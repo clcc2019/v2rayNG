@@ -166,13 +166,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     fun restartV2Ray() {
-        if (mainViewModel.isRunning.value == true) {
-            V2RayServiceManager.stopVService(this)
-        }
-        lifecycleScope.launch {
-            delay(500)
-            startV2Ray()
-        }
+        V2RayServiceManager.restartVService(this)
     }
 
     private fun setTestState(content: String?) {

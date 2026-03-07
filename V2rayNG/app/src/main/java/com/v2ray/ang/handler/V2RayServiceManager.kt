@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -20,6 +21,10 @@ import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
@@ -27,8 +32,13 @@ import java.lang.ref.SoftReference
 
 object V2RayServiceManager {
 
+    private const val RESTART_CHECK_INTERVAL_MS = 50L
+    private const val RESTART_MAX_WAIT_MS = 3_000L
+
     private val coreController: CoreController = V2RayNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
+    private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var restartJob: Job? = null
     private var currentConfig: ProfileItem? = null
 
     var serviceControl: SoftReference<ServiceControl>? = null
@@ -47,6 +57,7 @@ object V2RayServiceManager {
             context.toast(R.string.app_tile_first_use)
             return false
         }
+        restartJob?.cancel()
         startContextService(context)
         return true
     }
@@ -57,10 +68,30 @@ object V2RayServiceManager {
      * @param guid The GUID of the server configuration to use (optional).
      */
     fun startVService(context: Context, guid: String? = null) {
+        restartJob?.cancel()
         if (guid != null) {
             MmkvManager.setSelectServer(guid)
         }
         startContextService(context)
+    }
+
+    /**
+     * Restarts the V2Ray service without a fixed blocking delay.
+     * It starts as soon as the core is fully stopped (or timeout reached).
+     */
+    fun restartVService(context: Context, guid: String? = null) {
+        if (guid != null) {
+            MmkvManager.setSelectServer(guid)
+        }
+
+        val appContext = context.applicationContext
+        if (!coreController.isRunning) {
+            startContextService(appContext)
+            return
+        }
+
+        stopVService(appContext)
+        scheduleStartAfterStop(appContext)
     }
 
     /**
@@ -114,6 +145,17 @@ object V2RayServiceManager {
             Intent(context.applicationContext, V2RayProxyOnlyService::class.java)
         }
         ContextCompat.startForegroundService(context, intent)
+    }
+
+    private fun scheduleStartAfterStop(context: Context) {
+        restartJob?.cancel()
+        restartJob = restartScope.launch {
+            val deadline = SystemClock.elapsedRealtime() + RESTART_MAX_WAIT_MS
+            while (isActive && coreController.isRunning && SystemClock.elapsedRealtime() < deadline) {
+                delay(RESTART_CHECK_INTERVAL_MS)
+            }
+            startContextService(context)
+        }
     }
 
     /**
@@ -347,8 +389,7 @@ object V2RayServiceManager {
                 AppConfig.MSG_STATE_RESTART -> {
                     Log.i(AppConfig.TAG, "Restart Service")
                     serviceControl.stopService()
-                    Thread.sleep(500L)
-                    startVService(serviceControl.getService())
+                    scheduleStartAfterStop(serviceControl.getService().applicationContext)
                 }
 
                 AppConfig.MSG_MEASURE_DELAY -> {
