@@ -429,4 +429,5 @@
         <item>WebDAV</item>
     </string-array>
 
+    <string name="bottom_nav_more">更多</string>
 </resources>

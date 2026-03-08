@@ -62,8 +62,8 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvType.text = profile.configType.name
             holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.9f
             holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.8f else 0.68f
-            holder.itemMainBinding.tvType.alpha = if (isSelected) 0.82f else 0.72f
-            holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.94f else 0.84f
+            holder.itemMainBinding.tvType.alpha = if (isSelected) 0.92f else 0.82f
+            holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.98f else 0.84f
             holder.itemMainBinding.tvName.setTextColor(
                 ContextCompat.getColor(
                     context,
@@ -88,22 +88,23 @@ class MainRecyclerAdapter(
 
             //layoutIndicator
             if (isSelected) {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.divider_color_light)
+                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
                 holder.itemMainBinding.itemBg.strokeWidth = 1
-                holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.md_theme_outlineVariant))
-                holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.md_theme_surface))
+                holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.colorSelectionIndicator))
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.colorSelectionFill))
                 holder.itemMainBinding.itemBg.alpha = 1f
             } else {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
                 holder.itemMainBinding.itemBg.strokeWidth = 1
                 holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.md_theme_outlineVariant))
                 holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.md_theme_surface))
-                holder.itemMainBinding.itemBg.alpha = 0.96f
+                holder.itemMainBinding.itemBg.alpha = 0.98f
             }
 
             //subscription remarks
             val subRemarks = getSubscriptionRemarks(profile)
             holder.itemMainBinding.tvSubscription.text = subRemarks
+            holder.itemMainBinding.tvSubscription.setTextColor(ContextCompat.getColor(context, R.color.md_theme_onPrimaryContainer))
             holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
 
             //layout

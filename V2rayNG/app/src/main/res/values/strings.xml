@@ -443,4 +443,5 @@
         <item>WebDAV</item>
     </string-array>
 
+    <string name="bottom_nav_more">More</string>
 </resources>
