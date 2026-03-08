@@ -443,6 +443,6 @@
         <item>Local</item>
         <item>WebDAV</item>
     </string-array>
-
+    <string name="nav_header_subtitle">Fast, clean, ready.</string>
     <string name="bottom_nav_more">More</string>
 </resources>

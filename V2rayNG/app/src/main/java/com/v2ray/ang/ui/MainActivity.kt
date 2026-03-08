@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.GravityCompat
@@ -80,7 +79,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        setupToolbar(binding.toolbar, false, getString(R.string.title_server))
+        setupToolbar(binding.toolbar, false, getString(R.string.app_name))
 
         // setup viewpager and tablayout
         groupPagerAdapter = GroupPagerAdapter(this, emptyList())
@@ -108,7 +107,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
-        setupBottomNav()
 
         setupGroupTab()
         setupViewModel()
@@ -169,28 +167,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
     }
 
-    private fun setupBottomNav() {
-        binding.bottomNav.selectedItemId = R.id.nav_configs
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_configs -> true
-                R.id.sub_setting -> {
-                    requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
-                    false
-                }
-                R.id.settings -> {
-                    requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
-                    false
-                }
-                R.id.nav_more -> {
-                    binding.drawerLayout.openDrawer(GravityCompat.START)
-                    false
-                }
-                else -> false
-            }
-        }
-    }
-
     private fun handleLayoutTestClick() {
         if (mainViewModel.isRunning.value == true) {
             setTestState(getString(R.string.connection_test_testing))
@@ -248,9 +224,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STARTING -> {
                 binding.fab.setIconResource(R.drawable.ic_play_24dp)
                 binding.fab.text = getString(R.string.connection_starting)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primary))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
+                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
+                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.connection_starting)
                 setTestState(getString(R.string.connection_starting))
@@ -259,9 +235,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STOPPING -> {
                 binding.fab.setIconResource(R.drawable.ic_stop_24dp)
                 binding.fab.text = getString(R.string.connection_stopping)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primary))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
+                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
+                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.connection_stopping)
                 setTestState(getString(R.string.connection_stopping))
@@ -270,9 +246,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.RUNNING -> {
                 binding.fab.setIconResource(R.drawable.ic_stop_24dp)
                 binding.fab.text = getString(R.string.action_stop_service)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primary))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
+                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
+                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.action_stop_service)
                 setTestState(getString(R.string.connection_connected))
@@ -281,7 +257,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STOPPED -> {
                 binding.fab.setIconResource(R.drawable.ic_play_24dp)
                 binding.fab.text = getString(R.string.tasker_start_service)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_surfaceVariant))
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_surface))
                 binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurface))
                 binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurface))
                 binding.fab.strokeWidth = 1
@@ -346,13 +322,23 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STOPPED -> R.color.divider_color_light
         }
         val badgeColorRes = when (state) {
-            ServiceUiState.STARTING -> R.color.color_fab_active
+            ServiceUiState.STARTING -> R.color.md_theme_onPrimaryContainer
             ServiceUiState.STOPPING -> R.color.md_theme_onSurfaceVariant
             ServiceUiState.RUNNING -> R.color.colorPing
             ServiceUiState.STOPPED -> R.color.md_theme_onSurfaceVariant
         }
+        val badgeBackgroundRes = when (state) {
+            ServiceUiState.STARTING -> R.color.md_theme_primaryContainer
+            ServiceUiState.STOPPING -> R.color.md_theme_surfaceVariant
+            ServiceUiState.RUNNING -> R.color.md_theme_primaryContainer
+            ServiceUiState.STOPPED -> R.color.md_theme_surfaceVariant
+        }
         DrawableCompat.setTint(binding.viewStatusDot.background.mutate(), ContextCompat.getColor(this, dotColorRes))
+        DrawableCompat.setTint(binding.tvConnectionBadge.background.mutate(), ContextCompat.getColor(this, badgeBackgroundRes))
         binding.tvConnectionBadge.setTextColor(ContextCompat.getColor(this, badgeColorRes))
+        binding.layoutTest.setCardBackgroundColor(
+            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_surface else R.color.md_theme_surfaceVariant)
+        )
         binding.layoutTest.strokeColor = ContextCompat.getColor(
             this,
             if (state == ServiceUiState.RUNNING) R.color.md_theme_outlineVariant else R.color.divider_color_light

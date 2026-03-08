@@ -429,6 +429,6 @@
         <item>本地</item>
         <item>WebDAV</item>
     </string-array>
-
+    <string name="nav_header_subtitle">更轻、更快、更克制。</string>
     <string name="bottom_nav_more">更多</string>
 </resources>
