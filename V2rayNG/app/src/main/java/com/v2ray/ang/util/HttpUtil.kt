@@ -16,8 +16,17 @@ import java.net.MalformedURLException
 import java.net.Proxy
 import java.net.URI
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
+import android.os.SystemClock
 
 object HttpUtil {
+    private const val HOST_RESOLVE_CACHE_TTL_MS = 10 * 60 * 1000L
+    private val hostResolveCache = ConcurrentHashMap<String, ResolveCacheEntry>()
+
+    private data class ResolveCacheEntry(
+        val expiresAt: Long,
+        val addresses: List<String>
+    )
 
     /**
      * Converts the domain part of a URL string to its IDN (Punycode, ASCII Compatible Encoding) format.
@@ -74,6 +83,13 @@ object HttpUtil {
                 return null
             }
 
+            val cacheKey = "$host#$ipv6Preferred"
+            val cached = hostResolveCache[cacheKey]
+            val now = SystemClock.elapsedRealtime()
+            if (cached != null && cached.expiresAt > now) {
+                return cached.addresses
+            }
+
             // Get all IP addresses
             val addresses = InetAddress.getAllByName(host)
             if (addresses.isEmpty()) {
@@ -90,6 +106,11 @@ object HttpUtil {
             val ipList = sortedAddresses.mapNotNull { it.hostAddress }
 
             Log.i(AppConfig.TAG, "Resolved IPs for $host: ${ipList.joinToString()}")
+
+            hostResolveCache[cacheKey] = ResolveCacheEntry(
+                expiresAt = now + HOST_RESOLVE_CACHE_TTL_MS,
+                addresses = ipList
+            )
 
             return ipList
         } catch (e: Exception) {
@@ -251,4 +272,3 @@ object HttpUtil {
         }
     }
 }
-

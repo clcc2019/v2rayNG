@@ -41,6 +41,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+    private enum class ServiceUiState {
+        STOPPED,
+        STARTING,
+        RUNNING,
+        STOPPING
+    }
+
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -48,10 +55,14 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var groupPagerAdapter: GroupPagerAdapter
     private var tabMediator: TabLayoutMediator? = null
+    private var serviceUiState = ServiceUiState.STOPPED
 
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
+            renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
+        } else {
+            renderServiceUiState(if (mainViewModel.isRunning.value == true) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
     private val requestActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -107,7 +118,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private fun setupViewModel() {
         mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
         mainViewModel.isRunning.observe(this) { isRunning ->
-            applyRunningState(false, isRunning)
+            renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
         mainViewModel.startListenBroadcast()
         mainViewModel.initAssets(assets)
@@ -132,18 +143,23 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun handleFabAction() {
-        applyRunningState(isLoading = true, isRunning = false)
+        if (serviceUiState == ServiceUiState.STARTING || serviceUiState == ServiceUiState.STOPPING) {
+            return
+        }
 
         if (mainViewModel.isRunning.value == true) {
+            renderServiceUiState(ServiceUiState.STOPPING)
             V2RayServiceManager.stopVService(this)
         } else if (SettingsManager.isVpnMode()) {
             val intent = VpnService.prepare(this)
             if (intent == null) {
+                renderServiceUiState(ServiceUiState.STARTING)
                 startV2Ray()
             } else {
                 requestVpnPermission.launch(intent)
             }
         } else {
+            renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
         }
     }
@@ -173,24 +189,47 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.tvTestState.text = content
     }
 
-    private  fun applyRunningState(isLoading: Boolean, isRunning: Boolean) {
-        if (isLoading) {
-            binding.fab.setImageResource(R.drawable.ic_fab_check)
-            return
-        }
+    private fun renderServiceUiState(state: ServiceUiState) {
+        serviceUiState = state
+        val isTransitioning = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
 
-        if (isRunning) {
-            binding.fab.setImageResource(R.drawable.ic_stop_24dp)
-            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
-            binding.fab.contentDescription = getString(R.string.action_stop_service)
-            setTestState(getString(R.string.connection_connected))
-            binding.layoutTest.isFocusable = true
-        } else {
-            binding.fab.setImageResource(R.drawable.ic_play_24dp)
-            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
-            binding.fab.contentDescription = getString(R.string.tasker_start_service)
-            setTestState(getString(R.string.connection_not_connected))
-            binding.layoutTest.isFocusable = false
+        binding.progressBar.isVisible = isTransitioning
+        binding.fab.isEnabled = !isTransitioning
+        binding.fab.isClickable = !isTransitioning
+        binding.fab.alpha = if (isTransitioning) 0.82f else 1f
+        binding.layoutTest.isEnabled = state == ServiceUiState.RUNNING
+        binding.layoutTest.isClickable = state == ServiceUiState.RUNNING
+        binding.layoutTest.isFocusable = state == ServiceUiState.RUNNING
+        binding.layoutTest.alpha = if (state == ServiceUiState.RUNNING) 1f else 0.72f
+
+        when (state) {
+            ServiceUiState.STARTING -> {
+                binding.fab.setImageResource(R.drawable.ic_fab_check)
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.fab.contentDescription = getString(R.string.connection_starting)
+                setTestState(getString(R.string.connection_starting))
+            }
+
+            ServiceUiState.STOPPING -> {
+                binding.fab.setImageResource(R.drawable.ic_stop_24dp)
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
+                binding.fab.contentDescription = getString(R.string.connection_stopping)
+                setTestState(getString(R.string.connection_stopping))
+            }
+
+            ServiceUiState.RUNNING -> {
+                binding.fab.setImageResource(R.drawable.ic_stop_24dp)
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.fab.contentDescription = getString(R.string.action_stop_service)
+                setTestState(getString(R.string.connection_connected))
+            }
+
+            ServiceUiState.STOPPED -> {
+                binding.fab.setImageResource(R.drawable.ic_play_24dp)
+                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
+                binding.fab.contentDescription = getString(R.string.tasker_start_service)
+                setTestState(getString(R.string.connection_not_connected))
+            }
         }
     }
 

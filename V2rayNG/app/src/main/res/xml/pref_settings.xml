@@ -181,7 +181,7 @@
             android:title="@string/title_core_loglevel" />
 
         <ListPreference
-            android:defaultValue="1"
+            android:defaultValue="0"
             android:entries="@array/outbound_domain_resolve_method"
             android:entryValues="@array/outbound_domain_resolve_method_value"
             android:key="pref_outbound_domain_resolve_method"

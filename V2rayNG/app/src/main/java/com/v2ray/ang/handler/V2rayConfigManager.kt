@@ -2,6 +2,7 @@ package com.v2ray.ang.handler
 
 import android.content.Context
 import android.text.TextUtils
+import android.os.SystemClock
 import android.util.Log
 import com.google.gson.JsonArray
 import com.v2ray.ang.AppConfig
@@ -28,10 +29,18 @@ import com.v2ray.ang.fmt.WireguardFmt
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
+import java.util.LinkedHashMap
 
 object V2rayConfigManager {
+    private const val GENERATED_CONFIG_CACHE_LIMIT = 8
     private var initConfigCache: String? = null
     private var initConfigCacheWithTun: String? = null
+    private val generatedConfigCacheLock = Any()
+    private val generatedConfigCache = object : LinkedHashMap<String, ConfigResult>(GENERATED_CONFIG_CACHE_LIMIT, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ConfigResult>?): Boolean {
+            return size > GENERATED_CONFIG_CACHE_LIMIT
+        }
+    }
 
     //region get config function
 
@@ -45,13 +54,24 @@ object V2rayConfigManager {
     fun getV2rayConfig(context: Context, guid: String): ConfigResult {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
-            return if (config.configType == EConfigType.CUSTOM) {
+            val cacheKey = buildConfigCacheKey(guid, config)
+            getCachedConfigResult(cacheKey)?.let {
+                Log.i(AppConfig.TAG, "Using cached generated config for $guid")
+                return it
+            }
+
+            val result = if (config.configType == EConfigType.CUSTOM) {
                 getV2rayCustomConfig(context, guid, config)
             } else if (config.configType == EConfigType.POLICYGROUP) {
                 getV2rayGroupConfig(context, guid, config)
             } else {
                 getV2rayNormalConfig(context, guid, config)
             }
+
+            if (result.status) {
+                putCachedConfigResult(cacheKey, result)
+            }
+            return result
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to get V2ray config", e)
             return ConfigResult(false)
@@ -215,7 +235,7 @@ object V2rayConfigManager {
         }
 
         //Resolve and add to DNS Hosts
-        if (MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "1") == "1") {
+        if (MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "0") == "1") {
             resolveOutboundDomainsToHosts(v2rayConfig)
         }
 
@@ -274,7 +294,7 @@ object V2rayConfigManager {
         }
 
         //Resolve and add to DNS Hosts
-        if (MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "1") == "1") {
+        if (MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "0") == "1") {
             resolveOutboundDomainsToHosts(v2rayConfig)
         }
 
@@ -350,6 +370,78 @@ object V2rayConfigManager {
         }
         val config = JsonUtil.fromJson(assets, V2rayConfig::class.java)
         return config
+    }
+
+    private fun buildConfigCacheKey(guid: String, config: ProfileItem): String {
+        val subscription = config.subscriptionId.takeIf { it.isNotEmpty() }?.let {
+            MmkvManager.decodeSubscription(it)
+        }
+
+        val cachePayload = linkedMapOf<String, Any?>(
+            "guid" to guid,
+            "configType" to config.configType,
+            "config" to config,
+            "raw" to if (config.configType == EConfigType.CUSTOM) MmkvManager.decodeServerRaw(guid) else null,
+            "subscription" to subscription,
+            "prevNode" to subscription?.prevProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks),
+            "nextNode" to subscription?.nextProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks),
+            "policyGroupConfigs" to if (config.configType == EConfigType.POLICYGROUP) {
+                MmkvManager.decodeAllServerList().mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
+            } else {
+                null
+            },
+            "routingRulesets" to MmkvManager.decodeRoutingRulesets(),
+            "isVpnMode" to SettingsManager.isVpnMode(),
+            "isUsingHevTun" to SettingsManager.isUsingHevTun(),
+            "vpnMtu" to SettingsManager.getVpnMtu(),
+            "vpnAddressConfig" to SettingsManager.getCurrentVpnInterfaceAddressConfig(),
+            "socksPort" to SettingsManager.getSocksPort(),
+            "httpPort" to SettingsManager.getHttpPort(),
+            "remoteDnsServers" to SettingsManager.getRemoteDnsServers(),
+            "domesticDnsServers" to SettingsManager.getDomesticDnsServers(),
+            "vpnDnsServers" to SettingsManager.getVpnDnsServers(),
+            "settings" to getConfigRelevantSettingsSnapshot()
+        )
+        return JsonUtil.toJson(cachePayload)
+    }
+
+    private fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {
+        return linkedMapOf(
+            AppConfig.PREF_ALLOW_INSECURE to MmkvManager.decodeSettingsBool(AppConfig.PREF_ALLOW_INSECURE, false),
+            AppConfig.PREF_DELAY_TEST_URL to MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL),
+            AppConfig.PREF_DNS_HOSTS to MmkvManager.decodeSettingsString(AppConfig.PREF_DNS_HOSTS),
+            AppConfig.PREF_FAKE_DNS_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, false),
+            AppConfig.PREF_FRAGMENT_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_FRAGMENT_ENABLED, false),
+            AppConfig.PREF_FRAGMENT_INTERVAL to MmkvManager.decodeSettingsString(AppConfig.PREF_FRAGMENT_INTERVAL),
+            AppConfig.PREF_FRAGMENT_LENGTH to MmkvManager.decodeSettingsString(AppConfig.PREF_FRAGMENT_LENGTH),
+            AppConfig.PREF_FRAGMENT_PACKETS to MmkvManager.decodeSettingsString(AppConfig.PREF_FRAGMENT_PACKETS),
+            AppConfig.PREF_LOCAL_DNS_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false),
+            AppConfig.PREF_LOGLEVEL to MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL),
+            AppConfig.PREF_MUX_CONCURRENCY to MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_CONCURRENCY),
+            AppConfig.PREF_MUX_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_MUX_ENABLED, false),
+            AppConfig.PREF_MUX_XUDP_CONCURRENCY to MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_CONCURRENCY),
+            AppConfig.PREF_MUX_XUDP_QUIC to MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_QUIC),
+            AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD to MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "0"),
+            AppConfig.PREF_PREFER_IPV6 to MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6, false),
+            AppConfig.PREF_PROXY_SHARING to MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING, false),
+            AppConfig.PREF_ROUTE_ONLY_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_ROUTE_ONLY_ENABLED, false),
+            AppConfig.PREF_ROUTING_DOMAIN_STRATEGY to MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY),
+            AppConfig.PREF_SNIFFING_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_SNIFFING_ENABLED, true),
+            AppConfig.PREF_SPEED_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED, false),
+            AppConfig.PREF_VPN_BYPASS_LAN to MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_BYPASS_LAN)
+        )
+    }
+
+    private fun getCachedConfigResult(cacheKey: String): ConfigResult? {
+        return synchronized(generatedConfigCacheLock) {
+            generatedConfigCache[cacheKey]?.copy()
+        }
+    }
+
+    private fun putCachedConfigResult(cacheKey: String, result: ConfigResult) {
+        synchronized(generatedConfigCacheLock) {
+            generatedConfigCache[cacheKey] = result.copy()
+        }
     }
 
 
@@ -1019,6 +1111,7 @@ object V2rayConfigManager {
      * @param v2rayConfig The V2ray configuration object to be modified
      */
     private fun resolveOutboundDomainsToHosts(v2rayConfig: V2rayConfig) {
+        val startAt = SystemClock.elapsedRealtime()
         val proxyOutboundList = v2rayConfig.getAllProxyOutbound()
         val dns = v2rayConfig.dns ?: return
         val newHosts = dns.hosts?.toMutableMap() ?: mutableMapOf()
@@ -1053,6 +1146,7 @@ object V2rayConfigManager {
         }
 
         dns.hosts = newHosts
+        Log.i(AppConfig.TAG, "Outbound domain pre-resolve finished in ${SystemClock.elapsedRealtime() - startAt}ms for ${proxyOutboundList.size} outbounds")
     }
 
     /**

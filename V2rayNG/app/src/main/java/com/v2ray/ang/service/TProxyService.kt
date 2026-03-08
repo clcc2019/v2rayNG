@@ -2,6 +2,7 @@ package com.v2ray.ang.service
 
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import android.util.Log
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.contracts.Tun2SocksControl
@@ -39,10 +40,12 @@ class TProxyService(
      */
     override fun startTun2Socks() {
 //        Log.i(AppConfig.TAG, "Starting HevSocks5Tunnel via JNI")
+        val startAt = SystemClock.elapsedRealtime()
 
         val configContent = buildConfig()
-        val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml").apply {
-            writeText(configContent)
+        val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml")
+        if (!configFile.exists() || configFile.readText() != configContent) {
+            configFile.writeText(configContent)
         }
 //        Log.i(AppConfig.TAG, "Config file created: ${configFile.absolutePath}")
         Log.d(AppConfig.TAG, "HevSocks5Tunnel Config content:\n$configContent")
@@ -50,6 +53,7 @@ class TProxyService(
         try {
 //            Log.i(AppConfig.TAG, "TProxyStartService...")
             TProxyStartService(configFile.absolutePath, vpnInterface.fd)
+            Log.i(AppConfig.TAG, "Hev tun start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "HevSocks5Tunnel exception: ${e.message}")
         }

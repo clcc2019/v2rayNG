@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import java.lang.ref.SoftReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 object V2RayServiceManager {
 
@@ -40,6 +41,8 @@ object V2RayServiceManager {
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var restartJob: Job? = null
     private var currentConfig: ProfileItem? = null
+    private val receiverRegistered = AtomicBoolean(false)
+    private val stopInProgress = AtomicBoolean(false)
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -168,12 +171,18 @@ object V2RayServiceManager {
             return false
         }
 
+        stopInProgress.set(false)
+
         val service = getService() ?: return false
         val guid = MmkvManager.getSelectServer() ?: return false
         val config = MmkvManager.decodeServerConfig(guid) ?: return false
+
+        val configStartAt = SystemClock.elapsedRealtime()
         val result = V2rayConfigManager.getV2rayConfig(service, guid)
+        val configElapsed = SystemClock.elapsedRealtime() - configStartAt
         if (!result.status)
             return false
+        Log.i(AppConfig.TAG, "V2Ray config build finished in ${configElapsed}ms")
 
         try {
             val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_SERVICE)
@@ -181,6 +190,7 @@ object V2RayServiceManager {
             mFilter.addAction(Intent.ACTION_SCREEN_OFF)
             mFilter.addAction(Intent.ACTION_USER_PRESENT)
             ContextCompat.registerReceiver(service, mMsgReceive, mFilter, Utils.receiverFlags())
+            receiverRegistered.set(true)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to register broadcast receiver", e)
             return false
@@ -194,15 +204,18 @@ object V2RayServiceManager {
 
         try {
             NotificationManager.showNotification(currentConfig)
+            val loopStartAt = SystemClock.elapsedRealtime()
             coreController.startLoop(result.content, tunFd)
+            Log.i(AppConfig.TAG, "V2Ray core startLoop finished in ${SystemClock.elapsedRealtime() - loopStartAt}ms")
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to start Core loop", e)
+            cleanupStartArtifacts(service)
             return false
         }
 
         if (coreController.isRunning == false) {
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
-            NotificationManager.cancelNotification()
+            cleanupStartArtifacts(service)
             return false
         }
 
@@ -226,26 +239,30 @@ object V2RayServiceManager {
     fun stopCoreLoop(): Boolean {
         val service = getService() ?: return false
 
-        if (coreController.isRunning) {
-            CoroutineScope(Dispatchers.IO).launch {
+        if (!stopInProgress.compareAndSet(false, true)) {
+            Log.d(AppConfig.TAG, "V2Ray core stop already in progress, skipping duplicate request")
+            return true
+        }
+
+        val startAt = SystemClock.elapsedRealtime()
+
+        try {
+            if (coreController.isRunning) {
                 try {
                     coreController.stopLoop()
                 } catch (e: Exception) {
                     Log.e(AppConfig.TAG, "Failed to stop V2Ray loop", e)
                 }
             }
+
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
+            NotificationManager.cancelNotification()
+            unregisterMessageReceiver(service)
+            Log.i(AppConfig.TAG, "V2Ray core stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
+            return true
+        } finally {
+            stopInProgress.set(false)
         }
-
-        MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
-        NotificationManager.cancelNotification()
-
-        try {
-            service.unregisterReceiver(mMsgReceive)
-        } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Failed to unregister broadcast receiver", e)
-        }
-
-        return true
     }
 
     /**
@@ -408,6 +425,23 @@ object V2RayServiceManager {
                     NotificationManager.startSpeedNotification(currentConfig)
                 }
             }
+        }
+    }
+
+    private fun cleanupStartArtifacts(service: Service) {
+        NotificationManager.cancelNotification()
+        unregisterMessageReceiver(service)
+    }
+
+    private fun unregisterMessageReceiver(service: Service) {
+        if (!receiverRegistered.compareAndSet(true, false)) {
+            return
+        }
+
+        try {
+            service.unregisterReceiver(mMsgReceive)
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to unregister broadcast receiver", e)
         }
     }
 }

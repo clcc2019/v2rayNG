@@ -13,6 +13,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.StrictMode
+import android.os.SystemClock
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.v2ray.ang.AppConfig
@@ -27,11 +28,20 @@ import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
 import java.lang.ref.SoftReference
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class V2RayVpnService : VpnService(), ServiceControl {
     private lateinit var mInterface: ParcelFileDescriptor
     private var isRunning = false
     private var tun2SocksService: Tun2SocksControl? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val isStarting = AtomicBoolean(false)
+    private val isStopping = AtomicBoolean(false)
 
     /**destroy
      * Unfortunately registerDefaultNetworkCallback is going to return our VPN interface: https://android.googlesource.com/platform/frameworks/base/+/dda156ab0c5d66ad82bdcf76cda07cbc0a9c8a2e
@@ -78,7 +88,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun onRevoke() {
-        stopAllService()
+        stopService()
     }
 
 //    override fun onLowMemory() {
@@ -87,12 +97,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
 //    }
 
     override fun onDestroy() {
-        super.onDestroy()
         NotificationManager.cancelNotification()
+        serviceScope.cancel()
+        super.onDestroy()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        setupVpnService()
         startService()
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
@@ -103,19 +113,58 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun startService() {
-        if (mInterface == null) {
-            Log.e(AppConfig.TAG, "Failed to create VPN interface")
+        if (!isStarting.compareAndSet(false, true)) {
+            Log.d(AppConfig.TAG, "VPN start already in progress, skipping duplicate request")
             return
         }
-        if (!V2RayServiceManager.startCoreLoop(mInterface)) {
-            Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
-            stopAllService()
-            return
+
+        isStopping.set(false)
+        serviceScope.launch {
+            try {
+                val startAt = SystemClock.elapsedRealtime()
+                if (!setupVpnService()) {
+                    Log.e(AppConfig.TAG, "Failed to setup VPN service")
+                    isStopping.set(true)
+                    stopAllService(isForced = true)
+                    return@launch
+                }
+                if (isStopping.get()) {
+                    Log.i(AppConfig.TAG, "VPN start aborted because stop is in progress")
+                    return@launch
+                }
+                if (!::mInterface.isInitialized) {
+                    Log.e(AppConfig.TAG, "Failed to create VPN interface")
+                    isStopping.set(true)
+                    stopAllService(isForced = true)
+                    return@launch
+                }
+                if (!V2RayServiceManager.startCoreLoop(mInterface)) {
+                    Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
+                    isStopping.set(true)
+                    stopAllService(isForced = true)
+                    return@launch
+                }
+                Log.i(AppConfig.TAG, "VPN start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
+            } finally {
+                isStarting.set(false)
+            }
         }
     }
 
     override fun stopService() {
-        stopAllService(true)
+        if (!isStopping.compareAndSet(false, true)) {
+            Log.d(AppConfig.TAG, "VPN stop already in progress, skipping duplicate request")
+            return
+        }
+
+        serviceScope.launch {
+            try {
+                stopAllService(true)
+            } finally {
+                isStarting.set(false)
+                isStopping.set(false)
+            }
+        }
     }
 
     override fun vpnProtect(socket: Int): Boolean {
@@ -133,21 +182,26 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * Sets up the VPN service.
      * Prepares the VPN and configures it if preparation is successful.
      */
-    private fun setupVpnService() {
+    private fun setupVpnService(): Boolean {
+        val startAt = SystemClock.elapsedRealtime()
         val prepare = prepare(this)
         if (prepare != null) {
             Log.e(AppConfig.TAG, "VPN preparation failed")
-            stopSelf()
-            return
+            return false
         }
 
-        if (configureVpnService() != true) {
+        val configureStartAt = SystemClock.elapsedRealtime()
+        if (!configureVpnService()) {
             Log.e(AppConfig.TAG, "VPN configuration failed")
-            stopSelf()
-            return
+            return false
         }
+        Log.i(AppConfig.TAG, "VPN configure finished in ${SystemClock.elapsedRealtime() - configureStartAt}ms")
 
+        val tunStartAt = SystemClock.elapsedRealtime()
         runTun2socks()
+        Log.i(AppConfig.TAG, "tun2socks setup finished in ${SystemClock.elapsedRealtime() - tunStartAt}ms")
+        Log.i(AppConfig.TAG, "VPN setup finished in ${SystemClock.elapsedRealtime() - startAt}ms")
+        return true
     }
 
     /**
@@ -155,32 +209,43 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * @return True if the VPN service was configured successfully, false otherwise.
      */
     private fun configureVpnService(): Boolean {
+        val startAt = SystemClock.elapsedRealtime()
         val builder = Builder()
 
         // Configure network settings (addresses, routing and DNS)
+        val networkStartAt = SystemClock.elapsedRealtime()
         configureNetworkSettings(builder)
+        Log.i(AppConfig.TAG, "VPN network settings configured in ${SystemClock.elapsedRealtime() - networkStartAt}ms")
 
         // Configure app-specific settings (session name and per-app proxy)
+        val perAppStartAt = SystemClock.elapsedRealtime()
         configurePerAppProxy(builder)
+        Log.i(AppConfig.TAG, "VPN per-app rules configured in ${SystemClock.elapsedRealtime() - perAppStartAt}ms")
 
         // Close the old interface since the parameters have been changed
-        try {
-            mInterface.close()
-        } catch (ignored: Exception) {
-            // ignored
+        if (::mInterface.isInitialized) {
+            try {
+                mInterface.close()
+            } catch (ignored: Exception) {
+                // ignored
+            }
         }
 
         // Configure platform-specific features
+        val platformStartAt = SystemClock.elapsedRealtime()
         configurePlatformFeatures(builder)
+        Log.i(AppConfig.TAG, "VPN platform features configured in ${SystemClock.elapsedRealtime() - platformStartAt}ms")
 
         // Create a new interface using the builder and save the parameters
         try {
+            val establishStartAt = SystemClock.elapsedRealtime()
             mInterface = builder.establish()!!
             isRunning = true
+            Log.i(AppConfig.TAG, "VPN interface established in ${SystemClock.elapsedRealtime() - establishStartAt}ms")
+            Log.i(AppConfig.TAG, "VPN configureVpnService total ${SystemClock.elapsedRealtime() - startAt}ms")
             return true
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to establish VPN interface", e)
-            stopAllService()
         }
         return false
     }
@@ -192,6 +257,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * @param builder The VPN Builder to configure
      */
     private fun configureNetworkSettings(builder: Builder) {
+        val startAt = SystemClock.elapsedRealtime()
         val vpnConfig = SettingsManager.getCurrentVpnInterfaceAddressConfig()
         val bypassLan = SettingsManager.routingRulesetsBypassLan()
 
@@ -201,9 +267,8 @@ class V2RayVpnService : VpnService(), ServiceControl {
 
         // Configure routing rules
         if (bypassLan) {
-            AppConfig.ROUTED_IP_LIST.forEach {
-                val addr = it.split('/')
-                builder.addRoute(addr[0], addr[1].toInt())
+            AppConfig.ROUTED_IP_PREFIXES.forEach { (address, prefix) ->
+                builder.addRoute(address, prefix)
             }
         } else {
             builder.addRoute("0.0.0.0", 0)
@@ -231,6 +296,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         }
 
         builder.setSession(V2RayServiceManager.getRunningServerName())
+        Log.i(AppConfig.TAG, "VPN routes=${if (bypassLan) AppConfig.ROUTED_IP_PREFIXES.size else 1}, dns=${SettingsManager.getVpnDnsServers().size}, ipv6=${MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) == true}, configureNetworkSettings took ${SystemClock.elapsedRealtime() - startAt}ms")
     }
 
     /**
@@ -268,6 +334,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * @param builder The VPN Builder to configure.
      */
     private fun configurePerAppProxy(builder: Builder) {
+        val startAt = SystemClock.elapsedRealtime()
         val selfPackageName = BuildConfig.APPLICATION_ID
 
         // If per-app proxy is not enabled, disallow the VPN service's own package and return
@@ -300,6 +367,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 Log.e(AppConfig.TAG, "Failed to configure app in VPN: ${e.localizedMessage}", e)
             }
         }
+        Log.i(AppConfig.TAG, "VPN per-app package count=${apps.size}, bypassMode=${bypassApps == true}, configurePerAppProxy took ${SystemClock.elapsedRealtime() - startAt}ms")
     }
 
     /**
@@ -307,6 +375,10 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * Starts the tun2socks process with the appropriate parameters.
      */
     private fun runTun2socks() {
+        if (isStopping.get()) {
+            return
+        }
+
         if (SettingsManager.isUsingHevTun()) {
             tun2SocksService = TProxyService(
                 context = applicationContext,
@@ -322,6 +394,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     private fun stopAllService(isForced: Boolean = true) {
+        val startAt = SystemClock.elapsedRealtime()
 //        val configName = defaultDPreference.getPrefString(PREF_CURR_CONFIG_GUID, "")
 //        val emptyInfo = VpnNetworkInfo()
 //        val info = loadVpnNetworkInfo(configName, emptyInfo)!! + (lastNetworkInfo ?: emptyInfo)
@@ -348,12 +421,15 @@ class V2RayVpnService : VpnService(), ServiceControl {
             //which means the first v2ray core somehow failed to stop and release the port.
             stopSelf()
 
-            try {
-                mInterface.close()
-            } catch (e: Exception) {
-                Log.e(AppConfig.TAG, "Failed to close VPN interface", e)
+            if (::mInterface.isInitialized) {
+                try {
+                    mInterface.close()
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Failed to close VPN interface", e)
+                }
             }
         }
+
+        Log.i(AppConfig.TAG, "VPN stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
     }
 }
-

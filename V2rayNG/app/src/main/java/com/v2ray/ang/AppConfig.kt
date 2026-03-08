@@ -252,6 +252,11 @@ object AppConfig {
         "240.0.0.0/4"
     )
 
+    val ROUTED_IP_PREFIXES = ROUTED_IP_LIST.map {
+        val splitIndex = it.indexOf('/')
+        it.substring(0, splitIndex) to it.substring(splitIndex + 1).toInt()
+    }
+
     val PRIVATE_IP_LIST = arrayListOf(
         "0.0.0.0/8",
         "10.0.0.0/8",
