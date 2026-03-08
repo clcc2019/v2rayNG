@@ -52,6 +52,7 @@ class MainRecyclerAdapter(
             val context = holder.itemMainBinding.root.context
             val guid = data[position].guid
             val profile = data[position].profile
+            val isSelected = guid == MmkvManager.getSelectServer()
 
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
 
@@ -59,6 +60,10 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvName.text = profile.remarks
             holder.itemMainBinding.tvStatistics.text = getAddress(profile)
             holder.itemMainBinding.tvType.text = profile.configType.name
+            holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.92f
+            holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.76f
+            holder.itemMainBinding.tvType.alpha = if (isSelected) 1f else 0.82f
+            holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 1f else 0.88f
 
             //TestResult
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
@@ -70,10 +75,14 @@ class MainRecyclerAdapter(
             }
 
             //layoutIndicator
-            if (guid == MmkvManager.getSelectServer()) {
+            if (isSelected) {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.colorIndicator)
+                holder.itemMainBinding.itemBg.setBackgroundResource(R.drawable.bg_selected_server)
+                holder.itemMainBinding.itemBg.alpha = 1f
             } else {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
+                holder.itemMainBinding.itemBg.setBackgroundColor(Color.TRANSPARENT)
+                holder.itemMainBinding.itemBg.alpha = 0.96f
             }
 
             //subscription remarks

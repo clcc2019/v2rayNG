@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -186,21 +187,35 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun setTestState(content: String?) {
-        binding.tvTestState.text = content
+        val target = content.orEmpty()
+        if (binding.tvTestState.text == target) {
+            return
+        }
+
+        binding.tvTestState.animate()
+            .alpha(0f)
+            .setDuration(120)
+            .withEndAction {
+                binding.tvTestState.text = target
+                binding.tvTestState.animate().alpha(1f).setDuration(160).start()
+            }
+            .start()
     }
 
     private fun renderServiceUiState(state: ServiceUiState) {
         serviceUiState = state
         val isTransitioning = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
 
-        binding.progressBar.isVisible = isTransitioning
+        animateProgressBar(isTransitioning)
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
-        binding.fab.alpha = if (isTransitioning) 0.82f else 1f
+        binding.fab.animate().alpha(if (isTransitioning) 0.82f else 1f).scaleX(if (isTransitioning) 0.94f else 1f).scaleY(if (isTransitioning) 0.94f else 1f).setDuration(180).start()
         binding.layoutTest.isEnabled = state == ServiceUiState.RUNNING
         binding.layoutTest.isClickable = state == ServiceUiState.RUNNING
         binding.layoutTest.isFocusable = state == ServiceUiState.RUNNING
-        binding.layoutTest.alpha = if (state == ServiceUiState.RUNNING) 1f else 0.72f
+        binding.layoutTest.animate().alpha(if (state == ServiceUiState.RUNNING) 1f else 0.72f).setDuration(180).start()
+        binding.fab.animate().rotation(if (isTransitioning) 135f else 0f).setDuration(220).start()
+        updateToolbarSubtitle(state)
 
         when (state) {
             ServiceUiState.STARTING -> {
@@ -230,6 +245,37 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.fab.contentDescription = getString(R.string.tasker_start_service)
                 setTestState(getString(R.string.connection_not_connected))
             }
+        }
+    }
+
+    private fun animateProgressBar(visible: Boolean) {
+        if (visible) {
+            if (!binding.progressBar.isVisible) {
+                binding.progressBar.alpha = 0f
+                binding.progressBar.visibility = View.VISIBLE
+            }
+            binding.progressBar.animate().alpha(1f).setDuration(180).start()
+        } else if (binding.progressBar.isVisible) {
+            binding.progressBar.animate()
+                .alpha(0f)
+                .setDuration(180)
+                .withEndAction {
+                    binding.progressBar.visibility = View.INVISIBLE
+                }
+                .start()
+        }
+    }
+
+    private fun updateToolbarSubtitle(state: ServiceUiState) {
+        val selectedName = MmkvManager.getSelectServer()?.let { guid ->
+            MmkvManager.decodeServerConfig(guid)?.remarks
+        }.orEmpty()
+
+        binding.toolbar.subtitle = when (state) {
+            ServiceUiState.STARTING -> getString(R.string.connection_starting)
+            ServiceUiState.STOPPING -> getString(R.string.connection_stopping)
+            ServiceUiState.RUNNING -> selectedName.ifEmpty { getString(R.string.connection_connected) }
+            ServiceUiState.STOPPED -> selectedName.ifEmpty { null }
         }
     }
 
