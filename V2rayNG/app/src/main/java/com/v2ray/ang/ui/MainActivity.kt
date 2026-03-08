@@ -17,6 +17,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -111,6 +112,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         setupGroupTab()
         setupViewModel()
         mainViewModel.reloadServerList()
+        refreshConnectionCard()
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
         }
@@ -141,6 +143,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.viewPager.setCurrentItem(targetIndex, false)
 
         binding.tabGroup.isVisible = groups.size > 1
+        refreshConnectionCard()
     }
 
     private fun handleFabAction() {
@@ -176,6 +179,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     private fun startV2Ray() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+            renderServiceUiState(ServiceUiState.STOPPED)
             toast(R.string.title_file_chooser)
             return
         }
@@ -209,17 +213,17 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         animateProgressBar(isTransitioning)
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
-        binding.fab.animate().alpha(if (isTransitioning) 0.82f else 1f).scaleX(if (isTransitioning) 0.94f else 1f).scaleY(if (isTransitioning) 0.94f else 1f).setDuration(180).start()
+        binding.fab.alpha = if (isTransitioning) 0.92f else 1f
         binding.layoutTest.isEnabled = state == ServiceUiState.RUNNING
         binding.layoutTest.isClickable = state == ServiceUiState.RUNNING
         binding.layoutTest.isFocusable = state == ServiceUiState.RUNNING
-        binding.layoutTest.animate().alpha(if (state == ServiceUiState.RUNNING) 1f else 0.72f).setDuration(180).start()
-        binding.fab.animate().rotation(if (isTransitioning) 135f else 0f).setDuration(220).start()
+        binding.layoutTest.alpha = if (state == ServiceUiState.RUNNING) 1f else 0.72f
+        updateConnectionCard(state)
         updateToolbarSubtitle(state)
 
         when (state) {
             ServiceUiState.STARTING -> {
-                binding.fab.setImageResource(R.drawable.ic_fab_check)
+                binding.fab.setImageResource(R.drawable.ic_play_24dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.fab.contentDescription = getString(R.string.connection_starting)
                 setTestState(getString(R.string.connection_starting))
@@ -267,9 +271,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun updateToolbarSubtitle(state: ServiceUiState) {
-        val selectedName = MmkvManager.getSelectServer()?.let { guid ->
-            MmkvManager.decodeServerConfig(guid)?.remarks
-        }.orEmpty()
+        val selectedName = getSelectedServerName().orEmpty()
 
         binding.toolbar.subtitle = when (state) {
             ServiceUiState.STARTING -> getString(R.string.connection_starting)
@@ -277,6 +279,44 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.RUNNING -> selectedName.ifEmpty { getString(R.string.connection_connected) }
             ServiceUiState.STOPPED -> selectedName.ifEmpty { null }
         }
+    }
+
+    fun refreshConnectionCard() {
+        updateConnectionCard(serviceUiState)
+        updateToolbarSubtitle(serviceUiState)
+    }
+
+    private fun updateConnectionCard(state: ServiceUiState) {
+        val selectedName = getSelectedServerName()
+        binding.tvActiveServer.text = selectedName ?: getString(R.string.connection_not_connected)
+
+        val statusText = when (state) {
+            ServiceUiState.STARTING -> getString(R.string.connection_starting)
+            ServiceUiState.STOPPING -> getString(R.string.connection_stopping)
+            ServiceUiState.RUNNING -> getString(R.string.connection_connected)
+            ServiceUiState.STOPPED -> getString(R.string.connection_not_connected)
+        }
+        binding.tvConnectionLabel.text = statusText
+
+        val colorRes = when (state) {
+            ServiceUiState.STARTING -> R.color.color_fab_active
+            ServiceUiState.STOPPING -> R.color.color_fab_inactive
+            ServiceUiState.RUNNING -> R.color.colorPing
+            ServiceUiState.STOPPED -> R.color.divider_color_light
+        }
+        DrawableCompat.setTint(binding.viewStatusDot.background.mutate(), ContextCompat.getColor(this, colorRes))
+
+        binding.cardConnection.setStrokeColor(
+            ContextCompat.getColor(
+                this,
+                if (state == ServiceUiState.RUNNING) R.color.md_theme_outlineVariant else R.color.divider_color_light
+            )
+        )
+    }
+
+    private fun getSelectedServerName(): String? {
+        val guid = MmkvManager.getSelectServer() ?: return null
+        return MmkvManager.decodeServerConfig(guid)?.remarks
     }
 
     override fun onResume() {

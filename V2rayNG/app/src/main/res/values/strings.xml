@@ -16,6 +16,13 @@
     <string name="toast_permission_denied">Unable to obtain the permission</string>
     <string name="toast_permission_denied_notification">Unable to obtain the notification permission</string>
     <string name="notification_action_more">Click for more</string>
+    <string name="empty_server_title">No configurations yet</string>
+    <string name="empty_server_subtitle">Import or add a server to get started</string>
+    <string name="empty_search_title">No matching configurations</string>
+    <string name="empty_search_subtitle">Try a different keyword or clear the filter</string>
+    <string name="action_qrcode">QR code</string>
+    <string name="action_export_clipboard">Export to clipboard</string>
+    <string name="action_export_full_clipboard">Export full config</string>
     <string name="toast_services_start">Start Services</string>
     <string name="toast_services_stop">Stop Services</string>
     <string name="toast_services_success">Start Services Success</string>

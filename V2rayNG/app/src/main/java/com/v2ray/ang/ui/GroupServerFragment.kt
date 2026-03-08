@@ -1,12 +1,15 @@
 package com.v2ray.ang.ui
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -15,7 +18,9 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
 import com.v2ray.ang.databinding.FragmentGroupServerBinding
+import com.v2ray.ang.databinding.ItemBottomSheetActionBinding
 import com.v2ray.ang.databinding.ItemQrcodeBinding
+import com.v2ray.ang.databinding.LayoutBottomSheetActionsBinding
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.toast
@@ -25,6 +30,7 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.viewmodel.MainViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -35,13 +41,6 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private lateinit var adapter: MainRecyclerAdapter
     private var itemTouchHelper: ItemTouchHelper? = null
     private val subId: String by lazy { arguments?.getString(ARG_SUB_ID).orEmpty() }
-
-    private val share_method: Array<out String> by lazy {
-        ownerActivity.resources.getStringArray(R.array.share_method)
-    }
-    private val share_method_more: Array<out String> by lazy {
-        ownerActivity.resources.getStringArray(R.array.share_method_more)
-    }
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -62,7 +61,6 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         } else {
             binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         }
-        addCustomDividerToRecyclerView(binding.recyclerView, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
 
         itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
@@ -74,8 +72,10 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             }
             // Log.d(TAG, "GroupServerFragment updateListAction subId=$subId")
             adapter.setData(mainViewModel.serversCache, index)
+            updateEmptyState()
         }
 
+        updateEmptyState()
         // Log.d(TAG, "GroupServerFragment onViewCreated: subId=$subId")
     }
 
@@ -84,30 +84,96 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         mainViewModel.subscriptionIdChanged(subId)
     }
 
-    /**
-     * Shares server configuration
-     * Displays a dialog with sharing options and executes the selected action
-     * @param guid The server unique identifier
-     * @param profile The server configuration
-     * @param position The position in the list
-     * @param shareOptions The list of share options
-     * @param skip The number of options to skip
-     */
-    private fun shareServer(guid: String, profile: ProfileItem, position: Int, shareOptions: List<String>, skip: Int) {
-        AlertDialog.Builder(ownerActivity).setItems(shareOptions.toTypedArray()) { _, i ->
-            try {
-                when (i + skip) {
-                    0 -> showQRCode(guid)
-                    1 -> share2Clipboard(guid)
-                    2 -> shareFullContent(guid)
-                    3 -> editServer(guid, profile)
-                    4 -> removeServer(guid, position)
-                    else -> ownerActivity.toast("else")
+    private fun updateEmptyState() {
+        val isEmpty = mainViewModel.serversCache.isEmpty()
+        binding.recyclerView.isVisible = !isEmpty
+        binding.layoutEmptyState.isVisible = isEmpty
+        binding.tvEmptyTitle.setText(
+            if (mainViewModel.keywordFilter.isBlank()) R.string.empty_server_title else R.string.empty_search_title
+        )
+        binding.tvEmptySubtitle.setText(
+            if (mainViewModel.keywordFilter.isBlank()) R.string.empty_server_subtitle else R.string.empty_search_subtitle
+        )
+    }
+
+    private data class ServerAction(
+        val label: String,
+        val iconRes: Int,
+        val destructive: Boolean = false,
+        val handler: () -> Unit
+    )
+
+    private fun showServerActions(guid: String, profile: ProfileItem, position: Int) {
+        val sheetBinding = LayoutBottomSheetActionsBinding.inflate(LayoutInflater.from(ownerActivity))
+        val bottomSheetDialog = BottomSheetDialog(ownerActivity)
+        val description = profile.description.orEmpty().ifBlank { profile.server.orEmpty() }
+        sheetBinding.tvTitle.text = profile.remarks
+        sheetBinding.tvSubtitle.text = description
+        sheetBinding.tvSubtitle.isVisible = description.isNotBlank()
+
+        buildServerActions(guid, profile, position).forEach { action ->
+            val itemBinding = ItemBottomSheetActionBinding.inflate(LayoutInflater.from(ownerActivity), sheetBinding.layoutActions, false)
+            itemBinding.ivIcon.setImageResource(action.iconRes)
+            val iconColor = ContextCompat.getColor(
+                ownerActivity,
+                if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurfaceVariant
+            )
+            itemBinding.ivIcon.imageTintList = ColorStateList.valueOf(iconColor)
+            itemBinding.tvLabel.text = action.label
+            itemBinding.tvLabel.setTextColor(
+                ContextCompat.getColor(
+                    ownerActivity,
+                    if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
+                )
+            )
+            itemBinding.root.setOnClickListener {
+                bottomSheetDialog.dismiss()
+                runCatching(action.handler).onFailure { e ->
+                    Log.e(AppConfig.TAG, "Error handling server action", e)
                 }
-            } catch (e: Exception) {
-                Log.e(AppConfig.TAG, "Error when sharing server", e)
             }
-        }.show()
+            sheetBinding.layoutActions.addView(itemBinding.root)
+        }
+
+        bottomSheetDialog.setContentView(sheetBinding.root)
+        bottomSheetDialog.show()
+    }
+
+    private fun buildServerActions(guid: String, profile: ProfileItem, position: Int): List<ServerAction> {
+        val isCustom = profile.configType == EConfigType.CUSTOM || profile.configType == EConfigType.POLICYGROUP
+        val actions = mutableListOf<ServerAction>()
+
+        if (!isCustom) {
+            actions += ServerAction(
+                label = getString(R.string.action_qrcode),
+                iconRes = R.drawable.ic_qu_scan_24dp,
+                handler = { showQRCode(guid) }
+            )
+            actions += ServerAction(
+                label = getString(R.string.action_export_clipboard),
+                iconRes = R.drawable.ic_copy,
+                handler = { share2Clipboard(guid) }
+            )
+        }
+
+        actions += ServerAction(
+            label = getString(R.string.action_export_full_clipboard),
+            iconRes = R.drawable.ic_description_24dp,
+            handler = { shareFullContent(guid) }
+        )
+        actions += ServerAction(
+            label = getString(R.string.menu_item_edit_config),
+            iconRes = R.drawable.ic_edit_24dp,
+            handler = { editServer(guid, profile) }
+        )
+        actions += ServerAction(
+            label = getString(R.string.menu_item_del_config),
+            iconRes = R.drawable.ic_delete_24dp,
+            destructive = true,
+            handler = { removeServer(guid, position) }
+        )
+
+        return actions
     }
 
     /**
@@ -117,11 +183,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private fun showQRCode(guid: String) {
         val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
         ivBinding.ivQcode.setImageBitmap(AngConfigManager.share2QRCode(guid))
-        if (share_method.isNotEmpty()) {
-            ivBinding.ivQcode.contentDescription = share_method[0]
-        } else {
-            ivBinding.ivQcode.contentDescription = "QR Code"
-        }
+        ivBinding.ivQcode.contentDescription = getString(R.string.action_qrcode)
         AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
     }
 
@@ -228,6 +290,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             val fromPosition = mainViewModel.getPosition(selected.orEmpty())
             val toPosition = mainViewModel.getPosition(guid)
             adapter.setSelectServer(fromPosition, toPosition)
+            ownerActivity.refreshConnectionCard()
 
             if (mainViewModel.isRunning.value == true) {
                 ownerActivity.restartV2Ray()
@@ -258,17 +321,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         }
 
         override fun onShare(guid: String, profile: ProfileItem, position: Int, more: Boolean) {
-            val isCustom = profile.configType == EConfigType.CUSTOM || profile.configType == EConfigType.POLICYGROUP
-
-            val (shareOptions, skip) = if (more) {
-                val options = if (isCustom) share_method_more.asList().takeLast(3) else share_method_more.asList()
-                options to if (isCustom) 2 else 0
-            } else {
-                val options = if (isCustom) share_method.asList().takeLast(1) else share_method.asList()
-                options to if (isCustom) 2 else 0
-            }
-
-            shareServer(guid, profile, position, shareOptions, skip)
+            showServerActions(guid, profile, position)
         }
     }
 }

@@ -60,10 +60,22 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvName.text = profile.remarks
             holder.itemMainBinding.tvStatistics.text = getAddress(profile)
             holder.itemMainBinding.tvType.text = profile.configType.name
-            holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.92f
-            holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.76f
-            holder.itemMainBinding.tvType.alpha = if (isSelected) 1f else 0.82f
-            holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 1f else 0.88f
+            holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.9f
+            holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.8f else 0.68f
+            holder.itemMainBinding.tvType.alpha = if (isSelected) 0.82f else 0.72f
+            holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.94f else 0.84f
+            holder.itemMainBinding.tvName.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (isSelected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                )
+            )
+            holder.itemMainBinding.tvStatistics.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (isSelected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                )
+            )
 
             //TestResult
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
@@ -76,12 +88,16 @@ class MainRecyclerAdapter(
 
             //layoutIndicator
             if (isSelected) {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.colorIndicator)
-                holder.itemMainBinding.itemBg.setBackgroundResource(R.drawable.bg_selected_server)
+                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.divider_color_light)
+                holder.itemMainBinding.itemBg.strokeWidth = 1
+                holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.md_theme_outlineVariant))
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.md_theme_surface))
                 holder.itemMainBinding.itemBg.alpha = 1f
             } else {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
-                holder.itemMainBinding.itemBg.setBackgroundColor(Color.TRANSPARENT)
+                holder.itemMainBinding.itemBg.strokeWidth = 1
+                holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.md_theme_outlineVariant))
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.md_theme_surface))
                 holder.itemMainBinding.itemBg.alpha = 0.96f
             }
 
@@ -91,31 +107,13 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
 
             //layout
-            if (doubleColumnDisplay) {
-                holder.itemMainBinding.layoutShare.visibility = View.GONE
-                holder.itemMainBinding.layoutEdit.visibility = View.GONE
-                holder.itemMainBinding.layoutRemove.visibility = View.GONE
-                holder.itemMainBinding.layoutMore.visibility = View.VISIBLE
+            holder.itemMainBinding.layoutShare.visibility = View.GONE
+            holder.itemMainBinding.layoutEdit.visibility = View.GONE
+            holder.itemMainBinding.layoutRemove.visibility = View.GONE
+            holder.itemMainBinding.layoutMore.visibility = View.VISIBLE
 
-                holder.itemMainBinding.layoutMore.setOnClickListener {
-                    adapterListener?.onShare(guid, profile, position, true)
-                }
-            } else {
-                holder.itemMainBinding.layoutShare.visibility = View.VISIBLE
-                holder.itemMainBinding.layoutEdit.visibility = View.VISIBLE
-                holder.itemMainBinding.layoutRemove.visibility = View.VISIBLE
-                holder.itemMainBinding.layoutMore.visibility = View.GONE
-
-                holder.itemMainBinding.layoutShare.setOnClickListener {
-                    adapterListener?.onShare(guid, profile, position, false)
-                }
-
-                holder.itemMainBinding.layoutEdit.setOnClickListener {
-                    adapterListener?.onEdit(guid, position, profile)
-                }
-                holder.itemMainBinding.layoutRemove.setOnClickListener {
-                    adapterListener?.onRemove(guid, position)
-                }
+            holder.itemMainBinding.layoutMore.setOnClickListener {
+                adapterListener?.onShare(guid, profile, position, true)
             }
 
             holder.itemMainBinding.infoContainer.setOnClickListener {

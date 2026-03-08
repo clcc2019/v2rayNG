@@ -15,6 +15,13 @@
     <string name="toast_permission_denied">无法取得权限</string>
     <string name="toast_permission_denied_notification">无法取得通知权限</string>
     <string name="notification_action_more">点击了解更多</string>
+    <string name="empty_server_title">暂无配置</string>
+    <string name="empty_server_subtitle">导入或添加一个节点后，即可开始连接</string>
+    <string name="empty_search_title">没有匹配的配置</string>
+    <string name="empty_search_subtitle">试试更换关键词，或清空当前筛选</string>
+    <string name="action_qrcode">二维码</string>
+    <string name="action_export_clipboard">导出至剪贴板</string>
+    <string name="action_export_full_clipboard">导出完整配置</string>
     <string name="toast_services_start">启动服务中</string>
     <string name="toast_services_stop">关闭中</string>
     <string name="toast_services_success">启动服务成功</string>
