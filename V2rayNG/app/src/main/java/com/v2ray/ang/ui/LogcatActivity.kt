@@ -35,6 +35,8 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
 
+        binding.refreshLayout.setColorSchemeResources(R.color.md_theme_primary)
+        binding.refreshLayout.setProgressBackgroundColorSchemeResource(R.color.md_theme_surfaceVariant)
         binding.refreshLayout.setOnRefreshListener(this)
 
         toast(getString(R.string.pull_down_to_refresh))
@@ -47,26 +49,17 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_logcat, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    viewModel.filter(newText)
-                    refreshData()
-                    return false
-                }
-            })
-            searchView.setOnCloseListener {
+        setupSearchView(
+            menuItem = menu.findItem(R.id.search_view),
+            onQueryChanged = {
+                viewModel.filter(it)
+                refreshData()
+            },
+            onClosed = {
                 viewModel.filter("")
                 refreshData()
-                false
             }
-        }
-
+        )
         return super.onCreateOptionsMenu(menu)
     }
 

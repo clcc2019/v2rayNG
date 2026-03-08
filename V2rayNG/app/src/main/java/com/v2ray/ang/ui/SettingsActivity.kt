@@ -2,9 +2,12 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceFragmentCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
@@ -62,6 +65,7 @@ class SettingsActivity : BaseActivity() {
             preferenceManager.preferenceDataStore = MmkvPreferenceDataStore()
 
             addPreferencesFromResource(R.xml.pref_settings)
+            preferenceScreen?.let { applyPreferenceVisuals(it) }
 
             initPreferenceSummaries()
 
@@ -111,6 +115,44 @@ class SettingsActivity : BaseActivity() {
             useHevTun?.setOnPreferenceChangeListener { _, newValue ->
                 updateHevTunSettings(newValue as Boolean)
                 true
+            }
+        }
+
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            listView.apply {
+                clipToPadding = false
+                setPadding(
+                    resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16),
+                    resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8),
+                    resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16),
+                    resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
+                )
+                setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.md_theme_background))
+                itemAnimator = null
+            }
+            setDivider(null)
+            setDividerHeight(0)
+        }
+
+        private fun applyPreferenceVisuals(group: PreferenceGroup) {
+            for (index in 0 until group.preferenceCount) {
+                val preference = group.getPreference(index)
+                preference.isIconSpaceReserved = false
+                when (preference) {
+                    is PreferenceCategory -> {
+                        preference.layoutResource = R.layout.preference_category_modern
+                        applyPreferenceVisuals(preference)
+                    }
+                    is PreferenceGroup -> {
+                        preference.layoutResource = R.layout.preference_item_modern
+                        applyPreferenceVisuals(preference)
+                    }
+                    else -> {
+                        preference.layoutResource = R.layout.preference_item_modern
+                    }
+                }
             }
         }
 

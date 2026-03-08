@@ -40,9 +40,9 @@ class PerAppProxyActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
 
+        binding.recyclerView.setHasFixedSize(true)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
 
         initList()
@@ -51,11 +51,17 @@ class PerAppProxyActivity : BaseActivity() {
             MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, isChecked)
         }
         binding.switchPerAppProxy.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)
+        binding.containerPerAppProxy.setOnClickListener {
+            binding.switchPerAppProxy.toggle()
+        }
 
         binding.switchBypassApps.setOnCheckedChangeListener { _, isChecked ->
             MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, isChecked)
         }
         binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
+        binding.containerBypassApps.setOnClickListener {
+            binding.switchBypassApps.toggle()
+        }
 
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
             Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
@@ -108,20 +114,11 @@ class PerAppProxyActivity : BaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_bypass_list, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    filterProxyApp(newText.orEmpty())
-                    return false
-                }
-            })
-        }
-
+        setupSearchView(
+            menuItem = menu.findItem(R.id.search_view),
+            onQueryChanged = { filterProxyApp(it) },
+            onClosed = { filterProxyApp("") }
+        )
         return super.onCreateOptionsMenu(menu)
     }
 

@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.databinding.ItemRecyclerBypassListBinding
 import com.v2ray.ang.dto.AppInfo
@@ -56,12 +57,8 @@ class PerAppProxyAdapter(
             this.appInfo = appInfo
 
             itemBypassBinding.icon.setImageDrawable(appInfo.appIcon)
-            itemBypassBinding.name.text = if (appInfo.isSystemApp) {
-                String.format("** %s", appInfo.appName)
-            } else {
-                appInfo.appName
-            }
-
+            itemBypassBinding.name.text = appInfo.appName
+            itemBypassBinding.systemBadge.isVisible = appInfo.isSystemApp
             itemBypassBinding.packageName.text = appInfo.packageName
             itemBypassBinding.checkBox.isChecked = viewModel.contains(appInfo.packageName)
 
