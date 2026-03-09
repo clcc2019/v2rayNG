@@ -28,32 +28,48 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
+import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    companion object {
+        private val TCPING_PARALLELISM = Runtime.getRuntime().availableProcessors().coerceAtLeast(2) * 2
+    }
+
     private data class TcpingTarget(
         val guid: String,
         val serverAddress: String,
         val serverPort: Int
     )
 
+    private data class ServerListSnapshot(
+        val serverGuids: MutableList<String>,
+        val servers: List<ServersCache>,
+        val positions: Map<String, Int>
+    )
+
     private var serverList = mutableListOf<String>() // MmkvManager.decodeServerList()
     private val serverPositions = mutableMapOf<String, Int>()
+    private val serverListVersion = AtomicInteger(0)
+    private val groupListVersion = AtomicInteger(0)
     var subscriptionId: String = MmkvManager.decodeSettingsString(AppConfig.CACHE_SUBSCRIPTION_ID, "").orEmpty()
     var keywordFilter = ""
     val serversCache = mutableListOf<ServersCache>()
     val isRunning by lazy { MutableLiveData<Boolean>() }
     val updateListAction by lazy { MutableLiveData<Int>() }
+    val updateGroupsAction by lazy { MutableLiveData<List<GroupMapItem>>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
-    private val tcpingTestScope by lazy { CoroutineScope(Dispatchers.IO) }
+    private val tcpingDispatcher = Dispatchers.IO.limitedParallelism(TCPING_PARALLELISM)
+    private var tcpingTestJob: Job? = null
+    private var prewarmJob: Job? = null
 
     /**
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
@@ -71,7 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     override fun onCleared() {
         getApplication<AngApplication>().unregisterReceiver(mMsgReceiver)
-        tcpingTestScope.coroutineContext[Job]?.cancelChildren()
+        tcpingTestJob?.cancel()
         SpeedtestManager.closeAllTcpSockets()
         Log.i(AppConfig.TAG, "Main ViewModel is cleared")
         super.onCleared()
@@ -81,14 +97,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Reloads the server list based on current subscription filter.
      */
     fun reloadServerList() {
-        serverList = if (subscriptionId.isEmpty()) {
-            MmkvManager.decodeAllServerList()
-        } else {
-            MmkvManager.decodeServerList(subscriptionId)
-        }
+        val requestVersion = serverListVersion.incrementAndGet()
+        val targetSubscriptionId = subscriptionId
+        val targetKeyword = keywordFilter.trim()
 
-        updateCache()
-        updateListAction.value = -1
+        viewModelScope.launch(Dispatchers.Default) {
+            val snapshot = buildServerListSnapshot(targetSubscriptionId, targetKeyword)
+            withContext(Dispatchers.Main) {
+                val currentKeyword = keywordFilter.trim()
+                if (requestVersion != serverListVersion.get()
+                    || targetSubscriptionId != subscriptionId
+                    || targetKeyword != currentKeyword
+                ) {
+                    return@withContext
+                }
+
+                applyServerListSnapshot(snapshot)
+                updateListAction.value = -1
+                prewarmSelectedConfig()
+            }
+        }
     }
 
     /**
@@ -96,6 +124,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @param guid The GUID of the server to remove.
      */
     fun removeServer(guid: String) {
+        invalidateServerListRequests()
         serverList.remove(guid)
         MmkvManager.removeServer(guid)
         val index = getPosition(guid)
@@ -118,6 +147,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        invalidateServerListRequests()
         Collections.swap(serverList, fromPosition, toPosition)
         Collections.swap(serversCache, fromPosition, toPosition)
         rebuildServerPositions()
@@ -130,21 +160,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     @Synchronized
     fun updateCache() {
-        serversCache.clear()
-        val keyword = keywordFilter.trim()
-        for (guid in serverList) {
-            val profile = MmkvManager.decodeServerConfig(guid) ?: continue
-            val displayAddress = profile.description.nullIfBlank() ?: AngConfigManager.generateDescription(profile)
-            if (keyword.isEmpty()) {
-                serversCache.add(ServersCache(guid, profile, displayAddress))
-                continue
-            }
-
-            if (matchesKeyword(profile, displayAddress, keyword)) {
-                serversCache.add(ServersCache(guid, profile, displayAddress))
-            }
-        }
-        rebuildServerPositions()
+        applyServerListSnapshot(buildServerListSnapshot(subscriptionId, keywordFilter.trim()))
     }
 
     /**
@@ -183,16 +199,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Tests the TCP ping for all servers.
      */
     fun testAllTcping() {
-        tcpingTestScope.coroutineContext[Job]?.cancelChildren()
+        tcpingTestJob?.cancel()
         SpeedtestManager.closeAllTcpSockets()
-        MmkvManager.clearAllTestDelayResults(currentVisibleServerGuids())
+        val visibleServerGuids = currentVisibleServerGuids()
+        MmkvManager.clearAllTestDelayResults(visibleServerGuids)
+        updateVisibleServerDelays(visibleServerGuids, 0L)
+        updateListAction.value = -1
 
-        buildTcpingTargets().forEach { target ->
-            tcpingTestScope.launch {
-                val testResult = SpeedtestManager.tcping(target.serverAddress, target.serverPort)
-                launch(Dispatchers.Main) {
-                    MmkvManager.encodeServerTestDelayMillis(target.guid, testResult)
-                    updateListAction.value = getPosition(target.guid)
+        val targets = buildTcpingTargets()
+        if (targets.isEmpty()) {
+            return
+        }
+
+        tcpingTestJob = viewModelScope.launch {
+            coroutineScope {
+                targets.forEach { target ->
+                    launch(tcpingDispatcher) {
+                        val testResult = SpeedtestManager.tcping(target.serverAddress, target.serverPort)
+                        MmkvManager.encodeServerTestDelayMillis(target.guid, testResult)
+                        updateServerDelay(target.guid, testResult)
+                        withContext(Dispatchers.Main) {
+                            updateListAction.value = getPosition(target.guid)
+                        }
+                    }
                 }
             }
         }
@@ -208,6 +237,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         val visibleServerGuids = currentVisibleServerGuids()
         MmkvManager.clearAllTestDelayResults(visibleServerGuids)
+        updateVisibleServerDelays(visibleServerGuids, 0L)
         updateListAction.value = -1
 
         viewModelScope.launch(Dispatchers.Default) {
@@ -237,11 +267,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @param id The new subscription ID.
      */
     fun subscriptionIdChanged(id: String) {
-        if (subscriptionId != id) {
+        ensureSubscriptionLoaded(id, forceReload = true)
+    }
+
+    fun ensureSubscriptionLoaded(id: String, forceReload: Boolean = false) {
+        val changed = subscriptionId != id
+        if (changed) {
             subscriptionId = id
             MmkvManager.encodeSettings(AppConfig.CACHE_SUBSCRIPTION_ID, subscriptionId)
         }
-        reloadServerList()
+        if (changed || forceReload) {
+            reloadServerList()
+        }
     }
 
     /**
@@ -249,12 +286,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @param context The context.
      * @return A pair of lists containing the subscription IDs and remarks.
      */
-    fun getSubscriptions(context: Context): List<GroupMapItem> {
-        val subscriptions = MmkvManager.decodeSubscriptions()
-        if (subscriptionId.isNotEmpty() && subscriptions.none { it.guid == subscriptionId }) {
-            subscriptionIdChanged("")
-        }
+    fun loadSubscriptions(context: Context) {
+        val appContext = context.applicationContext
+        val requestVersion = groupListVersion.incrementAndGet()
+        val currentSubscriptionId = subscriptionId
 
+        viewModelScope.launch(Dispatchers.Default) {
+            val subscriptions = MmkvManager.decodeSubscriptions()
+            val resolvedSubscriptionId = currentSubscriptionId.takeIf { current ->
+                current.isEmpty() || subscriptions.any { it.guid == current }
+            }.orEmpty()
+            val groups = buildSubscriptions(appContext, subscriptions)
+
+            withContext(Dispatchers.Main) {
+                if (requestVersion != groupListVersion.get()) {
+                    return@withContext
+                }
+                if (subscriptionId != resolvedSubscriptionId) {
+                    subscriptionId = resolvedSubscriptionId
+                    MmkvManager.encodeSettings(AppConfig.CACHE_SUBSCRIPTION_ID, subscriptionId)
+                    reloadServerList()
+                }
+                updateGroupsAction.value = groups
+            }
+        }
+    }
+
+    private fun buildSubscriptions(context: Context, subscriptions: List<SubscriptionCache>): List<GroupMapItem> {
         val serverCountsBySubscriptionId = subscriptions.associate { it.guid to MmkvManager.decodeServerList(it.guid).size }
 
         val groups = mutableListOf<GroupMapItem>()
@@ -281,6 +339,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return groups
     }
 
+    fun prewarmSelectedConfig(guid: String? = MmkvManager.getSelectServer()) {
+        if (guid.isNullOrBlank()) {
+            return
+        }
+        prewarmJob?.cancel()
+        prewarmJob = viewModelScope.launch(Dispatchers.Default) {
+            V2rayConfigManager.prewarmConfig(getApplication<AngApplication>(), guid)
+        }
+    }
+
     /**
      * Gets the position of a server by its GUID.
      * @param guid The GUID of the server.
@@ -295,6 +363,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return The number of removed servers.
      */
     fun removeDuplicateServer(): Int {
+        invalidateServerListRequests()
         val seenProfiles = HashSet<ProfileItem>(serversCache.size)
         val duplicateGuids = ArrayList<String>()
 
@@ -313,6 +382,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return The number of removed servers.
      */
     fun removeAllServer(): Int {
+        invalidateServerListRequests()
         val count =
             if (subscriptionId.isEmpty() && keywordFilter.isEmpty()) {
                 MmkvManager.removeAllServer()
@@ -329,6 +399,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return The number of removed servers.
      */
     fun removeInvalidServer(): Int {
+        invalidateServerListRequests()
         var count = 0
         if (subscriptionId.isEmpty() && keywordFilter.isEmpty()) {
             count += MmkvManager.removeInvalidServer("")
@@ -344,6 +415,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Sorts servers by their test results.
      */
     fun sortByTestResults() {
+        invalidateServerListRequests()
         if (subscriptionId.isEmpty()) {
             MmkvManager.decodeSubsList().forEach { guid ->
                 sortByTestResultsForSub(guid)
@@ -421,6 +493,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun updateServerDelay(guid: String, delayMillis: Long) {
+        val position = getPosition(guid)
+        if (position !in serversCache.indices) {
+            return
+        }
+        val server = serversCache[position]
+        if (server.testDelayMillis == delayMillis) {
+            return
+        }
+        serversCache[position] = server.copy(testDelayMillis = delayMillis)
+    }
+
+    private fun updateVisibleServerDelays(guids: List<String>, delayMillis: Long) {
+        guids.forEach { guid ->
+            val position = getPosition(guid)
+            if (position !in serversCache.indices) {
+                return@forEach
+            }
+            val server = serversCache[position]
+            if (server.testDelayMillis != delayMillis) {
+                serversCache[position] = server.copy(testDelayMillis = delayMillis)
+            }
+        }
+    }
+
     private fun currentVisibleServerGuids(): List<String> {
         return ArrayList<String>(serversCache.size).apply {
             serversCache.forEach { add(it.guid) }
@@ -441,6 +538,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return profile.remarks.contains(keyword, ignoreCase = true)
                 || displayAddress.contains(keyword, ignoreCase = true)
                 || profile.server.orEmpty().contains(keyword, ignoreCase = true)
+    }
+
+    private fun invalidateServerListRequests() {
+        serverListVersion.incrementAndGet()
+    }
+
+    private fun buildServerListSnapshot(targetSubscriptionId: String, keyword: String): ServerListSnapshot {
+        val targetServerList = if (targetSubscriptionId.isEmpty()) {
+            MmkvManager.decodeAllServerList()
+        } else {
+            MmkvManager.decodeServerList(targetSubscriptionId)
+        }
+
+        val servers = ArrayList<ServersCache>(targetServerList.size)
+        val positions = HashMap<String, Int>(targetServerList.size)
+        targetServerList.forEach { guid ->
+            val profile = MmkvManager.decodeServerConfig(guid) ?: return@forEach
+            val displayAddress = profile.description.nullIfBlank() ?: AngConfigManager.generateDescription(profile)
+            if (keyword.isNotEmpty() && !matchesKeyword(profile, displayAddress, keyword)) {
+                return@forEach
+            }
+            val testDelayMillis = MmkvManager.getServerTestDelayMillis(guid) ?: 0L
+            positions[guid] = servers.size
+            servers += ServersCache(guid, profile, displayAddress, testDelayMillis)
+        }
+        return ServerListSnapshot(
+            serverGuids = targetServerList,
+            servers = servers,
+            positions = positions
+        )
+    }
+
+    private fun applyServerListSnapshot(snapshot: ServerListSnapshot) {
+        serverList = snapshot.serverGuids
+        serversCache.clear()
+        serversCache.addAll(snapshot.servers)
+        serverPositions.clear()
+        serverPositions.putAll(snapshot.positions)
     }
 
     private val mMsgReceiver = object : BroadcastReceiver() {
@@ -475,6 +610,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AppConfig.MSG_MEASURE_CONFIG_SUCCESS -> {
                     val resultPair = intent.serializable<Pair<String, Long>>("content") ?: return
                     MmkvManager.encodeServerTestDelayMillis(resultPair.first, resultPair.second)
+                    updateServerDelay(resultPair.first, resultPair.second)
                     updateListAction.value = getPosition(resultPair.first)
                 }
 

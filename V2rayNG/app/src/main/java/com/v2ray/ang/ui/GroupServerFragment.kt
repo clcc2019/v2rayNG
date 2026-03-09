@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
@@ -41,6 +42,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var adapter: MainRecyclerAdapter
     private val subId: String by lazy { arguments?.getString(ARG_SUB_ID).orEmpty() }
+    private var shouldRefreshOnResume = false
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -63,7 +65,9 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             }
             // Log.d(TAG, "GroupServerFragment updateListAction subId=$subId")
             adapter.setData(mainViewModel.serversCache, index)
-            updateEmptyState()
+            if (index < 0) {
+                updateEmptyState()
+            }
         }
 
         updateEmptyState()
@@ -72,13 +76,15 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
 
     override fun onResume() {
         super.onResume()
-        mainViewModel.subscriptionIdChanged(subId)
+        mainViewModel.ensureSubscriptionLoaded(subId, forceReload = shouldRefreshOnResume)
+        shouldRefreshOnResume = false
         ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
     }
 
     private fun setupRecyclerView() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), getSpanCount())
+        (binding.recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -236,6 +242,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
      * @param profile The server configuration
      */
     private fun editServer(guid: String, profile: ProfileItem) {
+        shouldRefreshOnResume = true
         val intent = Intent().putExtra("guid", guid)
             .putExtra("isRunning", mainViewModel.isRunning.value)
             .putExtra("createConfigType", profile.configType.value)
@@ -304,6 +311,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             val toPosition = mainViewModel.getPosition(guid)
             adapter.setSelectServer(fromPosition, toPosition)
             ownerActivity.refreshConnectionCard()
+            mainViewModel.prewarmSelectedConfig(guid)
 
             if (mainViewModel.isRunning.value == true) {
                 ownerActivity.restartV2Ray()

@@ -4,6 +4,9 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.AdapterListUpdateCallback
+import androidx.recyclerview.widget.AsyncDifferConfig
+import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +22,7 @@ import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.viewmodel.MainViewModel
 import java.util.Collections
+import java.util.concurrent.Executors
 
 class MainRecyclerAdapter(
     private val mainViewModel: MainViewModel,
@@ -29,32 +33,44 @@ class MainRecyclerAdapter(
         private const val VIEW_TYPE_FOOTER = 2
         private const val PAYLOAD_TEST_RESULT = "payload_test_result"
         private const val PAYLOAD_SELECTION = "payload_selection"
+        private const val PAYLOAD_CONTENT = "payload_content"
         private const val SELECTION_ANIMATION_DURATION = 120L
         private val SELECTION_INTERPOLATOR = FastOutSlowInInterpolator()
+        private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
     }
 
-    private var data: MutableList<ServersCache> = mutableListOf()
+    private val differ = AsyncListDiffer(
+        AdapterListUpdateCallback(this),
+        AsyncDifferConfig.Builder(MainDiffCallback)
+            .setBackgroundThreadExecutor(DIFF_EXECUTOR)
+            .build()
+    )
     private var selectedGuid: String = MmkvManager.getSelectServer().orEmpty()
     private var subscriptionRemarksById: Map<String, String> = emptyMap()
+    private val testDelayOverrides = mutableMapOf<String, Long>()
 
     init {
         setHasStableIds(true)
     }
 
-    fun setData(newData: MutableList<ServersCache>?, position: Int = -1) {
-        val updatedData = newData?.toMutableList() ?: mutableListOf()
+    private val data: List<ServersCache>
+        get() = differ.currentList
 
-        if (position >= 0 && position in updatedData.indices && data.size == updatedData.size) {
-            data = updatedData
-            notifyItemChanged(position, PAYLOAD_TEST_RESULT)
+    fun setData(newData: MutableList<ServersCache>?, position: Int = -1) {
+        if (position >= 0) {
+            if (newData == null || data.size != newData.size || position !in data.indices || position !in newData.indices) {
+                setData(newData, position = -1)
+                return
+            }
+            updateTestResultItem(newData?.getOrNull(position), position)
             return
         }
 
+        val updatedData = newData?.toList() ?: emptyList()
         selectedGuid = MmkvManager.getSelectServer().orEmpty()
         subscriptionRemarksById = buildSubscriptionRemarksMap(updatedData)
-        val diffResult = DiffUtil.calculateDiff(MainDiffCallback(data, updatedData))
-        data = updatedData
-        diffResult.dispatchUpdatesTo(this)
+        testDelayOverrides.clear()
+        differ.submitList(updatedData)
     }
 
     override fun getItemCount() = data.size + 1
@@ -70,18 +86,24 @@ class MainRecyclerAdapter(
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int, payloads: MutableList<Any>) {
         if (holder is MainViewHolder) {
+            if (position >= data.size) {
+                return
+            }
             if (payloads.isEmpty()) {
                 bindFullItem(holder, position)
                 return
             }
 
-            val item = data[position]
-            val guid = item.guid
+            val item = getItem(position)
             if (payloads.contains(PAYLOAD_SELECTION)) {
-                bindSelectionState(holder, guid == selectedGuid, animate = true)
+                bindSelectionState(holder, item.guid == selectedGuid, animate = true)
             }
             if (payloads.contains(PAYLOAD_TEST_RESULT)) {
-                bindTestResult(holder, guid)
+                bindTestResult(holder, item)
+            }
+            if (payloads.contains(PAYLOAD_CONTENT)) {
+                bindPrimaryContent(holder, item)
+                bindSubscription(holder, item.profile)
             }
         }
     }
@@ -104,9 +126,7 @@ class MainRecyclerAdapter(
             else -> data.indexOfFirst { it.guid == guid }
         }
         if (idx >= 0) {
-            data.removeAt(idx)
-            notifyItemRemoved(idx)
-            notifyItemRangeChanged(idx, data.size - idx)
+            differ.submitList(data.toMutableList().apply { removeAt(idx) })
         }
     }
 
@@ -153,7 +173,7 @@ class MainRecyclerAdapter(
     }
 
     private fun bindFullItem(holder: MainViewHolder, position: Int) {
-        val item = data[position]
+        val item = getItem(position)
         val guid = item.guid
         val profile = item.profile
         holder.itemView.setBackgroundColor(Color.TRANSPARENT)
@@ -161,7 +181,7 @@ class MainRecyclerAdapter(
         bindSubscription(holder, profile)
         bindActions(holder, guid, profile)
         bindSelectionState(holder, guid == selectedGuid, animate = false)
-        bindTestResult(holder, guid)
+        bindTestResult(holder, item)
     }
 
     private fun bindPrimaryContent(holder: MainViewHolder, item: ServersCache) {
@@ -201,39 +221,73 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.tvType.alpha = if (isSelected) 0.92f else 0.82f
         holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.98f else 0.84f
         holder.itemMainBinding.layoutMore.alpha = if (isSelected) 1f else 0.74f
+        val selectionChanged = holder.lastSelectionState != isSelected
+        holder.lastSelectionState = isSelected
 
-        if (isSelected) {
-            holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
-            holder.itemMainBinding.itemBg.strokeWidth = 1
-            holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
-            holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
-        } else {
-            holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_item_indicator_idle)
-            holder.itemMainBinding.itemBg.strokeWidth = 1
-            holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
-            holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surfaceVariant)
-        }
-        holder.itemMainBinding.itemBg.animate().cancel()
-        if (animate) {
-            holder.itemMainBinding.itemBg.animate()
-                .scaleX(if (isSelected) 1f else 0.985f)
-                .scaleY(if (isSelected) 1f else 0.985f)
-                .setDuration(SELECTION_ANIMATION_DURATION)
-                .setInterpolator(SELECTION_INTERPOLATOR)
-                .start()
-        } else {
-            holder.itemMainBinding.itemBg.scaleX = if (isSelected) 1f else 0.985f
-            holder.itemMainBinding.itemBg.scaleY = if (isSelected) 1f else 0.985f
+        if (selectionChanged) {
+            if (isSelected) {
+                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
+                holder.itemMainBinding.itemBg.strokeWidth = 1
+                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
+            } else {
+                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_item_indicator_idle)
+                holder.itemMainBinding.itemBg.strokeWidth = 1
+                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surfaceVariant)
+            }
+            holder.itemMainBinding.itemBg.animate().cancel()
+            if (animate) {
+                holder.itemMainBinding.itemBg.animate()
+                    .scaleX(if (isSelected) 1f else 0.985f)
+                    .scaleY(if (isSelected) 1f else 0.985f)
+                    .setDuration(SELECTION_ANIMATION_DURATION)
+                    .setInterpolator(SELECTION_INTERPOLATOR)
+                    .start()
+            } else {
+                holder.itemMainBinding.itemBg.scaleX = if (isSelected) 1f else 0.985f
+                holder.itemMainBinding.itemBg.scaleY = if (isSelected) 1f else 0.985f
+            }
         }
         holder.itemMainBinding.itemBg.alpha = 1f
     }
 
-    private fun bindTestResult(holder: MainViewHolder, guid: String) {
-        val delayMillis = MmkvManager.getServerTestDelayMillis(guid) ?: 0L
+    private fun bindTestResult(holder: MainViewHolder, item: ServersCache) {
+        val delayMillis = item.testDelayMillis
         val testResult = delayMillis.takeIf { it != 0L }?.let { "${it}ms" }.orEmpty()
         holder.itemMainBinding.tvTestResult.text = testResult
         holder.itemMainBinding.tvTestResult.visibility = if (testResult.isBlank()) View.GONE else View.VISIBLE
         holder.itemMainBinding.tvTestResult.setTextColor(if (delayMillis < 0L) holder.colors.pingRed else holder.colors.ping)
+    }
+
+    private fun getItem(position: Int): ServersCache {
+        val item = data[position]
+        val overriddenDelay = testDelayOverrides[item.guid] ?: return item
+        return if (overriddenDelay == item.testDelayMillis) item else item.copy(testDelayMillis = overriddenDelay)
+    }
+
+    private fun updateTestResultItem(item: ServersCache?, position: Int) {
+        if (item == null || position !in data.indices) {
+            return
+        }
+
+        val currentItem = data[position]
+        if (currentItem.guid != item.guid) {
+            setData(ArrayList(data).apply {
+                if (position in indices) {
+                    this[position] = item
+                }
+            })
+            return
+        }
+
+        val currentDelay = testDelayOverrides[currentItem.guid] ?: currentItem.testDelayMillis
+        if (currentDelay == item.testDelayMillis) {
+            return
+        }
+
+        testDelayOverrides[item.guid] = item.testDelayMillis
+        notifyItemChanged(position, PAYLOAD_TEST_RESULT)
     }
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -249,6 +303,7 @@ class MainRecyclerAdapter(
     class MainViewHolder(val itemMainBinding: ItemRecyclerMainBinding) :
         BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder {
         val colors = ItemColors.from(itemMainBinding.root)
+        var lastSelectionState: Boolean? = null
     }
 
     class FooterViewHolder(val itemFooterBinding: ItemRecyclerFooterBinding) :
@@ -257,9 +312,10 @@ class MainRecyclerAdapter(
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         mainViewModel.swapServer(fromPosition, toPosition)
         if (fromPosition < data.size && toPosition < data.size) {
-            Collections.swap(data, fromPosition, toPosition)
+            val updatedData = data.toMutableList()
+            Collections.swap(updatedData, fromPosition, toPosition)
+            differ.submitList(updatedData)
         }
-        notifyItemMoved(fromPosition, toPosition)
         return true
     }
 
@@ -295,27 +351,23 @@ class MainRecyclerAdapter(
         }
     }
 
-    private class MainDiffCallback(
-        private val oldItems: List<ServersCache>,
-        private val newItems: List<ServersCache>
-    ) : DiffUtil.Callback() {
-        override fun getOldListSize(): Int = oldItems.size + 1
-        override fun getNewListSize(): Int = newItems.size + 1
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldItems.getOrNull(oldItemPosition)
-            val newItem = newItems.getOrNull(newItemPosition)
-            return when {
-                oldItem == null && newItem == null -> true
-                oldItem == null || newItem == null -> false
-                else -> oldItem.guid == newItem.guid
-            }
+    private object MainDiffCallback : DiffUtil.ItemCallback<ServersCache>() {
+        override fun areItemsTheSame(oldItem: ServersCache, newItem: ServersCache): Boolean {
+            return oldItem.guid == newItem.guid
         }
 
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldItem = oldItems.getOrNull(oldItemPosition)
-            val newItem = newItems.getOrNull(newItemPosition)
+        override fun areContentsTheSame(oldItem: ServersCache, newItem: ServersCache): Boolean {
             return oldItem == newItem
+        }
+
+        override fun getChangePayload(oldItem: ServersCache, newItem: ServersCache): Any? {
+            return when {
+                oldItem.testDelayMillis != newItem.testDelayMillis &&
+                    oldItem.profile == newItem.profile &&
+                    oldItem.displayAddress == newItem.displayAddress -> PAYLOAD_TEST_RESULT
+                oldItem.profile != newItem.profile || oldItem.displayAddress != newItem.displayAddress -> PAYLOAD_CONTENT
+                else -> null
+            }
         }
     }
 }

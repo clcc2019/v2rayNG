@@ -12,6 +12,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 object SubscriptionUpdater {
 
@@ -37,24 +39,32 @@ object SubscriptionUpdater {
             Log.i(AppConfig.TAG, "subscription automatic update starting")
 
             val subs = MmkvManager.decodeSubscriptions().filter { it.subscription.autoUpdate }
+            if (subs.isEmpty()) {
+                return Result.success()
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                notification.setChannelId(AppConfig.SUBSCRIPTION_UPDATE_CHANNEL)
+                val channel =
+                    NotificationChannel(
+                        AppConfig.SUBSCRIPTION_UPDATE_CHANNEL,
+                        AppConfig.SUBSCRIPTION_UPDATE_CHANNEL_NAME,
+                        NotificationManager.IMPORTANCE_MIN
+                    )
+                notificationManager.createNotificationChannel(channel)
+            }
 
             for (sub in subs) {
+                currentCoroutineContext().ensureActive()
+                if (isStopped) {
+                    return Result.success()
+                }
                 val subItem = sub.subscription
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    notification.setChannelId(AppConfig.SUBSCRIPTION_UPDATE_CHANNEL)
-                    val channel =
-                        NotificationChannel(
-                            AppConfig.SUBSCRIPTION_UPDATE_CHANNEL,
-                            AppConfig.SUBSCRIPTION_UPDATE_CHANNEL_NAME,
-                            NotificationManager.IMPORTANCE_MIN
-                        )
-                    notificationManager.createNotificationChannel(channel)
-                }
+                notification.setContentText("Updating ${subItem.remarks}")
                 notificationManager.notify(3, notification.build())
                 Log.i(AppConfig.TAG, "subscription automatic update: ---${subItem.remarks}")
                 AngConfigManager.updateConfigViaSub(sub)
-                notification.setContentText("Updating ${subItem.remarks}")
             }
             notificationManager.cancel(3)
             return Result.success()

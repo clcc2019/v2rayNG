@@ -14,9 +14,17 @@ class GroupPagerAdapter(activity: FragmentActivity, var groups: List<GroupMapIte
     override fun getItemId(position: Int): Long = groups[position].id.hashCode().toLong()
     override fun containsItem(itemId: Long): Boolean = groups.any { it.id.hashCode().toLong() == itemId }
 
+    fun hasSameStructure(groups: List<GroupMapItem>): Boolean {
+        return this.groups.size == groups.size && this.groups.zip(groups).all { (old, new) -> old.id == new.id }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
-    fun update(groups: List<GroupMapItem>) {
+    fun update(groups: List<GroupMapItem>): Boolean {
+        val sameStructure = hasSameStructure(groups)
         this.groups = groups
-        notifyDataSetChanged()
+        if (!sameStructure) {
+            notifyDataSetChanged()
+        }
+        return !sameStructure
     }
 }

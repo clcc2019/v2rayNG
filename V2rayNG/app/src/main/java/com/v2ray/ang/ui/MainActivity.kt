@@ -39,6 +39,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
+import com.v2ray.ang.databinding.ItemTabGroupBinding
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.enums.EConfigType
@@ -70,6 +71,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         STOPPING
     }
 
+    private data class GroupTabViewState(
+        var group: GroupMapItem,
+        val labelView: TextView
+    )
+
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -79,6 +85,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private var tabMediator: TabLayoutMediator? = null
     private var serviceUiState = ServiceUiState.STOPPED
     private var isGroupTabHidden = false
+    private var lastRenderedGroupCount = -1
+    private val groupTabTextCache = mutableMapOf<String, CharSequence>()
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) = syncGroupTabSelection()
@@ -95,11 +103,16 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
     }
     private val requestActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true) {
+        val shouldRestart = SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true
+        if (shouldRestart) {
+            mainViewModel.prewarmSelectedConfig()
             restartV2Ray()
         }
         if (SettingsChangeManager.consumeSetupGroupTab()) {
             setupGroupTab()
+        }
+        if (!shouldRestart) {
+            mainViewModel.prewarmSelectedConfig()
         }
     }
 
@@ -137,9 +150,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
 
-        setupGroupTab()
         setupViewModel()
+        setupGroupTab()
         mainViewModel.reloadServerList()
+        mainViewModel.prewarmSelectedConfig()
         refreshConnectionCard()
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
@@ -161,6 +175,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun setupViewModel() {
+        mainViewModel.updateGroupsAction.observe(this) { groups ->
+            renderGroupTabs(groups)
+        }
         mainViewModel.updateTestResultAction.observe(this) { result ->
             val message = compactTestResult(result)
             if (message.isNotBlank()) {
@@ -175,64 +192,107 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun setupGroupTab() {
-        val groups = mainViewModel.getSubscriptions(this)
-        groupPagerAdapter.update(groups)
+        mainViewModel.loadSubscriptions(applicationContext)
+    }
+
+    private fun renderGroupTabs(groups: List<GroupMapItem>) {
+        if (groups.isEmpty()) {
+            groupPagerAdapter.update(emptyList())
+            tabMediator?.detach()
+            tabMediator = null
+            lastRenderedGroupCount = 0
+            groupTabTextCache.clear()
+            binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
+            binding.tabGroup.isVisible = false
+            binding.cardTabGroup.isVisible = false
+            setGroupTabVisible(false, immediate = true)
+            updateGroupTabContentInset()
+            refreshConnectionCard()
+            return
+        }
+
+        val structureChanged = groupPagerAdapter.update(groups)
+        if (structureChanged) {
+            groupTabTextCache.clear()
+        }
         configureGroupTabLayout(groups.size)
 
-        tabMediator?.detach()
-        tabMediator = TabLayoutMediator(binding.tabGroup, binding.viewPager) { tab, position ->
-            groupPagerAdapter.groups.getOrNull(position)?.let {
-                tab.customView = createGroupTabView(it)
-                tab.tag = it.id
-            }
-        }.also { it.attach() }
+        if (structureChanged || tabMediator == null) {
+            tabMediator?.detach()
+            tabMediator = TabLayoutMediator(binding.tabGroup, binding.viewPager) { tab, position ->
+                groupPagerAdapter.groups.getOrNull(position)?.let {
+                    tab.customView = createGroupTabView(it)
+                    tab.tag = it.id
+                }
+            }.also { it.attach() }
 
-        binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
-        binding.tabGroup.addOnTabSelectedListener(groupTabSelectedListener)
+            binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
+            binding.tabGroup.addOnTabSelectedListener(groupTabSelectedListener)
+            binding.tabGroup.post { applyCompactGroupTabHeight() }
+        } else {
+            updateExistingGroupTabs(groups)
+        }
 
         val targetIndex = groups.indexOfFirst { it.id == mainViewModel.subscriptionId }.takeIf { it >= 0 } ?: (groups.size - 1)
-        binding.viewPager.setCurrentItem(targetIndex, false)
+        if (binding.viewPager.currentItem != targetIndex) {
+            binding.viewPager.setCurrentItem(targetIndex, false)
+        }
         syncGroupTabSelection()
-        binding.tabGroup.post { applyCompactGroupTabHeight() }
 
         binding.tabGroup.isVisible = groups.size > 1
         binding.cardTabGroup.isVisible = groups.size > 1
         setGroupTabVisible(groups.size > 1, immediate = true)
         binding.cardTabGroup.post { updateGroupTabContentInset() }
         refreshConnectionCard()
+        lastRenderedGroupCount = groups.size
     }
 
     private fun configureGroupTabLayout(groupCount: Int) {
         val useFixedLayout = groupCount in 2..3
-        binding.tabGroup.tabMode = if (useFixedLayout) TabLayout.MODE_FIXED else TabLayout.MODE_SCROLLABLE
-        binding.tabGroup.tabGravity = if (useFixedLayout) TabLayout.GRAVITY_FILL else TabLayout.GRAVITY_CENTER
+        val targetTabMode = if (useFixedLayout) TabLayout.MODE_FIXED else TabLayout.MODE_SCROLLABLE
+        val targetTabGravity = if (useFixedLayout) TabLayout.GRAVITY_FILL else TabLayout.GRAVITY_CENTER
+        if (binding.tabGroup.tabMode != targetTabMode) {
+            binding.tabGroup.tabMode = targetTabMode
+        }
+        if (binding.tabGroup.tabGravity != targetTabGravity) {
+            binding.tabGroup.tabGravity = targetTabGravity
+        }
 
         val cardHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp32)
         val cardTopMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
         val cardLayoutParams = binding.cardTabGroup.layoutParams as CoordinatorLayout.LayoutParams
-        cardLayoutParams.width = CoordinatorLayout.LayoutParams.MATCH_PARENT
-        cardLayoutParams.height = cardHeight
-        cardLayoutParams.topMargin = cardTopMargin
         val sideMargin = resources.getDimensionPixelSize(
             if (useFixedLayout) R.dimen.padding_spacing_dp20 else R.dimen.padding_spacing_dp16
         )
-        cardLayoutParams.marginStart = sideMargin
-        cardLayoutParams.marginEnd = sideMargin
-        binding.cardTabGroup.layoutParams = cardLayoutParams
+        if (cardLayoutParams.width != CoordinatorLayout.LayoutParams.MATCH_PARENT
+            || cardLayoutParams.height != cardHeight
+            || cardLayoutParams.topMargin != cardTopMargin
+            || cardLayoutParams.marginStart != sideMargin
+            || cardLayoutParams.marginEnd != sideMargin
+        ) {
+            cardLayoutParams.width = CoordinatorLayout.LayoutParams.MATCH_PARENT
+            cardLayoutParams.height = cardHeight
+            cardLayoutParams.topMargin = cardTopMargin
+            cardLayoutParams.marginStart = sideMargin
+            cardLayoutParams.marginEnd = sideMargin
+            binding.cardTabGroup.layoutParams = cardLayoutParams
+        }
 
         binding.tabGroup.layoutParams = binding.tabGroup.layoutParams.apply {
             width = CoordinatorLayout.LayoutParams.MATCH_PARENT
             height = cardHeight
         }
         binding.tabGroup.minimumHeight = 0
-        binding.tabGroup.requestLayout()
+        if (lastRenderedGroupCount != groupCount) {
+            binding.tabGroup.requestLayout()
+        }
     }
 
     private fun createGroupTabView(group: GroupMapItem): View {
-        val view = LayoutInflater.from(this).inflate(R.layout.item_tab_group, binding.tabGroup, false)
-        view.tag = group
-        view.findViewById<TextView>(R.id.tv_tab_label).text = buildGroupTabText(group, selected = false)
-        return view
+        val tabBinding = ItemTabGroupBinding.inflate(LayoutInflater.from(this), binding.tabGroup, false)
+        tabBinding.tvTabLabel.text = getGroupTabText(group, selected = false)
+        tabBinding.root.tag = GroupTabViewState(group = group, labelView = tabBinding.tvTabLabel)
+        return tabBinding.root
     }
 
     private fun syncGroupTabSelection() {
@@ -240,18 +300,42 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             val tab = binding.tabGroup.getTabAt(index) ?: continue
             val customView = tab.customView ?: continue
             val isSelected = tab.isSelected
-            customView.isSelected = isSelected
-            customView.animate()
-                .scaleX(if (isSelected) 1f else 0.97f)
-                .scaleY(if (isSelected) 1f else 0.97f)
-                .setDuration(SHORT_ANIMATION_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
+            if (customView.isSelected != isSelected) {
+                customView.isSelected = isSelected
+                customView.animate()
+                    .scaleX(if (isSelected) 1f else 0.97f)
+                    .scaleY(if (isSelected) 1f else 0.97f)
+                    .setDuration(SHORT_ANIMATION_DURATION)
+                    .setInterpolator(motionInterpolator)
+                    .start()
+            }
 
-            val group = customView.tag as? GroupMapItem ?: continue
-            val label = customView.findViewById<TextView>(R.id.tv_tab_label)
-            label.text = buildGroupTabText(group, selected = isSelected)
-            label.alpha = if (isSelected) 1f else 0.88f
+            val tabState = customView.tag as? GroupTabViewState ?: continue
+            val targetText = getGroupTabText(tabState.group, selected = isSelected)
+            if (tabState.labelView.text !== targetText) {
+                tabState.labelView.text = targetText
+            }
+            val targetAlpha = if (isSelected) 1f else 0.88f
+            if (tabState.labelView.alpha != targetAlpha) {
+                tabState.labelView.alpha = targetAlpha
+            }
+        }
+    }
+
+    private fun updateExistingGroupTabs(groups: List<GroupMapItem>) {
+        groups.forEachIndexed { index, group ->
+            val tab = binding.tabGroup.getTabAt(index) ?: return@forEachIndexed
+            val customView = tab.customView ?: return@forEachIndexed
+            val tabState = customView.tag as? GroupTabViewState ?: return@forEachIndexed
+            tabState.group = group
+            val targetText = getGroupTabText(group, selected = tab.isSelected)
+            if (tabState.labelView.text !== targetText) {
+                tabState.labelView.text = targetText
+            }
+            val targetAlpha = if (tab.isSelected) 1f else 0.88f
+            if (tabState.labelView.alpha != targetAlpha) {
+                tabState.labelView.alpha = targetAlpha
+            }
         }
     }
 
@@ -289,6 +373,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 setSpan(ForegroundColorSpan(counterColor), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 setSpan(RelativeSizeSpan(0.88f), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+        }
+    }
+
+    private fun getGroupTabText(group: GroupMapItem, selected: Boolean): CharSequence {
+        val cacheKey = "${group.id}|${group.remarks}|${group.count}|$selected"
+        return groupTabTextCache.getOrPut(cacheKey) {
+            buildGroupTabText(group, selected)
         }
     }
 
@@ -554,7 +645,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val serverAddress = buildConnectionAddress(profile)
         binding.tvConnectionAddress.text = serverAddress ?: getString(R.string.connection_not_connected)
 
-        val metaLine = buildConnectionMetaLine(profile)
+        val metaLine = buildConnectionMetaLine(profile, state)
         binding.tvConnectionMetaLine.text = metaLine
         binding.tvConnectionMetaLine.isVisible = !metaLine.isNullOrBlank()
 
@@ -627,7 +718,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         return network.takeIf { it.isNotEmpty() }?.uppercase()
     }
 
-    private fun buildConnectionMetaLine(profile: ProfileItem?): String? {
+    private fun buildConnectionMetaLine(profile: ProfileItem?, state: ServiceUiState): String? {
         if (profile == null) return null
         val details = linkedSetOf<String>()
         profile.security?.trim()?.takeIf { it.isNotEmpty() && !it.equals("none", ignoreCase = true) }?.let {
@@ -636,6 +727,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         profile.flow?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
         profile.method?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
         profile.host?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) &&
+            (state == ServiceUiState.STARTING || state == ServiceUiState.RUNNING)
+        ) {
+            details += getString(R.string.toast_warning_pref_proxysharing_short)
+        }
         return details.takeIf { it.isNotEmpty() }?.joinToString(" · ")
     }
 

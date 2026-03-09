@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.v2ray.ang.AppConfig
@@ -20,6 +19,7 @@ import com.v2ray.ang.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -31,12 +31,17 @@ object NotificationManager {
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
     private const val NOTIFICATION_ICON_THRESHOLD = 3000
-    private const val QUERY_INTERVAL_MS = 3000L
+    private const val ACTIVE_QUERY_INTERVAL_MS = 3000L
+    private const val IDLE_QUERY_INTERVAL_MS = 15000L
+    private const val IDLE_CYCLE_THRESHOLD = 2
 
     private var lastQueryTime = 0L
     private var mBuilder: NotificationCompat.Builder? = null
     private var speedNotificationJob: Job? = null
     private var mNotificationManager: NotificationManager? = null
+    private val notificationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var lastNotificationContent: String? = null
+    private var lastNotificationIconRes: Int = R.drawable.ic_stat_name
 
     /**
      * Starts the speed notification.
@@ -47,21 +52,14 @@ object NotificationManager {
         if (speedNotificationJob != null || V2RayServiceManager.isRunning() == false) return
 
         var lastZeroSpeed = false
+        var idleCycles = 0
         val outboundTags = currentConfig?.getAllOutboundTags()
         outboundTags?.remove(AppConfig.TAG_DIRECT)
 
-        speedNotificationJob = CoroutineScope(Dispatchers.IO).launch {
+        speedNotificationJob = notificationScope.launch {
             while (isActive) {
                 val queryTime = System.currentTimeMillis()
-                val sinceLastQueryIn = (queryTime - lastQueryTime)
-
-                // If the query interval is too short, skip this round to avoid excessive CPU usage
-                if (sinceLastQueryIn < QUERY_INTERVAL_MS) {
-                    Log.w(AppConfig.TAG, "Query interval too short: ${sinceLastQueryIn}ms, skipping")
-                    lastQueryTime = queryTime
-                    delay(QUERY_INTERVAL_MS)
-                    continue
-                }
+                val sinceLastQueryIn = (queryTime - lastQueryTime).coerceAtLeast(ACTIVE_QUERY_INTERVAL_MS)
                 val sinceLastQueryInSeconds = sinceLastQueryIn / 1000.0
 
                 var proxyTotal = 0L
@@ -88,8 +86,9 @@ object NotificationManager {
                     updateNotification(text.toString(), proxyTotal, directDownlink + directUplink)
                 }
                 lastZeroSpeed = zeroSpeed
+                idleCycles = if (zeroSpeed) idleCycles + 1 else 0
                 lastQueryTime = queryTime
-                delay(QUERY_INTERVAL_MS)
+                delay(if (idleCycles >= IDLE_CYCLE_THRESHOLD) IDLE_QUERY_INTERVAL_MS else ACTIVE_QUERY_INTERVAL_MS)
             }
         }
     }
@@ -156,13 +155,14 @@ object NotificationManager {
      * Cancels the notification.
      */
     fun cancelNotification() {
-        val service = getService() ?: return
-        service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
+        getService()?.stopForeground(Service.STOP_FOREGROUND_REMOVE)
 
         mBuilder = null
         speedNotificationJob?.cancel()
         speedNotificationJob = null
         mNotificationManager = null
+        lastNotificationContent = null
+        lastNotificationIconRes = R.drawable.ic_stat_name
     }
 
     /**
@@ -204,13 +204,17 @@ object NotificationManager {
      */
     private fun updateNotification(contentText: String?, proxyTraffic: Long, directTraffic: Long) {
         if (mBuilder != null) {
-            if (proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_name)
-            } else if (proxyTraffic > directTraffic) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_proxy)
-            } else {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_direct)
+            val iconRes = when {
+                proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD -> R.drawable.ic_stat_name
+                proxyTraffic > directTraffic -> R.drawable.ic_stat_proxy
+                else -> R.drawable.ic_stat_direct
             }
+            if (lastNotificationContent == contentText && lastNotificationIconRes == iconRes) {
+                return
+            }
+            lastNotificationContent = contentText
+            lastNotificationIconRes = iconRes
+            mBuilder?.setSmallIcon(iconRes)
             mBuilder?.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             mBuilder?.setContentText(contentText)
             getNotificationManager()?.notify(NOTIFICATION_ID, mBuilder?.build())

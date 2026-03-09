@@ -84,6 +84,10 @@ object V2rayConfigManager {
         }
     }
 
+    fun prewarmConfig(context: Context, guid: String): Boolean {
+        return getV2rayConfig(context, guid).status
+    }
+
     /**
      * Retrieves the speedtest V2ray configuration for the given GUID.
      *

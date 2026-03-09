@@ -11,12 +11,10 @@ import com.v2ray.ang.extension.serializable
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.V2RayNativeManager
 import com.v2ray.ang.util.MessageUtil
-import java.util.Collections
 
 class V2RayTestService : Service() {
-
-    // manage active batch workers so each batch is independent and cancellable
-    private val activeWorkers = Collections.synchronizedList(mutableListOf<RealPingWorkerService>())
+    private val workerLock = Any()
+    private var activeWorker: RealPingWorkerService? = null
 
     /**
      * Initializes the V2Ray environment.
@@ -40,10 +38,7 @@ class V2RayTestService : Service() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        // cancel any active workers
-        val snapshot = ArrayList(activeWorkers)
-        snapshot.forEach { it.cancel() }
-        activeWorkers.clear()
+        cancelActiveWorker()
     }
 
     /**
@@ -54,7 +49,7 @@ class V2RayTestService : Service() {
      * @return The start mode.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val message = intent?.serializable<TestServiceMessage>("content") ?: return super.onStartCommand(intent, flags, startId)
+        val message = intent?.serializable<TestServiceMessage>("content") ?: return START_NOT_STICKY
         when (message.key) {
             MSG_MEASURE_CONFIG -> {
                 val guidsList = if (message.serverGuids.isNotEmpty()) {
@@ -66,24 +61,42 @@ class V2RayTestService : Service() {
                 }
 
                 if (guidsList.isNotEmpty()) {
+                    cancelActiveWorker()
                     lateinit var worker: RealPingWorkerService
                     worker = RealPingWorkerService(this, guidsList) { status ->
-                        // notify UI and remove the worker from active list when finished
                         MessageUtil.sendMsg2UI(this@V2RayTestService, AppConfig.MSG_MEASURE_CONFIG_FINISH, status)
-                        activeWorkers.remove(worker)
+                        clearWorker(worker)
+                        stopSelfResult(startId)
                     }
-                    activeWorkers.add(worker)
+                    synchronized(workerLock) {
+                        activeWorker = worker
+                    }
                     worker.start()
+                } else {
+                    stopSelfResult(startId)
                 }
             }
 
             MSG_MEASURE_CONFIG_CANCEL -> {
-                // cancel all running batch workers independently
-                val snapshot = ArrayList(activeWorkers)
-                snapshot.forEach { it.cancel() }
-                activeWorkers.clear()
+                cancelActiveWorker()
+                stopSelfResult(startId)
             }
         }
-        return super.onStartCommand(intent, flags, startId)
+        return START_NOT_STICKY
+    }
+
+    private fun clearWorker(worker: RealPingWorkerService) {
+        synchronized(workerLock) {
+            if (activeWorker === worker) {
+                activeWorker = null
+            }
+        }
+    }
+
+    private fun cancelActiveWorker() {
+        synchronized(workerLock) {
+            activeWorker?.cancel()
+            activeWorker = null
+        }
     }
 }

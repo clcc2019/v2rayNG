@@ -14,7 +14,6 @@ android {
         targetSdk = 36
         versionCode = 713
         versionName = "2.0.16"
-        multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
         splits {
@@ -182,9 +181,6 @@ dependencies {
     // Background Task Libraries
     implementation(libs.work.runtime.ktx)
     implementation(libs.work.multiprocess)
-
-    // Multidex Support
-    implementation(libs.multidex)
 
     // Testing Libraries
     testImplementation(libs.junit)

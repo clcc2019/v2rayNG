@@ -5,10 +5,15 @@ import android.util.Log
 import com.v2ray.ang.AppConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ProcessService {
     private var process: Process? = null
+    private val processScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var waitJob: Job? = null
 
     /**
      * Runs a process with the given command.
@@ -25,11 +30,16 @@ class ProcessService {
                 .directory(context.filesDir)
                 .start()
 
-            CoroutineScope(Dispatchers.IO).launch {
-                Thread.sleep(50L)
+            val runningProcess = process
+            waitJob?.cancel()
+            waitJob = processScope.launch {
+                delay(50L)
                 Log.i(AppConfig.TAG, "runProcess check")
-                process?.waitFor()
+                runningProcess?.waitFor()
                 Log.i(AppConfig.TAG, "runProcess exited")
+                if (process === runningProcess) {
+                    process = null
+                }
             }
             Log.i(AppConfig.TAG, process.toString())
 
@@ -44,7 +54,10 @@ class ProcessService {
     fun stopProcess() {
         try {
             Log.i(AppConfig.TAG, "runProcess destroy")
+            waitJob?.cancel()
+            waitJob = null
             process?.destroy()
+            process = null
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to destroy process", e)
         }
