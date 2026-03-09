@@ -114,13 +114,22 @@ class SubEditActivity : BaseActivity() {
      */
     private fun deleteServer(): Boolean {
         if (editSubId.isNotEmpty()) {
+            if (!MmkvManager.canRemoveSubscription(editSubId)) {
+                toast(R.string.toast_action_not_allowed)
+                return false
+            }
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
                 AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         lifecycleScope.launch(Dispatchers.IO) {
-                            MmkvManager.removeSubscription(editSubId)
+                            val removed = MmkvManager.removeSubscription(editSubId)
                             launch(Dispatchers.Main) {
-                                finish()
+                                if (removed) {
+                                    SettingsChangeManager.makeSetupGroupTab()
+                                    finish()
+                                } else {
+                                    toast(R.string.toast_action_not_allowed)
+                                }
                             }
                         }
                     }
@@ -130,9 +139,14 @@ class SubEditActivity : BaseActivity() {
                     .show()
             } else {
                 lifecycleScope.launch(Dispatchers.IO) {
-                    MmkvManager.removeSubscription(editSubId)
+                    val removed = MmkvManager.removeSubscription(editSubId)
                     launch(Dispatchers.Main) {
-                        finish()
+                        if (removed) {
+                            SettingsChangeManager.makeSetupGroupTab()
+                            finish()
+                        } else {
+                            toast(R.string.toast_action_not_allowed)
+                        }
                     }
                 }
             }
@@ -145,9 +159,7 @@ class SubEditActivity : BaseActivity() {
         del_config = menu.findItem(R.id.del_config)
         save_config = menu.findItem(R.id.save_config)
 
-        if (editSubId.isEmpty() || editSubId == AppConfig.DEFAULT_SUBSCRIPTION_ID) {
-            del_config?.isVisible = false
-        }
+        del_config?.isVisible = editSubId.isNotEmpty() && MmkvManager.canRemoveSubscription(editSubId)
 
         return super.onCreateOptionsMenu(menu)
     }

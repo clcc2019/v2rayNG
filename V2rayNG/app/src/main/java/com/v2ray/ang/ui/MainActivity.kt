@@ -4,11 +4,11 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.RelativeSizeSpan
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -16,7 +16,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -26,8 +25,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
@@ -35,6 +36,7 @@ import androidx.core.view.updatePadding
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -56,7 +58,6 @@ import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,7 +66,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     companion object {
         private const val SHORT_ANIMATION_DURATION = 120L
         private const val MEDIUM_ANIMATION_DURATION = 180L
-        private const val FEEDBACK_GAP_DP = 6
+        private const val SPLASH_EXIT_DURATION = 260L
     }
 
     private enum class ServiceUiState {
@@ -75,12 +76,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         STOPPING
     }
 
-    private enum class ConnectionFeedbackStyle {
-        SUCCESS,
-        ERROR,
-        NEUTRAL
-    }
-
     private data class ChipUiModel(
         val backgroundColorRes: Int,
         val textColorRes: Int,
@@ -88,7 +83,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     )
 
     private data class StatusBadgeUiModel(
-        @StringRes val textResId: Int,
+        val text: CharSequence,
         val chip: ChipUiModel
     )
 
@@ -101,15 +96,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val strokeColorRes: Int? = null
     )
 
-    private data class FeedbackMotionSpec(
-        val displayDurationMillis: Long,
-        val enterOffsetMultiplier: Float = 1f,
-        val exitOffsetMultiplier: Float = 0.75f
-    )
-
     private data class GroupTabViewState(
         var group: GroupMapItem,
-        val labelView: TextView
+        val surfaceView: View,
+        val labelView: TextView,
+        val countView: TextView
     )
 
     private val binding by lazy {
@@ -122,12 +113,19 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private var serviceUiState = ServiceUiState.STOPPED
     private var isGroupTabHidden = false
     private var lastRenderedGroupCount = -1
-    private var connectionFeedbackJob: Job? = null
-    private var currentFeedbackMotionSpec = FeedbackMotionSpec(displayDurationMillis = 1800L)
-    private val groupTabTextCache = mutableMapOf<String, CharSequence>()
+    private var defaultViewPagerBottomPadding = 0
+    private var defaultConnectionCardBottomMargin = 0
+    private var isImeVisible = false
+    private var isSearchUiActive = false
+    private var homeSearchView: SearchView? = null
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
-        override fun onTabSelected(tab: TabLayout.Tab) = syncGroupTabSelection()
+        override fun onTabSelected(tab: TabLayout.Tab) {
+            if (binding.viewPager.currentItem != tab.position) {
+                binding.viewPager.setCurrentItem(tab.position, false)
+            }
+            syncGroupTabSelection()
+        }
         override fun onTabUnselected(tab: TabLayout.Tab) = syncGroupTabSelection()
         override fun onTabReselected(tab: TabLayout.Tab) = Unit
     }
@@ -137,7 +135,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
         } else {
-            dismissConnectionFeedback()
             renderServiceUiState(if (mainViewModel.isRunning.value == true) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
@@ -157,9 +154,19 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        configureLaunchSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         setupToolbar(binding.toolbar, false, getString(R.string.app_name))
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        binding.toolbar.title = null
+        binding.toolbar.subtitle = null
+        binding.toolbar.logo = AppCompatResources.getDrawable(this, R.drawable.ic_toolbar_brand)
+        binding.toolbar.logoDescription = getString(R.string.app_name)
+        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
+        binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+        defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
+        defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
         // setup viewpager and tablayout
         groupPagerAdapter = GroupPagerAdapter(this, emptyList())
@@ -170,10 +177,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val toggle = ActionBarDrawerToggle(
             this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
         )
-        binding.drawerLayout.addDrawerListener(toggle)
+        setupDrawerMotion(toggle)
         toggle.syncState()
         binding.navView.setNavigationItemSelectedListener(this)
         setupNavigationDrawerInsets()
+        setupMainContentInsets()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -188,6 +196,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
+        UiMotion.attachPressFeedback(binding.fab)
+        UiMotion.attachPressFeedback(binding.layoutTest)
+        setupHomeMotion(runInitialEntrance = savedInstanceState == null)
 
         setupViewModel()
         setupGroupTab()
@@ -197,6 +208,39 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
         }
+    }
+
+    private fun configureLaunchSplashScreen() {
+        val splashScreen = installSplashScreen()
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            val iconView = splashScreenView.iconView
+
+            iconView.pivotX = iconView.width / 2f
+            iconView.pivotY = iconView.height / 2f
+            iconView.animate()
+                .alpha(0f)
+                .scaleX(0.86f)
+                .scaleY(0.86f)
+                .translationY(-iconView.height * 0.08f)
+                .setDuration(SPLASH_EXIT_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
+
+            splashScreenView.view.animate()
+                .alpha(0f)
+                .setDuration(SPLASH_EXIT_DURATION)
+                .setInterpolator(motionInterpolator)
+                .withEndAction {
+                    splashScreenView.remove()
+                }
+                .start()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isSearchUiActive = homeSearchView?.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)?.hasFocus() == true
+        updateConnectionCardVisibility()
     }
 
     private fun setupNavigationDrawerInsets() {
@@ -213,6 +257,87 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         ViewCompat.requestApplyInsets(binding.navView)
     }
 
+    private fun setupDrawerMotion(toggle: ActionBarDrawerToggle) {
+        binding.drawerLayout.addDrawerListener(toggle)
+        binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                if (drawerView !== binding.navView) return
+                val progress = slideOffset.coerceIn(0f, 1f)
+                val shiftPx = resources.displayMetrics.density * 12f * progress
+                val contentScale = 1f - (0.018f * progress)
+                val toolbarScale = 1f - (0.01f * progress)
+
+                binding.toolbar.translationX = shiftPx * 0.45f
+                binding.toolbar.scaleX = toolbarScale
+                binding.toolbar.scaleY = toolbarScale
+                binding.mainContent.translationX = shiftPx
+                binding.mainContent.scaleX = contentScale
+                binding.mainContent.scaleY = contentScale
+                binding.mainContent.alpha = 1f - (0.05f * progress)
+                applyNavigationDrawerProgress(progress)
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                if (drawerView !== binding.navView) return
+                resetDrawerDrivenTransforms()
+                applyNavigationDrawerProgress(0f)
+            }
+        })
+    }
+
+    private fun setupHomeMotion(runInitialEntrance: Boolean) {
+        binding.viewPager.setPageTransformer(null)
+
+        if (!runInitialEntrance) {
+            return
+        }
+
+        binding.mainContent.post {
+            UiMotion.animateEntrance(binding.viewPager, translationOffsetDp = 18f)
+            if (binding.cardTabGroup.isVisible) {
+                UiMotion.animateEntrance(binding.cardTabGroup, translationOffsetDp = 14f, startDelay = 20L)
+            }
+            if (shouldShowConnectionCard()) {
+                UiMotion.animateEntrance(binding.cardConnection, translationOffsetDp = 22f, startDelay = 40L)
+            }
+        }
+    }
+
+    private fun setupMainContentInsets() {
+        val imeSpacing = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainContent) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
+            isImeVisible = imeVisible
+
+            val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
+            val targetCardBottomMargin = defaultConnectionCardBottomMargin + systemBars.bottom
+            if (cardLayoutParams.bottomMargin != targetCardBottomMargin) {
+                cardLayoutParams.bottomMargin = targetCardBottomMargin
+                binding.cardConnection.layoutParams = cardLayoutParams
+            }
+
+            val targetListBottomPadding = if (imeVisible) {
+                imeInsets.bottom + imeSpacing
+            } else {
+                defaultViewPagerBottomPadding + systemBars.bottom
+            }
+            binding.viewPager.updatePadding(bottom = targetListBottomPadding)
+            updateConnectionCardVisibility()
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.mainContent)
+    }
+
+    private fun updateConnectionCardVisibility() {
+        UiMotion.animateVisibility(binding.cardConnection, shouldShowConnectionCard(), translationOffsetDp = 18f)
+    }
+
+    private fun shouldShowConnectionCard(): Boolean {
+        return !isImeVisible && !isSearchUiActive
+    }
+
     private fun setupViewModel() {
         mainViewModel.updateGroupsAction.observe(this) { groups ->
             renderGroupTabs(groups)
@@ -223,13 +348,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 toast(message)
             }
         }
+        mainViewModel.updateConnectionCardAction.observe(this) {
+            refreshConnectionCard()
+        }
         mainViewModel.serviceFeedbackAction.observe(this) { feedback ->
-            val style = when (feedback.style) {
-                MainViewModel.ServiceFeedback.Style.SUCCESS -> ConnectionFeedbackStyle.SUCCESS
-                MainViewModel.ServiceFeedback.Style.ERROR -> ConnectionFeedbackStyle.ERROR
-                MainViewModel.ServiceFeedback.Style.NEUTRAL -> ConnectionFeedbackStyle.NEUTRAL
-            }
-            showConnectionFeedback(getString(feedback.messageResId), style)
+            toast(getString(feedback.messageResId))
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
@@ -248,7 +371,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             tabMediator?.detach()
             tabMediator = null
             lastRenderedGroupCount = 0
-            groupTabTextCache.clear()
             binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
             binding.tabGroup.isVisible = false
             binding.cardTabGroup.isVisible = false
@@ -259,9 +381,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
 
         val structureChanged = groupPagerAdapter.update(groups)
-        if (structureChanged) {
-            groupTabTextCache.clear()
-        }
         configureGroupTabLayout(groups.size)
 
         if (structureChanged || tabMediator == null) {
@@ -295,9 +414,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun configureGroupTabLayout(groupCount: Int) {
-        val useFixedLayout = groupCount in 2..3
-        val targetTabMode = if (useFixedLayout) TabLayout.MODE_FIXED else TabLayout.MODE_SCROLLABLE
-        val targetTabGravity = if (useFixedLayout) TabLayout.GRAVITY_FILL else TabLayout.GRAVITY_CENTER
+        val useAdaptiveWidth = groupCount in 1..3
+        val targetTabMode = TabLayout.MODE_SCROLLABLE
+        val targetTabGravity = TabLayout.GRAVITY_CENTER
         if (binding.tabGroup.tabMode != targetTabMode) {
             binding.tabGroup.tabMode = targetTabMode
         }
@@ -305,28 +424,29 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             binding.tabGroup.tabGravity = targetTabGravity
         }
 
-        val cardHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp32)
-        val cardTopMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
+        val cardHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp36) +
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp2)
+        val cardTopMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp2)
         val cardLayoutParams = binding.cardTabGroup.layoutParams as CoordinatorLayout.LayoutParams
-        val sideMargin = resources.getDimensionPixelSize(
-            if (useFixedLayout) R.dimen.padding_spacing_dp20 else R.dimen.padding_spacing_dp16
-        )
-        if (cardLayoutParams.width != CoordinatorLayout.LayoutParams.MATCH_PARENT
+        val sideMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
+        val targetWidth = if (useAdaptiveWidth) CoordinatorLayout.LayoutParams.WRAP_CONTENT else CoordinatorLayout.LayoutParams.MATCH_PARENT
+        val targetHorizontalMargin = if (useAdaptiveWidth) 0 else sideMargin
+        if (cardLayoutParams.width != targetWidth
             || cardLayoutParams.height != cardHeight
             || cardLayoutParams.topMargin != cardTopMargin
-            || cardLayoutParams.marginStart != sideMargin
-            || cardLayoutParams.marginEnd != sideMargin
+            || cardLayoutParams.marginStart != targetHorizontalMargin
+            || cardLayoutParams.marginEnd != targetHorizontalMargin
         ) {
-            cardLayoutParams.width = CoordinatorLayout.LayoutParams.MATCH_PARENT
+            cardLayoutParams.width = targetWidth
             cardLayoutParams.height = cardHeight
             cardLayoutParams.topMargin = cardTopMargin
-            cardLayoutParams.marginStart = sideMargin
-            cardLayoutParams.marginEnd = sideMargin
+            cardLayoutParams.marginStart = targetHorizontalMargin
+            cardLayoutParams.marginEnd = targetHorizontalMargin
             binding.cardTabGroup.layoutParams = cardLayoutParams
         }
 
         binding.tabGroup.layoutParams = binding.tabGroup.layoutParams.apply {
-            width = CoordinatorLayout.LayoutParams.MATCH_PARENT
+            width = if (useAdaptiveWidth) CoordinatorLayout.LayoutParams.WRAP_CONTENT else CoordinatorLayout.LayoutParams.MATCH_PARENT
             height = cardHeight
         }
         binding.tabGroup.minimumHeight = 0
@@ -337,8 +457,14 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     private fun createGroupTabView(group: GroupMapItem): View {
         val tabBinding = ItemTabGroupBinding.inflate(LayoutInflater.from(this), binding.tabGroup, false)
-        tabBinding.tvTabLabel.text = getGroupTabText(group, selected = false)
-        tabBinding.root.tag = GroupTabViewState(group = group, labelView = tabBinding.tvTabLabel)
+        val tabState = GroupTabViewState(
+            group = group,
+            surfaceView = tabBinding.layoutTabSurface,
+            labelView = tabBinding.tvTabLabel,
+            countView = tabBinding.tvTabCount
+        )
+        bindGroupTabViewState(tabState, selected = false)
+        tabBinding.root.tag = tabState
         return tabBinding.root
     }
 
@@ -347,25 +473,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             val tab = binding.tabGroup.getTabAt(index) ?: continue
             val customView = tab.customView ?: continue
             val isSelected = tab.isSelected
-            if (customView.isSelected != isSelected) {
-                customView.isSelected = isSelected
-                customView.animate()
-                    .scaleX(if (isSelected) 1f else 0.97f)
-                    .scaleY(if (isSelected) 1f else 0.97f)
-                    .setDuration(SHORT_ANIMATION_DURATION)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            }
+            customView.isSelected = isSelected
+            customView.animate().cancel()
+            customView.scaleX = 1f
+            customView.scaleY = 1f
 
             val tabState = customView.tag as? GroupTabViewState ?: continue
-            val targetText = getGroupTabText(tabState.group, selected = isSelected)
-            if (tabState.labelView.text !== targetText) {
-                tabState.labelView.text = targetText
-            }
-            val targetAlpha = if (isSelected) 1f else 0.88f
-            if (tabState.labelView.alpha != targetAlpha) {
-                tabState.labelView.alpha = targetAlpha
-            }
+            bindGroupTabViewState(tabState, selected = isSelected)
         }
     }
 
@@ -375,58 +489,54 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             val customView = tab.customView ?: return@forEachIndexed
             val tabState = customView.tag as? GroupTabViewState ?: return@forEachIndexed
             tabState.group = group
-            val targetText = getGroupTabText(group, selected = tab.isSelected)
-            if (tabState.labelView.text !== targetText) {
-                tabState.labelView.text = targetText
-            }
-            val targetAlpha = if (tab.isSelected) 1f else 0.88f
-            if (tabState.labelView.alpha != targetAlpha) {
-                tabState.labelView.alpha = targetAlpha
-            }
+            bindGroupTabViewState(tabState, selected = tab.isSelected)
         }
     }
 
     private fun applyCompactGroupTabHeight() {
-        val compactHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp30)
+        val compactHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp32)
         binding.tabGroup.minimumHeight = compactHeight
 
         val slidingTabIndicator = binding.tabGroup.getChildAt(0) as? ViewGroup ?: return
+        slidingTabIndicator.clipToPadding = false
+        slidingTabIndicator.clipChildren = false
         for (index in 0 until slidingTabIndicator.childCount) {
             val tabView = slidingTabIndicator.getChildAt(index)
             tabView.minimumHeight = compactHeight
             tabView.layoutParams = tabView.layoutParams.apply {
+                width = ViewGroup.LayoutParams.WRAP_CONTENT
                 height = compactHeight
             }
-            tabView.setPadding(tabView.paddingLeft, 0, tabView.paddingRight, 0)
+            tabView.setPadding(0, 0, 0, 0)
             tabView.requestLayout()
         }
     }
 
-    private fun buildGroupTabText(group: GroupMapItem, selected: Boolean): CharSequence {
-        val labelColor = ContextCompat.getColor(
-            this,
-            if (selected) R.color.md_theme_onSecondaryContainer else R.color.md_theme_onSurfaceVariant
+    private fun bindGroupTabViewState(tabState: GroupTabViewState, selected: Boolean) {
+        tabState.surfaceView.isSelected = selected
+        tabState.labelView.text = tabState.group.remarks
+        tabState.labelView.setTextColor(
+            ContextCompat.getColor(
+                this,
+                if (selected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+            )
         )
-        val counterColor = ContextCompat.getColor(
-            this,
-            if (selected) R.color.md_theme_primary else R.color.md_theme_onSurfaceVariant
-        )
+        tabState.labelView.alpha = if (selected) 1f else 0.88f
 
-        return SpannableStringBuilder(group.remarks).apply {
-            setSpan(ForegroundColorSpan(labelColor), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            if (group.count > 0) {
-                val start = length
-                append("  ${group.count}")
-                setSpan(ForegroundColorSpan(counterColor), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                setSpan(RelativeSizeSpan(0.88f), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-        }
-    }
-
-    private fun getGroupTabText(group: GroupMapItem, selected: Boolean): CharSequence {
-        val cacheKey = "${group.id}|${group.remarks}|${group.count}|$selected"
-        return groupTabTextCache.getOrPut(cacheKey) {
-            buildGroupTabText(group, selected)
+        val hasCount = tabState.group.count > 0
+        tabState.countView.isVisible = hasCount
+        if (hasCount) {
+            tabState.countView.text = tabState.group.count.toString()
+            tabState.countView.setBackgroundResource(
+                if (selected) R.drawable.bg_group_count_badge_selected else R.drawable.bg_group_count_badge
+            )
+            tabState.countView.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    if (selected) R.color.md_theme_onPrimary else R.color.md_theme_onSurfaceVariant
+                )
+            )
+            tabState.countView.alpha = if (selected) 1f else 0.92f
         }
     }
 
@@ -462,7 +572,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun updateGroupTabContentInset() {
-        val listGap = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp12)
+        val listGap = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
         val cardTopMargin = (binding.cardTabGroup.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin ?: 0
         val topPadding = if (binding.cardTabGroup.isVisible) {
             cardTopMargin + binding.cardTabGroup.height + listGap
@@ -478,11 +588,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
 
         if (mainViewModel.isRunning.value == true) {
-            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STOPPING)
             V2RayServiceManager.stopVService(this)
         } else if (SettingsManager.isVpnMode()) {
-            dismissConnectionFeedback()
             val intent = VpnService.prepare(this)
             if (intent == null) {
                 renderServiceUiState(ServiceUiState.STARTING)
@@ -491,7 +599,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 requestVpnPermission.launch(intent)
             }
         } else {
-            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
         }
@@ -499,7 +606,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     private fun startV2Ray() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
-            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STOPPED)
             toast(R.string.title_file_chooser)
             return
@@ -544,7 +650,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         serviceUiState = state
         val isTransitioning = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
 
-        animateProgressBar(isTransitioning)
+        hideProgressBar()
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
         binding.fab.alpha = if (isTransitioning) 0.92f else 1f
@@ -553,120 +659,84 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.layoutTest.isFocusable = state == ServiceUiState.RUNNING
         binding.layoutTest.alpha = if (state == ServiceUiState.RUNNING) 1f else 0.72f
         updateConnectionCard(state)
-        updateToolbarSubtitle(state)
+        updateToolbarSubtitle()
         animateServiceStateChange(previousState, state)
+        performServiceStateHaptic(previousState, state)
         applyActionButtonUiModel(buildActionButtonUiModel(state))
     }
 
-    private fun showConnectionFeedback(message: CharSequence, style: ConnectionFeedbackStyle) {
-        connectionFeedbackJob?.cancel()
-        binding.tvConnectionFeedback.text = message
-        val chipUiModel = buildFeedbackChipUiModel(style)
-        val motionSpec = buildFeedbackMotionSpec(style)
-        currentFeedbackMotionSpec = motionSpec
-        applyChipUiModel(binding.tvConnectionFeedback, chipUiModel)
-        binding.cardConnection.post { updateConnectionFeedbackAnchor() }
-        binding.tvConnectionFeedback.alpha = 0f
-        binding.tvConnectionFeedback.scaleX = 0.92f
-        binding.tvConnectionFeedback.scaleY = 0.92f
-        binding.tvConnectionFeedback.translationY = -feedbackOffsetPx() * motionSpec.enterOffsetMultiplier
-        binding.tvConnectionFeedback.isVisible = true
-        binding.tvConnectionFeedback.animate()
-            .alpha(1f)
-            .scaleX(1f)
-            .scaleY(1f)
-            .translationY(0f)
-            .setDuration(SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .start()
-        binding.tvConnectionFeedback.announceForAccessibility(message)
-
-        connectionFeedbackJob = lifecycleScope.launch {
-            delay(motionSpec.displayDurationMillis)
-            dismissConnectionFeedback()
+    private fun performServiceStateHaptic(previousState: ServiceUiState, newState: ServiceUiState) {
+        if (previousState == newState) {
+            return
         }
-    }
+        val effect = when (newState) {
+            ServiceUiState.STARTING -> buildServiceHapticEffect(isStarting = true)
+            ServiceUiState.STOPPING -> buildServiceHapticEffect(isStarting = false)
+            else -> null
+        } ?: return
 
-    private fun dismissConnectionFeedback() {
-        connectionFeedbackJob?.cancel()
-        connectionFeedbackJob = null
-        binding.tvConnectionFeedback.animate().cancel()
-        if (!binding.tvConnectionFeedback.isVisible) return
-        binding.tvConnectionFeedback.animate()
-            .alpha(0f)
-            .scaleX(0.96f)
-            .scaleY(0.96f)
-            .translationY(-feedbackOffsetPx() * currentFeedbackMotionSpec.exitOffsetMultiplier)
-            .setDuration(SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .withEndAction {
-                binding.tvConnectionFeedback.isVisible = false
-                binding.tvConnectionFeedback.translationY = -feedbackOffsetPx()
-            }
-            .start()
-    }
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(VIBRATOR_SERVICE) as? Vibrator
+        } ?: return
 
-    private fun buildFeedbackChipUiModel(style: ConnectionFeedbackStyle): ChipUiModel {
-        return when (style) {
-            ConnectionFeedbackStyle.SUCCESS -> ChipUiModel(
-                backgroundColorRes = R.color.md_theme_secondaryContainer,
-                textColorRes = R.color.md_theme_onSecondaryContainer,
-                iconRes = R.drawable.ic_action_done
-            )
-
-            ConnectionFeedbackStyle.ERROR -> ChipUiModel(
-                backgroundColorRes = R.color.md_theme_errorContainer,
-                textColorRes = R.color.md_theme_onErrorContainer,
-                iconRes = R.drawable.ic_feedback_error
-            )
-
-            ConnectionFeedbackStyle.NEUTRAL -> ChipUiModel(
-                backgroundColorRes = R.color.md_theme_surfaceVariant,
-                textColorRes = R.color.md_theme_onSurfaceVariant,
-                iconRes = R.drawable.ic_stop_24dp
-            )
+        if (!vibrator.hasVibrator()) {
+            return
         }
+        vibrator.vibrate(effect)
     }
 
-    private fun buildFeedbackMotionSpec(style: ConnectionFeedbackStyle): FeedbackMotionSpec {
-        return when (style) {
-            ConnectionFeedbackStyle.SUCCESS -> FeedbackMotionSpec(displayDurationMillis = 1800L, enterOffsetMultiplier = 0.9f)
-            ConnectionFeedbackStyle.ERROR -> FeedbackMotionSpec(displayDurationMillis = 2800L, enterOffsetMultiplier = 1.15f, exitOffsetMultiplier = 0.9f)
-            ConnectionFeedbackStyle.NEUTRAL -> FeedbackMotionSpec(displayDurationMillis = 1500L, enterOffsetMultiplier = 0.8f, exitOffsetMultiplier = 0.7f)
+    private fun buildServiceHapticEffect(isStarting: Boolean): VibrationEffect {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            VibrationEffect.createPredefined(
+                if (isStarting) VibrationEffect.EFFECT_TICK else VibrationEffect.EFFECT_CLICK
+            )
+        } else {
+            VibrationEffect.createOneShot(if (isStarting) 18L else 24L, VibrationEffect.DEFAULT_AMPLITUDE)
         }
     }
 
     private fun buildConnectionBadgeUiModel(state: ServiceUiState): StatusBadgeUiModel {
+        val latencyText = buildConnectionLatencyText(getSelectedProfile())
+        if (state == ServiceUiState.RUNNING && !latencyText.isNullOrBlank()) {
+            return StatusBadgeUiModel(
+                text = latencyText,
+                chip = ChipUiModel(
+                    backgroundColorRes = R.color.md_theme_tertiaryContainer,
+                    textColorRes = R.color.md_theme_onTertiaryContainer
+                )
+            )
+        }
+
         return when (state) {
             ServiceUiState.STARTING -> StatusBadgeUiModel(
-                textResId = R.string.connection_starting_short,
+                text = getString(R.string.connection_starting_short),
                 chip = ChipUiModel(
                     backgroundColorRes = R.color.md_theme_secondaryContainer,
-                    textColorRes = R.color.md_theme_onSecondaryContainer,
-                    iconRes = R.drawable.ic_play_24dp
+                    textColorRes = R.color.md_theme_onSecondaryContainer
                 )
             )
 
             ServiceUiState.STOPPING -> StatusBadgeUiModel(
-                textResId = R.string.connection_stopping_short,
+                text = getString(R.string.connection_stopping_short),
                 chip = ChipUiModel(
                     backgroundColorRes = R.color.md_theme_surfaceVariant,
-                    textColorRes = R.color.md_theme_onSurfaceVariant,
-                    iconRes = R.drawable.ic_stop_24dp
+                    textColorRes = R.color.md_theme_onSurfaceVariant
                 )
             )
 
             ServiceUiState.RUNNING -> StatusBadgeUiModel(
-                textResId = R.string.connection_connected_short,
+                text = getString(R.string.connection_connected_short),
                 chip = ChipUiModel(
                     backgroundColorRes = R.color.md_theme_tertiaryContainer,
-                    textColorRes = R.color.md_theme_onTertiaryContainer,
-                    iconRes = R.drawable.ic_action_done
+                    textColorRes = R.color.md_theme_onTertiaryContainer
                 )
             )
 
             ServiceUiState.STOPPED -> StatusBadgeUiModel(
-                textResId = R.string.connection_not_connected_short,
+                text = getString(R.string.connection_not_connected_short),
                 chip = ChipUiModel(
                     backgroundColorRes = R.color.md_theme_surfaceVariant,
                     textColorRes = R.color.md_theme_onSurfaceVariant
@@ -741,57 +811,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             DrawableCompat.setTint(this, ContextCompat.getColor(this@MainActivity, tintColorRes))
         }
 
-    private fun feedbackOffsetPx(): Float {
-        return resources.displayMetrics.density * FEEDBACK_GAP_DP
-    }
-
-    private fun updateConnectionHeaderInsets() {
-        val badgeLayoutParams = binding.tvConnectionBadge.layoutParams as? ViewGroup.MarginLayoutParams
-        val badgeInset = binding.tvConnectionBadge.width +
-                (badgeLayoutParams?.marginStart ?: 0) +
-                resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
-        val currentPadding = binding.tvActiveServer.paddingEnd
-        if (currentPadding != badgeInset) {
-            binding.tvActiveServer.setPaddingRelative(
-                binding.tvActiveServer.paddingStart,
-                binding.tvActiveServer.paddingTop,
-                badgeInset,
-                binding.tvActiveServer.paddingBottom
-            )
-        }
-    }
-
-    private fun updateConnectionFeedbackAnchor() {
-        val layoutParams = binding.tvConnectionFeedback.layoutParams as? FrameLayout.LayoutParams ?: return
-        val targetMarginTop = binding.tvConnectionBadge.bottom + resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
-        if (layoutParams.topMargin != targetMarginTop) {
-            layoutParams.topMargin = targetMarginTop
-            binding.tvConnectionFeedback.layoutParams = layoutParams
-        }
-    }
-
-    private fun animateProgressBar(visible: Boolean) {
+    private fun hideProgressBar() {
         binding.progressBar.animate().cancel()
-        if (visible) {
-            if (!binding.progressBar.isVisible) {
-                binding.progressBar.alpha = 0f
-                binding.progressBar.visibility = View.VISIBLE
-            }
-            binding.progressBar.animate()
-                .alpha(1f)
-                .setDuration(MEDIUM_ANIMATION_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
-        } else if (binding.progressBar.isVisible) {
-            binding.progressBar.animate()
-                .alpha(0f)
-                .setDuration(MEDIUM_ANIMATION_DURATION)
-                .setInterpolator(motionInterpolator)
-                .withEndAction {
-                    binding.progressBar.visibility = View.INVISIBLE
-                }
-                .start()
-        }
+        binding.progressBar.alpha = 0f
+        binding.progressBar.visibility = View.INVISIBLE
     }
 
     private fun animateServiceStateChange(previousState: ServiceUiState, newState: ServiceUiState) {
@@ -801,16 +824,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.fab.animate().cancel()
         binding.layoutTest.animate().cancel()
 
-        binding.cardConnection.scaleX = 0.985f
-        binding.cardConnection.scaleY = 0.985f
-        binding.cardConnection.alpha = 0.94f
-        binding.cardConnection.animate()
-            .scaleX(1f)
-            .scaleY(1f)
-            .alpha(1f)
-            .setDuration(MEDIUM_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .start()
+        binding.cardConnection.scaleX = 1f
+        binding.cardConnection.scaleY = 1f
+        binding.cardConnection.alpha = 1f
 
         val controlScale = if (newState == ServiceUiState.RUNNING) 1f else 0.985f
         binding.fab.animate()
@@ -835,26 +851,18 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             .start()
     }
 
-    private fun updateToolbarSubtitle(state: ServiceUiState) {
-        val selectedName = getSelectedServerName().orEmpty()
-
-        binding.toolbar.subtitle = when (state) {
-            ServiceUiState.STARTING -> getString(R.string.connection_starting)
-            ServiceUiState.STOPPING -> getString(R.string.connection_stopping)
-            ServiceUiState.RUNNING -> selectedName.ifEmpty { getString(R.string.connection_connected) }
-            ServiceUiState.STOPPED -> selectedName.ifEmpty { null }
-        }
+    private fun updateToolbarSubtitle() {
+        binding.toolbar.subtitle = null
     }
 
     fun refreshConnectionCard() {
         updateConnectionCard(serviceUiState)
-        updateToolbarSubtitle(serviceUiState)
+        updateToolbarSubtitle()
     }
 
     private fun updateConnectionCard(state: ServiceUiState) {
         val profile = getSelectedProfile()
-        val selectedName = profile?.remarks?.takeIf { it.isNotBlank() }
-        binding.tvActiveServer.text = selectedName ?: getString(R.string.connection_not_connected)
+        binding.tvActiveServer.text = buildConnectionTitle(profile) ?: getString(R.string.connection_not_connected)
         binding.tvConnectionLabel.text = getString(R.string.current_config)
         binding.tvConfigType.text = profile?.configType?.name.orEmpty()
         binding.tvConfigType.isVisible = profile != null
@@ -871,7 +879,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.tvConnectionMetaLine.isVisible = !metaLine.isNullOrBlank()
 
         val badgeUiModel = buildConnectionBadgeUiModel(state)
-        binding.tvConnectionBadge.text = getString(badgeUiModel.textResId)
+        binding.tvConnectionBadge.text = badgeUiModel.text
         applyChipUiModel(binding.tvConnectionBadge, badgeUiModel.chip)
         binding.layoutTest.backgroundTintList = ColorStateList.valueOf(
             ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_surface else R.color.md_theme_surfaceVariant)
@@ -886,19 +894,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant)
         )
 
-        binding.cardConnection.setCardBackgroundColor(
-            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.colorSelectionFill else R.color.md_theme_surface)
-        )
-        binding.cardConnection.setStrokeColor(
-            ContextCompat.getColor(
-                this,
-                if (state == ServiceUiState.RUNNING) R.color.colorSelectionIndicator else R.color.md_theme_outlineVariant
-            )
-        )
-        binding.cardConnection.post {
-            updateConnectionHeaderInsets()
-            updateConnectionFeedbackAnchor()
-        }
     }
 
     private fun getSelectedProfile(): ProfileItem? {
@@ -919,9 +914,29 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
     }
 
+    private fun buildConnectionTitle(profile: ProfileItem?): CharSequence? {
+        if (profile == null) return null
+        return profile.remarks.trim().ifEmpty {
+            profile.configType.name
+        }
+    }
+
     private fun buildConfigBadgeText(profile: ProfileItem?): String? {
         val network = profile?.network?.trim().orEmpty()
         return network.takeIf { it.isNotEmpty() }?.uppercase()
+    }
+
+    private fun buildConnectionLatencyText(profile: ProfileItem?): String? {
+        val selectedGuid = MmkvManager.getSelectServer().orEmpty()
+        if (profile == null || selectedGuid.isBlank()) {
+            return null
+        }
+
+        val delayMillis = MmkvManager.getServerTestDelayMillis(selectedGuid) ?: 0L
+        return when {
+            delayMillis > 0L -> "$delayMillis ms"
+            else -> null
+        }
     }
 
     private fun buildConnectionMetaLine(profile: ProfileItem?, state: ServiceUiState): String? {
@@ -947,124 +962,159 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        val searchItem = menu.findItem(R.id.search_view)
+        searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem): Boolean {
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                isSearchUiActive = false
+                updateConnectionCardVisibility()
+                return true
+            }
+        })
         setupSearchView(
-            menuItem = menu.findItem(R.id.search_view),
+            menuItem = searchItem,
             onQueryChanged = { mainViewModel.filterConfig(it) },
-            onClosed = { mainViewModel.filterConfig("") }
-        )
+            onClosed = {
+                isSearchUiActive = false
+                updateConnectionCardVisibility()
+                mainViewModel.filterConfig("")
+            }
+        )?.let { searchView ->
+            homeSearchView = searchView
+            searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+                isSearchUiActive = hasFocus
+                updateConnectionCardVisibility()
+            }
+            searchView.setOnSearchClickListener {
+                isSearchUiActive = true
+                updateConnectionCardVisibility()
+            }
+            searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)
+                ?.setOnEditorActionListener { v, _, _ ->
+                    isSearchUiActive = v.hasFocus()
+                    updateConnectionCardVisibility()
+                    false
+                }
+            searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)
+                ?.setOnFocusChangeListener { _, hasFocus ->
+                    isSearchUiActive = hasFocus
+                    updateConnectionCardVisibility()
+                }
+        }
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.import_qrcode -> {
-            importQRcode()
+        R.id.action_add_sheet -> {
+            showActionBottomSheet(
+                title = getString(R.string.menu_item_add_config),
+                subtitle = getString(R.string.current_config),
+                actions = buildHomeAddActions()
+            )
             true
         }
 
-        R.id.import_clipboard -> {
-            importClipboard()
+        R.id.action_more_sheet -> {
+            showActionBottomSheet(
+                title = getString(R.string.notification_action_more),
+                subtitle = getSelectedServerName().orEmpty().ifBlank { null },
+                actions = buildHomeMoreActions()
+            )
             true
         }
-
-        R.id.import_local -> {
-            importConfigLocal()
-            true
-        }
-
-        R.id.import_manually_policy_group -> {
-            importManually(EConfigType.POLICYGROUP.value)
-            true
-        }
-
-        R.id.import_manually_vmess -> {
-            importManually(EConfigType.VMESS.value)
-            true
-        }
-
-        R.id.import_manually_vless -> {
-            importManually(EConfigType.VLESS.value)
-            true
-        }
-
-        R.id.import_manually_ss -> {
-            importManually(EConfigType.SHADOWSOCKS.value)
-            true
-        }
-
-        R.id.import_manually_socks -> {
-            importManually(EConfigType.SOCKS.value)
-            true
-        }
-
-        R.id.import_manually_http -> {
-            importManually(EConfigType.HTTP.value)
-            true
-        }
-
-        R.id.import_manually_trojan -> {
-            importManually(EConfigType.TROJAN.value)
-            true
-        }
-
-        R.id.import_manually_wireguard -> {
-            importManually(EConfigType.WIREGUARD.value)
-            true
-        }
-
-        R.id.import_manually_hysteria2 -> {
-            importManually(EConfigType.HYSTERIA2.value)
-            true
-        }
-
-        R.id.export_all -> {
-            exportAll()
-            true
-        }
-
-        R.id.ping_all -> {
-            toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
-            mainViewModel.testAllTcping()
-            true
-        }
-
-        R.id.real_ping_all -> {
-            toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
-            mainViewModel.testAllRealPing()
-            true
-        }
-
-        R.id.service_restart -> {
-            restartV2Ray()
-            true
-        }
-
-        R.id.del_all_config -> {
-            delAllConfig()
-            true
-        }
-
-        R.id.del_duplicate_config -> {
-            delDuplicateConfig()
-            true
-        }
-
-        R.id.del_invalid_config -> {
-            delInvalidConfig()
-            true
-        }
-
-        R.id.sort_by_test_results -> {
-            sortByTestResults()
-            true
-        }
-
-        R.id.sub_update -> {
-            importConfigViaSub()
-            true
-        }
-
 
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun applyNavigationDrawerProgress(progress: Float) {
+        val clamped = progress.coerceIn(0f, 1f)
+        val offsetPx = resources.displayMetrics.density * 16f * (1f - clamped)
+        val headerView = binding.navView.getHeaderView(0)
+        headerView.alpha = clamped
+        headerView.translationY = offsetPx
+        val menuView = binding.navView.getChildAt(0) as? ViewGroup ?: return
+        for (index in 0 until menuView.childCount) {
+            val child = menuView.getChildAt(index)
+            val itemProgress = ((clamped - (index * 0.04f)) / 0.92f).coerceIn(0f, 1f)
+            child.alpha = itemProgress
+            child.translationY = resources.displayMetrics.density * 10f * (1f - itemProgress)
+        }
+    }
+
+    private fun resetDrawerDrivenTransforms() {
+        binding.toolbar.animate().cancel()
+        binding.mainContent.animate().cancel()
+        binding.toolbar.translationX = 0f
+        binding.toolbar.scaleX = 1f
+        binding.toolbar.scaleY = 1f
+        binding.mainContent.translationX = 0f
+        binding.mainContent.scaleX = 1f
+        binding.mainContent.scaleY = 1f
+        binding.mainContent.alpha = 1f
+    }
+
+    private fun buildHomeAddActions(): List<ActionBottomSheetItem> {
+        return listOf(
+            ActionBottomSheetItem(R.string.menu_item_import_config_qrcode, R.drawable.ic_qu_scan_24dp) { importQRcode() },
+            ActionBottomSheetItem(R.string.menu_item_import_config_clipboard, R.drawable.ic_copy) { importClipboard() },
+            ActionBottomSheetItem(R.string.menu_item_import_config_local, R.drawable.ic_file_24dp) { importConfigLocal() },
+            ActionBottomSheetItem(R.string.menu_item_import_config_policy_group, R.drawable.ic_subscriptions_24dp) {
+                importManually(EConfigType.POLICYGROUP.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_vmess, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.VMESS.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_vless, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.VLESS.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_ss, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.SHADOWSOCKS.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_socks, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.SOCKS.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_http, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.HTTP.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_trojan, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.TROJAN.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_wireguard, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.WIREGUARD.value)
+            },
+            ActionBottomSheetItem(R.string.menu_item_import_config_manually_hysteria2, R.drawable.ic_add_24dp) {
+                importManually(EConfigType.HYSTERIA2.value)
+            }
+        )
+    }
+
+    private fun buildHomeMoreActions(): List<ActionBottomSheetItem> {
+        return listOf(
+            ActionBottomSheetItem(R.string.title_service_restart, R.drawable.ic_restore_24dp) { restartV2Ray() },
+            ActionBottomSheetItem(R.string.title_sub_update, R.drawable.ic_cloud_download_24dp) { importConfigViaSub() },
+            ActionBottomSheetItem(R.string.title_export_all, R.drawable.ic_description_24dp) { exportAll() },
+            ActionBottomSheetItem(R.string.title_ping_all_server, R.drawable.ic_logcat_24dp) {
+                toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
+                mainViewModel.testAllTcping()
+            },
+            ActionBottomSheetItem(R.string.title_real_ping_all_server, R.drawable.ic_logcat_24dp) {
+                toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
+                mainViewModel.testAllRealPing()
+            },
+            ActionBottomSheetItem(R.string.title_sort_by_test_results, R.drawable.ic_feedback_24dp) { sortByTestResults() },
+            ActionBottomSheetItem(R.string.title_del_duplicate_config, R.drawable.ic_delete_24dp, destructive = true) {
+                delDuplicateConfig()
+            },
+            ActionBottomSheetItem(R.string.title_del_invalid_config, R.drawable.ic_delete_24dp, destructive = true) {
+                delInvalidConfig()
+            },
+            ActionBottomSheetItem(R.string.title_del_all_config, R.drawable.ic_delete_24dp, destructive = true) {
+                delAllConfig()
+            }
+        )
     }
 
     private fun importManually(createConfigType: Int) {

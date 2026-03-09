@@ -20,15 +20,14 @@
 
         <FrameLayout
             android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_nav_header_avatar">
+            android:layout_height="56dp">
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="12dp"
+                android:padding="4dp"
                 android:scaleType="fitCenter"
-                android:src="@mipmap/ic_launcher_foreground" />
+                android:src="@drawable/ic_app_launcher" />
 
         </FrameLayout>
 

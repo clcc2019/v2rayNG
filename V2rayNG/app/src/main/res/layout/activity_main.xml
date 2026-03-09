@@ -4,7 +4,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_theme_background">
+    android:background="@drawable/bg_home_surface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -56,41 +56,43 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:clipToPadding="false"
-                    android:paddingStart="@dimen/padding_spacing_dp14"
-                    android:paddingTop="@dimen/padding_spacing_dp12"
-                    android:paddingEnd="@dimen/padding_spacing_dp14"
-                    android:paddingBottom="148dp"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp4"
+                    android:paddingEnd="@dimen/padding_spacing_dp16"
+                    android:paddingBottom="140dp"
                     android:scrollbars="vertical" />
 
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_tab_group"
-                style="@style/Widget.V2Ray.Card.TabGroup"
+                style="@style/Widget.V2Ray.Card.TopTabs"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/view_height_dp32"
+                android:layout_height="38dp"
                 android:layout_gravity="top|center_horizontal"
-                android:layout_marginStart="@dimen/padding_spacing_dp20"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginEnd="@dimen/padding_spacing_dp20"
+                android:layout_marginStart="@dimen/padding_spacing_dp16"
+                android:layout_marginTop="@dimen/padding_spacing_dp2"
+                android:layout_marginEnd="@dimen/padding_spacing_dp16"
                 android:alpha="1">
 
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tab_group"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:minHeight="@dimen/view_height_dp30"
-                    android:paddingStart="@dimen/padding_spacing_dp1"
-                    android:paddingTop="@dimen/padding_spacing_dp1"
-                    android:paddingEnd="@dimen/padding_spacing_dp1"
-                    android:paddingBottom="@dimen/padding_spacing_dp1"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:minHeight="38dp"
+                    android:paddingStart="@dimen/padding_spacing_dp2"
+                    android:paddingTop="@dimen/padding_spacing_dp2"
+                    android:paddingEnd="@dimen/padding_spacing_dp2"
+                    android:paddingBottom="@dimen/padding_spacing_dp2"
                     android:background="@android:color/transparent"
                     app:tabIndicatorAnimationMode="linear"
                     app:tabIndicatorColor="@android:color/transparent"
                     app:tabIndicatorFullWidth="false"
                     app:tabIndicatorHeight="0dp"
                     app:tabMinWidth="0dp"
-                    app:tabMode="fixed"
+                    app:tabMode="scrollable"
                     app:tabPaddingBottom="0dp"
                     app:tabPaddingEnd="0dp"
                     app:tabPaddingStart="0dp"
@@ -104,108 +106,117 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_connection"
-                style="@style/Widget.V2Ray.Card.Primary"
+                style="@style/Widget.V2Ray.Card.HomeConnection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginStart="@dimen/padding_spacing_dp16"
                 android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                android:layout_marginBottom="@dimen/padding_spacing_dp16">
+                android:layout_marginBottom="@dimen/padding_spacing_dp16"
+                android:clipChildren="true"
+                android:clipToOutline="true">
 
-                <FrameLayout
+                <LinearLayout
+                    android:id="@+id/layout_connection_surface"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/padding_spacing_dp18">
+                    android:background="@drawable/bg_nav_header_panel"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp14"
+                    android:paddingEnd="@dimen/padding_spacing_dp16"
+                    android:paddingBottom="@dimen/padding_spacing_dp14">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_connection_label"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/current_config"
+                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <TextView
+                            android:id="@+id/tv_connection_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/padding_spacing_dp12"
+                            android:background="@drawable/bg_connection_badge"
+                            android:gravity="center"
+                            android:paddingStart="@dimen/padding_spacing_dp10"
+                            android:paddingTop="@dimen/padding_spacing_dp4"
+                            android:paddingEnd="@dimen/padding_spacing_dp10"
+                            android:paddingBottom="@dimen/padding_spacing_dp4"
+                            android:text="@string/connection_not_connected"
+                            android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp6"
                         android:orientation="vertical">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="top"
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/tv_active_server"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:id="@+id/tv_connection_label"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/current_config"
-                                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                                <TextView
-                                    android:id="@+id/tv_active_server"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp4"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/connection_not_connected"
-                                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/tv_connection_badge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/padding_spacing_dp12"
-                                android:background="@drawable/bg_connection_badge"
-                                android:gravity="center"
-                                android:paddingStart="@dimen/padding_spacing_dp10"
-                                android:paddingTop="@dimen/padding_spacing_dp4"
-                                android:paddingEnd="@dimen/padding_spacing_dp10"
-                                android:paddingBottom="@dimen/padding_spacing_dp4"
+                                android:ellipsize="end"
+                                android:maxLines="1"
                                 android:text="@string/connection_not_connected"
-                                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp12"
-                            android:orientation="horizontal">
+                                android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                                android:textColor="?attr/colorOnSurface" />
 
                             <TextView
                                 android:id="@+id/tv_config_type"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/padding_spacing_dp8"
                                 android:background="@drawable/bg_type_chip"
+                                android:gravity="center"
+                                android:minHeight="@dimen/view_height_dp26"
                                 android:paddingStart="@dimen/padding_spacing_dp8"
                                 android:paddingTop="@dimen/padding_spacing_dp3"
                                 android:paddingEnd="@dimen/padding_spacing_dp8"
                                 android:paddingBottom="@dimen/padding_spacing_dp3"
                                 android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                                android:textColor="@color/colorConfigType" />
+                                android:textColor="@color/colorConfigType"
+                                android:visibility="gone" />
 
                             <TextView
                                 android:id="@+id/tv_config_meta"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/padding_spacing_dp8"
-                                android:background="@drawable/bg_metric_badge"
+                                android:layout_marginStart="@dimen/padding_spacing_dp6"
+                                android:background="@drawable/bg_type_chip"
                                 android:ellipsize="end"
+                                android:gravity="center"
                                 android:maxLines="1"
+                                android:minHeight="@dimen/view_height_dp26"
                                 android:paddingStart="@dimen/padding_spacing_dp8"
                                 android:paddingTop="@dimen/padding_spacing_dp3"
                                 android:paddingEnd="@dimen/padding_spacing_dp8"
                                 android:paddingBottom="@dimen/padding_spacing_dp3"
                                 android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textColor="@color/colorConfigType"
                                 android:visibility="gone" />
 
                         </LinearLayout>
@@ -214,17 +225,17 @@
                             android:id="@+id/tv_connection_address"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp12"
+                            android:layout_marginTop="@dimen/padding_spacing_dp8"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textAppearance="@style/TextAppearance.V2Ray.Body"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
 
                         <TextView
                             android:id="@+id/tv_connection_meta_line"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
+                            android:layout_marginTop="@dimen/padding_spacing_dp2"
                             android:ellipsize="end"
                             android:maxLines="1"
                             android:textAppearance="@style/TextAppearance.V2Ray.Support"
@@ -234,30 +245,32 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp16"
+                            android:layout_marginTop="@dimen/padding_spacing_dp10"
+                            android:baselineAligned="false"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/layout_test"
-                                style="@style/Widget.V2Ray.Button.Secondary"
-                                android:layout_width="wrap_content"
+                                style="@style/Widget.V2Ray.Button.HomeSecondary"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="0.85"
                                 android:layout_marginEnd="@dimen/padding_spacing_dp12"
                                 android:clickable="true"
                                 android:contentDescription="@string/connection_test_pending"
                                 android:focusable="true"
-                                android:minWidth="@dimen/view_height_dp56"
+                                android:minWidth="0dp"
                                 android:text="@string/connection_test_short"
                                 app:icon="@drawable/ic_logcat_24dp"
                                 app:iconTint="?attr/colorOnSurfaceVariant" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/fab"
-                                style="@style/Widget.V2Ray.Button.Primary"
+                                style="@style/Widget.V2Ray.Button.HomePrimary"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
+                                android:layout_weight="1.15"
                                 android:clickable="true"
                                 android:contentDescription="@string/tasker_start_service"
                                 android:focusable="true"
@@ -269,25 +282,7 @@
 
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tv_connection_feedback"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="top|end"
-                        android:background="@drawable/bg_metric_badge"
-                        android:drawablePadding="@dimen/padding_spacing_dp4"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:paddingStart="@dimen/padding_spacing_dp8"
-                        android:paddingTop="@dimen/padding_spacing_dp3"
-                        android:paddingEnd="@dimen/padding_spacing_dp8"
-                        android:paddingBottom="@dimen/padding_spacing_dp3"
-                        android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:visibility="gone" />
-
-                </FrameLayout>
+                </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
@@ -302,8 +297,8 @@
         app:elevation="0dp"
         app:headerLayout="@layout/nav_header"
         app:itemBackground="@drawable/bg_drawer_item"
-        app:itemHorizontalPadding="@dimen/padding_spacing_dp12"
-        app:itemIconPadding="@dimen/padding_spacing_dp12"
+        app:itemHorizontalPadding="@dimen/padding_spacing_dp16"
+        app:itemIconPadding="@dimen/padding_spacing_dp16"
         app:itemIconTint="@color/drawer_item_color"
         app:itemTextColor="@color/drawer_item_color"
         app:menu="@menu/menu_drawer" />

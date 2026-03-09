@@ -193,7 +193,7 @@ abstract class BaseActivity : AppCompatActivity() {
         searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)?.let { searchText ->
             searchText.setTextColor(textColor)
             searchText.setHintTextColor(hintColor)
-            searchText.textSize = 14f
+            searchText.textSize = 16f
             searchText.setPadding(0, 0, textEndInset, 0)
         }
 

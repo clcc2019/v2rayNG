@@ -77,10 +77,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateGroupsAction by lazy { MutableLiveData<List<GroupMapItem>>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
+    val updateConnectionCardAction by lazy { MutableLiveData<Int>() }
     val serviceFeedbackAction by lazy { MutableLiveData<ServiceFeedback>() }
     private val tcpingDispatcher = Dispatchers.IO.limitedParallelism(TCPING_PARALLELISM)
     private var tcpingTestJob: Job? = null
     private var prewarmJob: Job? = null
+    private var connectionCardRefreshVersion = 0
 
     /**
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
@@ -271,6 +273,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun testCurrentServerRealPing() {
         MessageUtil.sendMsg2Service(getApplication(), AppConfig.MSG_MEASURE_DELAY, "")
+    }
+
+    fun testServerTcping(guid: String) {
+        val position = getPosition(guid)
+        val server = serversCache.getOrNull(position)
+        val serverAddress = server?.profile?.server ?: return
+        val serverPort = server.profile.serverPort?.toIntOrNull() ?: return
+
+        viewModelScope.launch {
+            val result = withContext(tcpingDispatcher) {
+                SpeedtestManager.tcping(serverAddress, serverPort)
+            }
+            MmkvManager.encodeServerTestDelayMillis(guid, result)
+            updateServerDelay(guid, result)
+            notifyConnectionCardChangedIfSelected(guid)
+            updateListAction.value = getPosition(guid)
+        }
     }
 
     /**
@@ -516,6 +535,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         serversCache[position] = server.copy(testDelayMillis = delayMillis)
     }
 
+    private fun notifyConnectionCardChangedIfSelected(guid: String) {
+        if (guid != MmkvManager.getSelectServer()) {
+            return
+        }
+        updateConnectionCardAction.postValue(++connectionCardRefreshVersion)
+    }
+
+    private fun extractDelayMillis(content: String?): Long? {
+        val raw = content.orEmpty()
+        return listOf(
+            Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE),
+            Regex("(\\d+)\\s*毫秒")
+        ).firstNotNullOfOrNull { pattern ->
+            pattern.find(raw)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.toLongOrNull()
+        }
+    }
+
+    private fun saveSelectedServerDelayResult(content: String?) {
+        val selectedGuid = MmkvManager.getSelectServer().orEmpty()
+        if (selectedGuid.isBlank()) {
+            return
+        }
+
+        val delayMillis = extractDelayMillis(content)
+            ?: if (
+                content.orEmpty().contains("fail", ignoreCase = true)
+                || content.orEmpty().contains("error", ignoreCase = true)
+                || content.orEmpty().contains("失败")
+                || content.orEmpty().contains("无互联网")
+            ) {
+                -1L
+            } else {
+                null
+            }
+            ?: return
+
+        MmkvManager.encodeServerTestDelayMillis(selectedGuid, delayMillis)
+        updateServerDelay(selectedGuid, delayMillis)
+        notifyConnectionCardChangedIfSelected(selectedGuid)
+        val position = getPosition(selectedGuid)
+        if (position >= 0) {
+            updateListAction.value = position
+        }
+    }
+
     private fun updateVisibleServerDelays(guids: List<String>, delayMillis: Long) {
         guids.forEach { guid ->
             val position = getPosition(guid)
@@ -625,13 +692,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 AppConfig.MSG_MEASURE_DELAY_SUCCESS -> {
-                    updateTestResultAction.value = intent.getStringExtra("content")
+                    val content = intent.getStringExtra("content")
+                    updateTestResultAction.value = content
+                    saveSelectedServerDelayResult(content)
                 }
 
                 AppConfig.MSG_MEASURE_CONFIG_SUCCESS -> {
                     val resultPair = intent.serializable<Pair<String, Long>>("content") ?: return
                     MmkvManager.encodeServerTestDelayMillis(resultPair.first, resultPair.second)
                     updateServerDelay(resultPair.first, resultPair.second)
+                    notifyConnectionCardChangedIfSelected(resultPair.first)
                     updateListAction.value = getPosition(resultPair.first)
                 }
 

@@ -18,10 +18,12 @@ class SubscriptionsViewModel : ViewModel() {
         subscriptions.addAll(MmkvManager.decodeSubscriptions())
     }
 
+    fun canRemove(subId: String): Boolean = MmkvManager.canRemoveSubscription(subId)
+
     fun remove(subId: String): Boolean {
-        val changed = subscriptions.removeAll { it.guid == subId }
+        val changed = MmkvManager.removeSubscription(subId)
         if (changed) {
-            MmkvManager.removeSubscription(subId)
+            subscriptions.removeAll { it.guid == subId }
             SettingsChangeManager.makeSetupGroupTab()
         }
         return changed
@@ -44,4 +46,3 @@ class SubscriptionsViewModel : ViewModel() {
         }
     }
 }
-

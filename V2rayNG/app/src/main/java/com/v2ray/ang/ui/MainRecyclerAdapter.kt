@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerFooterBinding
@@ -34,8 +33,6 @@ class MainRecyclerAdapter(
         private const val PAYLOAD_TEST_RESULT = "payload_test_result"
         private const val PAYLOAD_SELECTION = "payload_selection"
         private const val PAYLOAD_CONTENT = "payload_content"
-        private const val SELECTION_ANIMATION_DURATION = 120L
-        private val SELECTION_INTERPOLATOR = FastOutSlowInInterpolator()
         private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
     }
 
@@ -62,7 +59,7 @@ class MainRecyclerAdapter(
                 setData(newData, position = -1)
                 return
             }
-            updateTestResultItem(newData?.getOrNull(position), position)
+            updateTestResultItem(newData[position], position)
             return
         }
 
@@ -95,8 +92,9 @@ class MainRecyclerAdapter(
             }
 
             val item = getItem(position)
+            holder.boundItem = item
             if (payloads.contains(PAYLOAD_SELECTION)) {
-                bindSelectionState(holder, item.guid == selectedGuid, animate = true)
+                bindSelectionState(holder, item.guid == selectedGuid)
             }
             if (payloads.contains(PAYLOAD_TEST_RESULT)) {
                 bindTestResult(holder, item)
@@ -143,7 +141,10 @@ class MainRecyclerAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         return when (viewType) {
             VIEW_TYPE_ITEM ->
-                MainViewHolder(ItemRecyclerMainBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+                MainViewHolder(
+                    ItemRecyclerMainBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+                    adapterListener
+                )
 
             else ->
                 FooterViewHolder(ItemRecyclerFooterBinding.inflate(LayoutInflater.from(parent.context), parent, false))
@@ -176,11 +177,11 @@ class MainRecyclerAdapter(
         val item = getItem(position)
         val guid = item.guid
         val profile = item.profile
+        holder.boundItem = item
         holder.itemView.setBackgroundColor(Color.TRANSPARENT)
         bindPrimaryContent(holder, item)
         bindSubscription(holder, profile)
-        bindActions(holder, guid, profile)
-        bindSelectionState(holder, guid == selectedGuid, animate = false)
+        bindSelectionState(holder, guid == selectedGuid)
         bindTestResult(holder, item)
     }
 
@@ -196,26 +197,7 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    private fun bindActions(holder: MainViewHolder, guid: String, profile: ProfileItem) {
-        holder.itemMainBinding.layoutShare.visibility = View.GONE
-        holder.itemMainBinding.layoutEdit.visibility = View.GONE
-        holder.itemMainBinding.layoutRemove.visibility = View.GONE
-        holder.itemMainBinding.layoutMore.visibility = View.VISIBLE
-
-        holder.itemMainBinding.layoutMore.setOnClickListener {
-            val currentPosition = holder.bindingAdapterPosition
-            if (currentPosition == RecyclerView.NO_POSITION) {
-                return@setOnClickListener
-            }
-            adapterListener?.onShare(guid, profile, currentPosition, true)
-        }
-
-        holder.itemMainBinding.infoContainer.setOnClickListener {
-            adapterListener?.onSelectServer(guid)
-        }
-    }
-
-    private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean, animate: Boolean) {
+    private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean) {
         holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.9f
         holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.78f
         holder.itemMainBinding.tvType.alpha = if (isSelected) 0.92f else 0.82f
@@ -228,36 +210,37 @@ class MainRecyclerAdapter(
             if (isSelected) {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
                 holder.itemMainBinding.itemBg.strokeWidth = 1
-                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
-                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
+                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.selectionIndicator)
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.selectionFill)
             } else {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_item_indicator_idle)
                 holder.itemMainBinding.itemBg.strokeWidth = 1
                 holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
-                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surfaceVariant)
+                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
             }
             holder.itemMainBinding.itemBg.animate().cancel()
-            if (animate) {
-                holder.itemMainBinding.itemBg.animate()
-                    .scaleX(if (isSelected) 1f else 0.985f)
-                    .scaleY(if (isSelected) 1f else 0.985f)
-                    .setDuration(SELECTION_ANIMATION_DURATION)
-                    .setInterpolator(SELECTION_INTERPOLATOR)
-                    .start()
-            } else {
-                holder.itemMainBinding.itemBg.scaleX = if (isSelected) 1f else 0.985f
-                holder.itemMainBinding.itemBg.scaleY = if (isSelected) 1f else 0.985f
-            }
+            holder.itemMainBinding.itemBg.scaleX = 1f
+            holder.itemMainBinding.itemBg.scaleY = 1f
         }
         holder.itemMainBinding.itemBg.alpha = 1f
     }
 
     private fun bindTestResult(holder: MainViewHolder, item: ServersCache) {
+        val shouldAnimateResult = holder.boundGuid == item.guid &&
+            holder.lastTestDelay != null &&
+            holder.lastTestDelay != item.testDelayMillis &&
+            item.testDelayMillis != 0L
+
         val delayMillis = item.testDelayMillis
         val testResult = delayMillis.takeIf { it != 0L }?.let { "${it}ms" }.orEmpty()
         holder.itemMainBinding.tvTestResult.text = testResult
         holder.itemMainBinding.tvTestResult.visibility = if (testResult.isBlank()) View.GONE else View.VISIBLE
         holder.itemMainBinding.tvTestResult.setTextColor(if (delayMillis < 0L) holder.colors.pingRed else holder.colors.ping)
+        if (shouldAnimateResult && holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
+            UiMotion.animatePulse(holder.itemMainBinding.tvTestResult, pulseScale = 1.03f)
+        }
+        holder.boundGuid = item.guid
+        holder.lastTestDelay = item.testDelayMillis
     }
 
     private fun getItem(position: Int): ServersCache {
@@ -291,19 +274,70 @@ class MainRecyclerAdapter(
     }
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY)
-        }
+        open fun onItemSelected() {}
 
-        fun onItemClear() {
-            itemView.setBackgroundColor(0)
-        }
+        open fun onItemClear() {}
     }
 
-    class MainViewHolder(val itemMainBinding: ItemRecyclerMainBinding) :
+    class MainViewHolder(
+        val itemMainBinding: ItemRecyclerMainBinding,
+        private val adapterListener: MainAdapterListener?
+    ) :
         BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder {
         val colors = ItemColors.from(itemMainBinding.root)
         var lastSelectionState: Boolean? = null
+        var boundGuid: String? = null
+        var lastTestDelay: Long? = null
+        var boundItem: ServersCache? = null
+
+        init {
+            itemMainBinding.layoutMore.visibility = View.VISIBLE
+            UiMotion.attachPressFeedback(itemMainBinding.infoContainer, pressedScale = 0.992f)
+            UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
+
+            itemMainBinding.layoutMore.setOnClickListener {
+                val item = boundItem ?: return@setOnClickListener
+                val currentPosition = bindingAdapterPosition
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    return@setOnClickListener
+                }
+                adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
+            }
+
+            itemMainBinding.infoContainer.setOnClickListener {
+                val item = boundItem ?: return@setOnClickListener
+                adapterListener?.onSelectServer(item.guid)
+            }
+
+            itemMainBinding.tvTestResult.setOnClickListener {
+                val item = boundItem ?: return@setOnClickListener
+                val currentPosition = bindingAdapterPosition
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    return@setOnClickListener
+                }
+                adapterListener?.onTestDelay(item.guid, currentPosition)
+            }
+        }
+
+        override fun onItemSelected() {
+            itemMainBinding.itemBg.animate().cancel()
+            itemMainBinding.itemBg.alpha = 1f
+            itemMainBinding.itemBg.scaleX = 1f
+            itemMainBinding.itemBg.scaleY = 1f
+            itemMainBinding.itemBg.strokeWidth = 1
+            itemMainBinding.itemBg.setStrokeColor(colors.selectionIndicator)
+        }
+
+        override fun onItemClear() {
+            itemMainBinding.itemBg.animate().cancel()
+            itemMainBinding.itemBg.alpha = 1f
+            itemMainBinding.itemBg.scaleX = 1f
+            itemMainBinding.itemBg.scaleY = 1f
+            itemMainBinding.itemBg.strokeWidth = 1
+            itemMainBinding.itemBg.setStrokeColor(
+                if (lastSelectionState == true) colors.selectionIndicator else colors.outlineVariant
+            )
+        }
     }
 
     class FooterViewHolder(val itemFooterBinding: ItemRecyclerFooterBinding) :
@@ -331,7 +365,6 @@ class MainRecyclerAdapter(
         val selectionFill: Int,
         val outlineVariant: Int,
         val surface: Int,
-        val surfaceVariant: Int,
         val ping: Int,
         val pingRed: Int
     ) {
@@ -343,7 +376,6 @@ class MainRecyclerAdapter(
                     selectionFill = ContextCompat.getColor(context, R.color.colorSelectionFill),
                     outlineVariant = ContextCompat.getColor(context, R.color.md_theme_outlineVariant),
                     surface = ContextCompat.getColor(context, R.color.md_theme_surface),
-                    surfaceVariant = ContextCompat.getColor(context, R.color.md_theme_surfaceVariant),
                     ping = ContextCompat.getColor(context, R.color.colorPing),
                     pingRed = ContextCompat.getColor(context, R.color.colorPingRed)
                 )

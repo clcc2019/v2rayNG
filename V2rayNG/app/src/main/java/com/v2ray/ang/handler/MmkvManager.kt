@@ -1,6 +1,7 @@
 package com.v2ray.ang.handler
 
 import com.tencent.mmkv.MMKV
+import com.v2ray.ang.AppConfig.CACHE_SUBSCRIPTION_ID
 import com.v2ray.ang.AppConfig.DEFAULT_SUBSCRIPTION_ID
 import com.v2ray.ang.AppConfig.PREF_IS_BOOTED
 import com.v2ray.ang.AppConfig.PREF_ROUTING_RULESET
@@ -382,22 +383,47 @@ object MmkvManager {
     }
 
     /**
+     * Returns whether the subscription can be removed.
+     */
+    fun canRemoveSubscription(subid: String): Boolean {
+        if (subid.isBlank()) {
+            return false
+        }
+
+        val subscriptions = decodeSubscriptions()
+        if (subscriptions.none { it.guid == subid }) {
+            return false
+        }
+
+        if (subid != DEFAULT_SUBSCRIPTION_ID) {
+            return true
+        }
+
+        return subscriptions.size == 2 && decodeServerList(subid).isEmpty()
+    }
+
+    /**
      * Removes the subscription.
      *
      * @param subid The subscription ID.
      */
-    fun removeSubscription(subid: String) {
-        // Protect default subscription from being deleted
-        if (subid == DEFAULT_SUBSCRIPTION_ID) {
-            return
+    fun removeSubscription(subid: String): Boolean {
+        if (!canRemoveSubscription(subid)) {
+            return false
         }
 
-        subStorage.remove(subid)
         val subsList = decodeSubsList()
         subsList.remove(subid)
+        removeServerViaSubid(subid)
+        mainStorage.remove("$KEY_SUB_SERVER_PREFIX${getSubscriptionId(subid)}")
+        subStorage.remove(subid)
         encodeSubsList(subsList)
 
-        removeServerViaSubid(subid)
+        if (decodeSettingsString(CACHE_SUBSCRIPTION_ID, "").orEmpty() == subid) {
+            encodeSettings(CACHE_SUBSCRIPTION_ID, subsList.firstOrNull().orEmpty())
+        }
+
+        return true
     }
 
     /**

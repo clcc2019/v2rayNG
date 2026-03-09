@@ -43,6 +43,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private lateinit var adapter: MainRecyclerAdapter
     private val subId: String by lazy { arguments?.getString(ARG_SUB_ID).orEmpty() }
     private var shouldRefreshOnResume = false
+    private var lastKnownItemCount: Int? = null
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -55,9 +56,11 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         FragmentGroupServerBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         adapter = MainRecyclerAdapter(mainViewModel, ActivityAdapterListener())
         setupRecyclerView()
+        if (mainViewModel.keywordFilter.isBlank()) {
+            lastKnownItemCount = getStoredItemCount()
+        }
 
         mainViewModel.updateListAction.observe(viewLifecycleOwner) { index ->
             if (mainViewModel.subscriptionId != subId) {
@@ -66,6 +69,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             // Log.d(TAG, "GroupServerFragment updateListAction subId=$subId")
             adapter.setData(mainViewModel.serversCache, index)
             if (index < 0) {
+                lastKnownItemCount = mainViewModel.serversCache.size
                 updateEmptyState()
             }
         }
@@ -76,8 +80,18 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
 
     override fun onResume() {
         super.onResume()
+        val storedItemCount = if (mainViewModel.keywordFilter.isBlank()) getStoredItemCount() else null
         mainViewModel.ensureSubscriptionLoaded(subId, forceReload = shouldRefreshOnResume)
         shouldRefreshOnResume = false
+        if (storedItemCount == 0 && mainViewModel.keywordFilter.isBlank()) {
+            adapter.setData(mutableListOf())
+        }
+        if (storedItemCount != null) {
+            lastKnownItemCount = storedItemCount
+        } else if (mainViewModel.subscriptionId == subId) {
+            lastKnownItemCount = mainViewModel.serversCache.size
+        }
+        updateEmptyState()
         ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
     }
 
@@ -104,15 +118,33 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     }
 
     private fun updateEmptyState() {
-        val isEmpty = mainViewModel.serversCache.isEmpty()
-        binding.recyclerView.isVisible = !isEmpty
-        binding.layoutEmptyState.isVisible = isEmpty
+        val itemCount = when {
+            mainViewModel.keywordFilter.isBlank() -> getStoredItemCount().also {
+                lastKnownItemCount = it
+            }
+            mainViewModel.subscriptionId == subId -> mainViewModel.serversCache.size.also {
+                lastKnownItemCount = it
+            }
+            lastKnownItemCount != null -> lastKnownItemCount ?: 0
+            else -> null
+        }
+        val shouldShowEmptyState = itemCount == 0
+        binding.recyclerView.isVisible = !shouldShowEmptyState
+        UiMotion.animateVisibility(binding.layoutEmptyState, shouldShowEmptyState)
         binding.tvEmptyTitle.setText(
             if (mainViewModel.keywordFilter.isBlank()) R.string.empty_server_title else R.string.empty_search_title
         )
         binding.tvEmptySubtitle.setText(
             if (mainViewModel.keywordFilter.isBlank()) R.string.empty_server_subtitle else R.string.empty_search_subtitle
         )
+    }
+
+    private fun getStoredItemCount(): Int {
+        return if (subId.isEmpty()) {
+            MmkvManager.decodeAllServerList().size
+        } else {
+            MmkvManager.decodeServerList(subId).size
+        }
     }
 
     private data class ServerAction(
@@ -145,6 +177,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
                     if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
                 )
             )
+            UiMotion.attachPressFeedback(itemBinding.root)
             itemBinding.root.setOnClickListener {
                 bottomSheetDialog.dismiss()
                 runCatching(action.handler).onFailure { e ->
@@ -155,6 +188,9 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         }
 
         bottomSheetDialog.setContentView(sheetBinding.root)
+        bottomSheetDialog.setOnShowListener {
+            UiMotion.animateStaggeredChildren(sheetBinding.layoutActions)
+        }
         bottomSheetDialog.show()
     }
 
@@ -339,6 +375,10 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
 
         override fun onSelectServer(guid: String) {
             setSelectServer(guid)
+        }
+
+        override fun onTestDelay(guid: String, position: Int) {
+            mainViewModel.testServerTcping(guid)
         }
 
         override fun onShare(guid: String, profile: ProfileItem, position: Int, more: Boolean) {

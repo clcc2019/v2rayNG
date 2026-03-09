@@ -8,6 +8,8 @@ interface MainAdapterListener :BaseAdapterListener {
 
     fun onSelectServer(guid: String)
 
+    fun onTestDelay(guid: String, position: Int)
+
     fun onShare(guid: String, profile: ProfileItem, position: Int, more: Boolean)
 
 }

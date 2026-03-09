@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="padding_spacing_dp1">1dp</dimen>
+    <dimen name="padding_spacing_dp2">2dp</dimen>
     <dimen name="padding_spacing_dp3">3dp</dimen>
     <dimen name="padding_spacing_dp4">4dp</dimen>
     <dimen name="padding_spacing_dp6">6dp</dimen>
@@ -19,8 +20,13 @@
     <dimen name="image_size_dp24">24dp</dimen>
     <dimen name="view_height_dp36">36dp</dimen>
     <dimen name="view_height_dp40">40dp</dimen>
+    <dimen name="view_height_dp44">44dp</dimen>
     <dimen name="view_height_dp30">30dp</dimen>
+    <dimen name="view_height_dp28">28dp</dimen>
+    <dimen name="view_height_dp26">26dp</dimen>
     <dimen name="view_height_dp32">32dp</dimen>
+    <dimen name="view_size_dp36">36dp</dimen>
+    <dimen name="view_width_delay_badge">54dp</dimen>
     <dimen name="view_height_dp48">48dp</dimen>
     <dimen name="view_height_dp56">56dp</dimen>
     <dimen name="view_height_dp64">64dp</dimen>

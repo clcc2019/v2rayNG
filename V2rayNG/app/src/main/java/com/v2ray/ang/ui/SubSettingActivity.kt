@@ -116,17 +116,27 @@ class SubSettingActivity : BaseActivity() {
         }
 
         override fun onRemove(guid: String, position: Int) {
+            if (!viewModel.canRemove(guid)) {
+                toast(R.string.toast_action_not_allowed)
+                refreshData()
+                return
+            }
+
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
                 AlertDialog.Builder(ownerActivity)
                     .setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
-                        viewModel.remove(guid)
+                        if (!viewModel.remove(guid)) {
+                            toast(R.string.toast_action_not_allowed)
+                        }
                         refreshData()
                     }
                     .setNegativeButton(android.R.string.cancel, null)
                     .show()
             } else {
-                viewModel.remove(guid)
+                if (!viewModel.remove(guid)) {
+                    toast(R.string.toast_action_not_allowed)
+                }
                 refreshData()
             }
         }

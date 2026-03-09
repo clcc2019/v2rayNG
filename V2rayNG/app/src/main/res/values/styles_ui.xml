@@ -3,54 +3,61 @@
 
     <style name="TextAppearance.V2Ray.Eyebrow" parent="TextAppearance.AppCompat.Caption">
         <item name="android:textSize">12sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.02</item>
     </style>
 
     <style name="TextAppearance.V2Ray.ScreenTitle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textSize">22sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.V2Ray.CardTitle" parent="TextAppearance.AppCompat.Subhead">
-        <item name="android:textSize">18sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineSpacingExtra">0dp</item>
     </style>
 
     <style name="TextAppearance.V2Ray.BodyStrong" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Body" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Support" parent="TextAppearance.AppCompat.Small">
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Badge" parent="TextAppearance.AppCompat.Small">
         <item name="android:textSize">11sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Tab" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">11sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.TabLarge" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.V2Ray.FormLabel" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">13sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
     </style>
 
     <style name="TextAppearance.V2Ray.MenuItem" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
     </style>
 
@@ -76,10 +83,35 @@
 
     <style name="Widget.V2Ray.Card.TabGroup" parent="Widget.V2Ray.Card.Subtle">
         <item name="cardCornerRadius">@dimen/shape_corner_dp16</item>
+        <item name="cardBackgroundColor">@color/md_theme_surface</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.TopTabs" parent="Widget.V2Ray.Card.Primary">
+        <item name="cardCornerRadius">19dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
     </style>
 
     <style name="Widget.V2Ray.Card.ListItem" parent="Widget.V2Ray.Card.TabGroup">
-        <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
+        <item name="cardBackgroundColor">@color/md_theme_surface</item>
+        <item name="cardCornerRadius">20dp</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.HomeConnection" parent="Widget.V2Ray.Card.Primary">
+        <item name="cardCornerRadius">28dp</item>
+        <item name="cardBackgroundColor">@android:color/transparent</item>
+        <item name="strokeColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.V2Ray.Button.HomePrimary" parent="Widget.V2Ray.Button.Primary">
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">@dimen/view_height_dp44</item>
+    </style>
+
+    <style name="Widget.V2Ray.Button.HomeSecondary" parent="Widget.V2Ray.Button.Secondary">
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">@dimen/view_height_dp44</item>
     </style>
 
     <style name="Widget.V2Ray.Button" parent="Widget.Material3.Button">
@@ -123,7 +155,8 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp14</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp12</item>
         <item name="android:minHeight">@dimen/view_height_dp56</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
         <item name="android:textColorHint">@color/md_theme_onSurfaceVariant</item>
         <item name="android:gravity">center_vertical</item>
