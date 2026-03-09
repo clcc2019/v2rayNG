@@ -18,7 +18,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayoutMediator
@@ -93,6 +96,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
         binding.navView.setNavigationItemSelectedListener(this)
+        setupNavigationDrawerInsets()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -115,6 +119,20 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
         }
+    }
+
+    private fun setupNavigationDrawerInsets() {
+        val headerView = binding.navView.getHeaderView(0)
+        val headerTopPadding = headerView.paddingTop
+        val navBottomPadding = binding.navView.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.navView) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            headerView.updatePadding(top = headerTopPadding + systemBars.top)
+            binding.navView.updatePadding(bottom = navBottomPadding + systemBars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.navView)
     }
 
     private fun setupViewModel() {
