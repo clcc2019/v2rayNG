@@ -142,6 +142,6 @@ class SimpleItemTouchHelperCallback(private val mAdapter: ItemTouchHelperAdapter
     companion object {
         private const val ALPHA_FULL = 1.0f
         private const val SWIPE_THRESHOLD = 0.25f
-        private const val ANIMATION_DURATION: Long = 200
+        private const val ANIMATION_DURATION: Long = 120
     }
 }

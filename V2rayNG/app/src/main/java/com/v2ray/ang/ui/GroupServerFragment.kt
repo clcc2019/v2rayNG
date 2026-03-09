@@ -14,6 +14,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
@@ -39,7 +40,6 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         get() = requireActivity() as MainActivity
     private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var adapter: MainRecyclerAdapter
-    private var itemTouchHelper: ItemTouchHelper? = null
     private val subId: String by lazy { arguments?.getString(ARG_SUB_ID).orEmpty() }
 
     companion object {
@@ -55,16 +55,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         adapter = MainRecyclerAdapter(mainViewModel, ActivityAdapterListener())
-        binding.recyclerView.setHasFixedSize(true)
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
-            binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        } else {
-            binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
-        }
-        binding.recyclerView.adapter = adapter
-
-        itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
-        itemTouchHelper?.attachToRecyclerView(binding.recyclerView)
+        setupRecyclerView()
 
         mainViewModel.updateListAction.observe(viewLifecycleOwner) { index ->
             if (mainViewModel.subscriptionId != subId) {
@@ -82,6 +73,28 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     override fun onResume() {
         super.onResume()
         mainViewModel.subscriptionIdChanged(subId)
+        ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
+    }
+
+    private fun setupRecyclerView() {
+        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), getSpanCount())
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (mainViewModel.subscriptionId != subId) {
+                    return
+                }
+                ownerActivity.onServerListScrolled(dy, recyclerView.canScrollVertically(-1))
+            }
+        })
+        ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
+            .attachToRecyclerView(binding.recyclerView)
+    }
+
+    private fun getSpanCount(): Int {
+        return if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) 2 else 1
     }
 
     private fun updateEmptyState() {
@@ -274,7 +287,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
      * @param position The position in the list
      */
     private fun removeServerSub(guid: String, position: Int) {
-        ownerActivity.mainViewModel.removeServer(guid)
+        mainViewModel.removeServer(guid)
         adapter.removeServerSub(guid, position)
     }
 

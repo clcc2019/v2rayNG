@@ -5,9 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewbinding.ViewBinding
 import com.v2ray.ang.helper.CustomDividerItemDecoration
 
@@ -49,5 +51,18 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
 
         // Add the divider to the RecyclerView
         recyclerView.addItemDecoration(dividerItemDecoration)
+    }
+
+    fun optimizeRecyclerViewForHighRefresh(recyclerView: RecyclerView) {
+        val animator = (recyclerView.itemAnimator as? DefaultItemAnimator) ?: DefaultItemAnimator()
+        animator.supportsChangeAnimations = false
+        animator.addDuration = 120L
+        animator.moveDuration = 120L
+        animator.removeDuration = 100L
+        animator.changeDuration = 80L
+        recyclerView.itemAnimator = animator
+        (recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        recyclerView.setItemViewCacheSize(12)
+        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
     }
 }

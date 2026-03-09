@@ -2,15 +2,11 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/item_bg"
+    style="@style/Widget.V2Ray.Card.Section"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/padding_spacing_dp6"
-    android:layout_marginBottom="@dimen/padding_spacing_dp6"
-    app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutlineVariant"
-    app:strokeWidth="1dp">
+    android:layout_marginBottom="@dimen/padding_spacing_dp6">
 
     <LinearLayout
         android:id="@+id/info_container"

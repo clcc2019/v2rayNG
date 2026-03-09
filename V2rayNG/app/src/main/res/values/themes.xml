@@ -53,6 +53,16 @@
         <!-- Status bar and navigation bar - system bars -->
         <item name="android:statusBarColor">@color/md_theme_background</item>
         <item name="android:navigationBarColor">@color/md_theme_background</item>
+        <item name="toolbarStyle">@style/Widget.V2Ray.Toolbar</item>
+        <item name="android:editTextStyle">@style/Widget.V2Ray.EditText</item>
+        <item name="editTextStyle">@style/Widget.V2Ray.EditText</item>
+        <item name="android:spinnerStyle">@style/Widget.V2Ray.Spinner</item>
+        <item name="spinnerStyle">@style/Widget.V2Ray.Spinner</item>
+        <item name="android:popupMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
+        <item name="popupMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
+        <item name="android:actionOverflowMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.V2Ray.BottomSheetDialog</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->

@@ -5,11 +5,20 @@ import android.content.res.ColorStateList
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
 import android.util.Log
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -23,11 +32,15 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
+import com.v2ray.ang.dto.ProfileItem
+import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.PermissionType
 import com.v2ray.ang.extension.toast
@@ -45,6 +58,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+    companion object {
+        private const val SHORT_ANIMATION_DURATION = 120L
+        private const val MEDIUM_ANIMATION_DURATION = 180L
+    }
+
     private enum class ServiceUiState {
         STOPPED,
         STARTING,
@@ -60,6 +78,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private lateinit var groupPagerAdapter: GroupPagerAdapter
     private var tabMediator: TabLayoutMediator? = null
     private var serviceUiState = ServiceUiState.STOPPED
+    private var isGroupTabHidden = false
+    private val motionInterpolator = FastOutSlowInInterpolator()
+    private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
+        override fun onTabSelected(tab: TabLayout.Tab) = syncGroupTabSelection()
+        override fun onTabUnselected(tab: TabLayout.Tab) = syncGroupTabSelection()
+        override fun onTabReselected(tab: TabLayout.Tab) = Unit
+    }
 
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
@@ -136,7 +161,12 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun setupViewModel() {
-        mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
+        mainViewModel.updateTestResultAction.observe(this) { result ->
+            val message = compactTestResult(result)
+            if (message.isNotBlank()) {
+                toast(message)
+            }
+        }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
@@ -147,21 +177,161 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private fun setupGroupTab() {
         val groups = mainViewModel.getSubscriptions(this)
         groupPagerAdapter.update(groups)
+        configureGroupTabLayout(groups.size)
 
         tabMediator?.detach()
         tabMediator = TabLayoutMediator(binding.tabGroup, binding.viewPager) { tab, position ->
             groupPagerAdapter.groups.getOrNull(position)?.let {
-                tab.text = it.remarks
+                tab.customView = createGroupTabView(it)
                 tab.tag = it.id
             }
         }.also { it.attach() }
 
+        binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
+        binding.tabGroup.addOnTabSelectedListener(groupTabSelectedListener)
+
         val targetIndex = groups.indexOfFirst { it.id == mainViewModel.subscriptionId }.takeIf { it >= 0 } ?: (groups.size - 1)
         binding.viewPager.setCurrentItem(targetIndex, false)
+        syncGroupTabSelection()
+        binding.tabGroup.post { applyCompactGroupTabHeight() }
 
         binding.tabGroup.isVisible = groups.size > 1
         binding.cardTabGroup.isVisible = groups.size > 1
+        setGroupTabVisible(groups.size > 1, immediate = true)
+        binding.cardTabGroup.post { updateGroupTabContentInset() }
         refreshConnectionCard()
+    }
+
+    private fun configureGroupTabLayout(groupCount: Int) {
+        val useFixedLayout = groupCount in 2..3
+        binding.tabGroup.tabMode = if (useFixedLayout) TabLayout.MODE_FIXED else TabLayout.MODE_SCROLLABLE
+        binding.tabGroup.tabGravity = if (useFixedLayout) TabLayout.GRAVITY_FILL else TabLayout.GRAVITY_CENTER
+
+        val cardHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp32)
+        val cardTopMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
+        val cardLayoutParams = binding.cardTabGroup.layoutParams as CoordinatorLayout.LayoutParams
+        cardLayoutParams.width = CoordinatorLayout.LayoutParams.MATCH_PARENT
+        cardLayoutParams.height = cardHeight
+        cardLayoutParams.topMargin = cardTopMargin
+        val sideMargin = resources.getDimensionPixelSize(
+            if (useFixedLayout) R.dimen.padding_spacing_dp20 else R.dimen.padding_spacing_dp16
+        )
+        cardLayoutParams.marginStart = sideMargin
+        cardLayoutParams.marginEnd = sideMargin
+        binding.cardTabGroup.layoutParams = cardLayoutParams
+
+        binding.tabGroup.layoutParams = binding.tabGroup.layoutParams.apply {
+            width = CoordinatorLayout.LayoutParams.MATCH_PARENT
+            height = cardHeight
+        }
+        binding.tabGroup.minimumHeight = 0
+        binding.tabGroup.requestLayout()
+    }
+
+    private fun createGroupTabView(group: GroupMapItem): View {
+        val view = LayoutInflater.from(this).inflate(R.layout.item_tab_group, binding.tabGroup, false)
+        view.tag = group
+        view.findViewById<TextView>(R.id.tv_tab_label).text = buildGroupTabText(group, selected = false)
+        return view
+    }
+
+    private fun syncGroupTabSelection() {
+        for (index in 0 until binding.tabGroup.tabCount) {
+            val tab = binding.tabGroup.getTabAt(index) ?: continue
+            val customView = tab.customView ?: continue
+            val isSelected = tab.isSelected
+            customView.isSelected = isSelected
+            customView.animate()
+                .scaleX(if (isSelected) 1f else 0.97f)
+                .scaleY(if (isSelected) 1f else 0.97f)
+                .setDuration(SHORT_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
+
+            val group = customView.tag as? GroupMapItem ?: continue
+            val label = customView.findViewById<TextView>(R.id.tv_tab_label)
+            label.text = buildGroupTabText(group, selected = isSelected)
+            label.alpha = if (isSelected) 1f else 0.88f
+        }
+    }
+
+    private fun applyCompactGroupTabHeight() {
+        val compactHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp30)
+        binding.tabGroup.minimumHeight = compactHeight
+
+        val slidingTabIndicator = binding.tabGroup.getChildAt(0) as? ViewGroup ?: return
+        for (index in 0 until slidingTabIndicator.childCount) {
+            val tabView = slidingTabIndicator.getChildAt(index)
+            tabView.minimumHeight = compactHeight
+            tabView.layoutParams = tabView.layoutParams.apply {
+                height = compactHeight
+            }
+            tabView.setPadding(tabView.paddingLeft, 0, tabView.paddingRight, 0)
+            tabView.requestLayout()
+        }
+    }
+
+    private fun buildGroupTabText(group: GroupMapItem, selected: Boolean): CharSequence {
+        val labelColor = ContextCompat.getColor(
+            this,
+            if (selected) R.color.md_theme_onSecondaryContainer else R.color.md_theme_onSurfaceVariant
+        )
+        val counterColor = ContextCompat.getColor(
+            this,
+            if (selected) R.color.md_theme_primary else R.color.md_theme_onSurfaceVariant
+        )
+
+        return SpannableStringBuilder(group.remarks).apply {
+            setSpan(ForegroundColorSpan(labelColor), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (group.count > 0) {
+                val start = length
+                append("  ${group.count}")
+                setSpan(ForegroundColorSpan(counterColor), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RelativeSizeSpan(0.88f), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+    }
+
+    fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
+        if (!binding.cardTabGroup.isVisible) return
+        when {
+            !canScrollUp -> setGroupTabVisible(true)
+            dy > 6 -> setGroupTabVisible(false)
+            dy < -6 -> setGroupTabVisible(true)
+        }
+    }
+
+    private fun setGroupTabVisible(visible: Boolean, immediate: Boolean = false) {
+        if (visible == !isGroupTabHidden && !immediate) return
+        isGroupTabHidden = !visible
+
+        val targetAlpha = if (visible) 1f else 0f
+        val targetTranslationY = if (visible) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.45f
+        if (immediate) {
+            binding.cardTabGroup.alpha = targetAlpha
+            binding.cardTabGroup.translationY = targetTranslationY
+            return
+        }
+
+        binding.cardTabGroup.animate()
+            .cancel()
+        binding.cardTabGroup.animate()
+            .alpha(targetAlpha)
+            .translationY(targetTranslationY)
+            .setDuration(MEDIUM_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .start()
+    }
+
+    private fun updateGroupTabContentInset() {
+        val listGap = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp12)
+        val cardTopMargin = (binding.cardTabGroup.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin ?: 0
+        val topPadding = if (binding.cardTabGroup.isVisible) {
+            cardTopMargin + binding.cardTabGroup.height + listGap
+        } else {
+            listGap
+        }
+        binding.viewPager.updatePadding(top = topPadding)
     }
 
     private fun handleFabAction() {
@@ -186,15 +356,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
     }
 
-    private fun handleLayoutTestClick() {
-        if (mainViewModel.isRunning.value == true) {
-            setTestState(getString(R.string.connection_test_testing))
-            mainViewModel.testCurrentServerRealPing()
-        } else {
-            // service not running: keep existing no-op (could show a message if desired)
-        }
-    }
-
     private fun startV2Ray() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
             renderServiceUiState(ServiceUiState.STOPPED)
@@ -204,28 +365,21 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         V2RayServiceManager.startVService(this)
     }
 
+    private fun handleLayoutTestClick() {
+        if (mainViewModel.isRunning.value == true) {
+            toast(R.string.connection_test_testing)
+            mainViewModel.testCurrentServerRealPing()
+        } else {
+            toast(R.string.connection_test_unavailable)
+        }
+    }
+
     fun restartV2Ray() {
         V2RayServiceManager.restartVService(this)
     }
 
-    private fun setTestState(content: String?) {
-        val target = compactTestState(content.orEmpty())
-        if (binding.tvTestState.text == target) {
-            return
-        }
-
-        binding.tvTestState.animate()
-            .alpha(0f)
-            .setDuration(120)
-            .withEndAction {
-                binding.tvTestState.text = target
-                binding.tvTestState.animate().alpha(1f).setDuration(160).start()
-            }
-            .start()
-    }
-
-    private fun compactTestState(content: String): String {
-        val raw = content.trim()
+    private fun compactTestResult(content: String?): String {
+        val raw = content.orEmpty().trim()
         if (raw.isEmpty()) return raw
 
         Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE).find(raw)?.groupValues?.getOrNull(1)?.let {
@@ -244,6 +398,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun renderServiceUiState(state: ServiceUiState) {
+        val previousState = serviceUiState
         serviceUiState = state
         val isTransitioning = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
 
@@ -257,6 +412,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.layoutTest.alpha = if (state == ServiceUiState.RUNNING) 1f else 0.72f
         updateConnectionCard(state)
         updateToolbarSubtitle(state)
+        animateServiceStateChange(previousState, state)
 
         when (state) {
             ServiceUiState.STARTING -> {
@@ -267,7 +423,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.connection_starting)
-                setTestState(getString(R.string.connection_starting))
             }
 
             ServiceUiState.STOPPING -> {
@@ -278,7 +433,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.connection_stopping)
-                setTestState(getString(R.string.connection_stopping))
             }
 
             ServiceUiState.RUNNING -> {
@@ -289,7 +443,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
                 binding.fab.strokeWidth = 0
                 binding.fab.contentDescription = getString(R.string.action_stop_service)
-                setTestState(getString(R.string.connection_connected))
             }
 
             ServiceUiState.STOPPED -> {
@@ -301,27 +454,73 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.fab.strokeWidth = 1
                 binding.fab.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_outlineVariant))
                 binding.fab.contentDescription = getString(R.string.tasker_start_service)
-                setTestState(getString(R.string.connection_not_connected))
             }
         }
     }
 
     private fun animateProgressBar(visible: Boolean) {
+        binding.progressBar.animate().cancel()
         if (visible) {
             if (!binding.progressBar.isVisible) {
                 binding.progressBar.alpha = 0f
                 binding.progressBar.visibility = View.VISIBLE
             }
-            binding.progressBar.animate().alpha(1f).setDuration(180).start()
+            binding.progressBar.animate()
+                .alpha(1f)
+                .setDuration(MEDIUM_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
         } else if (binding.progressBar.isVisible) {
             binding.progressBar.animate()
                 .alpha(0f)
-                .setDuration(180)
+                .setDuration(MEDIUM_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
                 .withEndAction {
                     binding.progressBar.visibility = View.INVISIBLE
                 }
                 .start()
         }
+    }
+
+    private fun animateServiceStateChange(previousState: ServiceUiState, newState: ServiceUiState) {
+        if (previousState == newState) return
+
+        binding.cardConnection.animate().cancel()
+        binding.fab.animate().cancel()
+        binding.layoutTest.animate().cancel()
+
+        binding.cardConnection.scaleX = 0.985f
+        binding.cardConnection.scaleY = 0.985f
+        binding.cardConnection.alpha = 0.94f
+        binding.cardConnection.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .setDuration(MEDIUM_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .start()
+
+        val controlScale = if (newState == ServiceUiState.RUNNING) 1f else 0.985f
+        binding.fab.animate()
+            .scaleX(controlScale)
+            .scaleY(controlScale)
+            .setDuration(SHORT_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .withEndAction {
+                binding.fab.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(SHORT_ANIMATION_DURATION)
+                    .setInterpolator(motionInterpolator)
+                    .start()
+            }
+            .start()
+
+        binding.layoutTest.animate()
+            .alpha(if (newState == ServiceUiState.RUNNING) 1f else 0.72f)
+            .setDuration(SHORT_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .start()
     }
 
     private fun updateToolbarSubtitle(state: ServiceUiState) {
@@ -341,8 +540,23 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun updateConnectionCard(state: ServiceUiState) {
-        val selectedName = getSelectedServerName()
+        val profile = getSelectedProfile()
+        val selectedName = profile?.remarks?.takeIf { it.isNotBlank() }
         binding.tvActiveServer.text = selectedName ?: getString(R.string.connection_not_connected)
+        binding.tvConnectionLabel.text = getString(R.string.current_config)
+        binding.tvConfigType.text = profile?.configType?.name.orEmpty()
+        binding.tvConfigType.isVisible = profile != null
+
+        val configBadgeText = buildConfigBadgeText(profile)
+        binding.tvConfigMeta.text = configBadgeText
+        binding.tvConfigMeta.isVisible = !configBadgeText.isNullOrBlank()
+
+        val serverAddress = buildConnectionAddress(profile)
+        binding.tvConnectionAddress.text = serverAddress ?: getString(R.string.connection_not_connected)
+
+        val metaLine = buildConnectionMetaLine(profile)
+        binding.tvConnectionMetaLine.text = metaLine
+        binding.tvConnectionMetaLine.isVisible = !metaLine.isNullOrBlank()
 
         val statusText = when (state) {
             ServiceUiState.STARTING -> getString(R.string.connection_starting)
@@ -350,15 +564,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.RUNNING -> getString(R.string.connection_connected)
             ServiceUiState.STOPPED -> getString(R.string.connection_not_connected)
         }
-        binding.tvConnectionLabel.text = statusText
         binding.tvConnectionBadge.text = statusText
 
-        val dotColorRes = when (state) {
-            ServiceUiState.STARTING -> R.color.color_fab_active
-            ServiceUiState.STOPPING -> R.color.color_fab_inactive
-            ServiceUiState.RUNNING -> R.color.colorPing
-            ServiceUiState.STOPPED -> R.color.colorStatusIdle
-        }
         val badgeColorRes = when (state) {
             ServiceUiState.STARTING -> R.color.md_theme_onPrimaryContainer
             ServiceUiState.STOPPING -> R.color.md_theme_onSurfaceVariant
@@ -371,7 +578,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.RUNNING -> R.color.md_theme_tertiaryContainer
             ServiceUiState.STOPPED -> R.color.md_theme_surfaceVariant
         }
-        DrawableCompat.setTint(binding.viewStatusDot.background.mutate(), ContextCompat.getColor(this, dotColorRes))
         DrawableCompat.setTint(binding.tvConnectionBadge.background.mutate(), ContextCompat.getColor(this, badgeBackgroundRes))
         binding.tvConnectionBadge.setTextColor(ContextCompat.getColor(this, badgeColorRes))
         binding.layoutTest.backgroundTintList = ColorStateList.valueOf(
@@ -398,17 +604,43 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         )
     }
 
-    private fun getSelectedServerName(): String? {
+    private fun getSelectedProfile(): ProfileItem? {
         val guid = MmkvManager.getSelectServer() ?: return null
-        return MmkvManager.decodeServerConfig(guid)?.remarks
+        return MmkvManager.decodeServerConfig(guid)
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun buildConnectionAddress(profile: ProfileItem?): String? {
+        if (profile == null) return null
+        val server = profile.server?.trim().orEmpty()
+        val port = profile.serverPort?.trim().orEmpty()
+        return when {
+            server.isNotEmpty() && port.isNotEmpty() -> Utils.getIpv6Address(server) + ":" + port
+            server.isNotEmpty() -> Utils.getIpv6Address(server)
+            port.isNotEmpty() -> port
+            profile.configType == EConfigType.CUSTOM -> profile.getServerAddressAndPort()
+            else -> null
+        }
     }
 
-    override fun onPause() {
-        super.onPause()
+    private fun buildConfigBadgeText(profile: ProfileItem?): String? {
+        val network = profile?.network?.trim().orEmpty()
+        return network.takeIf { it.isNotEmpty() }?.uppercase()
+    }
+
+    private fun buildConnectionMetaLine(profile: ProfileItem?): String? {
+        if (profile == null) return null
+        val details = linkedSetOf<String>()
+        profile.security?.trim()?.takeIf { it.isNotEmpty() && !it.equals("none", ignoreCase = true) }?.let {
+            details += it.uppercase()
+        }
+        profile.flow?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
+        profile.method?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
+        profile.host?.trim()?.takeIf { it.isNotEmpty() }?.let { details += it }
+        return details.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+    }
+
+    private fun getSelectedServerName(): String? {
+        return getSelectedProfile()?.remarks
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -578,32 +810,25 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun importBatchConfig(server: String?) {
-        showLoading()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val (count, countSub) = AngConfigManager.importBatchConfig(server, mainViewModel.subscriptionId, true)
-                delay(500L)
-                withContext(Dispatchers.Main) {
-                    when {
-                        count > 0 -> {
-                            toast(getString(R.string.title_import_config_count, count))
-                            mainViewModel.reloadServerList()
-                        }
-
-                        countSub > 0 -> setupGroupTab()
-                        else -> toastError(R.string.toast_failure)
+        launchLoadingTask(
+            delayMillis = 500L,
+            task = { AngConfigManager.importBatchConfig(server, mainViewModel.subscriptionId, true) },
+            onSuccess = { (count, countSub) ->
+                when {
+                    count > 0 -> {
+                        toast(getString(R.string.title_import_config_count, count))
+                        mainViewModel.reloadServerList()
                     }
-                    hideLoading()
+
+                    countSub > 0 -> setupGroupTab()
+                    else -> toastError(R.string.toast_failure)
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    toastError(R.string.toast_failure)
-                    hideLoading()
-                }
+            },
+            onFailure = { e ->
+                toastError(R.string.toast_failure)
                 Log.e(AppConfig.TAG, "Failed to import batch config", e)
             }
-        }
+        )
     }
 
     /**
@@ -624,12 +849,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
      * import config from sub
      */
     private fun importConfigViaSub(): Boolean {
-        showLoading()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val result = mainViewModel.updateConfigViaSubAll()
-            delay(500L)
-            launch(Dispatchers.Main) {
+        launchLoadingTask(
+            delayMillis = 500L,
+            task = { mainViewModel.updateConfigViaSubAll() },
+            onSuccess = { result ->
                 if (result.successCount + result.failureCount + result.skipCount == 0) {
                     toast(R.string.title_update_subscription_no_subscription)
                 } else if (result.successCount > 0 && result.failureCount + result.skipCount == 0) {
@@ -645,90 +868,106 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 if (result.configCount > 0) {
                     mainViewModel.reloadServerList()
                 }
-                hideLoading()
             }
-        }
+        )
         return true
     }
 
     private fun exportAll() {
-        showLoading()
-        lifecycleScope.launch(Dispatchers.IO) {
-            val ret = mainViewModel.exportAllServer()
-            launch(Dispatchers.Main) {
-                if (ret > 0)
-                    toast(getString(R.string.title_export_config_count, ret))
-                else
+        launchLoadingTask(
+            task = { mainViewModel.exportAllServer() },
+            onSuccess = { count ->
+                if (count > 0) {
+                    toast(getString(R.string.title_export_config_count, count))
+                } else {
                     toastError(R.string.toast_failure)
-                hideLoading()
+                }
             }
-        }
+        )
     }
 
     private fun delAllConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeAllServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        hideLoading()
-                    }
+        showConfirmDialog(R.string.del_config_comfirm) {
+            launchLoadingTask(
+                task = { mainViewModel.removeAllServer() },
+                onSuccess = { count ->
+                    mainViewModel.reloadServerList()
+                    toast(getString(R.string.title_del_config_count, count))
                 }
-            }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+            )
+        }
     }
 
     private fun delDuplicateConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeDuplicateServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        toast(getString(R.string.title_del_duplicate_config_count, ret))
-                        hideLoading()
-                    }
+        showConfirmDialog(R.string.del_config_comfirm) {
+            launchLoadingTask(
+                task = { mainViewModel.removeDuplicateServer() },
+                onSuccess = { count ->
+                    mainViewModel.reloadServerList()
+                    toast(getString(R.string.title_del_duplicate_config_count, count))
                 }
-            }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+            )
+        }
     }
 
     private fun delInvalidConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_invalid_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                showLoading()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeInvalidServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        hideLoading()
-                    }
+        showConfirmDialog(R.string.del_invalid_config_comfirm) {
+            launchLoadingTask(
+                task = { mainViewModel.removeInvalidServer() },
+                onSuccess = { count ->
+                    mainViewModel.reloadServerList()
+                    toast(getString(R.string.title_del_config_count, count))
                 }
-            }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+            )
+        }
     }
 
     private fun sortByTestResults() {
+        launchLoadingTask(
+            task = {
+                mainViewModel.sortByTestResults()
+            },
+            onSuccess = {
+                mainViewModel.reloadServerList()
+            }
+        )
+    }
+
+    private fun showConfirmDialog(
+        @StringRes messageResId: Int,
+        onConfirmed: () -> Unit
+    ) {
+        AlertDialog.Builder(this)
+            .setMessage(messageResId)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                onConfirmed()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun <T> launchLoadingTask(
+        delayMillis: Long = 0L,
+        task: suspend () -> T,
+        onSuccess: (T) -> Unit,
+        onFailure: ((Exception) -> Unit)? = null
+    ) {
         showLoading()
         lifecycleScope.launch(Dispatchers.IO) {
-            mainViewModel.sortByTestResults()
-            launch(Dispatchers.Main) {
-                mainViewModel.reloadServerList()
-                hideLoading()
+            try {
+                val result = task()
+                if (delayMillis > 0) {
+                    delay(delayMillis)
+                }
+                withContext(Dispatchers.Main) {
+                    onSuccess(result)
+                    hideLoading()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onFailure?.invoke(e)
+                    hideLoading()
+                }
             }
         }
     }

@@ -339,8 +339,11 @@
     <string name="routing_settings_outbound_tag" translatable="false">outboundTag</string>
 
     <string name="connection_test_pending">Check Connectivity</string>
+    <string name="connection_test_short">Test</string>
     <string name="connection_test_testing">Testing…</string>
     <string name="connection_test_testing_count">Testing %d configs…</string>
+    <string name="connection_test_label">Connectivity</string>
+    <string name="connection_test_unavailable">Connect first to test</string>
     <string name="connection_test_available">Success: Connection took %dms</string>
     <string name="connection_test_error">Fail to detect internet connection: %s</string>
     <string name="connection_test_fail">Internet Unavailable</string>

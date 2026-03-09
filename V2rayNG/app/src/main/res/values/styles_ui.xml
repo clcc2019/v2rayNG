@@ -36,6 +36,24 @@
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
+    <style name="TextAppearance.V2Ray.Tab" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.FormLabel" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/md_theme_onSurface</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.MenuItem" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/md_theme_onSurface</item>
+    </style>
+
     <style name="Widget.V2Ray.Card" parent="Widget.Material3.CardView.Filled">
         <item name="cardCornerRadius">28dp</item>
         <item name="cardElevation">0dp</item>
@@ -47,9 +65,21 @@
         <item name="cardBackgroundColor">@color/md_theme_surface</item>
     </style>
 
+    <style name="Widget.V2Ray.Card.Section" parent="Widget.V2Ray.Card.Primary">
+        <item name="cardCornerRadius">@dimen/shape_corner_dp20</item>
+    </style>
+
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">
         <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
         <item name="cardCornerRadius">22dp</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.TabGroup" parent="Widget.V2Ray.Card.Subtle">
+        <item name="cardCornerRadius">@dimen/shape_corner_dp16</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.ListItem" parent="Widget.V2Ray.Card.TabGroup">
+        <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
     </style>
 
     <style name="Widget.V2Ray.Button" parent="Widget.Material3.Button">
@@ -77,6 +107,57 @@
         <item name="strokeColor">@color/md_theme_outlineVariant</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
         <item name="iconTint">@color/md_theme_onSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.Toolbar" parent="Widget.Material3.Toolbar.Surface">
+        <item name="android:background">@color/md_theme_background</item>
+        <item name="titleTextColor">@color/md_theme_onBackground</item>
+        <item name="subtitleTextColor">@color/md_theme_onSurfaceVariant</item>
+        <item name="popupTheme">@style/ThemeOverlay.V2Ray.PopupMenu</item>
+    </style>
+
+    <style name="Widget.V2Ray.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_form_field</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp14</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp12</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp14</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp12</item>
+        <item name="android:minHeight">@dimen/view_height_dp56</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/md_theme_onSurface</item>
+        <item name="android:textColorHint">@color/md_theme_onSurfaceVariant</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="Widget.V2Ray.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@drawable/bg_form_field</item>
+        <item name="android:minHeight">@dimen/view_height_dp56</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp12</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp12</item>
+        <item name="android:popupBackground">@drawable/bg_popup_surface</item>
+        <item name="android:dropDownSelector">@drawable/bg_selected_indicator</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="Widget.V2Ray.PopupMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/bg_menu_surface</item>
+        <item name="overlapAnchor">false</item>
+    </style>
+
+    <style name="Widget.V2Ray.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_popup_surface</item>
+        <item name="backgroundTint">@color/md_theme_surface</item>
+    </style>
+
+    <style name="ThemeOverlay.V2Ray.PopupMenu" parent="ThemeOverlay.Material3.Light">
+        <item name="android:textColorPrimary">@color/md_theme_onSurface</item>
+        <item name="android:textColorSecondary">@color/md_theme_onSurfaceVariant</item>
+        <item name="android:popupBackground">@drawable/bg_menu_surface</item>
+        <item name="popupMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
+    </style>
+
+    <style name="ThemeOverlay.V2Ray.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.V2Ray.BottomSheet</item>
     </style>
 
 </resources>

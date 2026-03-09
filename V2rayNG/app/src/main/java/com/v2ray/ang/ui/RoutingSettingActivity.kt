@@ -50,6 +50,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.adapter = adapter
 
         mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))

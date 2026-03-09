@@ -136,8 +136,8 @@ class ServerGroupActivity : BaseActivity() {
             displayList.add(name)
             subIds.add(sub.guid)
         }
-        val subAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, displayList)
-        subAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val subAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, displayList)
+        subAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
         binding.spPolicyGroupSubId.adapter = subAdapter
     }
 

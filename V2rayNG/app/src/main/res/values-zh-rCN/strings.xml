@@ -323,9 +323,12 @@
     <string name="routing_settings_export_rulesets_to_clipboard">导出规则集至剪贴板</string>
     <string name="routing_settings_locked">锁定中，导入预设时不删除此规则</string>
 
-    <string name="connection_test_pending">"检查网络连接"</string>
+    <string name="connection_test_pending">"测试代理连接"</string>
+    <string name="connection_test_short">测试</string>
     <string name="connection_test_testing">"测试中…"</string>
     <string name="connection_test_testing_count">测试 %d 个配置中…</string>
+    <string name="connection_test_label">连接检测</string>
+    <string name="connection_test_unavailable">连接后可测试</string>
     <string name="connection_test_available">"连接成功：延时 %d 毫秒"</string>
     <string name="connection_test_error">"失败：%s"</string>
     <string name="connection_test_fail">"无互联网连接"</string>

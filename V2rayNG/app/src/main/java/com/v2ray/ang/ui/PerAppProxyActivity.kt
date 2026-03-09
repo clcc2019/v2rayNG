@@ -42,6 +42,7 @@ class PerAppProxyActivity : BaseActivity() {
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
 
         binding.recyclerView.setHasFixedSize(true)
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
 
         initList()

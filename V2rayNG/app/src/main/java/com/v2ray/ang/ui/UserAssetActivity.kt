@@ -44,6 +44,7 @@ class UserAssetActivity : HelperBaseActivity() {
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         adapter = UserAssetAdapter(viewModel, extDir, ActivityAdapterListener())
         binding.recyclerView.adapter = adapter
 

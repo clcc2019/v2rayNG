@@ -6,12 +6,12 @@
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="52dp"
+    android:minHeight="@dimen/view_height_dp56"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/padding_spacing_dp8"
-    android:paddingTop="@dimen/padding_spacing_dp8"
-    android:paddingEnd="@dimen/padding_spacing_dp8"
-    android:paddingBottom="@dimen/padding_spacing_dp8">
+    android:paddingStart="@dimen/padding_spacing_dp10"
+    android:paddingTop="@dimen/padding_spacing_dp10"
+    android:paddingEnd="@dimen/padding_spacing_dp10"
+    android:paddingBottom="@dimen/padding_spacing_dp10">
 
     <ImageView
         android:id="@+id/iv_icon"
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/padding_spacing_dp12"
         android:layout_weight="1"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textAppearance="@style/TextAppearance.V2Ray.MenuItem"
         android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>

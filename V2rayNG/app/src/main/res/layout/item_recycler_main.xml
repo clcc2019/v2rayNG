@@ -3,25 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_bg"
-    style="@style/Widget.V2Ray.Card.Primary"
+    style="@style/Widget.V2Ray.Card.ListItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp8"
-    android:layout_marginBottom="@dimen/padding_spacing_dp8">
+    android:layout_marginTop="@dimen/padding_spacing_dp6"
+    android:layout_marginBottom="@dimen/padding_spacing_dp6">
 
     <LinearLayout
         android:id="@+id/info_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/bg_list_item_ripple"
         android:clickable="true"
         android:focusable="true"
         android:nextFocusRight="@+id/layout_more"
         android:orientation="vertical"
-        android:paddingStart="@dimen/padding_spacing_dp14"
-        android:paddingTop="@dimen/padding_spacing_dp14"
-        android:paddingEnd="@dimen/padding_spacing_dp10"
-        android:paddingBottom="@dimen/padding_spacing_dp14">
+        android:paddingStart="@dimen/padding_spacing_dp12"
+        android:paddingTop="@dimen/padding_spacing_dp12"
+        android:paddingEnd="@dimen/padding_spacing_dp8"
+        android:paddingBottom="@dimen/padding_spacing_dp12">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,8 +31,8 @@
 
             <LinearLayout
                 android:id="@+id/layout_indicator"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:layout_width="4dp"
+                android:layout_height="28dp"
                 android:layout_marginEnd="@dimen/padding_spacing_dp10"
                 android:background="@drawable/bg_item_indicator_idle"
                 android:orientation="vertical" />
@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:minLines="1"
                 android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                 android:textColor="?attr/colorOnSurface"
@@ -57,9 +57,9 @@
                 android:background="@drawable/bg_metric_badge"
                 android:gravity="end"
                 android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="4dp"
+                android:paddingTop="@dimen/padding_spacing_dp4"
                 android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="4dp"
+                android:paddingBottom="@dimen/padding_spacing_dp4"
                 android:textAppearance="@style/TextAppearance.V2Ray.Badge"
                 android:textColor="@color/colorPing"
                 android:visibility="gone"
@@ -94,7 +94,7 @@
             android:id="@+id/tv_statistics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp10"
+            android:layout_marginTop="@dimen/padding_spacing_dp6"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAppearance="@style/TextAppearance.V2Ray.Support"
@@ -104,7 +104,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp10"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -114,9 +114,9 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_type_chip"
                 android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="4dp"
+                android:paddingTop="@dimen/padding_spacing_dp3"
                 android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="4dp"
+                android:paddingBottom="@dimen/padding_spacing_dp3"
                 android:textAppearance="@style/TextAppearance.V2Ray.Badge"
                 android:textColor="@color/colorConfigType"
                 tools:text="VLESS" />
@@ -125,13 +125,13 @@
                 android:id="@+id/layout_subscription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                android:layout_marginStart="@dimen/padding_spacing_dp6"
                 android:background="@drawable/bg_subscription_badge"
                 android:gravity="center"
                 android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="4dp"
+                android:paddingTop="@dimen/padding_spacing_dp3"
                 android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="4dp"
+                android:paddingBottom="@dimen/padding_spacing_dp3"
                 android:visibility="gone">
 
                 <TextView

@@ -31,6 +31,7 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
 

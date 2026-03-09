@@ -87,44 +87,79 @@ data class ProfileItem(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other == null) return false
-        val obj = other as ProfileItem
+        if (this === other) return true
+        if (other !is ProfileItem) return false
 
-        return (this.server == obj.server
-                && this.serverPort == obj.serverPort
-                && this.password == obj.password
-                && this.method == obj.method
-                && this.flow == obj.flow
-                && this.username == obj.username
+        return (this.server == other.server
+                && this.serverPort == other.serverPort
+                && this.password == other.password
+                && this.method == other.method
+                && this.flow == other.flow
+                && this.username == other.username
 
-                && this.network == obj.network
-                && this.headerType == obj.headerType
-                && this.host == obj.host
-                && this.path == obj.path
-                && this.seed == obj.seed
-                && this.quicSecurity == obj.quicSecurity
-                && this.quicKey == obj.quicKey
-                && this.mode == obj.mode
-                && this.serviceName == obj.serviceName
-                && this.authority == obj.authority
-                && this.xhttpMode == obj.xhttpMode
+                && this.network == other.network
+                && this.headerType == other.headerType
+                && this.host == other.host
+                && this.path == other.path
+                && this.seed == other.seed
+                && this.quicSecurity == other.quicSecurity
+                && this.quicKey == other.quicKey
+                && this.mode == other.mode
+                && this.serviceName == other.serviceName
+                && this.authority == other.authority
+                && this.xhttpMode == other.xhttpMode
 
-                && this.security == obj.security
-                && this.sni == obj.sni
-                && this.alpn == obj.alpn
-                && this.fingerPrint == obj.fingerPrint
-                && this.publicKey == obj.publicKey
-                && this.shortId == obj.shortId
+                && this.security == other.security
+                && this.sni == other.sni
+                && this.alpn == other.alpn
+                && this.fingerPrint == other.fingerPrint
+                && this.publicKey == other.publicKey
+                && this.shortId == other.shortId
 
-                && this.secretKey == obj.secretKey
-                && this.localAddress == obj.localAddress
-                && this.reserved == obj.reserved
-                && this.mtu == obj.mtu
+                && this.secretKey == other.secretKey
+                && this.localAddress == other.localAddress
+                && this.reserved == other.reserved
+                && this.mtu == other.mtu
 
-                && this.obfsPassword == obj.obfsPassword
-                && this.portHopping == obj.portHopping
-                && this.portHoppingInterval == obj.portHoppingInterval
-                && this.pinnedCA256 == obj.pinnedCA256
+                && this.obfsPassword == other.obfsPassword
+                && this.portHopping == other.portHopping
+                && this.portHoppingInterval == other.portHoppingInterval
+                && this.pinnedCA256 == other.pinnedCA256
                 )
+    }
+
+    override fun hashCode(): Int {
+        var result = server.hashCode()
+        result = 31 * result + serverPort.hashCode()
+        result = 31 * result + password.hashCode()
+        result = 31 * result + method.hashCode()
+        result = 31 * result + flow.hashCode()
+        result = 31 * result + username.hashCode()
+        result = 31 * result + network.hashCode()
+        result = 31 * result + headerType.hashCode()
+        result = 31 * result + host.hashCode()
+        result = 31 * result + path.hashCode()
+        result = 31 * result + seed.hashCode()
+        result = 31 * result + quicSecurity.hashCode()
+        result = 31 * result + quicKey.hashCode()
+        result = 31 * result + mode.hashCode()
+        result = 31 * result + serviceName.hashCode()
+        result = 31 * result + authority.hashCode()
+        result = 31 * result + xhttpMode.hashCode()
+        result = 31 * result + security.hashCode()
+        result = 31 * result + sni.hashCode()
+        result = 31 * result + alpn.hashCode()
+        result = 31 * result + fingerPrint.hashCode()
+        result = 31 * result + publicKey.hashCode()
+        result = 31 * result + shortId.hashCode()
+        result = 31 * result + secretKey.hashCode()
+        result = 31 * result + localAddress.hashCode()
+        result = 31 * result + reserved.hashCode()
+        result = 31 * result + mtu.hashCode()
+        result = 31 * result + obfsPassword.hashCode()
+        result = 31 * result + portHopping.hashCode()
+        result = 31 * result + portHoppingInterval.hashCode()
+        result = 31 * result + pinnedCA256.hashCode()
+        return result
     }
 }

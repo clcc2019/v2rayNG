@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -15,8 +16,10 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -31,6 +34,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyPreferredRefreshRate()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         if (!Utils.getDarkModeStatus(this)) {
@@ -57,6 +61,19 @@ abstract class BaseActivity : AppCompatActivity() {
         val drawable = ContextCompat.getDrawable(context!!, drawableResId)
         requireNotNull(drawable) { "Drawable resource not found" }
         recyclerView.addItemDecoration(CustomDividerItemDecoration(drawable, orientation))
+    }
+
+    protected fun optimizeRecyclerViewForHighRefresh(recyclerView: RecyclerView) {
+        val animator = (recyclerView.itemAnimator as? DefaultItemAnimator) ?: DefaultItemAnimator()
+        animator.supportsChangeAnimations = false
+        animator.addDuration = 120L
+        animator.moveDuration = 120L
+        animator.removeDuration = 100L
+        animator.changeDuration = 80L
+        recyclerView.itemAnimator = animator
+        (recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        recyclerView.setItemViewCacheSize(12)
+        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
     }
 
     protected fun setupToolbar(toolbar: Toolbar?, showHomeAsUp: Boolean = true, title: CharSequence? = null) {
@@ -140,30 +157,44 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     private fun styleSearchView(searchView: SearchView) {
-        val surfaceVariant = MaterialColors.getColor(searchView, com.google.android.material.R.attr.colorSurfaceVariant, ContextCompat.getColor(this, R.color.md_theme_surfaceVariant))
+        val surfaceColor = MaterialColors.getColor(searchView, com.google.android.material.R.attr.colorSurface, ContextCompat.getColor(this, R.color.md_theme_surface))
         val outlineColor = MaterialColors.getColor(searchView, com.google.android.material.R.attr.colorOutlineVariant, ContextCompat.getColor(this, R.color.md_theme_outlineVariant))
         val textColor = MaterialColors.getColor(searchView, com.google.android.material.R.attr.colorOnSurface, ContextCompat.getColor(this, R.color.md_theme_onSurface))
         val hintColor = MaterialColors.getColor(searchView, com.google.android.material.R.attr.colorOnSurfaceVariant, ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
-        val cornerRadius = resources.getDimension(R.dimen.view_height_dp36) / 2f
+        val searchFieldHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val cornerRadius = searchFieldHeight / 2f
         val strokeWidth = resources.displayMetrics.density.toInt().coerceAtLeast(1)
+        val horizontalInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp10)
+        val verticalInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
+        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+        val textEndInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
 
         val plateDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            setColor(surfaceVariant)
+            setColor(surfaceColor)
             setStroke(strokeWidth, outlineColor)
             this.cornerRadius = cornerRadius
         }
 
         searchView.findViewById<View>(androidx.appcompat.R.id.search_plate)?.let { plate ->
             plate.background = plateDrawable
-            plate.minimumHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
+            plate.minimumHeight = searchFieldHeight
+            plate.setPadding(horizontalInset, verticalInset, horizontalInset, verticalInset)
+        }
+
+        searchView.findViewById<View>(androidx.appcompat.R.id.search_edit_frame)?.let { editFrame ->
+            editFrame.setPadding(0, 0, 0, 0)
+        }
+
+        searchView.findViewById<View>(androidx.appcompat.R.id.submit_area)?.let { submitArea ->
+            submitArea.setPadding(0, 0, 0, 0)
         }
 
         searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)?.let { searchText ->
             searchText.setTextColor(textColor)
             searchText.setHintTextColor(hintColor)
             searchText.textSize = 14f
-            searchText.setPadding(0, 0, 0, 0)
+            searchText.setPadding(0, 0, textEndInset, 0)
         }
 
         listOf(
@@ -173,7 +204,10 @@ abstract class BaseActivity : AppCompatActivity() {
             androidx.appcompat.R.id.search_go_btn,
             androidx.appcompat.R.id.search_voice_btn
         ).forEach { id ->
-            searchView.findViewById<ImageView?>(id)?.imageTintList = ColorStateList.valueOf(hintColor)
+            searchView.findViewById<ImageView?>(id)?.let { imageView ->
+                imageView.imageTintList = ColorStateList.valueOf(hintColor)
+                imageView.setPadding(iconInset, iconInset, iconInset, iconInset)
+            }
         }
     }
 
@@ -191,5 +225,29 @@ abstract class BaseActivity : AppCompatActivity() {
 
     protected fun isLoadingVisible(): Boolean {
         return progressBar?.visibility == View.VISIBLE
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applyPreferredRefreshRate() {
+        val layoutParams = window.attributes ?: return
+        val display = windowManager.defaultDisplay ?: return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val currentMode = display.mode
+            val preferredMode = display.supportedModes
+                .filter { it.physicalWidth == currentMode.physicalWidth && it.physicalHeight == currentMode.physicalHeight }
+                .maxByOrNull { it.refreshRate }
+
+            preferredMode?.let {
+                layoutParams.preferredDisplayModeId = it.modeId
+                layoutParams.preferredRefreshRate = it.refreshRate
+            }
+        } else {
+            display.supportedRefreshRates.maxOrNull()?.let { refreshRate ->
+                layoutParams.preferredRefreshRate = refreshRate
+            }
+        }
+
+        window.attributes = layoutParams
     }
 }

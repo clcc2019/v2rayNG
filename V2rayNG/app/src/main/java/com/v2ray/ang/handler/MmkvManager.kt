@@ -31,6 +31,7 @@ object MmkvManager {
     private const val KEY_SUB_SERVER_PREFIX = "SUB_SERVERS_"
     private const val KEY_SUB_IDS = "SUB_IDS"
     private const val KEY_WEBDAV_CONFIG = "WEBDAV_CONFIG"
+    private const val NO_TEST_DELAY = Long.MIN_VALUE
 
     private val mainStorage by lazy { MMKV.mmkvWithID(ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val profileFullStorage by lazy { MMKV.mmkvWithID(ID_PROFILE_FULL_CONFIG, MMKV.MULTI_PROCESS_MODE) }
@@ -234,14 +235,22 @@ object MmkvManager {
      * @return The server affiliation information.
      */
     fun decodeServerAffiliationInfo(guid: String): ServerAffiliationInfo? {
+        val delayMillis = getServerTestDelayMillis(guid) ?: return null
+        return ServerAffiliationInfo(delayMillis)
+    }
+
+    fun getServerTestDelayMillis(guid: String): Long? {
         if (guid.isBlank()) {
             return null
         }
-        val json = serverAffStorage.decodeString(guid)
-        if (json.isNullOrBlank()) {
-            return null
+
+        val legacyJson = serverAffStorage.decodeString(guid)
+        if (!legacyJson.isNullOrBlank()) {
+            return JsonUtil.fromJson(legacyJson, ServerAffiliationInfo::class.java)?.testDelayMillis
         }
-        return JsonUtil.fromJson(json, ServerAffiliationInfo::class.java)
+
+        val delayMillis = serverAffStorage.decodeLong(guid, NO_TEST_DELAY)
+        return delayMillis.takeUnless { it == NO_TEST_DELAY }
     }
 
     /**
@@ -254,9 +263,7 @@ object MmkvManager {
         if (guid.isBlank()) {
             return
         }
-        val aff = decodeServerAffiliationInfo(guid) ?: ServerAffiliationInfo()
-        aff.testDelayMillis = testResult
-        serverAffStorage.encode(guid, JsonUtil.toJson(aff))
+        serverAffStorage.encode(guid, testResult)
     }
 
     /**
@@ -266,9 +273,8 @@ object MmkvManager {
      */
     fun clearAllTestDelayResults(keys: List<String>?) {
         keys?.forEach { key ->
-            decodeServerAffiliationInfo(key)?.let { aff ->
-                aff.testDelayMillis = 0
-                serverAffStorage.encode(key, JsonUtil.toJson(aff))
+            if (key.isNotBlank()) {
+                serverAffStorage.encode(key, 0L)
             }
         }
     }
@@ -295,16 +301,16 @@ object MmkvManager {
     fun removeInvalidServer(guid: String): Int {
         var count = 0
         if (guid.isNotEmpty()) {
-            decodeServerAffiliationInfo(guid)?.let { aff ->
-                if (aff.testDelayMillis < 0L) {
+            getServerTestDelayMillis(guid)?.let { delayMillis ->
+                if (delayMillis < 0L) {
                     removeServer(guid)
                     count++
                 }
             }
         } else {
             serverAffStorage.allKeys()?.forEach { key ->
-                decodeServerAffiliationInfo(key)?.let { aff ->
-                    if (aff.testDelayMillis < 0L) {
+                getServerTestDelayMillis(key)?.let { delayMillis ->
+                    if (delayMillis < 0L) {
                         removeServer(key)
                         count++
                     }

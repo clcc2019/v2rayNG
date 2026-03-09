@@ -15,11 +15,13 @@ import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.GroupMapItem
+import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.ServersCache
 import com.v2ray.ang.dto.SubscriptionCache
 import com.v2ray.ang.dto.SubscriptionUpdateResult
 import com.v2ray.ang.dto.TestServiceMessage
 import com.v2ray.ang.extension.serializable
+import com.v2ray.ang.extension.nullIfBlank
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
@@ -37,7 +39,14 @@ import kotlinx.coroutines.withContext
 import java.util.Collections
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private data class TcpingTarget(
+        val guid: String,
+        val serverAddress: String,
+        val serverPort: Int
+    )
+
     private var serverList = mutableListOf<String>() // MmkvManager.decodeServerList()
+    private val serverPositions = mutableMapOf<String, Int>()
     var subscriptionId: String = MmkvManager.decodeSettingsString(AppConfig.CACHE_SUBSCRIPTION_ID, "").orEmpty()
     var keywordFilter = ""
     val serversCache = mutableListOf<ServersCache>()
@@ -92,6 +101,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val index = getPosition(guid)
         if (index >= 0) {
             serversCache.removeAt(index)
+            rebuildServerPositions()
         }
     }
 
@@ -104,9 +114,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (subscriptionId.isEmpty()) {
             return
         }
+        if (fromPosition !in serverList.indices || toPosition !in serverList.indices) {
+            return
+        }
 
         Collections.swap(serverList, fromPosition, toPosition)
         Collections.swap(serversCache, fromPosition, toPosition)
+        rebuildServerPositions()
 
         MmkvManager.encodeServerList(serverList, subscriptionId)
     }
@@ -117,22 +131,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     @Synchronized
     fun updateCache() {
         serversCache.clear()
-        val kw = keywordFilter.trim().lowercase()
+        val keyword = keywordFilter.trim()
         for (guid in serverList) {
             val profile = MmkvManager.decodeServerConfig(guid) ?: continue
-            if (kw.isEmpty()) {
-                serversCache.add(ServersCache(guid, profile))
+            val displayAddress = profile.description.nullIfBlank() ?: AngConfigManager.generateDescription(profile)
+            if (keyword.isEmpty()) {
+                serversCache.add(ServersCache(guid, profile, displayAddress))
                 continue
             }
 
-            val remarks = profile.remarks.lowercase()
-            val description = profile.description.orEmpty().lowercase()
-            val server = profile.server.orEmpty().lowercase()
-
-            if (remarks.contains(kw) || description.contains(kw) || server.contains(kw)) {
-                serversCache.add(ServersCache(guid, profile))
+            if (matchesKeyword(profile, displayAddress, keyword)) {
+                serversCache.add(ServersCache(guid, profile, displayAddress))
             }
         }
+        rebuildServerPositions()
     }
 
     /**
@@ -157,7 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (subscriptionId.isEmpty() && keywordFilter.isEmpty()) {
                 serverList
             } else {
-                serversCache.map { it.guid }.toList()
+                currentVisibleServerGuids()
             }
 
         val ret = AngConfigManager.shareNonCustomConfigsToClipboard(
@@ -173,21 +185,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun testAllTcping() {
         tcpingTestScope.coroutineContext[Job]?.cancelChildren()
         SpeedtestManager.closeAllTcpSockets()
-        MmkvManager.clearAllTestDelayResults(serversCache.map { it.guid }.toList())
+        MmkvManager.clearAllTestDelayResults(currentVisibleServerGuids())
 
-        val serversCopy = serversCache.toList()
-        for (item in serversCopy) {
-            item.profile.let { outbound ->
-                val serverAddress = outbound.server
-                val serverPort = outbound.serverPort
-                if (serverAddress != null && serverPort != null) {
-                    tcpingTestScope.launch {
-                        val testResult = SpeedtestManager.tcping(serverAddress, serverPort.toInt())
-                        launch(Dispatchers.Main) {
-                            MmkvManager.encodeServerTestDelayMillis(item.guid, testResult)
-                            updateListAction.value = getPosition(item.guid)
-                        }
-                    }
+        buildTcpingTargets().forEach { target ->
+            tcpingTestScope.launch {
+                val testResult = SpeedtestManager.tcping(target.serverAddress, target.serverPort)
+                launch(Dispatchers.Main) {
+                    MmkvManager.encodeServerTestDelayMillis(target.guid, testResult)
+                    updateListAction.value = getPosition(target.guid)
                 }
             }
         }
@@ -201,7 +206,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             getApplication(),
             TestServiceMessage(key = AppConfig.MSG_MEASURE_CONFIG_CANCEL)
         )
-        MmkvManager.clearAllTestDelayResults(serversCache.map { it.guid }.toList())
+        val visibleServerGuids = currentVisibleServerGuids()
+        MmkvManager.clearAllTestDelayResults(visibleServerGuids)
         updateListAction.value = -1
 
         viewModelScope.launch(Dispatchers.Default) {
@@ -213,7 +219,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 TestServiceMessage(
                     key = AppConfig.MSG_MEASURE_CONFIG,
                     subscriptionId = subscriptionId,
-                    serverGuids = if (keywordFilter.isNotEmpty()) serversCache.map { it.guid } else emptyList()
+                    serverGuids = if (keywordFilter.isNotEmpty()) visibleServerGuids else emptyList()
                 )
             )
         }
@@ -245,11 +251,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun getSubscriptions(context: Context): List<GroupMapItem> {
         val subscriptions = MmkvManager.decodeSubscriptions()
-        if (subscriptionId.isNotEmpty()
-            && !subscriptions.map { it.guid }.contains(subscriptionId)
-        ) {
+        if (subscriptionId.isNotEmpty() && subscriptions.none { it.guid == subscriptionId }) {
             subscriptionIdChanged("")
         }
+
+        val serverCountsBySubscriptionId = subscriptions.associate { it.guid to MmkvManager.decodeServerList(it.guid).size }
 
         val groups = mutableListOf<GroupMapItem>()
         if (subscriptions.size > 1
@@ -258,7 +264,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             groups.add(
                 GroupMapItem(
                     id = "",
-                    remarks = context.getString(R.string.filter_config_all)
+                    remarks = context.getString(R.string.filter_config_all),
+                    count = serverCountsBySubscriptionId.values.sum()
                 )
             )
         }
@@ -266,7 +273,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             groups.add(
                 GroupMapItem(
                     id = sub.guid,
-                    remarks = sub.subscription.remarks
+                    remarks = sub.subscription.remarks,
+                    count = serverCountsBySubscriptionId[sub.guid] ?: 0
                 )
             )
         }
@@ -279,11 +287,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return The position of the server.
      */
     fun getPosition(guid: String): Int {
-        serversCache.forEachIndexed { index, it ->
-            if (it.guid == guid)
-                return index
-        }
-        return -1
+        return serverPositions[guid] ?: -1
     }
 
     /**
@@ -291,24 +295,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return The number of removed servers.
      */
     fun removeDuplicateServer(): Int {
-        val serversCacheCopy = serversCache.toList().toMutableList()
-        val deleteServer = mutableListOf<String>()
-        serversCacheCopy.forEachIndexed { index, sc ->
-            val profile = sc.profile
-            serversCacheCopy.forEachIndexed { index2, sc2 ->
-                if (index2 > index) {
-                    val profile2 = sc2.profile
-                    if (profile == profile2 && !deleteServer.contains(sc2.guid)) {
-                        deleteServer.add(sc2.guid)
-                    }
-                }
+        val seenProfiles = HashSet<ProfileItem>(serversCache.size)
+        val duplicateGuids = ArrayList<String>()
+
+        serversCache.forEach { server ->
+            if (!seenProfiles.add(server.profile)) {
+                duplicateGuids += server.guid
             }
         }
-        for (it in deleteServer) {
-            MmkvManager.removeServer(it)
-        }
 
-        return deleteServer.count()
+        duplicateGuids.forEach(MmkvManager::removeServer)
+        return duplicateGuids.size
     }
 
     /**
@@ -320,11 +317,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (subscriptionId.isEmpty() && keywordFilter.isEmpty()) {
                 MmkvManager.removeAllServer()
             } else {
-                val serversCopy = serversCache.toList()
-                for (item in serversCopy) {
-                    MmkvManager.removeServer(item.guid)
-                }
-                serversCache.toList().count()
+                val visibleServerGuids = currentVisibleServerGuids()
+                visibleServerGuids.forEach(MmkvManager::removeServer)
+                visibleServerGuids.size
             }
         return count
     }
@@ -338,9 +333,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (subscriptionId.isEmpty() && keywordFilter.isEmpty()) {
             count += MmkvManager.removeInvalidServer("")
         } else {
-            val serversCopy = serversCache.toList()
-            for (item in serversCopy) {
-                count += MmkvManager.removeInvalidServer(item.guid)
+            currentVisibleServerGuids().forEach { guid ->
+                count += MmkvManager.removeInvalidServer(guid)
             }
         }
         return count
@@ -370,7 +364,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val serverListToSort = MmkvManager.decodeServerList(subId)
 
         serverListToSort.forEach { key ->
-            val delay = MmkvManager.decodeServerAffiliationInfo(key)?.testDelayMillis ?: 0L
+            val delay = MmkvManager.getServerTestDelayMillis(key) ?: 0L
             serverDelays.add(ServerDelay(key, if (delay <= 0L) 999999 else delay))
         }
         serverDelays.sortBy { it.testDelayMillis }
@@ -418,6 +412,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 reloadServerList()
             }
         }
+    }
+
+    private fun rebuildServerPositions() {
+        serverPositions.clear()
+        serversCache.forEachIndexed { index, server ->
+            serverPositions[server.guid] = index
+        }
+    }
+
+    private fun currentVisibleServerGuids(): List<String> {
+        return ArrayList<String>(serversCache.size).apply {
+            serversCache.forEach { add(it.guid) }
+        }
+    }
+
+    private fun buildTcpingTargets(): List<TcpingTarget> {
+        return buildList(serversCache.size) {
+            serversCache.forEach { item ->
+                val serverAddress = item.profile.server ?: return@forEach
+                val serverPort = item.profile.serverPort?.toIntOrNull() ?: return@forEach
+                add(TcpingTarget(item.guid, serverAddress, serverPort))
+            }
+        }
+    }
+
+    private fun matchesKeyword(profile: ProfileItem, displayAddress: String, keyword: String): Boolean {
+        return profile.remarks.contains(keyword, ignoreCase = true)
+                || displayAddress.contains(keyword, ignoreCase = true)
+                || profile.server.orEmpty().contains(keyword, ignoreCase = true)
     }
 
     private val mMsgReceiver = object : BroadcastReceiver() {
