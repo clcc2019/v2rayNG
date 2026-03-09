@@ -336,9 +336,16 @@
     <string name="connection_summary_hint">"在这里控制服务，并在下方查看当前使用的配置。"</string>
     <string name="current_config">"当前配置"</string>
     <string name="connection_connected">"已连接"</string>
+    <string name="connection_connected_short">"在线"</string>
     <string name="connection_not_connected">"未连接"</string>
+    <string name="connection_not_connected_short">"离线"</string>
+    <string name="connection_started">"已启动"</string>
+    <string name="connection_start_failed">"启动失败"</string>
+    <string name="connection_stopped">"已停止"</string>
     <string name="connection_starting">"正在启动代理…"</string>
+    <string name="connection_starting_short">"连接中"</string>
     <string name="connection_stopping">"正在关闭代理…"</string>
+    <string name="connection_stopping_short">"断开中"</string>
     <string name="connection_runing_task_left">运行中的测试任务数：%s</string>
 
     <string name="import_subscription_success">订阅导入成功</string>

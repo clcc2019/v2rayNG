@@ -351,9 +351,16 @@
     <string name="connection_summary_hint">Control the service here, then review the active configuration below.</string>
     <string name="current_config">Current configuration</string>
     <string name="connection_connected">Connected</string>
+    <string name="connection_connected_short">Online</string>
     <string name="connection_not_connected">Not connected</string>
+    <string name="connection_not_connected_short">Offline</string>
+    <string name="connection_started">Started</string>
+    <string name="connection_start_failed">Start failed</string>
+    <string name="connection_stopped">Stopped</string>
     <string name="connection_starting">Starting proxy…</string>
+    <string name="connection_starting_short">Starting</string>
     <string name="connection_stopping">Stopping proxy…</string>
+    <string name="connection_stopping_short">Stopping</string>
     <string name="connection_runing_task_left">Number of running test tasks: %s</string>
 
     <string name="import_subscription_success">Subscription imported Successfully</string>

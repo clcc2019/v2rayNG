@@ -112,158 +112,182 @@
                 android:layout_marginEnd="@dimen/padding_spacing_dp16"
                 android:layout_marginBottom="@dimen/padding_spacing_dp16">
 
-                <LinearLayout
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
                     android:padding="@dimen/padding_spacing_dp18">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="top"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:gravity="top"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_connection_label"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/current_config"
+                                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                                <TextView
+                                    android:id="@+id/tv_active_server"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/connection_not_connected"
+                                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
+                                    android:textColor="?attr/colorOnSurface" />
+
+                            </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tv_connection_label"
-                                android:layout_width="match_parent"
+                                android:id="@+id/tv_connection_badge"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/current_config"
-                                android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                                android:layout_marginStart="@dimen/padding_spacing_dp12"
+                                android:background="@drawable/bg_connection_badge"
+                                android:gravity="center"
+                                android:paddingStart="@dimen/padding_spacing_dp10"
+                                android:paddingTop="@dimen/padding_spacing_dp4"
+                                android:paddingEnd="@dimen/padding_spacing_dp10"
+                                android:paddingBottom="@dimen/padding_spacing_dp4"
+                                android:text="@string/connection_not_connected"
+                                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
                                 android:textColor="?attr/colorOnSurfaceVariant" />
 
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/padding_spacing_dp12"
+                            android:orientation="horizontal">
+
                             <TextView
-                                android:id="@+id/tv_active_server"
-                                android:layout_width="match_parent"
+                                android:id="@+id/tv_config_type"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/padding_spacing_dp4"
+                                android:background="@drawable/bg_type_chip"
+                                android:paddingStart="@dimen/padding_spacing_dp8"
+                                android:paddingTop="@dimen/padding_spacing_dp3"
+                                android:paddingEnd="@dimen/padding_spacing_dp8"
+                                android:paddingBottom="@dimen/padding_spacing_dp3"
+                                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                                android:textColor="@color/colorConfigType" />
+
+                            <TextView
+                                android:id="@+id/tv_config_meta"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                                android:background="@drawable/bg_metric_badge"
                                 android:ellipsize="end"
                                 android:maxLines="1"
-                                android:text="@string/connection_not_connected"
-                                android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                                android:textColor="?attr/colorOnSurface" />
+                                android:paddingStart="@dimen/padding_spacing_dp8"
+                                android:paddingTop="@dimen/padding_spacing_dp3"
+                                android:paddingEnd="@dimen/padding_spacing_dp8"
+                                android:paddingBottom="@dimen/padding_spacing_dp3"
+                                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:visibility="gone" />
 
                         </LinearLayout>
 
                         <TextView
-                            android:id="@+id/tv_connection_badge"
-                            android:layout_width="wrap_content"
+                            android:id="@+id/tv_connection_address"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/padding_spacing_dp12"
-                            android:background="@drawable/bg_connection_badge"
-                            android:gravity="center"
-                            android:paddingStart="@dimen/padding_spacing_dp10"
-                            android:paddingTop="@dimen/padding_spacing_dp4"
-                            android:paddingEnd="@dimen/padding_spacing_dp10"
-                            android:paddingBottom="@dimen/padding_spacing_dp4"
-                            android:text="@string/connection_not_connected"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp12"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tv_config_type"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_type_chip"
-                            android:paddingStart="@dimen/padding_spacing_dp8"
-                            android:paddingTop="@dimen/padding_spacing_dp3"
-                            android:paddingEnd="@dimen/padding_spacing_dp8"
-                            android:paddingBottom="@dimen/padding_spacing_dp3"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                            android:textColor="@color/colorConfigType" />
-
-                        <TextView
-                            android:id="@+id/tv_config_meta"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/padding_spacing_dp8"
-                            android:background="@drawable/bg_metric_badge"
+                            android:layout_marginTop="@dimen/padding_spacing_dp12"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:paddingStart="@dimen/padding_spacing_dp8"
-                            android:paddingTop="@dimen/padding_spacing_dp3"
-                            android:paddingEnd="@dimen/padding_spacing_dp8"
-                            android:paddingBottom="@dimen/padding_spacing_dp3"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <TextView
+                            android:id="@+id/tv_connection_meta_line"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/padding_spacing_dp4"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:visibility="gone" />
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/padding_spacing_dp16"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/layout_test"
+                                style="@style/Widget.V2Ray.Button.Secondary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/padding_spacing_dp12"
+                                android:clickable="true"
+                                android:contentDescription="@string/connection_test_pending"
+                                android:focusable="true"
+                                android:minWidth="@dimen/view_height_dp56"
+                                android:text="@string/connection_test_short"
+                                app:icon="@drawable/ic_logcat_24dp"
+                                app:iconTint="?attr/colorOnSurfaceVariant" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/fab"
+                                style="@style/Widget.V2Ray.Button.Primary"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:clickable="true"
+                                android:contentDescription="@string/tasker_start_service"
+                                android:focusable="true"
+                                android:text="@string/tasker_start_service"
+                                app:icon="@drawable/ic_play_24dp"
+                                app:iconTint="?attr/colorOnSurface" />
+
+                        </LinearLayout>
+
                     </LinearLayout>
 
                     <TextView
-                        android:id="@+id/tv_connection_address"
-                        android:layout_width="match_parent"
+                        android:id="@+id/tv_connection_feedback"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp12"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/bg_metric_badge"
+                        android:drawablePadding="@dimen/padding_spacing_dp4"
                         android:ellipsize="end"
+                        android:gravity="center"
                         android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                        android:textColor="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:id="@+id/tv_connection_meta_line"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp4"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                        android:paddingStart="@dimen/padding_spacing_dp8"
+                        android:paddingTop="@dimen/padding_spacing_dp3"
+                        android:paddingEnd="@dimen/padding_spacing_dp8"
+                        android:paddingBottom="@dimen/padding_spacing_dp3"
+                        android:textAppearance="@style/TextAppearance.V2Ray.Badge"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:visibility="gone" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp16"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/layout_test"
-                            style="@style/Widget.V2Ray.Button.Secondary"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/padding_spacing_dp12"
-                            android:clickable="true"
-                            android:contentDescription="@string/connection_test_pending"
-                            android:focusable="true"
-                            android:minWidth="@dimen/view_height_dp56"
-                            android:text="@string/connection_test_short"
-                            app:icon="@drawable/ic_logcat_24dp"
-                            app:iconTint="?attr/colorOnSurfaceVariant" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/fab"
-                            style="@style/Widget.V2Ray.Button.Primary"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:clickable="true"
-                            android:contentDescription="@string/tasker_start_service"
-                            android:focusable="true"
-                            android:text="@string/tasker_start_service"
-                            app:icon="@drawable/ic_play_24dp"
-                            app:iconTint="?attr/colorOnSurface" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
+                </FrameLayout>
 
             </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

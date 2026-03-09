@@ -16,12 +16,14 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -54,6 +56,7 @@ import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,6 +65,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     companion object {
         private const val SHORT_ANIMATION_DURATION = 120L
         private const val MEDIUM_ANIMATION_DURATION = 180L
+        private const val FEEDBACK_GAP_DP = 6
     }
 
     private enum class ServiceUiState {
@@ -70,6 +74,38 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         RUNNING,
         STOPPING
     }
+
+    private enum class ConnectionFeedbackStyle {
+        SUCCESS,
+        ERROR,
+        NEUTRAL
+    }
+
+    private data class ChipUiModel(
+        val backgroundColorRes: Int,
+        val textColorRes: Int,
+        val iconRes: Int? = null
+    )
+
+    private data class StatusBadgeUiModel(
+        @StringRes val textResId: Int,
+        val chip: ChipUiModel
+    )
+
+    private data class ActionButtonUiModel(
+        @StringRes val textResId: Int,
+        val iconRes: Int,
+        val backgroundColorRes: Int,
+        val contentColorRes: Int,
+        val strokeWidth: Int,
+        val strokeColorRes: Int? = null
+    )
+
+    private data class FeedbackMotionSpec(
+        val displayDurationMillis: Long,
+        val enterOffsetMultiplier: Float = 1f,
+        val exitOffsetMultiplier: Float = 0.75f
+    )
 
     private data class GroupTabViewState(
         var group: GroupMapItem,
@@ -86,6 +122,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private var serviceUiState = ServiceUiState.STOPPED
     private var isGroupTabHidden = false
     private var lastRenderedGroupCount = -1
+    private var connectionFeedbackJob: Job? = null
+    private var currentFeedbackMotionSpec = FeedbackMotionSpec(displayDurationMillis = 1800L)
     private val groupTabTextCache = mutableMapOf<String, CharSequence>()
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
@@ -99,6 +137,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
         } else {
+            dismissConnectionFeedback()
             renderServiceUiState(if (mainViewModel.isRunning.value == true) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
@@ -183,6 +222,14 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             if (message.isNotBlank()) {
                 toast(message)
             }
+        }
+        mainViewModel.serviceFeedbackAction.observe(this) { feedback ->
+            val style = when (feedback.style) {
+                MainViewModel.ServiceFeedback.Style.SUCCESS -> ConnectionFeedbackStyle.SUCCESS
+                MainViewModel.ServiceFeedback.Style.ERROR -> ConnectionFeedbackStyle.ERROR
+                MainViewModel.ServiceFeedback.Style.NEUTRAL -> ConnectionFeedbackStyle.NEUTRAL
+            }
+            showConnectionFeedback(getString(feedback.messageResId), style)
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
@@ -431,9 +478,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
 
         if (mainViewModel.isRunning.value == true) {
+            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STOPPING)
             V2RayServiceManager.stopVService(this)
         } else if (SettingsManager.isVpnMode()) {
+            dismissConnectionFeedback()
             val intent = VpnService.prepare(this)
             if (intent == null) {
                 renderServiceUiState(ServiceUiState.STARTING)
@@ -442,6 +491,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 requestVpnPermission.launch(intent)
             }
         } else {
+            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STARTING)
             startV2Ray()
         }
@@ -449,6 +499,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     private fun startV2Ray() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+            dismissConnectionFeedback()
             renderServiceUiState(ServiceUiState.STOPPED)
             toast(R.string.title_file_chooser)
             return
@@ -504,48 +555,218 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         updateConnectionCard(state)
         updateToolbarSubtitle(state)
         animateServiceStateChange(previousState, state)
+        applyActionButtonUiModel(buildActionButtonUiModel(state))
+    }
 
-        when (state) {
-            ServiceUiState.STARTING -> {
-                binding.fab.setIconResource(R.drawable.ic_play_24dp)
-                binding.fab.text = getString(R.string.connection_starting)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.strokeWidth = 0
-                binding.fab.contentDescription = getString(R.string.connection_starting)
-            }
+    private fun showConnectionFeedback(message: CharSequence, style: ConnectionFeedbackStyle) {
+        connectionFeedbackJob?.cancel()
+        binding.tvConnectionFeedback.text = message
+        val chipUiModel = buildFeedbackChipUiModel(style)
+        val motionSpec = buildFeedbackMotionSpec(style)
+        currentFeedbackMotionSpec = motionSpec
+        applyChipUiModel(binding.tvConnectionFeedback, chipUiModel)
+        binding.cardConnection.post { updateConnectionFeedbackAnchor() }
+        binding.tvConnectionFeedback.alpha = 0f
+        binding.tvConnectionFeedback.scaleX = 0.92f
+        binding.tvConnectionFeedback.scaleY = 0.92f
+        binding.tvConnectionFeedback.translationY = -feedbackOffsetPx() * motionSpec.enterOffsetMultiplier
+        binding.tvConnectionFeedback.isVisible = true
+        binding.tvConnectionFeedback.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .translationY(0f)
+            .setDuration(SHORT_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .start()
+        binding.tvConnectionFeedback.announceForAccessibility(message)
 
-            ServiceUiState.STOPPING -> {
-                binding.fab.setIconResource(R.drawable.ic_stop_24dp)
-                binding.fab.text = getString(R.string.connection_stopping)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.strokeWidth = 0
-                binding.fab.contentDescription = getString(R.string.connection_stopping)
-            }
+        connectionFeedbackJob = lifecycleScope.launch {
+            delay(motionSpec.displayDurationMillis)
+            dismissConnectionFeedback()
+        }
+    }
 
-            ServiceUiState.RUNNING -> {
-                binding.fab.setIconResource(R.drawable.ic_stop_24dp)
-                binding.fab.text = getString(R.string.action_stop_service)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_primaryContainer))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onPrimaryContainer))
-                binding.fab.strokeWidth = 0
-                binding.fab.contentDescription = getString(R.string.action_stop_service)
+    private fun dismissConnectionFeedback() {
+        connectionFeedbackJob?.cancel()
+        connectionFeedbackJob = null
+        binding.tvConnectionFeedback.animate().cancel()
+        if (!binding.tvConnectionFeedback.isVisible) return
+        binding.tvConnectionFeedback.animate()
+            .alpha(0f)
+            .scaleX(0.96f)
+            .scaleY(0.96f)
+            .translationY(-feedbackOffsetPx() * currentFeedbackMotionSpec.exitOffsetMultiplier)
+            .setDuration(SHORT_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .withEndAction {
+                binding.tvConnectionFeedback.isVisible = false
+                binding.tvConnectionFeedback.translationY = -feedbackOffsetPx()
             }
+            .start()
+    }
 
-            ServiceUiState.STOPPED -> {
-                binding.fab.setIconResource(R.drawable.ic_play_24dp)
-                binding.fab.text = getString(R.string.tasker_start_service)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_surface))
-                binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurface))
-                binding.fab.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurface))
-                binding.fab.strokeWidth = 1
-                binding.fab.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_outlineVariant))
-                binding.fab.contentDescription = getString(R.string.tasker_start_service)
-            }
+    private fun buildFeedbackChipUiModel(style: ConnectionFeedbackStyle): ChipUiModel {
+        return when (style) {
+            ConnectionFeedbackStyle.SUCCESS -> ChipUiModel(
+                backgroundColorRes = R.color.md_theme_secondaryContainer,
+                textColorRes = R.color.md_theme_onSecondaryContainer,
+                iconRes = R.drawable.ic_action_done
+            )
+
+            ConnectionFeedbackStyle.ERROR -> ChipUiModel(
+                backgroundColorRes = R.color.md_theme_errorContainer,
+                textColorRes = R.color.md_theme_onErrorContainer,
+                iconRes = R.drawable.ic_feedback_error
+            )
+
+            ConnectionFeedbackStyle.NEUTRAL -> ChipUiModel(
+                backgroundColorRes = R.color.md_theme_surfaceVariant,
+                textColorRes = R.color.md_theme_onSurfaceVariant,
+                iconRes = R.drawable.ic_stop_24dp
+            )
+        }
+    }
+
+    private fun buildFeedbackMotionSpec(style: ConnectionFeedbackStyle): FeedbackMotionSpec {
+        return when (style) {
+            ConnectionFeedbackStyle.SUCCESS -> FeedbackMotionSpec(displayDurationMillis = 1800L, enterOffsetMultiplier = 0.9f)
+            ConnectionFeedbackStyle.ERROR -> FeedbackMotionSpec(displayDurationMillis = 2800L, enterOffsetMultiplier = 1.15f, exitOffsetMultiplier = 0.9f)
+            ConnectionFeedbackStyle.NEUTRAL -> FeedbackMotionSpec(displayDurationMillis = 1500L, enterOffsetMultiplier = 0.8f, exitOffsetMultiplier = 0.7f)
+        }
+    }
+
+    private fun buildConnectionBadgeUiModel(state: ServiceUiState): StatusBadgeUiModel {
+        return when (state) {
+            ServiceUiState.STARTING -> StatusBadgeUiModel(
+                textResId = R.string.connection_starting_short,
+                chip = ChipUiModel(
+                    backgroundColorRes = R.color.md_theme_secondaryContainer,
+                    textColorRes = R.color.md_theme_onSecondaryContainer,
+                    iconRes = R.drawable.ic_play_24dp
+                )
+            )
+
+            ServiceUiState.STOPPING -> StatusBadgeUiModel(
+                textResId = R.string.connection_stopping_short,
+                chip = ChipUiModel(
+                    backgroundColorRes = R.color.md_theme_surfaceVariant,
+                    textColorRes = R.color.md_theme_onSurfaceVariant,
+                    iconRes = R.drawable.ic_stop_24dp
+                )
+            )
+
+            ServiceUiState.RUNNING -> StatusBadgeUiModel(
+                textResId = R.string.connection_connected_short,
+                chip = ChipUiModel(
+                    backgroundColorRes = R.color.md_theme_tertiaryContainer,
+                    textColorRes = R.color.md_theme_onTertiaryContainer,
+                    iconRes = R.drawable.ic_action_done
+                )
+            )
+
+            ServiceUiState.STOPPED -> StatusBadgeUiModel(
+                textResId = R.string.connection_not_connected_short,
+                chip = ChipUiModel(
+                    backgroundColorRes = R.color.md_theme_surfaceVariant,
+                    textColorRes = R.color.md_theme_onSurfaceVariant
+                )
+            )
+        }
+    }
+
+    private fun buildActionButtonUiModel(state: ServiceUiState): ActionButtonUiModel {
+        return when (state) {
+            ServiceUiState.STARTING -> ActionButtonUiModel(
+                textResId = R.string.connection_starting,
+                iconRes = R.drawable.ic_play_24dp,
+                backgroundColorRes = R.color.md_theme_primaryContainer,
+                contentColorRes = R.color.md_theme_onPrimaryContainer,
+                strokeWidth = 0
+            )
+
+            ServiceUiState.STOPPING -> ActionButtonUiModel(
+                textResId = R.string.connection_stopping,
+                iconRes = R.drawable.ic_stop_24dp,
+                backgroundColorRes = R.color.md_theme_primaryContainer,
+                contentColorRes = R.color.md_theme_onPrimaryContainer,
+                strokeWidth = 0
+            )
+
+            ServiceUiState.RUNNING -> ActionButtonUiModel(
+                textResId = R.string.action_stop_service,
+                iconRes = R.drawable.ic_stop_24dp,
+                backgroundColorRes = R.color.md_theme_primaryContainer,
+                contentColorRes = R.color.md_theme_onPrimaryContainer,
+                strokeWidth = 0
+            )
+
+            ServiceUiState.STOPPED -> ActionButtonUiModel(
+                textResId = R.string.tasker_start_service,
+                iconRes = R.drawable.ic_play_24dp,
+                backgroundColorRes = R.color.md_theme_surface,
+                contentColorRes = R.color.md_theme_onSurface,
+                strokeWidth = 1,
+                strokeColorRes = R.color.md_theme_outlineVariant
+            )
+        }
+    }
+
+    private fun applyActionButtonUiModel(model: ActionButtonUiModel) {
+        binding.fab.setIconResource(model.iconRes)
+        binding.fab.text = getString(model.textResId)
+        binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.backgroundColorRes))
+        binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, model.contentColorRes))
+        binding.fab.setTextColor(ContextCompat.getColor(this, model.contentColorRes))
+        binding.fab.strokeWidth = model.strokeWidth
+        binding.fab.strokeColor = model.strokeColorRes?.let {
+            ColorStateList.valueOf(ContextCompat.getColor(this, it))
+        }
+        binding.fab.contentDescription = getString(model.textResId)
+    }
+
+    private fun applyChipUiModel(target: TextView, model: ChipUiModel) {
+        DrawableCompat.setTint(target.background.mutate(), ContextCompat.getColor(this, model.backgroundColorRes))
+        target.setTextColor(ContextCompat.getColor(this, model.textColorRes))
+        target.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            model.iconRes?.let { createFeedbackIconForRes(it, model.textColorRes) },
+            null,
+            null,
+            null
+        )
+    }
+
+    private fun createFeedbackIconForRes(iconRes: Int, tintColorRes: Int) =
+        AppCompatResources.getDrawable(this, iconRes)?.mutate()?.apply {
+            DrawableCompat.setTint(this, ContextCompat.getColor(this@MainActivity, tintColorRes))
+        }
+
+    private fun feedbackOffsetPx(): Float {
+        return resources.displayMetrics.density * FEEDBACK_GAP_DP
+    }
+
+    private fun updateConnectionHeaderInsets() {
+        val badgeLayoutParams = binding.tvConnectionBadge.layoutParams as? ViewGroup.MarginLayoutParams
+        val badgeInset = binding.tvConnectionBadge.width +
+                (badgeLayoutParams?.marginStart ?: 0) +
+                resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
+        val currentPadding = binding.tvActiveServer.paddingEnd
+        if (currentPadding != badgeInset) {
+            binding.tvActiveServer.setPaddingRelative(
+                binding.tvActiveServer.paddingStart,
+                binding.tvActiveServer.paddingTop,
+                badgeInset,
+                binding.tvActiveServer.paddingBottom
+            )
+        }
+    }
+
+    private fun updateConnectionFeedbackAnchor() {
+        val layoutParams = binding.tvConnectionFeedback.layoutParams as? FrameLayout.LayoutParams ?: return
+        val targetMarginTop = binding.tvConnectionBadge.bottom + resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+        if (layoutParams.topMargin != targetMarginTop) {
+            layoutParams.topMargin = targetMarginTop
+            binding.tvConnectionFeedback.layoutParams = layoutParams
         }
     }
 
@@ -649,28 +870,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.tvConnectionMetaLine.text = metaLine
         binding.tvConnectionMetaLine.isVisible = !metaLine.isNullOrBlank()
 
-        val statusText = when (state) {
-            ServiceUiState.STARTING -> getString(R.string.connection_starting)
-            ServiceUiState.STOPPING -> getString(R.string.connection_stopping)
-            ServiceUiState.RUNNING -> getString(R.string.connection_connected)
-            ServiceUiState.STOPPED -> getString(R.string.connection_not_connected)
-        }
-        binding.tvConnectionBadge.text = statusText
-
-        val badgeColorRes = when (state) {
-            ServiceUiState.STARTING -> R.color.md_theme_onPrimaryContainer
-            ServiceUiState.STOPPING -> R.color.md_theme_onSurfaceVariant
-            ServiceUiState.RUNNING -> R.color.md_theme_onTertiaryContainer
-            ServiceUiState.STOPPED -> R.color.md_theme_onSurfaceVariant
-        }
-        val badgeBackgroundRes = when (state) {
-            ServiceUiState.STARTING -> R.color.md_theme_primaryContainer
-            ServiceUiState.STOPPING -> R.color.md_theme_surfaceVariant
-            ServiceUiState.RUNNING -> R.color.md_theme_tertiaryContainer
-            ServiceUiState.STOPPED -> R.color.md_theme_surfaceVariant
-        }
-        DrawableCompat.setTint(binding.tvConnectionBadge.background.mutate(), ContextCompat.getColor(this, badgeBackgroundRes))
-        binding.tvConnectionBadge.setTextColor(ContextCompat.getColor(this, badgeColorRes))
+        val badgeUiModel = buildConnectionBadgeUiModel(state)
+        binding.tvConnectionBadge.text = getString(badgeUiModel.textResId)
+        applyChipUiModel(binding.tvConnectionBadge, badgeUiModel.chip)
         binding.layoutTest.backgroundTintList = ColorStateList.valueOf(
             ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_surface else R.color.md_theme_surfaceVariant)
         )
@@ -693,6 +895,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 if (state == ServiceUiState.RUNNING) R.color.colorSelectionIndicator else R.color.md_theme_outlineVariant
             )
         )
+        binding.cardConnection.post {
+            updateConnectionHeaderInsets()
+            updateConnectionFeedbackAnchor()
+        }
     }
 
     private fun getSelectedProfile(): ProfileItem? {

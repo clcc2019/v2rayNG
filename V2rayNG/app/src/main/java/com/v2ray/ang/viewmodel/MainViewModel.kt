@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.AssetManager
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -22,8 +23,6 @@ import com.v2ray.ang.dto.SubscriptionUpdateResult
 import com.v2ray.ang.dto.TestServiceMessage
 import com.v2ray.ang.extension.serializable
 import com.v2ray.ang.extension.nullIfBlank
-import com.v2ray.ang.extension.toastError
-import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
@@ -42,6 +41,17 @@ import java.util.concurrent.atomic.AtomicInteger
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private val TCPING_PARALLELISM = Runtime.getRuntime().availableProcessors().coerceAtLeast(2) * 2
+    }
+
+    data class ServiceFeedback(
+        @StringRes val messageResId: Int,
+        val style: Style
+    ) {
+        enum class Style {
+            SUCCESS,
+            ERROR,
+            NEUTRAL
+        }
     }
 
     private data class TcpingTarget(
@@ -67,6 +77,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateGroupsAction by lazy { MutableLiveData<List<GroupMapItem>>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
+    val serviceFeedbackAction by lazy { MutableLiveData<ServiceFeedback>() }
     private val tcpingDispatcher = Dispatchers.IO.limitedParallelism(TCPING_PARALLELISM)
     private var tcpingTestJob: Job? = null
     private var prewarmJob: Job? = null
@@ -590,16 +601,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 AppConfig.MSG_STATE_START_SUCCESS -> {
-                    getApplication<AngApplication>().toastSuccess(R.string.toast_services_success)
+                    serviceFeedbackAction.value = ServiceFeedback(
+                        messageResId = R.string.connection_started,
+                        style = ServiceFeedback.Style.SUCCESS
+                    )
                     isRunning.value = true
                 }
 
                 AppConfig.MSG_STATE_START_FAILURE -> {
-                    getApplication<AngApplication>().toastError(R.string.toast_services_failure)
+                    serviceFeedbackAction.value = ServiceFeedback(
+                        messageResId = R.string.connection_start_failed,
+                        style = ServiceFeedback.Style.ERROR
+                    )
                     isRunning.value = false
                 }
 
                 AppConfig.MSG_STATE_STOP_SUCCESS -> {
+                    serviceFeedbackAction.value = ServiceFeedback(
+                        messageResId = R.string.connection_stopped,
+                        style = ServiceFeedback.Style.NEUTRAL
+                    )
                     isRunning.value = false
                 }
 

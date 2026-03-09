@@ -323,7 +323,14 @@
     <string name="connection_test_fail">"無法使用網際網路"</string>
     <string name="connection_test_error_status_code">"錯誤碼：(#%d)"</string>
     <string name="connection_connected">"已連線，輕觸以檢查連線能力"</string>
+    <string name="connection_connected_short">"在線"</string>
     <string name="connection_not_connected">"未連線"</string>
+    <string name="connection_not_connected_short">"離線"</string>
+    <string name="connection_started">"已啟動"</string>
+    <string name="connection_start_failed">"啟動失敗"</string>
+    <string name="connection_stopped">"已停止"</string>
+    <string name="connection_starting_short">"連線中"</string>
+    <string name="connection_stopping_short">"中斷中"</string>
     <string name="connection_runing_task_left">運行中的測試任務數：%s</string>
 
     <string name="import_subscription_success">匯入訂閱成功</string>
