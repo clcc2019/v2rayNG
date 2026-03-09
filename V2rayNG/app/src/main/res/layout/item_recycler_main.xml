@@ -16,225 +16,202 @@
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:gravity="center"
         android:nextFocusRight="@+id/layout_more"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_spacing_dp12"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/padding_spacing_dp14"
         android:paddingTop="@dimen/padding_spacing_dp14"
-        android:paddingEnd="@dimen/padding_spacing_dp12"
+        android:paddingEnd="@dimen/padding_spacing_dp10"
         android:paddingBottom="@dimen/padding_spacing_dp14">
 
         <LinearLayout
-            android:id="@+id/layout_indicator"
-            android:layout_width="4dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:layout_marginEnd="@dimen/padding_spacing_dp14"
-            android:background="@drawable/bg_item_indicator_idle"
-            android:orientation="vertical" />
-
-        <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layout_indicator"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="@dimen/padding_spacing_dp10"
+                android:background="@drawable/bg_item_indicator_idle"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:minLines="1"
+                android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="hk-aliyun" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+            <TextView
+                android:id="@+id/tv_test_result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                android:background="@drawable/bg_metric_badge"
+                android:gravity="end"
+                android:paddingStart="@dimen/padding_spacing_dp8"
+                android:paddingTop="4dp"
+                android:paddingEnd="@dimen/padding_spacing_dp8"
+                android:paddingBottom="4dp"
+                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                android:textColor="@color/colorPing"
+                android:visibility="gone"
+                tools:text="114ms" />
 
-                    <TextView
-                        android:id="@+id/tv_name"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxLines="2"
-                        android:minLines="1"
-                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                        android:textColor="?attr/colorOnSurface"
-                        tools:text="Tokyo • VLESS" />
+            <LinearLayout
+                android:id="@+id/layout_more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/padding_spacing_dp6"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/notification_action_more"
+                android:focusable="true"
+                android:gravity="center"
+                android:nextFocusLeft="@+id/info_container"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp6">
 
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tv_test_result"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_metric_badge"
-                        android:gravity="end"
-                        android:paddingStart="@dimen/padding_spacing_dp8"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="@dimen/padding_spacing_dp8"
-                        android:paddingBottom="4dp"
-                        android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                        android:textColor="@color/colorPing"
-                        android:visibility="gone"
-                        tools:text="214ms" />
-
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:alpha="0.72"
+                    app:srcCompat="@drawable/ic_more_vert_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>
 
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_statistics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp10"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.V2Ray.Support"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="13.213.104.*** : 443" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp10"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
             <TextView
-                android:id="@+id/tv_statistics"
-                android:layout_width="match_parent"
+                android:id="@+id/tv_type"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp6"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="Singapore / TLS / 1.1.1.1" />
+                android:background="@drawable/bg_type_chip"
+                android:paddingStart="@dimen/padding_spacing_dp8"
+                android:paddingTop="4dp"
+                android:paddingEnd="@dimen/padding_spacing_dp8"
+                android:paddingBottom="4dp"
+                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                android:textColor="@color/colorConfigType"
+                tools:text="VLESS" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layout_subscription"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp12"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                android:background="@drawable/bg_subscription_badge"
+                android:gravity="center"
+                android:paddingStart="@dimen/padding_spacing_dp8"
+                android:paddingTop="4dp"
+                android:paddingEnd="@dimen/padding_spacing_dp8"
+                android:paddingBottom="4dp"
+                android:visibility="gone">
 
                 <TextView
-                    android:id="@+id/tv_type"
+                    android:id="@+id/tv_subscription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_type_chip"
-                    android:paddingStart="@dimen/padding_spacing_dp8"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
-                    android:paddingBottom="4dp"
                     android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                    android:textColor="@color/colorConfigType"
-                    tools:text="VLESS" />
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    tools:text="S" />
 
-                <LinearLayout
-                    android:id="@+id/layout_subscription"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
-                    android:background="@drawable/bg_subscription_badge"
-                    android:gravity="center"
-                    android:paddingStart="@dimen/padding_spacing_dp8"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
-                    android:paddingBottom="4dp"
-                    android:visibility="gone">
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tv_subscription"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.V2Ray.Badge"
-                        android:textColor="?attr/colorOnPrimaryContainer"
-                        tools:text="S" />
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
-                </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layout_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/title_configuration_share"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp6"
+                android:visibility="gone">
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:alpha="0.72"
+                    app:srcCompat="@drawable/ic_share_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
-                <LinearLayout
-                    android:id="@+id/layout_share"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="@string/title_configuration_share"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:nextFocusLeft="@+id/info_container"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_spacing_dp6"
-                    android:visibility="gone">
+            </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.72"
-                        app:srcCompat="@drawable/ic_share_24dp"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+            <LinearLayout
+                android:id="@+id/layout_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/menu_item_edit_config"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp6"
+                android:visibility="gone">
 
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:alpha="0.72"
+                    app:srcCompat="@drawable/ic_edit_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
-                <LinearLayout
-                    android:id="@+id/layout_edit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="@string/menu_item_edit_config"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_spacing_dp6"
-                    android:visibility="gone">
+            </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.72"
-                        app:srcCompat="@drawable/ic_edit_24dp"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+            <LinearLayout
+                android:id="@+id/layout_remove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/menu_item_del_config"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp6"
+                android:visibility="gone">
 
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layout_remove"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="@string/menu_item_del_config"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_spacing_dp6"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.72"
-                        app:srcCompat="@drawable/ic_delete_24dp"
-                        app:tint="?attr/colorOnSurfaceVariant" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layout_more"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:contentDescription="@string/notification_action_more"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_spacing_dp6">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.72"
-                        app:srcCompat="@drawable/ic_more_vert_24dp"
-                        app:tint="?attr/colorOnSurfaceVariant" />
-
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:alpha="0.72"
+                    app:srcCompat="@drawable/ic_delete_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>
 

@@ -191,7 +191,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun setTestState(content: String?) {
-        val target = content.orEmpty()
+        val target = compactTestState(content.orEmpty())
         if (binding.tvTestState.text == target) {
             return
         }
@@ -204,6 +204,25 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.tvTestState.animate().alpha(1f).setDuration(160).start()
             }
             .start()
+    }
+
+    private fun compactTestState(content: String): String {
+        val raw = content.trim()
+        if (raw.isEmpty()) return raw
+
+        Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE).find(raw)?.groupValues?.getOrNull(1)?.let {
+            return "${it}ms"
+        }
+        Regex("(\\d+)\\s*毫秒").find(raw)?.groupValues?.getOrNull(1)?.let {
+            return "${it}ms"
+        }
+        if (raw.contains("success", ignoreCase = true) || raw.contains("连接成功")) {
+            return getString(R.string.connection_connected)
+        }
+        if (raw.contains("error", ignoreCase = true) || raw.contains("fail", ignoreCase = true) || raw.contains("失败") || raw.contains("无互联网")) {
+            return getString(R.string.connection_test_fail)
+        }
+        return raw
     }
 
     private fun renderServiceUiState(state: ServiceUiState) {
@@ -337,12 +356,17 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         DrawableCompat.setTint(binding.viewStatusDot.background.mutate(), ContextCompat.getColor(this, dotColorRes))
         DrawableCompat.setTint(binding.tvConnectionBadge.background.mutate(), ContextCompat.getColor(this, badgeBackgroundRes))
         binding.tvConnectionBadge.setTextColor(ContextCompat.getColor(this, badgeColorRes))
-        binding.layoutTest.setCardBackgroundColor(
+        binding.layoutTest.backgroundTintList = ColorStateList.valueOf(
             ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_surface else R.color.md_theme_surfaceVariant)
         )
-        binding.layoutTest.strokeColor = ContextCompat.getColor(
-            this,
-            if (state == ServiceUiState.RUNNING) R.color.md_theme_primaryContainer else R.color.md_theme_outlineVariant
+        binding.layoutTest.strokeColor = ColorStateList.valueOf(
+            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_primaryContainer else R.color.md_theme_outlineVariant)
+        )
+        binding.layoutTest.setTextColor(
+            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant)
+        )
+        binding.layoutTest.iconTint = ColorStateList.valueOf(
+            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant)
         )
 
         binding.cardConnection.setCardBackgroundColor(
