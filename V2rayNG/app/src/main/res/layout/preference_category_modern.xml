@@ -3,14 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="@dimen/padding_spacing_dp16"
+    android:paddingStart="@dimen/padding_spacing_dp4"
+    android:paddingTop="@dimen/padding_spacing_dp20"
     android:paddingBottom="@dimen/padding_spacing_dp4">
 
     <TextView
         android:id="@android:id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

@@ -142,6 +142,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.viewPager.setCurrentItem(targetIndex, false)
 
         binding.tabGroup.isVisible = groups.size > 1
+        binding.cardTabGroup.isVisible = groups.size > 1
         refreshConnectionCard()
     }
 
@@ -319,18 +320,18 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STARTING -> R.color.color_fab_active
             ServiceUiState.STOPPING -> R.color.color_fab_inactive
             ServiceUiState.RUNNING -> R.color.colorPing
-            ServiceUiState.STOPPED -> R.color.divider_color_light
+            ServiceUiState.STOPPED -> R.color.colorStatusIdle
         }
         val badgeColorRes = when (state) {
             ServiceUiState.STARTING -> R.color.md_theme_onPrimaryContainer
             ServiceUiState.STOPPING -> R.color.md_theme_onSurfaceVariant
-            ServiceUiState.RUNNING -> R.color.colorPing
+            ServiceUiState.RUNNING -> R.color.md_theme_onTertiaryContainer
             ServiceUiState.STOPPED -> R.color.md_theme_onSurfaceVariant
         }
         val badgeBackgroundRes = when (state) {
             ServiceUiState.STARTING -> R.color.md_theme_primaryContainer
             ServiceUiState.STOPPING -> R.color.md_theme_surfaceVariant
-            ServiceUiState.RUNNING -> R.color.md_theme_primaryContainer
+            ServiceUiState.RUNNING -> R.color.md_theme_tertiaryContainer
             ServiceUiState.STOPPED -> R.color.md_theme_surfaceVariant
         }
         DrawableCompat.setTint(binding.viewStatusDot.background.mutate(), ContextCompat.getColor(this, dotColorRes))
@@ -341,13 +342,16 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         )
         binding.layoutTest.strokeColor = ContextCompat.getColor(
             this,
-            if (state == ServiceUiState.RUNNING) R.color.md_theme_outlineVariant else R.color.divider_color_light
+            if (state == ServiceUiState.RUNNING) R.color.md_theme_primaryContainer else R.color.md_theme_outlineVariant
         )
 
+        binding.cardConnection.setCardBackgroundColor(
+            ContextCompat.getColor(this, if (state == ServiceUiState.RUNNING) R.color.colorSelectionFill else R.color.md_theme_surface)
+        )
         binding.cardConnection.setStrokeColor(
             ContextCompat.getColor(
                 this,
-                if (state == ServiceUiState.RUNNING) R.color.md_theme_outlineVariant else R.color.divider_color_light
+                if (state == ServiceUiState.RUNNING) R.color.colorSelectionIndicator else R.color.md_theme_outlineVariant
             )
         )
     }

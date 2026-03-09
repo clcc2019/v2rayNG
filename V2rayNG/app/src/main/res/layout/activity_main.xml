@@ -18,12 +18,15 @@
             android:background="@color/md_theme_background"
             android:elevation="0dp">
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:paddingStart="@dimen/padding_spacing_dp4"
-                android:paddingEnd="@dimen/padding_spacing_dp4" />
+                android:layout_height="wrap_content"
+                android:minHeight="?attr/actionBarSize"
+                android:paddingStart="@dimen/padding_spacing_dp8"
+                android:paddingEnd="@dimen/padding_spacing_dp8"
+                app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
+                app:titleTextAppearance="@style/TextAppearance.V2Ray.ScreenTitle" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -40,29 +43,26 @@
                 <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/progress_bar"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="3dp"
                     android:indeterminate="true"
                     android:visibility="invisible"
                     app:indicatorColor="@color/color_fab_active" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_connection"
+                    style="@style/Widget.V2Ray.Card.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginTop="@dimen/padding_spacing_dp12"
                     android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="?attr/colorOutlineVariant"
-                    app:strokeWidth="1dp">
+                    android:layout_marginBottom="@dimen/padding_spacing_dp4">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp16">
+                        android:padding="@dimen/padding_spacing_dp18">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -75,7 +75,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/title_server"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
                                 android:textColor="?attr/colorOnSurfaceVariant" />
 
                             <TextView
@@ -83,14 +83,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/bg_connection_badge"
-                                android:paddingStart="@dimen/padding_spacing_dp8"
-                                android:paddingTop="2dp"
-                                android:paddingEnd="@dimen/padding_spacing_dp8"
-                                android:paddingBottom="2dp"
+                                android:paddingStart="@dimen/padding_spacing_dp10"
+                                android:paddingTop="4dp"
+                                android:paddingEnd="@dimen/padding_spacing_dp10"
+                                android:paddingBottom="4dp"
                                 android:text="@string/connection_not_connected"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                                android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="11sp" />
+                                android:textAppearance="@style/TextAppearance.V2Ray.Badge"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
 
                         </LinearLayout>
 
@@ -98,34 +97,34 @@
                             android:id="@+id/tv_active_server"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp12"
+                            android:layout_marginTop="@dimen/padding_spacing_dp10"
                             android:ellipsize="end"
                             android:maxLines="2"
                             android:text="@string/connection_not_connected"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
                             android:textColor="?attr/colorOnSurface" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp10"
+                            android:layout_marginTop="@dimen/padding_spacing_dp14"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
                             <View
                                 android:id="@+id/view_status_dot"
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
                                 android:background="@drawable/bg_status_dot" />
 
                             <TextView
                                 android:id="@+id/tv_connection_label"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                                android:layout_marginStart="@dimen/padding_spacing_dp10"
                                 android:layout_weight="1"
                                 android:text="@string/connection_not_connected"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                                android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                                 android:textColor="?attr/colorOnSurfaceVariant" />
 
                             <TextView
@@ -136,7 +135,7 @@
                                 android:gravity="end|center_vertical"
                                 android:maxLines="1"
                                 android:text="@string/connection_test_pending"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                                android:textAppearance="@style/TextAppearance.V2Ray.Support"
                                 android:textColor="?attr/colorOnSurfaceVariant" />
 
                         </LinearLayout>
@@ -149,6 +148,7 @@
                             android:clickable="true"
                             android:contentDescription="@string/tasker_start_service"
                             android:focusable="true"
+                            android:minHeight="@dimen/view_height_dp56"
                             android:text="@string/tasker_start_service"
                             android:textAllCaps="false"
                             app:backgroundTint="@color/md_theme_surface"
@@ -161,18 +161,14 @@
 
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/layout_test"
+                            style="@style/Widget.V2Ray.Card.Subtle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp10"
+                            android:layout_marginTop="@dimen/padding_spacing_dp12"
                             android:clickable="true"
                             android:contentDescription="@string/connection_test_pending"
                             android:focusable="true"
-                            android:minHeight="50dp"
-                            app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                            app:cardCornerRadius="18dp"
-                            app:cardElevation="0dp"
-                            app:strokeColor="?attr/colorOutlineVariant"
-                            app:strokeWidth="1dp">
+                            android:minHeight="@dimen/view_height_dp56">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -180,14 +176,14 @@
                                 android:background="?attr/selectableItemBackground"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingStart="@dimen/padding_spacing_dp12"
-                                android:paddingTop="@dimen/padding_spacing_dp12"
-                                android:paddingEnd="@dimen/padding_spacing_dp12"
-                                android:paddingBottom="@dimen/padding_spacing_dp12">
+                                android:paddingStart="@dimen/padding_spacing_dp14"
+                                android:paddingTop="@dimen/padding_spacing_dp14"
+                                android:paddingEnd="@dimen/padding_spacing_dp14"
+                                android:paddingBottom="@dimen/padding_spacing_dp14">
 
                                 <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
                                     android:alpha="0.72"
                                     app:srcCompat="@drawable/ic_logcat_24dp"
                                     app:tint="?attr/colorOnSurfaceVariant" />
@@ -195,10 +191,10 @@
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                                    android:layout_marginStart="@dimen/padding_spacing_dp10"
                                     android:layout_weight="1"
                                     android:text="@string/connection_test_pending"
-                                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                                    android:textAppearance="@style/TextAppearance.V2Ray.Body"
                                     android:textColor="?attr/colorOnSurface" />
 
                             </LinearLayout>
@@ -209,23 +205,35 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/tab_group"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_tab_group"
+                    style="@style/Widget.V2Ray.Card.Subtle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    android:background="@android:color/transparent"
-                    app:tabIndicatorAnimationMode="linear"
-                    app:tabIndicatorColor="@color/color_fab_active"
-                    app:tabIndicatorFullWidth="false"
-                    app:tabIndicatorHeight="2dp"
-                    app:tabMode="scrollable"
-                    app:tabRippleColor="@android:color/transparent"
-                    app:tabSelectedTextColor="?attr/colorOnSurface"
-                    app:tabTextAppearance="@style/TabLayoutTextStyle"
-                    app:tabTextColor="?attr/colorOnSurfaceVariant" />
+                    android:layout_marginEnd="@dimen/padding_spacing_dp16">
+
+                    <com.google.android.material.tabs.TabLayout
+                        android:id="@+id/tab_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="@dimen/padding_spacing_dp6"
+                        android:paddingTop="@dimen/padding_spacing_dp4"
+                        android:paddingEnd="@dimen/padding_spacing_dp6"
+                        android:paddingBottom="@dimen/padding_spacing_dp4"
+                        android:background="@android:color/transparent"
+                        app:tabIndicatorAnimationMode="linear"
+                        app:tabIndicatorColor="@color/color_fab_active"
+                        app:tabIndicatorFullWidth="false"
+                        app:tabIndicatorHeight="3dp"
+                        app:tabMode="scrollable"
+                        app:tabRippleColor="@android:color/transparent"
+                        app:tabSelectedTextColor="?attr/colorOnSurface"
+                        app:tabTextAppearance="@style/TabLayoutTextStyle"
+                        app:tabTextColor="?attr/colorOnSurfaceVariant" />
+
+                </com.google.android.material.card.MaterialCardView>
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/view_pager"
@@ -233,10 +241,10 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:clipToPadding="false"
-                    android:paddingStart="@dimen/padding_spacing_dp8"
+                    android:paddingStart="@dimen/padding_spacing_dp12"
                     android:paddingTop="@dimen/padding_spacing_dp4"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
-                    android:paddingBottom="@dimen/padding_spacing_dp16"
+                    android:paddingEnd="@dimen/padding_spacing_dp12"
+                    android:paddingBottom="@dimen/padding_spacing_dp20"
                     android:scrollbars="vertical" />
 
             </LinearLayout>

@@ -9,17 +9,21 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
         android:background="@color/md_theme_background"
+        android:minHeight="?attr/actionBarSize"
+        android:paddingStart="@dimen/padding_spacing_dp8"
+        android:paddingEnd="@dimen/padding_spacing_dp8"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextAppearance="@style/TextAppearance.AppCompat.Title" />
+        app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
+        app:titleTextAppearance="@style/TextAppearance.V2Ray.ScreenTitle" />
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="3dp"
         android:indeterminate="true"
         android:visibility="gone"
         app:indicatorColor="@color/color_fab_active"

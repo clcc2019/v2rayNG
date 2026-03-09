@@ -130,8 +130,10 @@ abstract class BaseActivity : AppCompatActivity() {
     private fun styleToolbar(toolbar: Toolbar) {
         val backgroundColor = ContextCompat.getColor(toolbar.context, R.color.md_theme_background)
         val foregroundColor = MaterialColors.getColor(toolbar, com.google.android.material.R.attr.colorOnBackground, ContextCompat.getColor(toolbar.context, R.color.md_theme_onBackground))
+        val subtitleColor = MaterialColors.getColor(toolbar, com.google.android.material.R.attr.colorOnSurfaceVariant, ContextCompat.getColor(toolbar.context, R.color.md_theme_onSurfaceVariant))
         toolbar.setBackgroundColor(backgroundColor)
         toolbar.setTitleTextColor(foregroundColor)
+        toolbar.setSubtitleTextColor(subtitleColor)
         toolbar.navigationIcon?.setTint(foregroundColor)
         toolbar.overflowIcon?.setTint(foregroundColor)
         toolbar.elevation = 0f

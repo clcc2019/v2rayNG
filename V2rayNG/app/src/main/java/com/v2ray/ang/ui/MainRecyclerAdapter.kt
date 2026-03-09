@@ -61,25 +61,27 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvStatistics.text = getAddress(profile)
             holder.itemMainBinding.tvType.text = profile.configType.name
             holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.9f
-            holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.8f else 0.68f
+            holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.78f
             holder.itemMainBinding.tvType.alpha = if (isSelected) 0.92f else 0.82f
             holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.98f else 0.84f
             holder.itemMainBinding.tvName.setTextColor(
                 ContextCompat.getColor(
                     context,
-                    if (isSelected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                    R.color.md_theme_onSurface
                 )
             )
             holder.itemMainBinding.tvStatistics.setTextColor(
                 ContextCompat.getColor(
                     context,
-                    if (isSelected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                    R.color.md_theme_onSurfaceVariant
                 )
             )
 
             //TestResult
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
-            holder.itemMainBinding.tvTestResult.text = aff?.getTestDelayString().orEmpty()
+            val testResult = aff?.getTestDelayString().orEmpty()
+            holder.itemMainBinding.tvTestResult.text = testResult
+            holder.itemMainBinding.tvTestResult.visibility = if (testResult.isBlank()) View.GONE else View.VISIBLE
             if ((aff?.testDelayMillis ?: 0L) < 0L) {
                 holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(context, R.color.colorPingRed))
             } else {
@@ -89,16 +91,16 @@ class MainRecyclerAdapter(
             //layoutIndicator
             if (isSelected) {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
-                holder.itemMainBinding.itemBg.strokeWidth = 1
+                holder.itemMainBinding.itemBg.strokeWidth = 2
                 holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.colorSelectionIndicator))
                 holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.colorSelectionFill))
                 holder.itemMainBinding.itemBg.alpha = 1f
             } else {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
+                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_item_indicator_idle)
                 holder.itemMainBinding.itemBg.strokeWidth = 1
                 holder.itemMainBinding.itemBg.setStrokeColor(ContextCompat.getColor(context, R.color.md_theme_outlineVariant))
                 holder.itemMainBinding.itemBg.setCardBackgroundColor(ContextCompat.getColor(context, R.color.md_theme_surface))
-                holder.itemMainBinding.itemBg.alpha = 0.98f
+                holder.itemMainBinding.itemBg.alpha = 1f
             }
 
             //subscription remarks
@@ -106,6 +108,7 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvSubscription.text = subRemarks
             holder.itemMainBinding.tvSubscription.setTextColor(ContextCompat.getColor(context, R.color.md_theme_onPrimaryContainer))
             holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
+            holder.itemMainBinding.layoutMore.alpha = if (isSelected) 1f else 0.74f
 
             //layout
             holder.itemMainBinding.layoutShare.visibility = View.GONE
