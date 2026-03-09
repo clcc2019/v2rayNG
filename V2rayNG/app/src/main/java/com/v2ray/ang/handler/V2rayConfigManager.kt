@@ -42,6 +42,12 @@ object V2rayConfigManager {
         }
     }
 
+    private data class RoutingDomainBuckets(
+        val proxy: ArrayList<String> = arrayListOf(),
+        val direct: ArrayList<String> = arrayListOf(),
+        val blocked: ArrayList<String> = arrayListOf(),
+    )
+
     //region get config function
 
     /**
@@ -212,6 +218,8 @@ object V2rayConfigManager {
         }
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
+        val routingRulesets = MmkvManager.decodeRoutingRulesets()
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets)
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
@@ -220,14 +228,14 @@ object V2rayConfigManager {
         getOutbounds(v2rayConfig, config) ?: return result
         getMoreOutbounds(v2rayConfig, config.subscriptionId)
 
-        getRouting(v2rayConfig)
+        getRouting(v2rayConfig, routingRulesets)
 
         getFakeDns(v2rayConfig)
 
-        getDns(v2rayConfig)
+        getDns(v2rayConfig, routingDomains)
 
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED) == true) {
-            getCustomLocalDns(v2rayConfig)
+            getCustomLocalDns(v2rayConfig, routingDomains)
         }
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) != true) {
             v2rayConfig.stats = null
@@ -258,6 +266,8 @@ object V2rayConfigManager {
         }
 
         val v2rayConfig = initV2rayConfig(context) ?: return null
+        val routingRulesets = MmkvManager.decodeRoutingRulesets()
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets)
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
@@ -277,16 +287,16 @@ object V2rayConfigManager {
         outboundsList.addAll(v2rayConfig.outbounds)
         v2rayConfig.outbounds = ArrayList(outboundsList)
 
-        getRouting(v2rayConfig)
+        getRouting(v2rayConfig, routingRulesets)
 
         getFakeDns(v2rayConfig)
 
-        getDns(v2rayConfig)
+        getDns(v2rayConfig, routingDomains)
 
         getBalance(v2rayConfig, config)
 
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED)) {
-            getCustomLocalDns(v2rayConfig)
+            getCustomLocalDns(v2rayConfig, routingDomains)
         }
         if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED)) {
             v2rayConfig.stats = null
@@ -376,33 +386,38 @@ object V2rayConfigManager {
         val subscription = config.subscriptionId.takeIf { it.isNotEmpty() }?.let {
             MmkvManager.decodeSubscription(it)
         }
+        val prevProfile = subscription?.prevProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks)
+        val nextProfile = subscription?.nextProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks)
+        val policyGroupHash = if (config.configType == EConfigType.POLICYGROUP) {
+            MmkvManager.decodeAllServerList()
+                .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
+                .hashCode()
+        } else {
+            0
+        }
 
-        val cachePayload = linkedMapOf<String, Any?>(
-            "guid" to guid,
-            "configType" to config.configType,
-            "config" to config,
-            "raw" to if (config.configType == EConfigType.CUSTOM) MmkvManager.decodeServerRaw(guid) else null,
-            "subscription" to subscription,
-            "prevNode" to subscription?.prevProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks),
-            "nextNode" to subscription?.nextProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks),
-            "policyGroupConfigs" to if (config.configType == EConfigType.POLICYGROUP) {
-                MmkvManager.decodeAllServerList().mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
-            } else {
-                null
-            },
-            "routingRulesets" to MmkvManager.decodeRoutingRulesets(),
-            "isVpnMode" to SettingsManager.isVpnMode(),
-            "isUsingHevTun" to SettingsManager.isUsingHevTun(),
-            "vpnMtu" to SettingsManager.getVpnMtu(),
-            "vpnAddressConfig" to SettingsManager.getCurrentVpnInterfaceAddressConfig(),
-            "socksPort" to SettingsManager.getSocksPort(),
-            "httpPort" to SettingsManager.getHttpPort(),
-            "remoteDnsServers" to SettingsManager.getRemoteDnsServers(),
-            "domesticDnsServers" to SettingsManager.getDomesticDnsServers(),
-            "vpnDnsServers" to SettingsManager.getVpnDnsServers(),
-            "settings" to getConfigRelevantSettingsSnapshot()
+        val signature = listOf(
+            guid.hashCode(),
+            config.configType.hashCode(),
+            config.hashCode(),
+            if (config.configType == EConfigType.CUSTOM) MmkvManager.decodeServerRaw(guid)?.hashCode() ?: 0 else 0,
+            subscription.hashCode(),
+            prevProfile.hashCode(),
+            nextProfile.hashCode(),
+            policyGroupHash,
+            MmkvManager.decodeRoutingRulesets().hashCode(),
+            SettingsManager.isVpnMode().hashCode(),
+            SettingsManager.isUsingHevTun().hashCode(),
+            SettingsManager.getVpnMtu(),
+            SettingsManager.getCurrentVpnInterfaceAddressConfig().hashCode(),
+            SettingsManager.getSocksPort(),
+            SettingsManager.getHttpPort(),
+            SettingsManager.getRemoteDnsServers().hashCode(),
+            SettingsManager.getDomesticDnsServers().hashCode(),
+            SettingsManager.getVpnDnsServers().hashCode(),
+            getConfigRelevantSettingsSnapshot().hashCode()
         )
-        return JsonUtil.toJson(cachePayload)
+        return signature.joinToString(separator = ":")
     }
 
     private fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {
@@ -527,14 +542,13 @@ object V2rayConfigManager {
      * @param v2rayConfig The V2ray configuration object to be modified
      * @return true if routing configuration was successful, false otherwise
      */
-    private fun getRouting(v2rayConfig: V2rayConfig): Boolean {
+    private fun getRouting(v2rayConfig: V2rayConfig, rulesetItems: List<RulesetItem>?): Boolean {
         try {
 
             v2rayConfig.routing.domainStrategy =
                 MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
                     ?: "AsIs"
 
-            val rulesetItems = MmkvManager.decodeRoutingRulesets()
             rulesetItems?.forEach { key ->
                 getRoutingUserRule(key, v2rayConfig)
             }
@@ -574,23 +588,24 @@ object V2rayConfigManager {
      * @param tag The outbound tag to search for
      * @return ArrayList of domain rules matching the tag
      */
-    private fun getUserRule2Domain(tag: String): ArrayList<String> {
-        val domain = ArrayList<String>()
-
-        val rulesetItems = MmkvManager.decodeRoutingRulesets()
+    private fun buildRoutingDomainBuckets(rulesetItems: List<RulesetItem>?): RoutingDomainBuckets {
+        val buckets = RoutingDomainBuckets()
         rulesetItems?.forEach { key ->
-            if (key.enabled && key.outboundTag == tag && !key.domain.isNullOrEmpty()) {
+            if (key.enabled && !key.domain.isNullOrEmpty()) {
                 key.domain?.forEach {
                     if (it != AppConfig.GEOSITE_PRIVATE
                         && (it.startsWith("geosite:") || it.startsWith("domain:"))
                     ) {
-                        domain.add(it)
+                        when (key.outboundTag) {
+                            AppConfig.TAG_PROXY -> buckets.proxy.add(it)
+                            AppConfig.TAG_DIRECT -> buckets.direct.add(it)
+                            AppConfig.TAG_BLOCKED -> buckets.blocked.add(it)
+                        }
                     }
                 }
             }
         }
-
-        return domain
+        return buckets
     }
 
     /**
@@ -601,18 +616,16 @@ object V2rayConfigManager {
      * @param v2rayConfig The V2ray configuration object to be modified
      * @return true if custom local DNS configuration was successful, false otherwise
      */
-    private fun getCustomLocalDns(v2rayConfig: V2rayConfig): Boolean {
+    private fun getCustomLocalDns(v2rayConfig: V2rayConfig, routingDomains: RoutingDomainBuckets): Boolean {
         try {
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED) == true) {
                 val geositeCn = arrayListOf(AppConfig.GEOSITE_CN)
-                val proxyDomain = getUserRule2Domain(AppConfig.TAG_PROXY)
-                val directDomain = getUserRule2Domain(AppConfig.TAG_DIRECT)
                 // fakedns with all domains to make it always top priority
                 v2rayConfig.dns?.servers?.add(
                     0,
                     V2rayConfig.DnsBean.ServersBean(
                         address = "fakedns",
-                        domains = geositeCn.plus(proxyDomain).plus(directDomain)
+                        domains = geositeCn.plus(routingDomains.proxy).plus(routingDomains.direct)
                     )
                 )
             }
@@ -665,36 +678,34 @@ object V2rayConfigManager {
      * @param v2rayConfig The V2ray configuration object to be modified
      * @return true if DNS configuration was successful, false otherwise
      */
-    private fun getDns(v2rayConfig: V2rayConfig): Boolean {
+    private fun getDns(v2rayConfig: V2rayConfig, routingDomains: RoutingDomainBuckets): Boolean {
         try {
             val hosts = mutableMapOf<String, Any>()
             val servers = ArrayList<Any>()
 
             //remote Dns
             val remoteDns = SettingsManager.getRemoteDnsServers()
-            val proxyDomain = getUserRule2Domain(AppConfig.TAG_PROXY)
             remoteDns.forEach {
                 servers.add(it)
             }
-            if (proxyDomain.isNotEmpty()) {
+            if (routingDomains.proxy.isNotEmpty()) {
                 servers.add(
                     V2rayConfig.DnsBean.ServersBean(
                         address = remoteDns.first(),
-                        domains = proxyDomain,
+                        domains = routingDomains.proxy,
                     )
                 )
             }
 
             // domestic DNS
             val domesticDns = SettingsManager.getDomesticDnsServers()
-            val directDomain = getUserRule2Domain(AppConfig.TAG_DIRECT)
-            val isCnRoutingMode = directDomain.contains(AppConfig.GEOSITE_CN)
+            val isCnRoutingMode = routingDomains.direct.contains(AppConfig.GEOSITE_CN)
             val geoipCn = arrayListOf(AppConfig.GEOIP_CN)
-            if (directDomain.isNotEmpty()) {
+            if (routingDomains.direct.isNotEmpty()) {
                 servers.add(
                     V2rayConfig.DnsBean.ServersBean(
                         address = domesticDns.first(),
-                        domains = directDomain,
+                        domains = routingDomains.direct,
                         expectIPs = if (isCnRoutingMode) geoipCn else null,
                         skipFallback = true,
                         tag = AppConfig.TAG_DOMESTIC_DNS
@@ -703,9 +714,8 @@ object V2rayConfigManager {
             }
 
             //block dns
-            val blkDomain = getUserRule2Domain(AppConfig.TAG_BLOCKED)
-            if (blkDomain.isNotEmpty()) {
-                hosts.putAll(blkDomain.map { it to AppConfig.LOOPBACK })
+            if (routingDomains.blocked.isNotEmpty()) {
+                hosts.putAll(routingDomains.blocked.map { it to AppConfig.LOOPBACK })
             }
 
             // hardcode googleapi rule to fix play store problems

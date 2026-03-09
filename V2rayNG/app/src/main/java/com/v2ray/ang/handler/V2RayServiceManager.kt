@@ -102,7 +102,14 @@ object V2RayServiceManager {
      * @param context The context from which the service is stopped.
      */
     fun stopVService(context: Context) {
-        //context.toast(R.string.toast_services_stop)
+        val control = serviceControl?.get()
+        if (control != null) {
+            Log.i(AppConfig.TAG, "Stop Service directly via serviceControl")
+            control.stopService()
+            return
+        }
+
+        Log.i(AppConfig.TAG, "Stop Service via broadcast fallback")
         MessageUtil.sendMsg2Service(context, AppConfig.MSG_STATE_STOP, "")
     }
 
