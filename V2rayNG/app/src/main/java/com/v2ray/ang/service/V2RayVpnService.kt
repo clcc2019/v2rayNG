@@ -1,5 +1,6 @@
 package com.v2ray.ang.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -35,6 +36,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
+@SuppressLint("VpnServicePolicy")
 class V2RayVpnService : VpnService(), ServiceControl {
     private lateinit var mInterface: ParcelFileDescriptor
     private var isRunning = false
@@ -186,7 +188,8 @@ class V2RayVpnService : VpnService(), ServiceControl {
         val startAt = SystemClock.elapsedRealtime()
         val prepare = prepare(this)
         if (prepare != null) {
-            Log.e(AppConfig.TAG, "VPN preparation failed")
+            Log.e(AppConfig.TAG, "VPN preparation failed - VPN permission not granted")
+            stopSelf()
             return false
         }
 
@@ -223,12 +226,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
         Log.i(AppConfig.TAG, "VPN per-app rules configured in ${SystemClock.elapsedRealtime() - perAppStartAt}ms")
 
         // Close the old interface since the parameters have been changed
-        if (::mInterface.isInitialized) {
-            try {
+        try {
+            if (::mInterface.isInitialized) {
                 mInterface.close()
-            } catch (ignored: Exception) {
-                // ignored
             }
+        } catch (e: Exception) {
+            Log.w(AppConfig.TAG, "Failed to close old interface", e)
         }
 
         // Configure platform-specific features
@@ -403,8 +406,8 @@ class V2RayVpnService : VpnService(), ServiceControl {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 connectivity.unregisterNetworkCallback(defaultNetworkCallback)
-            } catch (ignored: Exception) {
-                // ignored
+            } catch (e: Exception) {
+                Log.w(AppConfig.TAG, "Failed to unregister network callback", e)
             }
         }
 
@@ -421,12 +424,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
             //which means the first v2ray core somehow failed to stop and release the port.
             stopSelf()
 
-            if (::mInterface.isInitialized) {
-                try {
+            try {
+                if (::mInterface.isInitialized) {
                     mInterface.close()
-                } catch (e: Exception) {
-                    Log.e(AppConfig.TAG, "Failed to close VPN interface", e)
                 }
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Failed to close VPN interface", e)
             }
         }
 
