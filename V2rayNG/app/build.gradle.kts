@@ -67,7 +67,7 @@ android {
     sourceSets {
         getByName("main") {
             jniLibs {
-                directories.add(file("libs"))
+                directories.add("libs")
             }
         }
     }
@@ -130,7 +130,7 @@ androidComponents {
             }
 
             val versionName = output.versionName.orNull
-            if (!versionName.isNullOrBlank() && output is com.android.build.api.variant.ApkVariantOutput) {
+            if (!versionName.isNullOrBlank() && output is com.android.build.api.variant.impl.VariantOutputImpl) {
                 val suffix = if (isFdroid) "-fdroid" else ""
                 output.outputFileName.set("v2rayNG_${versionName}${suffix}_${abi}.apk")
             }
