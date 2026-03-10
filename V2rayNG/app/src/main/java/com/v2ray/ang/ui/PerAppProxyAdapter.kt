@@ -4,19 +4,47 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.databinding.ItemRecyclerBypassListBinding
 import com.v2ray.ang.dto.AppInfo
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
 
 class PerAppProxyAdapter(
-    val apps: List<AppInfo>,
+    apps: List<AppInfo>,
     val viewModel: PerAppProxyViewModel
 ) :RecyclerView.Adapter<PerAppProxyAdapter.BaseViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_HEADER = 0
         private const val VIEW_TYPE_ITEM = 1
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppInfo>() {
+            override fun areItemsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+                return oldItem.packageName == newItem.packageName
+            }
+
+            override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+                return oldItem.packageName == newItem.packageName
+                    && oldItem.appName == newItem.appName
+                    && oldItem.isSystemApp == newItem.isSystemApp
+                    && oldItem.isSelected == newItem.isSelected
+            }
+        }
+    }
+
+    private val differ = AsyncListDiffer(this, DIFF_CALLBACK)
+
+    val apps: List<AppInfo>
+        get() = differ.currentList
+
+    init {
+        setHasStableIds(true)
+        submitList(apps)
+    }
+
+    fun submitList(newApps: List<AppInfo>) {
+        differ.submitList(newApps.toList())
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
@@ -27,6 +55,14 @@ class PerAppProxyAdapter(
     }
 
     override fun getItemCount() = apps.size + 1
+
+    override fun getItemId(position: Int): Long {
+        return if (position == 0) {
+            Long.MIN_VALUE
+        } else {
+            apps[position - 1].packageName.hashCode().toLong()
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         val ctx = parent.context
@@ -53,6 +89,10 @@ class PerAppProxyAdapter(
         View.OnClickListener {
         private lateinit var appInfo: AppInfo
 
+        init {
+            itemView.setOnClickListener(this)
+        }
+
         fun bind(appInfo: AppInfo) {
             this.appInfo = appInfo
 
@@ -61,8 +101,6 @@ class PerAppProxyAdapter(
             itemBypassBinding.systemBadge.isVisible = appInfo.isSystemApp
             itemBypassBinding.packageName.text = appInfo.packageName
             itemBypassBinding.checkBox.isChecked = viewModel.contains(appInfo.packageName)
-
-            itemView.setOnClickListener(this)
         }
 
         override fun onClick(v: View?) {

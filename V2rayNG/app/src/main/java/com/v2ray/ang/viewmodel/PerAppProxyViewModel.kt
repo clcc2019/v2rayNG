@@ -38,6 +38,8 @@ class PerAppProxyViewModel : ViewModel() {
         }
     }
 
+    fun containsAll(packages: Collection<String>): Boolean = packages.all(blacklist::contains)
+
     fun addAll(packages: Collection<String>) {
         if (blacklist.addAll(packages)) {
             save()
@@ -55,6 +57,30 @@ class PerAppProxyViewModel : ViewModel() {
             blacklist.clear()
             save()
         }
+    }
+
+    fun toggleAll(packages: Collection<String>) {
+        var changed = false
+        packages.forEach { packageName ->
+            changed = if (blacklist.contains(packageName)) {
+                blacklist.remove(packageName) || changed
+            } else {
+                blacklist.add(packageName) || changed
+            }
+        }
+        if (changed) {
+            save()
+        }
+    }
+
+    fun replaceAll(packages: Collection<String>) {
+        val updated = packages.toHashSet()
+        if (blacklist == updated) {
+            return
+        }
+        blacklist.clear()
+        blacklist.addAll(updated)
+        save()
     }
 
     private fun save() {

@@ -33,8 +33,8 @@ import java.text.Collator
 class PerAppProxyActivity : BaseActivity() {
     private val binding by lazy { ActivityBypassListBinding.inflate(layoutInflater) }
 
-    private var adapter: PerAppProxyAdapter? = null
-    private var appsAll: List<AppInfo>? = null
+    private lateinit var adapter: PerAppProxyAdapter
+    private var appsAll: List<AppInfo> = emptyList()
     private val viewModel: PerAppProxyViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +44,8 @@ class PerAppProxyActivity : BaseActivity() {
         binding.recyclerView.setHasFixedSize(true)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
+        adapter = PerAppProxyAdapter(emptyList(), viewModel)
+        binding.recyclerView.adapter = adapter
 
         initList()
 
@@ -101,8 +103,7 @@ class PerAppProxyActivity : BaseActivity() {
                 }
 
                 appsAll = apps
-                adapter = PerAppProxyAdapter(apps, viewModel)
-                binding.recyclerView.adapter = adapter
+                adapter.submitList(apps)
 
             } catch (e: Exception) {
                 Log.e(ANG_PACKAGE, "Error loading apps", e)
@@ -157,26 +158,20 @@ class PerAppProxyActivity : BaseActivity() {
     }
 
     private fun selectAllApp() {
-        adapter?.let { adapter ->
-            val pkgNames = adapter.apps.map { it.packageName }
-            val allSelected = pkgNames.all { viewModel.contains(it) }
+        val pkgNames = adapter.apps.map { it.packageName }
+        val allSelected = viewModel.containsAll(pkgNames)
 
-            if (allSelected) {
-                viewModel.removeAll(pkgNames)
-            } else {
-                viewModel.addAll(pkgNames)
-            }
-            refreshData()
+        if (allSelected) {
+            viewModel.removeAll(pkgNames)
+        } else {
+            viewModel.addAll(pkgNames)
         }
+        refreshData()
     }
 
     private fun invertSelection() {
-        adapter?.let { adapter ->
-            adapter.apps.forEach { app ->
-                viewModel.toggle(app.packageName)
-            }
-            refreshData()
-        }
+        viewModel.toggleAll(adapter.apps.map { it.packageName })
+        refreshData()
     }
 
     private fun selectProxyAppAuto() {
@@ -231,29 +226,22 @@ class PerAppProxyActivity : BaseActivity() {
             }
             if (TextUtils.isEmpty(proxyApps)) return false
 
-            viewModel.clear()
-
-            if (binding.switchBypassApps.isChecked) {
-                adapter?.let { adapter ->
-                    adapter.apps.forEach { app ->
-                        val packageName = app.packageName
-                        if (!inProxyApps(proxyApps, packageName, force)) {
-                            viewModel.add(packageName)
+            val proxyPackageNames = parseProxyPackageNames(proxyApps)
+            val selectedPackages = buildList(adapter.apps.size) {
+                adapter.apps.forEach { app ->
+                    val matches = inProxyApps(proxyPackageNames, app.packageName, force)
+                    if (binding.switchBypassApps.isChecked) {
+                        if (!matches) {
+                            add(app.packageName)
                         }
+                    } else if (matches) {
+                        add(app.packageName)
                     }
-                    refreshData()
-                }
-            } else {
-                adapter?.let { adapter ->
-                    adapter.apps.forEach { app ->
-                        val packageName = app.packageName
-                        if (inProxyApps(proxyApps, packageName, force)) {
-                            viewModel.add(packageName)
-                        }
-                    }
-                    refreshData()
                 }
             }
+
+            viewModel.replaceAll(selectedPackages)
+            refreshData()
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Error selecting proxy app", e)
             return false
@@ -261,42 +249,40 @@ class PerAppProxyActivity : BaseActivity() {
         return true
     }
 
-    private fun inProxyApps(proxyApps: String, packageName: String, force: Boolean): Boolean {
-        println(packageName)
+    private fun parseProxyPackageNames(proxyApps: String): Set<String> {
+        return proxyApps.lineSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .filterNot { it.equals("true", ignoreCase = true) || it.equals("false", ignoreCase = true) }
+            .toSet()
+    }
+
+    private fun inProxyApps(proxyApps: Set<String>, packageName: String, force: Boolean): Boolean {
         if (force) {
             if (packageName == "com.google.android.webview") return false
             if (packageName.startsWith("com.google")) return true
         }
 
-        return proxyApps.indexOf(packageName) >= 0
+        return proxyApps.contains(packageName)
     }
 
     private fun filterProxyApp(content: String): Boolean {
-        val apps = ArrayList<AppInfo>()
-
-        val key = content.uppercase()
-        if (key.isNotEmpty()) {
-            appsAll?.forEach {
-                if (it.appName.uppercase().indexOf(key) >= 0
-                    || it.packageName.uppercase().indexOf(key) >= 0
-                ) {
-                    apps.add(it)
-                }
-            }
+        val key = content.trim()
+        val filteredApps = if (key.isEmpty()) {
+            appsAll
         } else {
-            appsAll?.forEach {
-                apps.add(it)
+            appsAll.filter {
+                it.appName.contains(key, ignoreCase = true)
+                    || it.packageName.contains(key, ignoreCase = true)
             }
         }
 
-        adapter = PerAppProxyAdapter(apps, adapter?.viewModel ?: viewModel)
-        binding.recyclerView.adapter = adapter
-        refreshData()
+        adapter.submitList(filteredApps)
         return true
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        adapter?.notifyDataSetChanged()
+        adapter.notifyDataSetChanged()
     }
 }
