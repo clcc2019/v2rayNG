@@ -8,10 +8,6 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.v2ray.ang.R
 
 object UiMotion {
-    private const val PRESS_DURATION = 90L
-    private const val RELEASE_DURATION = 140L
-    private const val REVEAL_DURATION = 180L
-    private const val STAGGER_DELAY = 26L
     private val motionInterpolator = FastOutSlowInInterpolator()
 
     fun attachPressFeedback(
@@ -25,7 +21,7 @@ object UiMotion {
                     target.animate()
                         .scaleX(pressedScale)
                         .scaleY(pressedScale)
-                        .setDuration(PRESS_DURATION)
+                        .setDuration(MotionTokens.PRESS_DURATION)
                         .setInterpolator(motionInterpolator)
                         .start()
                 }
@@ -36,7 +32,7 @@ object UiMotion {
                     target.animate()
                         .scaleX(1f)
                         .scaleY(1f)
-                        .setDuration(RELEASE_DURATION)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
                         .setInterpolator(motionInterpolator)
                         .start()
                 }
@@ -56,7 +52,7 @@ object UiMotion {
                     target.animate().cancel()
                     target.animate()
                         .alpha(pressedAlpha)
-                        .setDuration(PRESS_DURATION)
+                        .setDuration(MotionTokens.PRESS_DURATION)
                         .setInterpolator(motionInterpolator)
                         .start()
                 }
@@ -66,7 +62,7 @@ object UiMotion {
                     target.animate().cancel()
                     target.animate()
                         .alpha(1f)
-                        .setDuration(RELEASE_DURATION)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
                         .setInterpolator(motionInterpolator)
                         .start()
                 }
@@ -104,7 +100,7 @@ object UiMotion {
         view: View,
         translationOffsetDp: Float = 14f,
         startDelay: Long = 0L,
-        duration: Long = REVEAL_DURATION
+        duration: Long = MotionTokens.REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
         view.animate().cancel()
@@ -122,7 +118,7 @@ object UiMotion {
     fun animateStaggeredChildren(
         container: ViewGroup,
         translationOffsetDp: Float = 16f,
-        stepDelay: Long = STAGGER_DELAY,
+        stepDelay: Long = MotionTokens.STAGGER_DELAY,
         startDelay: Long = 0L
     ) {
         val offsetPx = container.resources.displayMetrics.density * translationOffsetDp
@@ -135,13 +131,13 @@ object UiMotion {
                 .alpha(1f)
                 .translationY(0f)
                 .setStartDelay(startDelay + (index * stepDelay))
-                .setDuration(REVEAL_DURATION)
+                .setDuration(MotionTokens.REVEAL_DURATION)
                 .setInterpolator(motionInterpolator)
                 .start()
         }
     }
 
-    fun animatePulse(view: View, pulseScale: Float = 1.04f, duration: Long = 120L) {
+    fun animatePulse(view: View, pulseScale: Float = 1.04f, duration: Long = MotionTokens.PULSE_DEFAULT) {
         view.animate().cancel()
         view.animate()
             .scaleX(pulseScale)
@@ -163,7 +159,7 @@ object UiMotion {
         view: View,
         visible: Boolean,
         translationOffsetDp: Float = 12f,
-        duration: Long = REVEAL_DURATION
+        duration: Long = MotionTokens.REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
         view.setTag(R.id.tag_visibility_target, visible)

@@ -23,16 +23,19 @@
     <style name="TextAppearance.V2Ray.BodyStrong" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Body" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Support" parent="TextAppearance.AppCompat.Small">
         <item name="android:textSize">13sp</item>
         <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Badge" parent="TextAppearance.AppCompat.Small">
@@ -107,14 +110,105 @@
         <item name="strokeColor">@android:color/transparent</item>
     </style>
 
+    <style name="Widget.V2Ray.Chip.Protocol" parent="">
+        <item name="android:background">@drawable/bg_type_chip</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:minHeight">@dimen/view_height_dp26</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textColor">@color/colorConfigType</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.Connection" parent="">
+        <item name="android:background">@drawable/bg_connection_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp10</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp4</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp10</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp4</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.ConnectionCompact" parent="">
+        <item name="android:background">@drawable/bg_connection_badge</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Small</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.Metric" parent="">
+        <item name="android:background">@drawable/bg_metric_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">@dimen/view_width_delay_badge</item>
+        <item name="android:minHeight">@dimen/view_height_dp26</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp4</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp4</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textColor">@color/colorPing</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.SubscriptionContainer" parent="">
+        <item name="android:background">@drawable/bg_subscription_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.SubscriptionText" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.Count" parent="">
+        <item name="android:background">@drawable/bg_group_count_badge</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:minWidth">18dp</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp4</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp1</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp4</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp1</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+    </style>
+
+    <style name="Widget.V2Ray.Badge.IconContainer" parent="">
+        <item name="android:background">@drawable/bg_connection_badge</item>
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:foregroundGravity">center</item>
+    </style>
+
     <style name="Widget.V2Ray.Button.HomePrimary" parent="Widget.V2Ray.Button.Primary">
         <item name="cornerRadius">16dp</item>
-        <item name="android:minHeight">@dimen/view_height_dp44</item>
+        <item name="android:minHeight">@dimen/view_height_dp48</item>
     </style>
 
     <style name="Widget.V2Ray.Button.HomeSecondary" parent="Widget.V2Ray.Button.Secondary">
         <item name="cornerRadius">16dp</item>
-        <item name="android:minHeight">@dimen/view_height_dp44</item>
+        <item name="android:minHeight">@dimen/view_height_dp48</item>
+    </style>
+
+    <style name="Widget.V2Ray.Button.IconCircle" parent="Widget.V2Ray.Button.Secondary">
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minWidth">@dimen/view_size_dp44</item>
+        <item name="android:minHeight">@dimen/view_size_dp44</item>
+        <item name="iconPadding">0dp</item>
+        <item name="android:padding">0dp</item>
     </style>
 
     <style name="Widget.V2Ray.Button" parent="Widget.Material3.Button">

@@ -13,16 +13,10 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/log_tag"
+        style="@style/Widget.V2Ray.Badge.ConnectionCompact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_connection_badge"
-        android:paddingStart="@dimen/padding_spacing_dp8"
-        android:paddingTop="2dp"
-        android:paddingEnd="@dimen/padding_spacing_dp8"
-        android:paddingBottom="2dp"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="11sp" />
+        />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/log_content"

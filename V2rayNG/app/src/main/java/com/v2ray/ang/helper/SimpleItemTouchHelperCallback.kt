@@ -81,20 +81,9 @@ class SimpleItemTouchHelperCallback(private val mAdapter: ItemTouchHelperAdapter
         dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean
     ) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-            val maxSwipeDistance = viewHolder.itemView.width * SWIPE_THRESHOLD
-            val swipeAmount = abs(dX)
-            val direction = sign(dX)
-
-            // Limit maximum swipe distance
-            val translationX = min(swipeAmount, maxSwipeDistance) * direction
-            val alpha = ALPHA_FULL - min(swipeAmount, maxSwipeDistance) / maxSwipeDistance
-
-            viewHolder.itemView.translationX = translationX
-            viewHolder.itemView.alpha = alpha
-
-            if (swipeAmount >= maxSwipeDistance && isCurrentlyActive) {
-                returnViewToOriginalPosition(viewHolder)
-            }
+            viewHolder.itemView.translationX = 0f
+            viewHolder.itemView.alpha = ALPHA_FULL
+            return
         } else {
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         }

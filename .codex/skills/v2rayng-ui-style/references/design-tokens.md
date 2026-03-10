@@ -7,40 +7,40 @@
 #### 基础层 (Base Surface)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_background` | `#F2F2F2` | 页面/背景灰 |
+| `md_theme_background` | `#F5F4F1` | 页面/背景灰 |
 | `md_theme_surface` | `#FFFFFF` | 卡片/浮层基础色 |
-| `md_theme_surfaceVariant` | `#F7F7F7` | 次要表面 |
-| `md_theme_onSurface` | `#15212D` | 主文字色 |
-| `md_theme_onSurfaceVariant` | `#627487` | 次要文字色 |
-| `md_theme_outline` | `#9FAFBE` | 描边主色 |
-| `md_theme_outlineVariant` | `#E2E2E2` | 描边次色 |
-| `color_card_outline` | `#E6E6E6` | 统一卡片描边 |
+| `md_theme_surfaceVariant` | `#F3F4F7` | 次要表面 |
+| `md_theme_onSurface` | `#1B2330` | 主文字色 |
+| `md_theme_onSurfaceVariant` | `#636F82` | 次要文字色 |
+| `md_theme_outline` | `#C6CEDA` | 描边主色 |
+| `md_theme_outlineVariant` | `#E5E9F0` | 描边次色 |
+| `color_card_outline` | `#E4E8EF` | 统一卡片描边 |
 | `colorSelectionFill` | `#FFFFFF` | 列表选中填充（与 surface 一致） |
 
 #### 品牌主色 (Primary — Electric Blue)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_primary` | `#1F7BFF` | 品牌主色、主要按钮、激活状态 |
-| `md_theme_primaryContainer` | `#E1ECFF` | 主色调容器背景 (如 Drawer Header) |
-| `md_theme_onPrimaryContainer` | `#12346E` | 容器内文字与图标色 |
-| `md_theme_surfaceTint` | `#1F7BFF` | 表面着色 |
-| `color_fab_active` | `#1F7BFF` | 悬浮按钮激活色 |
-| `colorSelectionIndicator` | `#BFD6FF` | 列表选中指示器 |
-| `colorConfigType` | `#0F52C8` | 配置类型高亮色 |
+| `md_theme_primary` | `#2D63E9` | 品牌主色、主要按钮、激活状态 |
+| `md_theme_primaryContainer` | `#E8EDFF` | 主色调容器背景 (如 Drawer Header) |
+| `md_theme_onPrimaryContainer` | `#1A2B55` | 容器内文字与图标色 |
+| `md_theme_surfaceTint` | `#2D63E9` | 表面着色 |
+| `color_fab_active` | `#2D63E9` | 悬浮按钮激活色 |
+| `colorSelectionIndicator` | `#C6D7FF` | 列表选中指示器 |
+| `colorConfigType` | `#1E4FBF` | 配置类型高亮色 |
 
 #### 强调次色 (Secondary — Teal/Cyan)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_secondary` | `#006C7A` | 强调色，与主色形成冷暖/明暗对比 |
-| `md_theme_secondaryContainer` | `#B3EBFF` | 次要容器背景 |
-| `md_theme_onSecondaryContainer` | `#001F24` | 次要容器内文字色 |
+| `md_theme_secondary` | `#2A8684` | 强调色，与主色形成冷暖/明暗对比 |
+| `md_theme_secondaryContainer` | `#D7EEEC` | 次要容器背景 |
+| `md_theme_onSecondaryContainer` | `#143C3A` | 次要容器内文字色 |
 
 #### 语义状态色 (Semantic Status)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_error` | `#D94F4F` | 错误、断开连接、删除警告 |
-| `md_theme_warning` | `#E07B2A` | 警告、高延迟 (Ping)、即将过期 |
-| `md_theme_success` | `#1A9E5C` | 成功、已连接、低延迟 (Ping) |
+| `md_theme_error` | `#D25757` | 错误、断开连接、删除警告 |
+| `md_theme_warning` | `#E08A2E` | 警告、高延迟 (Ping)、即将过期 |
+| `md_theme_success` | `#2C9567` | 成功、已连接、低延迟 (Ping) |
 
 ---
 
@@ -50,39 +50,39 @@
 | Token | Value | 说明 |
 |-------|-------|------|
 | `md_theme_background` | `#000000` | 系统真黑（OLED 省电） |
-| `md_theme_surface` | `#0F0F0F` | 卡片基础色 |
-| `md_theme_surfaceVariant` | `#1A1A1A` | 次要表面 |
-| `md_theme_onSurface` | `#F2F2F2` | 主文字色 |
-| `md_theme_onSurfaceVariant` | `#B5B5B5` | 次要文字色 |
-| `md_theme_outline` | `#3A3A3A` | 描边主色 |
-| `md_theme_outlineVariant` | `#2A2A2A` | 描边次色 |
-| `color_card_outline` | `#2A2A2A` | 统一卡片描边 |
-| `colorSelectionFill` | `#0F0F0F` | 列表选中填充 |
+| `md_theme_surface` | `#0A0D11` | 卡片基础色 |
+| `md_theme_surfaceVariant` | `#131922` | 次要表面 |
+| `md_theme_onSurface` | `#E4E9F1` | 主文字色 |
+| `md_theme_onSurfaceVariant` | `#9AA7B9` | 次要文字色 |
+| `md_theme_outline` | `#293342` | 描边主色 |
+| `md_theme_outlineVariant` | `#1B2230` | 描边次色 |
+| `color_card_outline` | `#1C2430` | 统一卡片描边 |
+| `colorSelectionFill` | `#0B0E12` | 列表选中填充 |
 
 #### 品牌主色 (Primary — Electric Blue)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_primary` | `#6CA8FF` | 品牌主色、主要按钮、激活状态 |
-| `md_theme_primaryContainer` | `#1C386A` | 主色调容器背景 (如 Drawer Header) |
+| `md_theme_primary` | `#76A0FF` | 品牌主色、主要按钮、激活状态 |
+| `md_theme_primaryContainer` | `#1B2A4D` | 主色调容器背景 (如 Drawer Header) |
 | `md_theme_onPrimaryContainer` | `#DCE9FF` | 容器内文字与图标色 |
-| `md_theme_surfaceTint` | `#6CA8FF` | 表面着色 |
-| `color_fab_active` | `#6CA8FF` | 悬浮按钮激活色 |
-| `colorSelectionIndicator` | `#2E5A9E` | 列表选中指示器 |
-| `colorConfigType` | `#A9CCFF` | 配置类型高亮色 |
+| `md_theme_surfaceTint` | `#76A0FF` | 表面着色 |
+| `color_fab_active` | `#76A0FF` | 悬浮按钮激活色 |
+| `colorSelectionIndicator` | `#34558C` | 列表选中指示器 |
+| `colorConfigType` | `#A0BAFF` | 配置类型高亮色 |
 
 #### 强调次色 (Secondary — Teal/Cyan)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_secondary` | `#4DD9E6` | 强调色，与主色形成对比 |
-| `md_theme_secondaryContainer` | `#004F59` | 次要容器背景 |
-| `md_theme_onSecondaryContainer` | `#B3EBFF` | 次要容器内文字色 |
+| `md_theme_secondary` | `#56BDB9` | 强调色，与主色形成对比 |
+| `md_theme_secondaryContainer` | `#0D3837` | 次要容器背景 |
+| `md_theme_onSecondaryContainer` | `#CAE9E8` | 次要容器内文字色 |
 
 #### 语义状态色 (Semantic Status)
 | Token | Value | 说明 |
 |-------|-------|------|
-| `md_theme_error` | `#FF6B6B` | 错误、断开连接、删除警告 |
-| `md_theme_warning` | `#FFB347` | 警告、高延迟 (Ping)、即将过期 |
-| `md_theme_success` | `#4ADE80` | 成功、已连接、低延迟 (Ping) |
+| `md_theme_error` | `#FF7373` | 错误、断开连接、删除警告 |
+| `md_theme_warning` | `#FFC067` | 警告、高延迟 (Ping)、即将过期 |
+| `md_theme_success` | `#53CE8F` | 成功、已连接、低延迟 (Ping) |
 
 ---
 

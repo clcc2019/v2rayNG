@@ -53,6 +53,7 @@
         <!-- Status bar and navigation bar - system bars -->
         <item name="android:statusBarColor">@color/md_theme_background</item>
         <item name="android:navigationBarColor">@color/md_theme_background</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimation.V2Ray</item>
         <item name="toolbarStyle">@style/Widget.V2Ray.Toolbar</item>
         <item name="android:editTextStyle">@style/Widget.V2Ray.EditText</item>
         <item name="editTextStyle">@style/Widget.V2Ray.EditText</item>

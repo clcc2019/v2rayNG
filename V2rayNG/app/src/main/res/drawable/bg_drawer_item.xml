@@ -1,15 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_checked="true">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/md_theme_primaryContainer" />
-            <corners android:radius="18dp" />
-        </shape>
+        <inset
+            android:insetTop="@dimen/padding_spacing_dp4"
+            android:insetBottom="@dimen/padding_spacing_dp4">
+            <layer-list>
+                <item>
+                    <shape android:shape="rectangle">
+                        <solid android:color="@color/md_theme_surface" />
+                        <corners android:radius="@dimen/shape_corner_dp20" />
+                    </shape>
+                </item>
+                <item
+                    android:width="@dimen/padding_spacing_dp6"
+                    android:gravity="start|center_vertical">
+                    <shape android:shape="rectangle">
+                        <solid android:color="@color/colorSelectionIndicator" />
+                        <corners android:radius="@dimen/shape_corner_dp20" />
+                    </shape>
+                </item>
+                <item>
+                    <shape android:shape="rectangle">
+                        <solid android:color="@android:color/transparent" />
+                        <stroke
+                            android:width="1dp"
+                            android:color="@color/color_card_outline" />
+                        <corners android:radius="@dimen/shape_corner_dp20" />
+                    </shape>
+                </item>
+            </layer-list>
+        </inset>
     </item>
     <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@android:color/transparent" />
-            <corners android:radius="18dp" />
-        </shape>
+        <inset
+            android:insetTop="@dimen/padding_spacing_dp4"
+            android:insetBottom="@dimen/padding_spacing_dp4">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/md_theme_surface" />
+                <stroke
+                    android:width="1dp"
+                    android:color="@color/color_card_outline" />
+                <corners android:radius="@dimen/shape_corner_dp20" />
+            </shape>
+        </inset>
     </item>
 </selector>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbar_app_action_root"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="?attr/actionBarSize"
+    android:paddingStart="0dp"
+    android:paddingEnd="@dimen/padding_spacing_dp8">
+
+    <ImageView
+        android:id="@+id/toolbar_app_icon"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:contentDescription="@string/navigation_drawer_open"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_toolbar_brand" />
+
+    <TextView
+        android:id="@+id/toolbar_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/padding_spacing_dp8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.V2Ray.Support"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone" />
+
+</LinearLayout>

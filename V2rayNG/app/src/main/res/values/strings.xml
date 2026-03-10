@@ -7,7 +7,7 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="migration_success">Data migration success!</string>
-    <string name="action_stop_service">Stop service</string>
+    <string name="action_stop_service">Stop</string>
     <string name="migration_fail">Data migration failed!</string>
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
@@ -281,7 +281,7 @@
     <string name="title_logcat">Logcat</string>
     <string name="logcat_copy">Copy</string>
     <string name="logcat_clear">Clear</string>
-    <string name="title_service_restart">Service restart</string>
+    <string name="title_service_restart">Restart</string>
     <string name="title_del_all_config">Delete config</string>
     <string name="title_del_duplicate_config">Delete duplicate config</string>
     <string name="title_del_invalid_config">Delete invalid config</string>

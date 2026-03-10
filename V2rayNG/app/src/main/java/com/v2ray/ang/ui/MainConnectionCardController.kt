@@ -64,39 +64,16 @@ class MainConnectionCardController(
 
         val badgeUiModel = buildConnectionBadgeUiModel(state, snapshot)
         if (binding.tvConnectionBadge.text.toString() != badgeUiModel.text.toString() && shouldAnimate) {
-            UiMotion.animatePulse(binding.tvConnectionBadge, pulseScale = 1.03f, duration = 120L)
+            UiMotion.animatePulse(binding.tvConnectionBadge, pulseScale = 1.03f, duration = MotionTokens.PULSE_DEFAULT)
         }
         binding.tvConnectionBadge.text = badgeUiModel.text
         applyChipUiModel(binding.tvConnectionBadge, badgeUiModel.chip)
-        binding.layoutTest.backgroundTintList = ColorStateList.valueOf(
-            ContextCompat.getColor(
-                context,
-                if (state == ServiceUiState.RUNNING) R.color.md_theme_surface else R.color.md_theme_surfaceVariant
-            )
-        )
-        binding.layoutTest.strokeColor = ColorStateList.valueOf(
-            ContextCompat.getColor(
-                context,
-                if (state == ServiceUiState.RUNNING) R.color.md_theme_primaryContainer else R.color.md_theme_outlineVariant
-            )
-        )
-        binding.layoutTest.setTextColor(
-            ContextCompat.getColor(
-                context,
-                if (state == ServiceUiState.RUNNING) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
-            )
-        )
-        binding.layoutTest.iconTint = ColorStateList.valueOf(
-            ContextCompat.getColor(
-                context,
-                if (state == ServiceUiState.RUNNING) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
-            )
-        )
+        updateTestButtonState(state == ServiceUiState.RUNNING)
         val shouldPulseCard = shouldAnimate && (
             previousGuid != snapshot?.guid || (previousState != null && previousState != state)
         )
         if (shouldPulseCard) {
-            UiMotion.animatePulse(binding.cardConnection, pulseScale = 1.01f, duration = 140L)
+            UiMotion.animatePulse(binding.cardConnection, pulseScale = 1.01f, duration = MotionTokens.PULSE_LONG)
         }
         lastConnectionSnapshot = snapshot
         lastConnectionState = state
@@ -111,7 +88,7 @@ class MainConnectionCardController(
         }
         binding.layoutConnectionSurface.animate()
             .alpha(targetAlpha)
-            .setDuration(STATE_FADE_DURATION)
+            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
             .setInterpolator(motionInterpolator)
             .start()
     }
@@ -128,13 +105,13 @@ class MainConnectionCardController(
         }
         target.animate()
             .alpha(0f)
-            .setDuration(80L)
+            .setDuration(MotionTokens.FAST_ANIMATION_DURATION)
             .setInterpolator(motionInterpolator)
             .withEndAction {
                 target.text = newText
                 target.animate()
                     .alpha(1f)
-                    .setDuration(120L)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                     .setInterpolator(motionInterpolator)
                     .start()
             }
@@ -145,41 +122,11 @@ class MainConnectionCardController(
         val textValue = value?.toString().orEmpty()
         val shouldShow = textValue.isNotBlank()
         if (!shouldShow) {
-            if (!target.isVisible) {
-                target.text = ""
-                return
-            }
-            target.animate().cancel()
-            if (!animate) {
-                target.isVisible = false
-                target.text = ""
-                target.alpha = 1f
-                return
-            }
-            target.animate()
-                .alpha(0f)
-                .setDuration(80L)
-                .setInterpolator(motionInterpolator)
-                .withEndAction {
-                    target.isVisible = false
-                    target.text = ""
-                    target.alpha = 1f
-                }
-                .start()
+            hideText(target, animate)
             return
         }
 
-        if (!target.isVisible) {
-            target.isVisible = true
-            target.alpha = if (animate) 0f else 1f
-            target.text = textValue
-            if (animate) {
-                target.animate()
-                    .alpha(1f)
-                    .setDuration(120L)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            }
+        if (showText(target, textValue, animate)) {
             return
         }
 
@@ -190,24 +137,55 @@ class MainConnectionCardController(
         val trimmed = value.trim()
         if (trimmed.isEmpty()) {
             if (target.isVisible) {
-                setTextWithVisibility(target, "", animate)
+                hideText(target, animate)
             }
             return
         }
-        if (!target.isVisible) {
-            target.isVisible = true
-            target.alpha = if (animate) 0f else 1f
-            target.text = trimmed
-            if (animate) {
-                target.animate()
-                    .alpha(1f)
-                    .setDuration(120L)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            }
+        if (showText(target, trimmed, animate)) {
             return
         }
         setTextWithFade(target, trimmed, animate)
+    }
+
+    private fun showText(target: TextView, value: CharSequence, animate: Boolean): Boolean {
+        if (target.isVisible) {
+            return false
+        }
+        target.isVisible = true
+        target.alpha = if (animate) 0f else 1f
+        target.text = value
+        if (animate) {
+            target.animate()
+                .alpha(1f)
+                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
+        }
+        return true
+    }
+
+    private fun hideText(target: TextView, animate: Boolean) {
+        if (!target.isVisible) {
+            target.text = ""
+            return
+        }
+        target.animate().cancel()
+        if (!animate) {
+            target.isVisible = false
+            target.text = ""
+            target.alpha = 1f
+            return
+        }
+        target.animate()
+            .alpha(0f)
+            .setDuration(MotionTokens.FAST_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .withEndAction {
+                target.isVisible = false
+                target.text = ""
+                target.alpha = 1f
+            }
+            .start()
     }
 
     private fun applyChipUiModel(target: TextView, model: ChipUiModel) {
@@ -221,54 +199,68 @@ class MainConnectionCardController(
         )
     }
 
+    private fun updateTestButtonState(isRunning: Boolean) {
+        val backgroundColorRes = R.color.md_theme_surface
+        val strokeColorRes = R.color.md_theme_outlineVariant
+        val contentColorRes = R.color.md_theme_onSurfaceVariant
+        binding.layoutTest.backgroundTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(context, backgroundColorRes))
+        binding.layoutTest.strokeColor =
+            ColorStateList.valueOf(ContextCompat.getColor(context, strokeColorRes))
+        binding.layoutTest.setTextColor(ContextCompat.getColor(context, contentColorRes))
+        binding.layoutTest.iconTint = ColorStateList.valueOf(ContextCompat.getColor(context, contentColorRes))
+    }
+
     private fun createFeedbackIconForRes(iconRes: Int, tintColorRes: Int) =
         AppCompatResources.getDrawable(context, iconRes)?.mutate()?.apply {
             DrawableCompat.setTint(this, ContextCompat.getColor(context, tintColorRes))
         }
 
+    private fun statusBadge(
+        text: CharSequence,
+        backgroundColorRes: Int,
+        textColorRes: Int
+    ) = StatusBadgeUiModel(
+        text = text,
+        chip = ChipUiModel(
+            backgroundColorRes = backgroundColorRes,
+            textColorRes = textColorRes
+        )
+    )
+
     private fun buildConnectionBadgeUiModel(state: ServiceUiState, snapshot: ServersCache?): StatusBadgeUiModel {
         val latencyText = buildConnectionLatencyText(snapshot)
         if (state == ServiceUiState.RUNNING && !latencyText.isNullOrBlank()) {
-            return StatusBadgeUiModel(
+            return statusBadge(
                 text = latencyText,
-                chip = ChipUiModel(
-                    backgroundColorRes = R.color.md_theme_tertiaryContainer,
-                    textColorRes = R.color.md_theme_onTertiaryContainer
-                )
+                backgroundColorRes = R.color.md_theme_tertiaryContainer,
+                textColorRes = R.color.md_theme_onTertiaryContainer
             )
         }
 
         return when (state) {
-            ServiceUiState.STARTING -> StatusBadgeUiModel(
+            ServiceUiState.STARTING -> statusBadge(
                 text = context.getString(R.string.connection_starting_short),
-                chip = ChipUiModel(
-                    backgroundColorRes = R.color.md_theme_secondaryContainer,
-                    textColorRes = R.color.md_theme_onSecondaryContainer
-                )
+                backgroundColorRes = R.color.md_theme_secondaryContainer,
+                textColorRes = R.color.md_theme_onSecondaryContainer
             )
 
-            ServiceUiState.STOPPING -> StatusBadgeUiModel(
+            ServiceUiState.STOPPING -> statusBadge(
                 text = context.getString(R.string.connection_stopping_short),
-                chip = ChipUiModel(
-                    backgroundColorRes = R.color.md_theme_surfaceVariant,
-                    textColorRes = R.color.md_theme_onSurfaceVariant
-                )
+                backgroundColorRes = R.color.md_theme_surfaceVariant,
+                textColorRes = R.color.md_theme_onSurfaceVariant
             )
 
-            ServiceUiState.RUNNING -> StatusBadgeUiModel(
+            ServiceUiState.RUNNING -> statusBadge(
                 text = context.getString(R.string.connection_connected_short),
-                chip = ChipUiModel(
-                    backgroundColorRes = R.color.md_theme_tertiaryContainer,
-                    textColorRes = R.color.md_theme_onTertiaryContainer
-                )
+                backgroundColorRes = R.color.md_theme_tertiaryContainer,
+                textColorRes = R.color.md_theme_onTertiaryContainer
             )
 
-            ServiceUiState.STOPPED -> StatusBadgeUiModel(
+            ServiceUiState.STOPPED -> statusBadge(
                 text = context.getString(R.string.connection_not_connected_short),
-                chip = ChipUiModel(
-                    backgroundColorRes = R.color.md_theme_surfaceVariant,
-                    textColorRes = R.color.md_theme_onSurfaceVariant
-                )
+                backgroundColorRes = R.color.md_theme_surfaceVariant,
+                textColorRes = R.color.md_theme_onSurfaceVariant
             )
         }
     }
@@ -331,7 +323,4 @@ class MainConnectionCardController(
         return details.takeIf { it.isNotEmpty() }?.joinToString(" · ")
     }
 
-    companion object {
-        private const val STATE_FADE_DURATION = 120L
-    }
 }

@@ -284,14 +284,14 @@ class MainGroupTabsController(
             tabState.surfaceView.animate()
                 .scaleX(1f)
                 .scaleY(1f)
-                .setDuration(140L)
+                .setDuration(MotionTokens.RELEASE_DURATION)
                 .setInterpolator(motionInterpolator)
                 .start()
         } else {
             tabState.surfaceView.animate()
                 .scaleX(1f)
                 .scaleY(1f)
-                .setDuration(120L)
+                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                 .setInterpolator(motionInterpolator)
                 .start()
         }
@@ -314,7 +314,7 @@ class MainGroupTabsController(
         binding.cardTabGroup.animate()
             .alpha(targetAlpha)
             .translationY(targetTranslationY)
-            .setDuration(MEDIUM_ANIMATION_DURATION)
+            .setDuration(MotionTokens.REVEAL_DURATION)
             .setInterpolator(motionInterpolator)
             .start()
     }
@@ -330,7 +330,4 @@ class MainGroupTabsController(
         binding.viewPager.updatePadding(top = topPadding)
     }
 
-    companion object {
-        private const val MEDIUM_ANIMATION_DURATION = 180L
-    }
 }

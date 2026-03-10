@@ -4,11 +4,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.net.VpnService
-import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -19,7 +15,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -46,8 +41,6 @@ import com.v2ray.ang.viewmodel.MainViewModel
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener {
     companion object {
-        private const val SHORT_ANIMATION_DURATION = 120L
-        private const val SPLASH_EXIT_DURATION = 260L
     }
 
     private data class ActionButtonUiModel(
@@ -79,8 +72,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         MainActionsController(
             activity = this,
             mainViewModel = mainViewModel,
-            onSetupGroupTabs = { groupTabsController.setupGroupTabs() },
-            onRestartService = { restartV2Ray() }
+            onSetupGroupTabs = { groupTabsController.setupGroupTabs() }
         )
     }
     private var serviceUiState = ServiceUiState.STOPPED
@@ -88,6 +80,16 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private var defaultConnectionCardBottomMargin = 0
     private var isImeVisible = false
     private var isCurrentPingTesting = false
+    private var pendingRestart = false
+    private val toolbarController by lazy {
+        MainToolbarController(
+            activity = this,
+            binding = binding,
+            motionInterpolator = motionInterpolator,
+            onOpenDrawer = { binding.drawerLayout.openDrawer(GravityCompat.START) },
+            statusProvider = { ToolbarStatusState(serviceUiState, isCurrentPingTesting) }
+        )
+    }
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
@@ -118,12 +120,16 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         setContentView(binding.root)
         setupToolbar(binding.toolbar, false, getString(R.string.app_name))
         supportActionBar?.setDisplayShowTitleEnabled(false)
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        supportActionBar?.setHomeButtonEnabled(false)
         binding.toolbar.title = null
         binding.toolbar.subtitle = null
-        binding.toolbar.logo = AppCompatResources.getDrawable(this, R.drawable.ic_toolbar_brand)
+        binding.toolbar.logo = null
         binding.toolbar.logoDescription = getString(R.string.app_name)
         binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
         binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+        toolbarController.attach()
+        toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
         defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
         defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
@@ -134,8 +140,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val toggle = ActionBarDrawerToggle(
             this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
         )
+        toggle.isDrawerIndicatorEnabled = false
+        binding.toolbar.navigationIcon = null
         setupDrawerMotion(toggle)
         toggle.syncState()
+        binding.toolbar.navigationIcon = null
         binding.navView.setNavigationItemSelectedListener(this)
         setupNavigationDrawerInsets()
         setupMainContentInsets()
@@ -153,8 +162,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
+        binding.layoutRestart.setOnClickListener { handleRestartClick() }
         UiMotion.attachPressFeedback(binding.fab)
         UiMotion.attachPressFeedback(binding.layoutTest)
+        UiMotion.attachPressFeedback(binding.layoutRestart)
         setupHomeMotion(runInitialEntrance = savedInstanceState == null)
 
         setupViewModel()
@@ -186,13 +197,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 .scaleX(0.86f)
                 .scaleY(0.86f)
                 .translationY(-iconView.height * 0.08f)
-                .setDuration(SPLASH_EXIT_DURATION)
+                .setDuration(MotionTokens.SPLASH_EXIT_DURATION)
                 .setInterpolator(motionInterpolator)
                 .start()
 
             splashScreenView.view.animate()
                 .alpha(0f)
-                .setDuration(SPLASH_EXIT_DURATION)
+                .setDuration(MotionTokens.SPLASH_EXIT_DURATION)
                 .setInterpolator(motionInterpolator)
                 .withEndAction {
                     splashScreenView.remove()
@@ -226,9 +237,9 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 if (drawerView !== binding.navView) return
                 val progress = slideOffset.coerceIn(0f, 1f)
-                val shiftPx = resources.displayMetrics.density * 12f * progress
-                val contentScale = 1f - (0.018f * progress)
-                val toolbarScale = 1f - (0.01f * progress)
+                val shiftPx = resources.displayMetrics.density * MotionTokens.DRAWER_SHIFT_DP * progress
+                val contentScale = 1f - (MotionTokens.DRAWER_CONTENT_SCALE_DELTA * progress)
+                val toolbarScale = 1f - (MotionTokens.DRAWER_TOOLBAR_SCALE_DELTA * progress)
 
                 binding.toolbar.translationX = shiftPx * 0.45f
                 binding.toolbar.scaleX = toolbarScale
@@ -236,7 +247,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 binding.mainContent.translationX = shiftPx
                 binding.mainContent.scaleX = contentScale
                 binding.mainContent.scaleY = contentScale
-                binding.mainContent.alpha = 1f - (0.05f * progress)
+                binding.mainContent.alpha = 1f - (MotionTokens.DRAWER_CONTENT_ALPHA_DELTA * progress)
                 applyNavigationDrawerProgress(progress)
             }
 
@@ -318,16 +329,22 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 isCurrentPingTesting = false
                 updateTestButtonState(serviceUiState)
                 animateTestButtonAlpha(serviceUiState)
+                toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
             }
         }
         mainViewModel.updateConnectionCardAction.observe(this) {
             refreshConnectionCard()
         }
         mainViewModel.serviceFeedbackAction.observe(this) { feedback ->
-            toast(getString(feedback.messageResId))
+            toolbarController.showTransientMessage(getString(feedback.messageResId))
+            performServiceFeedbackHaptic(feedback.style)
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
+            if (!isRunning && pendingRestart) {
+                pendingRestart = false
+                startAfterRestart()
+            }
         }
     }
 
@@ -369,24 +386,48 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         V2RayServiceManager.startVService(this)
     }
 
+    private fun startAfterRestart() {
+        if (SettingsManager.isVpnMode()) {
+            val intent = VpnService.prepare(this)
+            if (intent == null) {
+                renderServiceUiState(ServiceUiState.STARTING)
+                startV2Ray()
+            } else {
+                requestVpnPermission.launch(intent)
+            }
+            return
+        }
+        renderServiceUiState(ServiceUiState.STARTING)
+        startV2Ray()
+    }
+
     private fun handleLayoutTestClick() {
         if (mainViewModel.isRunning.value == true) {
             if (isCurrentPingTesting) {
                 return
             }
             isCurrentPingTesting = true
+            binding.layoutTest.hapticVirtualKey()
             updateTestButtonState(serviceUiState)
             animateTestButtonAlpha(serviceUiState)
-            UiMotion.animatePulse(binding.layoutTest, pulseScale = 1.02f, duration = 110L)
+            toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
+            UiMotion.animatePulse(binding.layoutTest, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM)
             toast(R.string.connection_test_testing)
             mainViewModel.testCurrentServerRealPing()
         } else {
+            binding.layoutTest.hapticClick()
             toast(R.string.connection_test_unavailable)
         }
     }
 
     fun restartV2Ray() {
-        V2RayServiceManager.restartVService(this)
+        if (V2RayServiceManager.isRunning()) {
+            pendingRestart = true
+            renderServiceUiState(ServiceUiState.STOPPING)
+            V2RayServiceManager.stopVService(this)
+        } else {
+            startAfterRestart()
+        }
     }
 
     private fun compactTestResult(content: String?): String {
@@ -413,11 +454,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         serviceUiState = state
         val isTransitioning = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
 
-        if (isTransitioning) {
-            showProgressBar()
-        } else {
-            hideProgressBar()
-        }
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
         binding.fab.alpha = if (isTransitioning) 0.92f else 1f
@@ -425,9 +461,11 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             isCurrentPingTesting = false
         }
         updateTestButtonState(state)
+        updateRestartButtonState(state)
         connectionCardController.render(state)
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
         updateToolbarSubtitle()
+        toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
         animateServiceStateChange(previousState, state)
         performServiceStateHaptic(previousState, state)
         applyActionButtonUiModel(buildActionButtonUiModel(state))
@@ -437,32 +475,18 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         if (previousState == newState) {
             return
         }
-        val effect = when (newState) {
-            ServiceUiState.STARTING -> buildServiceHapticEffect(isStarting = true)
-            ServiceUiState.STOPPING -> buildServiceHapticEffect(isStarting = false)
-            else -> null
-        } ?: return
-
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (getSystemService(VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(VIBRATOR_SERVICE) as? Vibrator
-        } ?: return
-
-        if (!vibrator.hasVibrator()) {
-            return
+        when (newState) {
+            ServiceUiState.STARTING -> binding.fab.hapticClick()
+            ServiceUiState.STOPPING -> binding.fab.hapticVirtualKey()
+            else -> Unit
         }
-        vibrator.vibrate(effect)
     }
 
-    private fun buildServiceHapticEffect(isStarting: Boolean): VibrationEffect {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            VibrationEffect.createPredefined(
-                if (isStarting) VibrationEffect.EFFECT_TICK else VibrationEffect.EFFECT_CLICK
-            )
-        } else {
-            VibrationEffect.createOneShot(if (isStarting) 18L else 24L, VibrationEffect.DEFAULT_AMPLITUDE)
+    private fun performServiceFeedbackHaptic(style: MainViewModel.ServiceFeedback.Style) {
+        when (style) {
+            MainViewModel.ServiceFeedback.Style.SUCCESS -> binding.toolbar.hapticConfirm()
+            MainViewModel.ServiceFeedback.Style.ERROR -> binding.toolbar.hapticReject()
+            MainViewModel.ServiceFeedback.Style.NEUTRAL -> binding.toolbar.hapticClick()
         }
     }
 
@@ -516,26 +540,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.fab.contentDescription = getString(model.textResId)
     }
 
-    private fun hideProgressBar() {
-        binding.progressBar.animate().cancel()
-        binding.progressBar.alpha = 0f
-        binding.progressBar.visibility = View.INVISIBLE
-    }
-
-    private fun showProgressBar() {
-        if (binding.progressBar.visibility == View.VISIBLE && binding.progressBar.alpha == 1f) {
-            return
-        }
-        binding.progressBar.animate().cancel()
-        binding.progressBar.alpha = 0f
-        binding.progressBar.visibility = View.VISIBLE
-        binding.progressBar.animate()
-            .alpha(1f)
-            .setDuration(SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .start()
-    }
-
     private fun animateServiceStateChange(previousState: ServiceUiState, newState: ServiceUiState) {
         if (previousState == newState) return
 
@@ -551,13 +555,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.fab.animate()
             .scaleX(controlScale)
             .scaleY(controlScale)
-            .setDuration(SHORT_ANIMATION_DURATION)
+            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
             .setInterpolator(motionInterpolator)
             .withEndAction {
                 binding.fab.animate()
                     .scaleX(1f)
                     .scaleY(1f)
-                    .setDuration(SHORT_ANIMATION_DURATION)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                     .setInterpolator(motionInterpolator)
                     .start()
             }
@@ -572,9 +576,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.layoutTest.isEnabled = canTest
         binding.layoutTest.isClickable = canTest
         binding.layoutTest.isFocusable = canTest
-        binding.layoutTest.text = getString(
-            if (isCurrentPingTesting) R.string.connection_test_testing else R.string.connection_test_short
-        )
+        binding.layoutTest.text = null
         binding.layoutTest.contentDescription = getString(
             when {
                 isCurrentPingTesting -> R.string.connection_test_testing
@@ -582,6 +584,70 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 else -> R.string.connection_test_unavailable
             }
         )
+    }
+
+    private fun updateRestartButtonState(state: ServiceUiState) {
+        val isRunning = state == ServiceUiState.RUNNING
+        animateRestartVisibility(isRunning)
+        binding.layoutRestart.isEnabled = isRunning
+        binding.layoutRestart.isClickable = isRunning
+        binding.layoutRestart.isFocusable = isRunning
+        binding.layoutRestart.alpha = if (isRunning) 1f else 0.72f
+    }
+
+    private fun animateRestartVisibility(visible: Boolean) {
+        val view = binding.layoutRestart
+        view.setTag(R.id.tag_visibility_target, visible)
+        if (visible) {
+            if (view.isVisible && view.alpha == 1f && view.scaleX == 1f && view.scaleY == 1f) {
+                return
+            }
+            view.animate().cancel()
+            if (!view.isVisible) {
+                view.alpha = 0f
+                view.scaleX = 0.96f
+                view.scaleY = 0.96f
+                view.isVisible = true
+            }
+            view.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(MotionTokens.RELEASE_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
+            return
+        }
+        if (!view.isVisible) {
+            return
+        }
+        view.animate().cancel()
+        view.animate()
+            .alpha(0f)
+            .scaleX(0.96f)
+            .scaleY(0.96f)
+            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+            .setInterpolator(motionInterpolator)
+            .withEndAction {
+                val targetVisible = (view.getTag(R.id.tag_visibility_target) as? Boolean) == true
+                if (!targetVisible) {
+                    view.isVisible = false
+                } else {
+                    view.alpha = 1f
+                    view.scaleX = 1f
+                    view.scaleY = 1f
+                }
+            }
+            .start()
+    }
+
+    private fun handleRestartClick() {
+        if (serviceUiState != ServiceUiState.RUNNING) {
+            return
+        }
+        binding.layoutRestart.hapticClick()
+        UiMotion.animatePulse(binding.layoutRestart, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM)
+        restartV2Ray()
     }
 
     private fun animateTestButtonAlpha(state: ServiceUiState) {
@@ -592,7 +658,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         }
         binding.layoutTest.animate()
             .alpha(targetAlpha)
-            .setDuration(SHORT_ANIMATION_DURATION)
+            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
             .setInterpolator(motionInterpolator)
             .start()
     }
@@ -605,8 +671,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         connectionCardController.render(serviceUiState)
         updateToolbarSubtitle()
     }
-
-    private fun getSelectedServerName(): String? = mainViewModel.getSelectedServerSnapshot()?.profile?.remarks
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -716,6 +780,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     override fun onDestroy() {
+        toolbarController.clear()
         groupTabsController.onDestroy()
         super.onDestroy()
     }

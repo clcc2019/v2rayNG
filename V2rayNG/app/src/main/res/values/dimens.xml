@@ -21,15 +21,18 @@
     <dimen name="view_height_dp36">36dp</dimen>
     <dimen name="view_height_dp40">40dp</dimen>
     <dimen name="view_height_dp44">44dp</dimen>
+    <dimen name="view_height_dp48">48dp</dimen>
     <dimen name="view_height_dp30">30dp</dimen>
     <dimen name="view_height_dp28">28dp</dimen>
     <dimen name="view_height_dp26">26dp</dimen>
     <dimen name="view_height_dp32">32dp</dimen>
     <dimen name="view_size_dp36">36dp</dimen>
+    <dimen name="view_size_dp40">40dp</dimen>
+    <dimen name="view_size_dp44">44dp</dimen>
     <dimen name="view_width_delay_badge">54dp</dimen>
-    <dimen name="view_height_dp48">48dp</dimen>
     <dimen name="view_height_dp56">56dp</dimen>
     <dimen name="view_height_dp64">64dp</dimen>
     <dimen name="view_height_dp72">72dp</dimen>
     <dimen name="view_height_dp160">160dp</dimen>
+    <dimen name="list_card_max_width">360dp</dimen>
 </resources>

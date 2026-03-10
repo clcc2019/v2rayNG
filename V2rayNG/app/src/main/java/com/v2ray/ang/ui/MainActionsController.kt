@@ -22,9 +22,27 @@ import kotlinx.coroutines.withContext
 class MainActionsController(
     private val activity: MainActivity,
     private val mainViewModel: MainViewModel,
-    private val onSetupGroupTabs: () -> Unit,
-    private val onRestartService: () -> Unit
+    private val onSetupGroupTabs: () -> Unit
 ) {
+    private data class ManualImportAction(
+        val type: EConfigType,
+        @StringRes val labelResId: Int,
+        val iconResId: Int
+    )
+
+    private fun action(
+        @StringRes labelResId: Int,
+        iconResId: Int,
+        destructive: Boolean = false,
+        handler: () -> Unit
+    ): ActionBottomSheetItem {
+        return ActionBottomSheetItem(
+            labelResId = labelResId,
+            iconRes = iconResId,
+            destructive = destructive,
+            handler = handler
+        )
+    }
 
     fun handleOptionsItem(itemId: Int): Boolean {
         return when (itemId) {
@@ -49,70 +67,56 @@ class MainActionsController(
     }
 
     private fun showMoreSheet() {
-        val subtitle = mainViewModel.getSelectedServerSnapshot()?.profile?.remarks.orEmpty().ifBlank { null }
         activity.showActionBottomSheet(
-            title = activity.getString(R.string.notification_action_more),
-            subtitle = subtitle,
+            title = "",
+            subtitle = null,
             actions = buildHomeMoreActions()
         )
     }
 
     private fun buildHomeAddActions(): List<ActionBottomSheetItem> {
-        return listOf(
-            ActionBottomSheetItem(R.string.menu_item_import_config_qrcode, R.drawable.ic_qu_scan_24dp) { importQRcode() },
-            ActionBottomSheetItem(R.string.menu_item_import_config_clipboard, R.drawable.ic_copy) { importClipboard() },
-            ActionBottomSheetItem(R.string.menu_item_import_config_local, R.drawable.ic_file_24dp) { importConfigLocal() },
-            ActionBottomSheetItem(R.string.menu_item_import_config_policy_group, R.drawable.ic_subscriptions_24dp) {
-                importManually(EConfigType.POLICYGROUP.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_vmess, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.VMESS.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_vless, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.VLESS.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_ss, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.SHADOWSOCKS.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_socks, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.SOCKS.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_http, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.HTTP.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_trojan, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.TROJAN.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_wireguard, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.WIREGUARD.value)
-            },
-            ActionBottomSheetItem(R.string.menu_item_import_config_manually_hysteria2, R.drawable.ic_add_24dp) {
-                importManually(EConfigType.HYSTERIA2.value)
-            }
+        val baseActions = listOf(
+            action(R.string.menu_item_import_config_qrcode, R.drawable.ic_qu_scan_24dp) { importQRcode() },
+            action(R.string.menu_item_import_config_clipboard, R.drawable.ic_copy) { importClipboard() },
+            action(R.string.menu_item_import_config_local, R.drawable.ic_file_24dp) { importConfigLocal() }
         )
+        val manualActions = listOf(
+            ManualImportAction(EConfigType.POLICYGROUP, R.string.menu_item_import_config_policy_group, R.drawable.ic_subscriptions_24dp),
+            ManualImportAction(EConfigType.VMESS, R.string.menu_item_import_config_manually_vmess, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.VLESS, R.string.menu_item_import_config_manually_vless, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.SHADOWSOCKS, R.string.menu_item_import_config_manually_ss, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.SOCKS, R.string.menu_item_import_config_manually_socks, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.HTTP, R.string.menu_item_import_config_manually_http, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.TROJAN, R.string.menu_item_import_config_manually_trojan, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.WIREGUARD, R.string.menu_item_import_config_manually_wireguard, R.drawable.ic_add_24dp),
+            ManualImportAction(EConfigType.HYSTERIA2, R.string.menu_item_import_config_manually_hysteria2, R.drawable.ic_add_24dp)
+        )
+        val manualItems = manualActions.map { entry ->
+            action(entry.labelResId, entry.iconResId) { importManually(entry.type.value) }
+        }
+        return baseActions + manualItems
     }
 
     private fun buildHomeMoreActions(): List<ActionBottomSheetItem> {
         return listOf(
-            ActionBottomSheetItem(R.string.title_service_restart, R.drawable.ic_restore_24dp) { onRestartService() },
-            ActionBottomSheetItem(R.string.title_sub_update, R.drawable.ic_cloud_download_24dp) { importConfigViaSub() },
-            ActionBottomSheetItem(R.string.title_export_all, R.drawable.ic_description_24dp) { exportAll() },
-            ActionBottomSheetItem(R.string.title_ping_all_server, R.drawable.ic_logcat_24dp) {
+            action(R.string.title_sub_update, R.drawable.ic_cloud_download_24dp) { importConfigViaSub() },
+            action(R.string.title_export_all, R.drawable.ic_description_24dp) { exportAll() },
+            action(R.string.title_ping_all_server, R.drawable.ic_logcat_24dp) {
                 activity.toast(activity.getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
                 mainViewModel.testAllTcping()
             },
-            ActionBottomSheetItem(R.string.title_real_ping_all_server, R.drawable.ic_logcat_24dp) {
+            action(R.string.title_real_ping_all_server, R.drawable.ic_logcat_24dp) {
                 activity.toast(activity.getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
                 mainViewModel.testAllRealPing()
             },
-            ActionBottomSheetItem(R.string.title_sort_by_test_results, R.drawable.ic_feedback_24dp) { sortByTestResults() },
-            ActionBottomSheetItem(R.string.title_del_duplicate_config, R.drawable.ic_delete_24dp, destructive = true) {
+            action(R.string.title_sort_by_test_results, R.drawable.ic_feedback_24dp) { sortByTestResults() },
+            action(R.string.title_del_duplicate_config, R.drawable.ic_delete_24dp, destructive = true) {
                 delDuplicateConfig()
             },
-            ActionBottomSheetItem(R.string.title_del_invalid_config, R.drawable.ic_delete_24dp, destructive = true) {
+            action(R.string.title_del_invalid_config, R.drawable.ic_delete_24dp, destructive = true) {
                 delInvalidConfig()
             },
-            ActionBottomSheetItem(R.string.title_del_all_config, R.drawable.ic_delete_24dp, destructive = true) {
+            action(R.string.title_del_all_config, R.drawable.ic_delete_24dp, destructive = true) {
                 delAllConfig()
             }
         )

@@ -1,14 +1,13 @@
 package com.v2ray.ang.ui
 
 import android.content.Intent
-import android.content.res.ColorStateList
+import android.graphics.Canvas
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EdgeEffect
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -20,9 +19,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
 import com.v2ray.ang.databinding.FragmentGroupServerBinding
-import com.v2ray.ang.databinding.ItemBottomSheetActionBinding
 import com.v2ray.ang.databinding.ItemQrcodeBinding
-import com.v2ray.ang.databinding.LayoutBottomSheetActionsBinding
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.toast
@@ -32,7 +29,6 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.viewmodel.MainViewModel
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -116,6 +112,27 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), getSpanCount())
         binding.recyclerView.itemAnimator = null
+        binding.recyclerView.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
+            override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
+                return object : EdgeEffect(view.context) {
+                    override fun onPull(deltaDistance: Float) {
+                        // No-op to disable stretch/glow.
+                    }
+
+                    override fun onPull(deltaDistance: Float, displacement: Float) {
+                        // No-op to disable stretch/glow.
+                    }
+
+                    override fun onPullDistance(deltaDistance: Float, displacement: Float): Float {
+                        return 0f
+                    }
+
+                    override fun draw(canvas: Canvas): Boolean {
+                        return false
+                    }
+                }
+            }
+        }
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -214,60 +231,28 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         }
     }
 
-    private data class ServerAction(
-        val label: String,
-        val iconRes: Int,
-        val destructive: Boolean = false,
-        val handler: () -> Unit
-    )
+    private fun action(
+        label: String,
+        iconRes: Int,
+        destructive: Boolean = false,
+        handler: () -> Unit
+    ): ActionBottomSheetItem {
+        return ActionBottomSheetItem(
+            iconRes = iconRes,
+            destructive = destructive,
+            label = label,
+            handler = handler
+        )
+    }
 
     private fun showServerActions(guid: String, profile: ProfileItem, position: Int) {
         focusServerItem(position)
-        val sheetBinding = LayoutBottomSheetActionsBinding.inflate(LayoutInflater.from(ownerActivity))
-        val bottomSheetDialog = BottomSheetDialog(ownerActivity)
         val description = profile.description.orEmpty().ifBlank { profile.server.orEmpty() }
-        sheetBinding.tvTitle.text = profile.remarks
-        sheetBinding.tvSubtitle.text = description
-        sheetBinding.tvSubtitle.isVisible = description.isNotBlank()
-
-        buildServerActions(guid, profile, position).forEach { action ->
-            val itemBinding = ItemBottomSheetActionBinding.inflate(LayoutInflater.from(ownerActivity), sheetBinding.layoutActions, false)
-            itemBinding.ivIcon.setImageResource(action.iconRes)
-            val iconColor = ContextCompat.getColor(
-                ownerActivity,
-                if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurfaceVariant
-            )
-            itemBinding.ivIcon.imageTintList = ColorStateList.valueOf(iconColor)
-            itemBinding.tvLabel.text = action.label
-            itemBinding.tvLabel.setTextColor(
-                ContextCompat.getColor(
-                    ownerActivity,
-                    if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
-                )
-            )
-            UiMotion.attachPressFeedback(itemBinding.root)
-            itemBinding.root.setOnClickListener {
-                bottomSheetDialog.dismiss()
-                runCatching(action.handler).onFailure { e ->
-                    Log.e(AppConfig.TAG, "Error handling server action", e)
-                }
-            }
-            sheetBinding.layoutActions.addView(itemBinding.root)
-        }
-
-        bottomSheetDialog.setContentView(sheetBinding.root)
-        bottomSheetDialog.setOnShowListener {
-            sheetBinding.root.alpha = 0f
-            sheetBinding.root.translationY = sheetBinding.root.resources.displayMetrics.density * 6f
-            sheetBinding.root.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(160L)
-                .setInterpolator(androidx.interpolator.view.animation.FastOutSlowInInterpolator())
-                .start()
-            UiMotion.animateStaggeredChildren(sheetBinding.layoutActions, startDelay = 40L)
-        }
-        bottomSheetDialog.show()
+        ownerActivity.showActionBottomSheet(
+            title = profile.remarks,
+            subtitle = description,
+            actions = buildServerActions(guid, profile, position)
+        )
     }
 
     private fun focusServerItem(position: Int) {
@@ -281,43 +266,38 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         binding.recyclerView.postDelayed({
             val holder = binding.recyclerView.findViewHolderForAdapterPosition(position)
                 as? MainRecyclerAdapter.MainViewHolder
-            holder?.itemMainBinding?.itemBg?.let { UiMotion.animatePulse(it, pulseScale = 1.02f, duration = 110L) }
-        }, 140L)
+            holder?.itemMainBinding?.itemBg?.let { UiMotion.animatePulse(it, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM) }
+        }, MotionTokens.RELEASE_DURATION)
     }
 
-    private fun buildServerActions(guid: String, profile: ProfileItem, position: Int): List<ServerAction> {
+    private fun buildServerActions(guid: String, profile: ProfileItem, position: Int): List<ActionBottomSheetItem> {
         val isCustom = profile.configType == EConfigType.CUSTOM || profile.configType == EConfigType.POLICYGROUP
-        val actions = mutableListOf<ServerAction>()
+        val actions = mutableListOf<ActionBottomSheetItem>()
 
         if (!isCustom) {
-            actions += ServerAction(
+            actions += action(
                 label = getString(R.string.action_qrcode),
-                iconRes = R.drawable.ic_qu_scan_24dp,
-                handler = { showQRCode(guid) }
-            )
-            actions += ServerAction(
+                iconRes = R.drawable.ic_qu_scan_24dp
+            ) { showQRCode(guid) }
+            actions += action(
                 label = getString(R.string.action_export_clipboard),
-                iconRes = R.drawable.ic_copy,
-                handler = { share2Clipboard(guid) }
-            )
+                iconRes = R.drawable.ic_copy
+            ) { share2Clipboard(guid) }
         }
 
-        actions += ServerAction(
+        actions += action(
             label = getString(R.string.action_export_full_clipboard),
-            iconRes = R.drawable.ic_description_24dp,
-            handler = { shareFullContent(guid) }
-        )
-        actions += ServerAction(
+            iconRes = R.drawable.ic_description_24dp
+        ) { shareFullContent(guid) }
+        actions += action(
             label = getString(R.string.menu_item_edit_config),
-            iconRes = R.drawable.ic_edit_24dp,
-            handler = { editServer(guid, profile) }
-        )
-        actions += ServerAction(
+            iconRes = R.drawable.ic_edit_24dp
+        ) { editServer(guid, profile) }
+        actions += action(
             label = getString(R.string.menu_item_del_config),
             iconRes = R.drawable.ic_delete_24dp,
-            destructive = true,
-            handler = { removeServer(guid, position) }
-        )
+            destructive = true
+        ) { removeServer(guid, position) }
 
         return actions
     }

@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.HapticFeedbackConstants
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -320,13 +319,14 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnClickListener
                 }
-                itemMainBinding.layoutMore.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                UiMotion.animatePulse(itemMainBinding.layoutMore, pulseScale = 1.02f, duration = 90L)
+                itemMainBinding.layoutMore.hapticClick()
+                UiMotion.animatePulse(itemMainBinding.layoutMore, pulseScale = 1.02f, duration = MotionTokens.PULSE_QUICK)
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
             }
 
             itemMainBinding.infoContainer.setOnClickListener {
                 val item = boundItem ?: return@setOnClickListener
+                itemMainBinding.infoContainer.hapticClick()
                 adapterListener?.onSelectServer(item.guid)
             }
             itemMainBinding.infoContainer.setOnLongClickListener {
@@ -335,7 +335,7 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnLongClickListener false
                 }
-                itemMainBinding.infoContainer.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                itemMainBinding.infoContainer.hapticLongPress()
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
                 true
             }
@@ -346,6 +346,7 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnClickListener
                 }
+                itemMainBinding.tvTestResult.hapticVirtualKey()
                 adapterListener?.onTestDelay(item.guid, currentPosition)
             }
         }

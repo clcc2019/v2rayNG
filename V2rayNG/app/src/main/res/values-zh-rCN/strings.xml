@@ -6,7 +6,7 @@
     <string name="navigation_drawer_open">打开导航栏</string>
     <string name="navigation_drawer_close">关闭导航栏</string>
     <string name="migration_success">数据迁移成功!</string>
-    <string name="action_stop_service">停止服务</string>
+    <string name="action_stop_service">停止</string>
     <string name="migration_fail">数据迁移失败啦!</string>
     <string name="pull_down_to_refresh">请下拉刷新!</string>
 
@@ -274,8 +274,8 @@
     <string name="title_logcat">Logcat</string>
     <string name="logcat_copy">复制</string>
     <string name="logcat_clear">清除</string>
-    <string name="title_service_restart">服务重启</string>
-    <string name="title_del_all_config">删除配置</string>
+    <string name="title_service_restart">重启</string>
+    <string name="title_del_all_config">删除全部配置</string>
     <string name="title_del_duplicate_config">删除重复配置</string>
     <string name="title_del_invalid_config">删除无效配置</string>
     <string name="title_export_all">导出配置至剪贴板</string>
