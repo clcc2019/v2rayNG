@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     id("com.jaredsburrows.license")
 }
 
-tasks.withType<com.jaredsburrows.license.LicenseReportTask>().configureEach {
-    notCompatibleWithConfigurationCache("LicenseReportTask uses Task.project at execution time.")
+tasks.matching { it.name.startsWith("licenseReport") }.configureEach {
+    notCompatibleWithConfigurationCache("License report tasks use Task.project at execution time.")
 }
 
 android {
@@ -67,7 +66,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            jniLibs.srcDirs("libs")
+            jniLibs.srcDir("libs")
         }
     }
 
