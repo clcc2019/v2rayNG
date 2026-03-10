@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -18,6 +17,7 @@ import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ActivitySubSettingBinding
 import com.v2ray.ang.databinding.ItemQrcodeBinding
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
@@ -25,8 +25,10 @@ import com.v2ray.ang.util.QRCodeDecoder
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.SubscriptionsViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SubSettingActivity : BaseActivity() {
     private val binding by lazy { ActivitySubSettingBinding.inflate(layoutInflater) }
@@ -35,6 +37,7 @@ class SubSettingActivity : BaseActivity() {
     private val viewModel: SubscriptionsViewModel by viewModels()
     private lateinit var adapter: SubSettingRecyclerAdapter
     private var mItemTouchHelper: ItemTouchHelper? = null
+    private var refreshJob: Job? = null
     private val share_method: Array<out String> by lazy {
         resources.getStringArray(R.array.share_sub_method)
     }
@@ -101,10 +104,15 @@ class SubSettingActivity : BaseActivity() {
 
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        viewModel.reload()
-        adapter.notifyDataSetChanged()
+        refreshJob?.cancel()
+        refreshJob = lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.reload()
+            val items = viewModel.getAll()
+            withContext(Dispatchers.Main) {
+                adapter.submitList(items)
+            }
+        }
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {
@@ -147,15 +155,21 @@ class SubSettingActivity : BaseActivity() {
                     try {
                         when (i) {
                             0 -> {
-                                val ivBinding =
-                                    ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
-                                ivBinding.ivQcode.setImageBitmap(
-                                    QRCodeDecoder.createQRCode(
-                                        url
-
-                                    )
-                                )
-                                AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
+                                showLoading()
+                                lifecycleScope.launch(Dispatchers.Default) {
+                                    val result = runCatching { QRCodeDecoder.createQRCode(url) }
+                                    launch(Dispatchers.Main) {
+                                        result.onSuccess { bitmap ->
+                                            val ivBinding =
+                                                ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
+                                            ivBinding.ivQcode.setImageBitmap(bitmap)
+                                            AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
+                                        }.onFailure {
+                                            toastError(R.string.toast_failure)
+                                        }
+                                        hideLoading()
+                                    }
+                                }
                             }
 
                             1 -> {

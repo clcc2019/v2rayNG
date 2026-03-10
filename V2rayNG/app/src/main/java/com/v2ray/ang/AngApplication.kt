@@ -7,6 +7,9 @@ import androidx.work.WorkManager
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.handler.SettingsManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AngApplication : Application() {
     companion object {
@@ -25,6 +28,9 @@ class AngApplication : Application() {
     private val workManagerConfiguration: Configuration = Configuration.Builder()
         .setDefaultProcessName("${ANG_PACKAGE}:bg")
         .build()
+    @Volatile
+    private var workManagerInitialized = false
+    private val workManagerLock = Any()
 
     /**
      * Initializes the application.
@@ -34,15 +40,25 @@ class AngApplication : Application() {
 
         MMKV.initialize(this)
 
-        // Initialize WorkManager with the custom configuration
-        WorkManager.initialize(this, workManagerConfiguration)
-
         // Ensure critical preference defaults are present in MMKV early
-        SettingsManager.initApp(this)
+        SettingsManager.initAppFast(this)
         SettingsManager.setNightMode()
 
         es.dmoral.toasty.Toasty.Config.getInstance()
             .setGravity(android.view.Gravity.BOTTOM, 0, 300)
             .apply()
+
+        CoroutineScope(Dispatchers.Default).launch {
+            SettingsManager.initAppDeferred(this@AngApplication)
+        }
+    }
+
+    fun ensureWorkManagerInitialized() {
+        if (workManagerInitialized) return
+        synchronized(workManagerLock) {
+            if (workManagerInitialized) return
+            WorkManager.initialize(this, workManagerConfiguration)
+            workManagerInitialized = true
+        }
     }
 }

@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.ServiceControl
+import com.v2ray.ang.dto.ConfigResult
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.toast
@@ -41,6 +42,7 @@ object V2RayServiceManager {
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var restartJob: Job? = null
     private var currentConfig: ProfileItem? = null
+    private var pendingConfigGuid: String? = null
     private val receiverRegistered = AtomicBoolean(false)
     private val stopInProgress = AtomicBoolean(false)
 
@@ -74,6 +76,9 @@ object V2RayServiceManager {
         restartJob?.cancel()
         if (guid != null) {
             MmkvManager.setSelectServer(guid)
+            pendingConfigGuid = guid
+        } else {
+            pendingConfigGuid = MmkvManager.getSelectServer()
         }
         startContextService(context)
     }
@@ -85,6 +90,9 @@ object V2RayServiceManager {
     fun restartVService(context: Context, guid: String? = null) {
         if (guid != null) {
             MmkvManager.setSelectServer(guid)
+            pendingConfigGuid = guid
+        } else {
+            pendingConfigGuid = MmkvManager.getSelectServer()
         }
 
         val appContext = context.applicationContext
@@ -134,7 +142,7 @@ object V2RayServiceManager {
         if (coreController.isRunning) {
             return
         }
-        val guid = MmkvManager.getSelectServer() ?: return
+        val guid = pendingConfigGuid ?: MmkvManager.getSelectServer() ?: return
         val config = MmkvManager.decodeServerConfig(guid) ?: return
         if (config.configType != EConfigType.CUSTOM
             && config.configType != EConfigType.POLICYGROUP
@@ -168,7 +176,7 @@ object V2RayServiceManager {
      * `registerReceiver(Context, BroadcastReceiver, IntentFilter, int)`.
      * Starts the V2Ray core service.
      */
-    fun startCoreLoop(vpnInterface: ParcelFileDescriptor?): Boolean {
+    fun startCoreLoop(vpnInterface: ParcelFileDescriptor?, prebuiltConfig: ConfigResult? = null): Boolean {
         if (coreController.isRunning) {
             return false
         }
@@ -176,11 +184,19 @@ object V2RayServiceManager {
         stopInProgress.set(false)
 
         val service = getService() ?: return false
-        val guid = MmkvManager.getSelectServer() ?: return false
+        val guid = prebuiltConfig?.guid ?: pendingConfigGuid ?: MmkvManager.getSelectServer() ?: return false
         val config = MmkvManager.decodeServerConfig(guid) ?: return false
 
         val configStartAt = SystemClock.elapsedRealtime()
-        val result = V2rayConfigManager.getV2rayConfig(service, guid)
+        val result = if (prebuiltConfig != null
+            && prebuiltConfig.status
+            && prebuiltConfig.guid == guid
+            && prebuiltConfig.content.isNotBlank()
+        ) {
+            prebuiltConfig
+        } else {
+            V2rayConfigManager.getV2rayConfig(service, guid)
+        }
         val configElapsed = SystemClock.elapsedRealtime() - configStartAt
         if (!result.status)
             return false
@@ -199,13 +215,13 @@ object V2RayServiceManager {
         }
 
         currentConfig = config
+        pendingConfigGuid = null
         var tunFd = vpnInterface?.fd ?: 0
         if (SettingsManager.isUsingHevTun()) {
             tunFd = 0
         }
 
         try {
-            NotificationManager.showNotification(currentConfig)
             val loopStartAt = SystemClock.elapsedRealtime()
             coreController.startLoop(result.content, tunFd)
             Log.i(AppConfig.TAG, "V2Ray core startLoop finished in ${SystemClock.elapsedRealtime() - loopStartAt}ms")
@@ -223,9 +239,8 @@ object V2RayServiceManager {
 
         try {
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
-            //NotificationManager.showNotification(currentConfig)
+            NotificationManager.showNotification(currentConfig)
             NotificationManager.startSpeedNotification(currentConfig)
-
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to startup service", e)
             return false

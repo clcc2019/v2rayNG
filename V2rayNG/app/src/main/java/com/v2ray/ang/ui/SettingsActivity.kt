@@ -246,6 +246,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun configureUpdateTask(interval: Long) {
+            AngApplication.application.ensureWorkManagerInitialized()
             val rw = RemoteWorkManager.getInstance(AngApplication.application)
             rw.cancelUniqueWork(AppConfig.SUBSCRIPTION_UPDATE_TASK_NAME)
             rw.enqueueUniquePeriodicWork(
@@ -264,6 +265,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun cancelUpdateTask() {
+            AngApplication.application.ensureWorkManagerInitialized()
             val rw = RemoteWorkManager.getInstance(AngApplication.application)
             rw.cancelUniqueWork(AppConfig.SUBSCRIPTION_UPDATE_TASK_NAME)
         }

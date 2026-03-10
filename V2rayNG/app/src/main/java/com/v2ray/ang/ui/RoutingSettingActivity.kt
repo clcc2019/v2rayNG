@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -24,6 +23,7 @@ import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,6 +34,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     private val viewModel: RoutingSettingsViewModel by viewModels()
     private lateinit var adapter: RoutingSettingRecyclerAdapter
     private var mItemTouchHelper: ItemTouchHelper? = null
+    private var refreshJob: Job? = null
     private val routing_domain_strategy: Array<out String> by lazy {
         resources.getStringArray(R.array.routing_domain_strategy)
     }
@@ -190,10 +191,15 @@ class RoutingSettingActivity : HelperBaseActivity() {
         return true
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        viewModel.reload()
-        adapter.notifyDataSetChanged()
+        refreshJob?.cancel()
+        refreshJob = lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.reload()
+            val items = viewModel.getAll()
+            withContext(Dispatchers.Main) {
+                adapter.submitList(items)
+            }
+        }
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {

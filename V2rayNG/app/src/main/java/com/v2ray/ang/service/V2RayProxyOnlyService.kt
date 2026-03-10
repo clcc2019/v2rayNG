@@ -8,7 +8,9 @@ import android.os.SystemClock
 import android.util.Log
 import com.v2ray.ang.contracts.ServiceControl
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.MyContextWrapper
 import java.lang.ref.SoftReference
@@ -76,7 +78,19 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
         serviceScope.launch {
             try {
                 val startAt = SystemClock.elapsedRealtime()
-                if (!V2RayServiceManager.startCoreLoop(null)) {
+                val guid = MmkvManager.getSelectServer()
+                if (guid.isNullOrEmpty()) {
+                    Log.e(AppConfig.TAG, "Failed to start proxy-only: no selected server")
+                    stopSelf()
+                    return@launch
+                }
+                val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid)
+                if (!configResult.status) {
+                    Log.e(AppConfig.TAG, "Failed to build proxy-only V2Ray config")
+                    stopSelf()
+                    return@launch
+                }
+                if (!V2RayServiceManager.startCoreLoop(null, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only core loop")
                     stopSelf()
                     return@launch

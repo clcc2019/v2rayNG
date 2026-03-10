@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
@@ -15,6 +14,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityBypassListBinding
 import com.v2ray.ang.dto.AppInfo
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.extension.v2RayApplication
 import com.v2ray.ang.handler.MmkvManager
@@ -26,6 +26,7 @@ import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.Collator
@@ -36,6 +37,8 @@ class PerAppProxyActivity : BaseActivity() {
     private lateinit var adapter: PerAppProxyAdapter
     private var appsAll: List<AppInfo> = emptyList()
     private val viewModel: PerAppProxyViewModel by viewModels()
+    private var listUpdateJob: Job? = null
+    private var currentFilter: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,15 +103,15 @@ class PerAppProxyActivity : BaseActivity() {
                         val collator = Collator.getInstance()
                         appsList.sortedWith(compareBy(collator) { it.appName })
                     }
-                }
+        }
 
-                appsAll = apps
-                adapter.submitList(apps)
+        appsAll = apps
+        scheduleListUpdate(currentFilter)
 
-            } catch (e: Exception) {
-                Log.e(ANG_PACKAGE, "Error loading apps", e)
-            } finally {
-                hideLoading()
+    } catch (e: Exception) {
+        Log.e(ANG_PACKAGE, "Error loading apps", e)
+    } finally {
+        hideLoading()
             }
         }
     }
@@ -118,13 +121,13 @@ class PerAppProxyActivity : BaseActivity() {
         setupSearchView(
             menuItem = menu.findItem(R.id.search_view),
             onQueryChanged = { filterProxyApp(it) },
-            onClosed = { filterProxyApp("") }
+            onClosed = { filterProxyApp("") },
+            debounceMillis = 180L
         )
         return super.onCreateOptionsMenu(menu)
     }
 
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.select_all -> {
             selectAllApp()
@@ -139,13 +142,11 @@ class PerAppProxyActivity : BaseActivity() {
 
         R.id.select_proxy_app -> {
             selectProxyAppAuto()
-            allowPerAppProxy()
             true
         }
 
         R.id.import_proxy_app -> {
             importProxyApp()
-            allowPerAppProxy()
             true
         }
 
@@ -185,11 +186,17 @@ class PerAppProxyActivity : BaseActivity() {
                 val httpPort = SettingsManager.getHttpPort()
                 content = HttpUtil.getUrlContent(url, 5000, httpPort) ?: ""
             }
-            launch(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 //Log.i(AppConfig.TAG, content)
-                selectProxyApp(content, true)
-                toastSuccess(R.string.toast_success)
-                hideLoading()
+                applyProxySelection(content, true) { success ->
+                    if (success) {
+                        toastSuccess(R.string.toast_success)
+                        allowPerAppProxy()
+                    } else {
+                        toastError(R.string.toast_failure)
+                    }
+                    hideLoading()
+                }
             }
         }
     }
@@ -197,8 +204,14 @@ class PerAppProxyActivity : BaseActivity() {
     private fun importProxyApp() {
         val content = Utils.getClipboard(applicationContext)
         if (TextUtils.isEmpty(content)) return
-        selectProxyApp(content, false)
-        toastSuccess(R.string.toast_success)
+        applyProxySelection(content, false) { success ->
+            if (success) {
+                toastSuccess(R.string.toast_success)
+                allowPerAppProxy()
+            } else {
+                toastError(R.string.toast_failure)
+            }
+        }
     }
 
     private fun exportProxyApp() {
@@ -216,37 +229,46 @@ class PerAppProxyActivity : BaseActivity() {
         SettingsChangeManager.makeRestartService()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private fun selectProxyApp(content: String, force: Boolean): Boolean {
-        try {
-            val proxyApps = if (TextUtils.isEmpty(content)) {
-                Utils.readTextFromAssets(v2RayApplication, "proxy_package_name")
-            } else {
-                content
-            }
-            if (TextUtils.isEmpty(proxyApps)) return false
-
-            val proxyPackageNames = parseProxyPackageNames(proxyApps)
-            val selectedPackages = buildList(adapter.apps.size) {
-                adapter.apps.forEach { app ->
-                    val matches = inProxyApps(proxyPackageNames, app.packageName, force)
-                    if (binding.switchBypassApps.isChecked) {
-                        if (!matches) {
-                            add(app.packageName)
-                        }
-                    } else if (matches) {
-                        add(app.packageName)
-                    }
+    private fun applyProxySelection(content: String, force: Boolean, onComplete: (Boolean) -> Unit) {
+        val bypassChecked = binding.switchBypassApps.isChecked
+        val appsSnapshot = adapter.apps.toList()
+        lifecycleScope.launch(Dispatchers.Default) {
+            val success = try {
+                val proxyApps = if (TextUtils.isEmpty(content)) {
+                    Utils.readTextFromAssets(v2RayApplication, "proxy_package_name")
+                } else {
+                    content
                 }
+                if (TextUtils.isEmpty(proxyApps)) {
+                    false
+                } else {
+                    val proxyPackageNames = parseProxyPackageNames(proxyApps)
+                    val selectedPackages = buildList(appsSnapshot.size) {
+                        appsSnapshot.forEach { app ->
+                            val matches = inProxyApps(proxyPackageNames, app.packageName, force)
+                            if (bypassChecked) {
+                                if (!matches) {
+                                    add(app.packageName)
+                                }
+                            } else if (matches) {
+                                add(app.packageName)
+                            }
+                        }
+                    }
+                    viewModel.replaceAll(selectedPackages)
+                    true
+                }
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Error selecting proxy app", e)
+                false
             }
-
-            viewModel.replaceAll(selectedPackages)
-            refreshData()
-        } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Error selecting proxy app", e)
-            return false
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    refreshData()
+                }
+                onComplete(success)
+            }
         }
-        return true
     }
 
     private fun parseProxyPackageNames(proxyApps: String): Set<String> {
@@ -267,22 +289,39 @@ class PerAppProxyActivity : BaseActivity() {
     }
 
     private fun filterProxyApp(content: String): Boolean {
-        val key = content.trim()
-        val filteredApps = if (key.isEmpty()) {
-            appsAll
-        } else {
-            appsAll.filter {
-                it.appName.contains(key, ignoreCase = true)
-                    || it.packageName.contains(key, ignoreCase = true)
-            }
-        }
-
-        adapter.submitList(filteredApps)
+        scheduleListUpdate(content)
         return true
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        adapter.notifyDataSetChanged()
+        scheduleListUpdate(currentFilter)
+    }
+
+    private fun scheduleListUpdate(filter: String) {
+        val key = filter.trim()
+        currentFilter = key
+        val snapshot = appsAll
+        listUpdateJob?.cancel()
+        listUpdateJob = lifecycleScope.launch(Dispatchers.Default) {
+            val filteredApps = if (key.isEmpty()) {
+                snapshot
+            } else {
+                snapshot.filter {
+                    it.appName.contains(key, ignoreCase = true)
+                        || it.packageName.contains(key, ignoreCase = true)
+                }
+            }
+            val synced = syncSelection(filteredApps)
+            withContext(Dispatchers.Main) {
+                adapter.submitList(synced)
+            }
+        }
+    }
+
+    private fun syncSelection(apps: List<AppInfo>): List<AppInfo> {
+        return apps.map { app ->
+            val selected = if (viewModel.contains(app.packageName)) 1 else 0
+            if (app.isSelected == selected) app else app.copy(isSelected = selected)
+        }
     }
 }

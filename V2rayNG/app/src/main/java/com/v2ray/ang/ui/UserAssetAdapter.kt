@@ -4,23 +4,61 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.AdapterListUpdateCallback
+import androidx.recyclerview.widget.AsyncDifferConfig
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerUserAssetBinding
-import com.v2ray.ang.extension.toTrafficString
-import com.v2ray.ang.viewmodel.UserAssetViewModel
-import java.io.File
-import java.text.DateFormat
-import java.util.Date
-
+import com.v2ray.ang.dto.AssetUrlCache
+import java.util.concurrent.Executors
 class UserAssetAdapter(
-    private val viewModel: UserAssetViewModel,
-    private val extDir: File,
     private val adapterListener: BaseAdapterListener?
 ) : RecyclerView.Adapter<UserAssetAdapter.UserAssetViewHolder>() {
 
-    override fun getItemCount() = viewModel.itemCount
+    companion object {
+        private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AssetUrlCache>() {
+            override fun areItemsTheSame(oldItem: AssetUrlCache, newItem: AssetUrlCache): Boolean {
+                return oldItem.guid == newItem.guid
+            }
+
+            override fun areContentsTheSame(oldItem: AssetUrlCache, newItem: AssetUrlCache): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+
+    private val differ = AsyncListDiffer(
+        AdapterListUpdateCallback(this),
+        AsyncDifferConfig.Builder(DIFF_CALLBACK)
+            .setBackgroundThreadExecutor(DIFF_EXECUTOR)
+            .build()
+    )
+    private val items: List<AssetUrlCache>
+        get() = differ.currentList
+    private var fileMeta: Map<String, AssetFileMeta> = emptyMap()
+
+    init {
+        setHasStableIds(true)
+    }
+
+    data class AssetFileMeta(
+        val propertiesText: String
+    )
+
+    fun submitList(newItems: List<AssetUrlCache>, fileMeta: Map<String, AssetFileMeta>) {
+        this.fileMeta = fileMeta
+        differ.submitList(newItems.toList())
+    }
+
+    override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int): Long {
+        return items.getOrNull(position)?.guid?.hashCode()?.toLong() ?: RecyclerView.NO_ID
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserAssetViewHolder {
         return UserAssetViewHolder(
@@ -34,15 +72,13 @@ class UserAssetAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: UserAssetViewHolder, position: Int) {
-        val item = viewModel.getAsset(position) ?: return
-        val file = extDir.listFiles()?.find { it.name == item.assetUrl.remarks }
+        val item = items.getOrNull(position) ?: return
+        val meta = fileMeta[item.assetUrl.remarks]
 
         holder.itemUserAssetBinding.assetName.text = item.assetUrl.remarks
 
-        if (file != null) {
-            val dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-            holder.itemUserAssetBinding.assetProperties.text =
-                "${file.length().toTrafficString()}  •  ${dateFormat.format(Date(file.lastModified()))}"
+        if (meta != null) {
+            holder.itemUserAssetBinding.assetProperties.text = meta.propertiesText
         } else {
             holder.itemUserAssetBinding.assetProperties.text =
                 holder.itemUserAssetBinding.root.context.getString(R.string.msg_file_not_found)

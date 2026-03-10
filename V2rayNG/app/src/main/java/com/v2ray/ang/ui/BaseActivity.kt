@@ -16,6 +16,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +29,9 @@ import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.CustomDividerItemDecoration
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 abstract class BaseActivity : AppCompatActivity() {
     private var progressBar: LinearProgressIndicator? = null
@@ -109,21 +113,33 @@ abstract class BaseActivity : AppCompatActivity() {
         menuItem: MenuItem?,
         hint: CharSequence = getString(R.string.menu_item_search),
         onQueryChanged: (String) -> Unit,
-        onClosed: (() -> Unit)? = null
+        onClosed: (() -> Unit)? = null,
+        debounceMillis: Long = 0L
     ): SearchView? {
         val searchView = menuItem?.actionView as? SearchView ?: return null
         styleSearchView(searchView)
         searchView.queryHint = hint
         searchView.maxWidth = Int.MAX_VALUE
+        var searchJob: Job? = null
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                onQueryChanged(newText.orEmpty())
+                val query = newText.orEmpty()
+                if (debounceMillis <= 0L) {
+                    onQueryChanged(query)
+                    return false
+                }
+                searchJob?.cancel()
+                searchJob = lifecycleScope.launch {
+                    delay(debounceMillis)
+                    onQueryChanged(query)
+                }
                 return false
             }
         })
         searchView.setOnCloseListener {
+            searchJob?.cancel()
             if (onClosed != null) {
                 onClosed()
             } else {

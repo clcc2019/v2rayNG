@@ -6,11 +6,12 @@ import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import java.io.IOException
 
 class LogcatViewModel : ViewModel() {
+    private val lock = Any()
     private val logsetsAll: MutableList<String> = mutableListOf()
     private var filteredLogs: List<String> = emptyList()
     private var currentFilter: String = ""
 
-    fun getAll(): List<String> = filteredLogs
+    fun getAll(): List<String> = synchronized(lock) { filteredLogs }
 
     fun loadLogcat() {
         try {
@@ -24,9 +25,25 @@ class LogcatViewModel : ViewModel() {
             val process = Runtime.getRuntime().exec(lst.toTypedArray())
             val allText = process.inputStream.bufferedReader().use { it.readLines() }.reversed()
 
-            logsetsAll.clear()
-            logsetsAll.addAll(allText)
-            applyFilter()
+            val filterSnapshot = synchronized(lock) { currentFilter }
+            val filtered = if (filterSnapshot.isEmpty()) {
+                allText
+            } else {
+                allText.filter { it.contains(filterSnapshot, ignoreCase = true) }
+            }
+            synchronized(lock) {
+                logsetsAll.clear()
+                logsetsAll.addAll(allText)
+                if (currentFilter == filterSnapshot) {
+                    filteredLogs = filtered
+                } else {
+                    filteredLogs = if (currentFilter.isEmpty()) {
+                        logsetsAll.toList()
+                    } else {
+                        logsetsAll.filter { it.contains(currentFilter, ignoreCase = true) }
+                    }
+                }
+            }
         } catch (e: IOException) {
             android.util.Log.e(AppConfig.TAG, "Failed to get logcat", e)
         }
@@ -40,23 +57,34 @@ class LogcatViewModel : ViewModel() {
             val process = Runtime.getRuntime().exec(lst.toTypedArray())
             process.waitFor()
 
-            logsetsAll.clear()
-            filteredLogs = emptyList()
+            synchronized(lock) {
+                logsetsAll.clear()
+                filteredLogs = emptyList()
+            }
         } catch (e: IOException) {
             android.util.Log.e(AppConfig.TAG, "Failed to clear logcat", e)
         }
     }
 
     fun filter(content: String?) {
-        currentFilter = content?.trim() ?: ""
-        applyFilter()
-    }
-
-    private fun applyFilter() {
-        filteredLogs = if (currentFilter.isEmpty()) {
-            logsetsAll.toList()
+        val nextFilter = content?.trim().orEmpty()
+        val snapshot: List<String>
+        synchronized(lock) {
+            if (nextFilter == currentFilter) {
+                return
+            }
+            currentFilter = nextFilter
+            snapshot = logsetsAll.toList()
+        }
+        val filtered = if (nextFilter.isEmpty()) {
+            snapshot
         } else {
-            logsetsAll.filter { it.contains(currentFilter) }
+            snapshot.filter { it.contains(nextFilter, ignoreCase = true) }
+        }
+        synchronized(lock) {
+            if (currentFilter == nextFilter) {
+                filteredLogs = filtered
+            }
         }
     }
 }

@@ -5,12 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.AdapterListUpdateCallback
+import androidx.recyclerview.widget.AsyncDifferConfig
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerRoutingSettingBinding
+import com.v2ray.ang.dto.RulesetItem
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
+import java.util.Collections
+import java.util.concurrent.Executors
 
 class RoutingSettingRecyclerAdapter(
     private val viewModel: RoutingSettingsViewModel,
@@ -18,11 +25,36 @@ class RoutingSettingRecyclerAdapter(
 ) : RecyclerView.Adapter<RoutingSettingRecyclerAdapter.MainViewHolder>(),
     ItemTouchHelperAdapter {
 
-    override fun getItemCount() = viewModel.getAll().size
+    companion object {
+        private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RulesetItem>() {
+            override fun areItemsTheSame(oldItem: RulesetItem, newItem: RulesetItem): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areContentsTheSame(oldItem: RulesetItem, newItem: RulesetItem): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+
+    private val differ = AsyncListDiffer(
+        AdapterListUpdateCallback(this),
+        AsyncDifferConfig.Builder(DIFF_CALLBACK)
+            .setBackgroundThreadExecutor(DIFF_EXECUTOR)
+            .build()
+    )
+    private val items: List<RulesetItem>
+        get() = differ.currentList
+
+    fun submitList(newItems: List<RulesetItem>) {
+        differ.submitList(newItems.toList())
+    }
+
+    override fun getItemCount() = items.size
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
-        val rulesets = viewModel.getAll()
-        val ruleset = rulesets[position]
+        val ruleset = items[position]
 
         holder.itemRoutingSettingBinding.remarks.text = ruleset.remarks
         holder.itemRoutingSettingBinding.domainIp.text = (ruleset.domain ?: ruleset.ip ?: ruleset.port)?.toString()
@@ -67,7 +99,11 @@ class RoutingSettingRecyclerAdapter(
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         viewModel.swap(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
+        if (fromPosition in items.indices && toPosition in items.indices) {
+            val updated = items.toMutableList()
+            Collections.swap(updated, fromPosition, toPosition)
+            differ.submitList(updated)
+        }
         return true
     }
 

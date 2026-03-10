@@ -35,10 +35,18 @@ import java.util.Locale
 object SettingsManager {
 
     fun initApp(context: Context) {
+        initAppFast(context)
+        initAppDeferred(context)
+    }
+
+    fun initAppFast(context: Context) {
         ensureDefaultSettings()
         ensureDefaultSubscription()
-        initRoutingRulesets(context)
         migrateServerListToSubscriptions()
+    }
+
+    fun initAppDeferred(context: Context) {
+        initRoutingRulesets(context)
         migrateHysteria2PinSHA256()
     }
 

@@ -25,6 +25,7 @@ import com.v2ray.ang.contracts.Tun2SocksControl
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
@@ -34,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 @SuppressLint("VpnServicePolicy")
@@ -124,23 +126,42 @@ class V2RayVpnService : VpnService(), ServiceControl {
         serviceScope.launch {
             try {
                 val startAt = SystemClock.elapsedRealtime()
+                val guid = MmkvManager.getSelectServer()
+                if (guid.isNullOrEmpty()) {
+                    Log.e(AppConfig.TAG, "Failed to start VPN: no selected server")
+                    stopSelf()
+                    return@launch
+                }
+                val configDeferred = async {
+                    V2rayConfigManager.getV2rayConfig(this@V2RayVpnService, guid)
+                }
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")
                     isStopping.set(true)
                     stopAllService(isForced = true)
+                    configDeferred.cancel()
                     return@launch
                 }
                 if (isStopping.get()) {
                     Log.i(AppConfig.TAG, "VPN start aborted because stop is in progress")
+                    configDeferred.cancel()
                     return@launch
                 }
                 if (!::mInterface.isInitialized) {
                     Log.e(AppConfig.TAG, "Failed to create VPN interface")
                     isStopping.set(true)
                     stopAllService(isForced = true)
+                    configDeferred.cancel()
                     return@launch
                 }
-                if (!V2RayServiceManager.startCoreLoop(mInterface)) {
+                val configResult = configDeferred.await()
+                if (!configResult.status) {
+                    Log.e(AppConfig.TAG, "Failed to build V2Ray config")
+                    isStopping.set(true)
+                    stopAllService(isForced = true)
+                    return@launch
+                }
+                if (!V2RayServiceManager.startCoreLoop(mInterface, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
                     isStopping.set(true)
                     stopAllService(isForced = true)

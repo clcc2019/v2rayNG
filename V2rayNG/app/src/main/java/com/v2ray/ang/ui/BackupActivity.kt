@@ -54,22 +54,38 @@ class BackupActivity : HelperBaseActivity() {
         }
 
         binding.layoutShare.setOnClickListener {
-            val ret = backupConfigurationToCache()
-            if (ret.first) {
-                startActivity(
-                    Intent.createChooser(
-                        Intent(Intent.ACTION_SEND).setType("application/zip")
-                            .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            .putExtra(
-                                Intent.EXTRA_STREAM,
-                                FileProvider.getUriForFile(
-                                    this, BuildConfig.APPLICATION_ID + ".cache", File(ret.second)
+            showLoading()
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val ret = backupConfigurationToCache()
+                    withContext(Dispatchers.Main) {
+                        if (ret.first) {
+                            startActivity(
+                                Intent.createChooser(
+                                    Intent(Intent.ACTION_SEND).setType("application/zip")
+                                        .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        .putExtra(
+                                            Intent.EXTRA_STREAM,
+                                            FileProvider.getUriForFile(
+                                                this@BackupActivity, BuildConfig.APPLICATION_ID + ".cache", File(ret.second)
+                                            )
+                                        ), getString(R.string.title_configuration_share)
                                 )
-                            ), getString(R.string.title_configuration_share)
-                    )
-                )
-            } else {
-                toastError(R.string.toast_failure)
+                            )
+                        } else {
+                            toastError(R.string.toast_failure)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Error preparing share backup", e)
+                    withContext(Dispatchers.Main) {
+                        toastError(R.string.toast_failure)
+                    }
+                } finally {
+                    withContext(Dispatchers.Main) {
+                        hideLoading()
+                    }
+                }
             }
         }
 
@@ -135,22 +151,29 @@ class BackupActivity : HelperBaseActivity() {
             if (uri == null) {
                 return@launchFileChooser
             }
-            try {
-                val targetFile =
-                    File(this.cacheDir.absolutePath, "${System.currentTimeMillis()}.zip")
-                contentResolver.openInputStream(uri).use { input ->
-                    targetFile.outputStream().use { fileOut ->
-                        input?.copyTo(fileOut)
+            showLoading()
+            lifecycleScope.launch(Dispatchers.IO) {
+                val restored = try {
+                    val targetFile =
+                        File(this@BackupActivity.cacheDir.absolutePath, "${System.currentTimeMillis()}.zip")
+                    contentResolver.openInputStream(uri).use { input ->
+                        targetFile.outputStream().use { fileOut ->
+                            input?.copyTo(fileOut)
+                        }
                     }
+                    restoreConfiguration(targetFile)
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Error during file restore", e)
+                    false
                 }
-                if (restoreConfiguration(targetFile)) {
-                    toastSuccess(R.string.toast_success)
-                } else {
-                    toastError(R.string.toast_failure)
+                withContext(Dispatchers.Main) {
+                    if (restored) {
+                        toastSuccess(R.string.toast_success)
+                    } else {
+                        toastError(R.string.toast_failure)
+                    }
+                    hideLoading()
                 }
-            } catch (e: Exception) {
-                Log.e(AppConfig.TAG, "Error during file restore", e)
-                toastError(R.string.toast_failure)
             }
         }
     }
@@ -164,24 +187,35 @@ class BackupActivity : HelperBaseActivity() {
 
         launchCreateDocument(defaultFileName) { uri ->
             if (uri != null) {
-                try {
-                    val ret = backupConfigurationToCache()
-                    if (ret.first) {
-                        // Copy the cached zip file to user-selected location
-                        contentResolver.openOutputStream(uri)?.use { output ->
-                            File(ret.second).inputStream().use { input ->
-                                input.copyTo(output)
+                showLoading()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val success = try {
+                        val ret = backupConfigurationToCache()
+                        if (ret.first) {
+                            // Copy the cached zip file to user-selected location
+                            contentResolver.openOutputStream(uri)?.use { output ->
+                                File(ret.second).inputStream().use { input ->
+                                    input.copyTo(output)
+                                }
                             }
+                            // Clean up cache file
+                            File(ret.second).delete()
+                            true
+                        } else {
+                            false
                         }
-                        // Clean up cache file
-                        File(ret.second).delete()
-                        toastSuccess(R.string.toast_success)
-                    } else {
-                        toastError(R.string.toast_failure)
+                    } catch (e: Exception) {
+                        Log.e(AppConfig.TAG, "Failed to backup configuration", e)
+                        false
                     }
-                } catch (e: Exception) {
-                    Log.e(AppConfig.TAG, "Failed to backup configuration", e)
-                    toastError(R.string.toast_failure)
+                    withContext(Dispatchers.Main) {
+                        if (success) {
+                            toastSuccess(R.string.toast_success)
+                        } else {
+                            toastError(R.string.toast_failure)
+                        }
+                        hideLoading()
+                    }
                 }
             }
         }

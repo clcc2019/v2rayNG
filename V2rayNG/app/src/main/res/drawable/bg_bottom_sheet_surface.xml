@@ -4,6 +4,6 @@
 
     <corners android:radius="24dp" />
 
-    <solid android:color="@color/md_theme_surface" />
+    <solid android:color="@color/md_theme_background" />
 
 </shape>

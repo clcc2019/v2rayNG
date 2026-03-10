@@ -25,6 +25,7 @@
                 android:minHeight="?attr/actionBarSize"
                 android:paddingStart="@dimen/padding_spacing_dp8"
                 android:paddingEnd="@dimen/padding_spacing_dp8"
+                android:background="@color/md_theme_background"
                 app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
                 app:titleTextAppearance="@style/TextAppearance.V2Ray.ScreenTitle" />
 
@@ -59,7 +60,7 @@
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:paddingTop="@dimen/padding_spacing_dp4"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:paddingBottom="140dp"
+                    android:paddingBottom="148dp"
                     android:scrollbars="vertical" />
 
             </LinearLayout>
@@ -73,7 +74,11 @@
                 android:layout_marginStart="@dimen/padding_spacing_dp16"
                 android:layout_marginTop="@dimen/padding_spacing_dp2"
                 android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                android:alpha="1">
+                android:alpha="1"
+                android:background="@android:color/transparent"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="0dp">
 
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tab_group"
@@ -293,7 +298,7 @@
         android:layout_width="320dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="?attr/colorSurface"
+        android:background="@color/md_theme_background"
         app:elevation="0dp"
         app:headerLayout="@layout/nav_header"
         app:itemBackground="@drawable/bg_drawer_item"

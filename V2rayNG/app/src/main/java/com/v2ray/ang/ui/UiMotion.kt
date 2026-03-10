@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.v2ray.ang.R
 
 object UiMotion {
     private const val PRESS_DURATION = 90L
@@ -44,6 +45,61 @@ object UiMotion {
         }
     }
 
+    fun attachPressFeedbackAlpha(
+        source: View,
+        target: View = source,
+        pressedAlpha: Float = 0.96f
+    ) {
+        source.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    target.animate().cancel()
+                    target.animate()
+                        .alpha(pressedAlpha)
+                        .setDuration(PRESS_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    target.animate().cancel()
+                    target.animate()
+                        .alpha(1f)
+                        .setDuration(RELEASE_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+            }
+            false
+        }
+    }
+
+    fun attachPressFeedbackStroke(
+        source: View,
+        target: com.google.android.material.card.MaterialCardView,
+        pressedStrokeWidth: Int,
+        pressedStrokeColor: Int
+    ) {
+        val originalStrokeWidth = target.strokeWidth
+        val originalStrokeColor = target.strokeColor
+        source.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    target.animate().cancel()
+                    target.strokeWidth = pressedStrokeWidth
+                    target.setStrokeColor(pressedStrokeColor)
+                }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    target.strokeWidth = originalStrokeWidth
+                    target.setStrokeColor(originalStrokeColor)
+                }
+            }
+            false
+        }
+    }
+
     fun animateEntrance(
         view: View,
         translationOffsetDp: Float = 14f,
@@ -66,7 +122,8 @@ object UiMotion {
     fun animateStaggeredChildren(
         container: ViewGroup,
         translationOffsetDp: Float = 16f,
-        stepDelay: Long = STAGGER_DELAY
+        stepDelay: Long = STAGGER_DELAY,
+        startDelay: Long = 0L
     ) {
         val offsetPx = container.resources.displayMetrics.density * translationOffsetDp
         for (index in 0 until container.childCount) {
@@ -77,7 +134,7 @@ object UiMotion {
             child.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .setStartDelay(index * stepDelay)
+                .setStartDelay(startDelay + (index * stepDelay))
                 .setDuration(REVEAL_DURATION)
                 .setInterpolator(motionInterpolator)
                 .start()
@@ -109,6 +166,7 @@ object UiMotion {
         duration: Long = REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
+        view.setTag(R.id.tag_visibility_target, visible)
 
         if (visible) {
             if (view.isVisible && view.alpha == 1f && view.translationY == 0f) {
@@ -139,10 +197,22 @@ object UiMotion {
             .setDuration(duration)
             .setInterpolator(motionInterpolator)
             .withEndAction {
-                if (!visible) {
+                val targetVisible = (view.getTag(R.id.tag_visibility_target) as? Boolean) == true
+                if (!targetVisible) {
                     view.isVisible = false
+                } else {
+                    view.alpha = 1f
+                    view.translationY = 0f
                 }
             }
             .start()
+    }
+
+    fun setVisibility(view: View, visible: Boolean) {
+        view.animate().cancel()
+        view.alpha = if (visible) 1f else 0f
+        view.translationY = 0f
+        view.isVisible = visible
+        view.setTag(R.id.tag_visibility_target, visible)
     }
 }

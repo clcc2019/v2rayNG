@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
@@ -17,6 +16,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ActivityUserAssetBinding
 import com.v2ray.ang.dto.AssetUrlItem
+import com.v2ray.ang.extension.toTrafficString
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
@@ -25,9 +25,12 @@ import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.UserAssetViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.DateFormat
+import java.util.Date
 
 class UserAssetActivity : HelperBaseActivity() {
     private val binding by lazy { ActivityUserAssetBinding.inflate(layoutInflater) }
@@ -35,6 +38,7 @@ class UserAssetActivity : HelperBaseActivity() {
         get() = this
     private val viewModel: UserAssetViewModel by viewModels()
     private lateinit var adapter: UserAssetAdapter
+    private var refreshJob: Job? = null
 
     val extDir by lazy { File(Utils.userAssetPath(this)) }
 
@@ -45,7 +49,7 @@ class UserAssetActivity : HelperBaseActivity() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
-        adapter = UserAssetAdapter(viewModel, extDir, ActivityAdapterListener())
+        adapter = UserAssetAdapter(ActivityAdapterListener())
         binding.recyclerView.adapter = adapter
 
         binding.tvGeoFilesSourcesSummary.text = getGeoFilesSources()
@@ -96,36 +100,45 @@ class UserAssetActivity : HelperBaseActivity() {
             }
 
             val assetId = Utils.getUuid()
-            runCatching {
-                val assetItem = AssetUrlItem(
-                    getCursorName(uri) ?: uri.toString(),
-                    "file"
-                )
-
+            lifecycleScope.launch(Dispatchers.IO) {
+                val displayName = getCursorName(uri) ?: uri.toString()
+                val assetItem = AssetUrlItem(displayName, "file")
                 val assetList = MmkvManager.decodeAssetUrls()
                 if (assetList.any { it.assetUrl.remarks == assetItem.remarks && it.guid != assetId }) {
-                    toast(R.string.msg_remark_is_duplicate)
-                } else {
-                    MmkvManager.encodeAsset(assetId, assetItem)
-                    copyFile(uri)
+                    withContext(Dispatchers.Main) {
+                        toast(R.string.msg_remark_is_duplicate)
+                    }
+                    return@launch
                 }
-            }.onFailure {
-                toastError(R.string.toast_asset_copy_failed)
-                MmkvManager.removeAssetUrl(assetId)
+
+                MmkvManager.encodeAsset(assetId, assetItem)
+                val copied = copyFileInternal(uri, displayName)
+                withContext(Dispatchers.Main) {
+                    if (copied) {
+                        toastSuccess(R.string.toast_success)
+                        refreshData()
+                    } else {
+                        toastError(R.string.toast_asset_copy_failed)
+                        MmkvManager.removeAssetUrl(assetId)
+                    }
+                }
             }
         }
     }
 
-    private fun copyFile(uri: Uri): String {
-        val targetFile = File(extDir, getCursorName(uri) ?: uri.toString())
-        contentResolver.openInputStream(uri).use { inputStream ->
-            targetFile.outputStream().use { fileOut ->
-                inputStream?.copyTo(fileOut)
-                toastSuccess(R.string.toast_success)
-                refreshData()
+    private fun copyFileInternal(uri: Uri, fileName: String): Boolean {
+        val targetFile = File(extDir, fileName)
+        return try {
+            contentResolver.openInputStream(uri).use { inputStream ->
+                targetFile.outputStream().use { fileOut ->
+                    inputStream?.copyTo(fileOut)
+                }
             }
+            true
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to copy asset file", e)
+            false
         }
-        return targetFile.path
     }
 
     private fun getCursorName(uri: Uri): String? = try {
@@ -197,10 +210,25 @@ class UserAssetActivity : HelperBaseActivity() {
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        viewModel.reload(getGeoFilesSources())
-        adapter.notifyDataSetChanged()
+        refreshJob?.cancel()
+        refreshJob = lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.reload(getGeoFilesSources())
+            val assets = viewModel.getAssets()
+            val fileMeta = buildAssetFileMeta(extDir.listFiles())
+            withContext(Dispatchers.Main) {
+                adapter.submitList(assets, fileMeta)
+            }
+        }
+    }
+
+    private fun buildAssetFileMeta(files: Array<File>?): Map<String, UserAssetAdapter.AssetFileMeta> {
+        if (files.isNullOrEmpty()) return emptyMap()
+        val dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+        return files.associate { file ->
+            val properties = "${file.length().toTrafficString()}  •  ${dateFormat.format(Date(file.lastModified()))}"
+            file.name to UserAssetAdapter.AssetFileMeta(properties)
+        }
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {

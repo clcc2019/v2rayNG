@@ -33,9 +33,15 @@ import java.util.LinkedHashMap
 
 object V2rayConfigManager {
     private const val GENERATED_CONFIG_CACHE_LIMIT = 8
+    private const val CONFIG_BUILD_LOCK_LIMIT = 32
     private var initConfigCache: String? = null
     private var initConfigCacheWithTun: String? = null
     private val generatedConfigCacheLock = Any()
+    private val configBuildLocks = object : LinkedHashMap<String, Any>(CONFIG_BUILD_LOCK_LIMIT, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any>?): Boolean {
+            return size > CONFIG_BUILD_LOCK_LIMIT
+        }
+    }
     private val generatedConfigCache = object : LinkedHashMap<String, ConfigResult>(GENERATED_CONFIG_CACHE_LIMIT, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ConfigResult>?): Boolean {
             return size > GENERATED_CONFIG_CACHE_LIMIT
@@ -61,23 +67,26 @@ object V2rayConfigManager {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
             val cacheKey = buildConfigCacheKey(guid, config)
-            getCachedConfigResult(cacheKey)?.let {
-                Log.i(AppConfig.TAG, "Using cached generated config for $guid")
-                return it
-            }
+            val buildLock = getConfigBuildLock(cacheKey)
+            return synchronized(buildLock) {
+                getCachedConfigResult(cacheKey)?.let {
+                    Log.i(AppConfig.TAG, "Using cached generated config for $guid")
+                    return@synchronized it
+                }
 
-            val result = if (config.configType == EConfigType.CUSTOM) {
-                getV2rayCustomConfig(context, guid, config)
-            } else if (config.configType == EConfigType.POLICYGROUP) {
-                getV2rayGroupConfig(context, guid, config)
-            } else {
-                getV2rayNormalConfig(context, guid, config)
-            }
+                val result = if (config.configType == EConfigType.CUSTOM) {
+                    getV2rayCustomConfig(context, guid, config)
+                } else if (config.configType == EConfigType.POLICYGROUP) {
+                    getV2rayGroupConfig(context, guid, config)
+                } else {
+                    getV2rayNormalConfig(context, guid, config)
+                }
 
-            if (result.status) {
-                putCachedConfigResult(cacheKey, result)
+                if (result.status) {
+                    putCachedConfigResult(cacheKey, result)
+                }
+                result
             }
-            return result
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to get V2ray config", e)
             return ConfigResult(false)
@@ -422,6 +431,12 @@ object V2rayConfigManager {
             getConfigRelevantSettingsSnapshot().hashCode()
         )
         return signature.joinToString(separator = ":")
+    }
+
+    private fun getConfigBuildLock(cacheKey: String): Any {
+        synchronized(configBuildLocks) {
+            return configBuildLocks.getOrPut(cacheKey) { Any() }
+        }
     }
 
     private fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {

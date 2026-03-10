@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -15,6 +14,7 @@ import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.LogcatViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -22,12 +22,13 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
     private val binding by lazy { ActivityLogcatBinding.inflate(layoutInflater) }
     private val viewModel: LogcatViewModel by viewModels()
     private lateinit var adapter: LogcatRecyclerAdapter
+    private var filterJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_logcat))
 
-        adapter = LogcatRecyclerAdapter(viewModel, ::onLogLongClick)
+        adapter = LogcatRecyclerAdapter(::onLogLongClick)
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -52,22 +53,25 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         setupSearchView(
             menuItem = menu.findItem(R.id.search_view),
             onQueryChanged = {
-                viewModel.filter(it)
-                refreshData()
+                scheduleFilter(it)
             },
             onClosed = {
-                viewModel.filter("")
-                refreshData()
-            }
+                scheduleFilter("")
+            },
+            debounceMillis = 150L
         )
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.copy_all -> {
-            val all = viewModel.getAll().joinToString("\n")
-            Utils.setClipboard(this, all)
-            toastSuccess(R.string.toast_success)
+            lifecycleScope.launch(Dispatchers.Default) {
+                val all = viewModel.getAll().joinToString("\n")
+                withContext(Dispatchers.Main) {
+                    Utils.setClipboard(this@LogcatActivity, all)
+                    toastSuccess(R.string.toast_success)
+                }
+            }
             true
         }
 
@@ -94,8 +98,17 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
-        adapter.notifyDataSetChanged()
+        adapter.submitList(viewModel.getAll())
+    }
+
+    private fun scheduleFilter(content: String) {
+        filterJob?.cancel()
+        filterJob = lifecycleScope.launch(Dispatchers.Default) {
+            viewModel.filter(content)
+            withContext(Dispatchers.Main) {
+                refreshData()
+            }
+        }
     }
 }

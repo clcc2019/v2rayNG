@@ -2,10 +2,12 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityNoneBinding
@@ -16,9 +18,13 @@ import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanCustomCode
 import io.github.g00fy2.quickie.config.BarcodeFormat
 import io.github.g00fy2.quickie.config.ScannerConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ScannerActivity : HelperBaseActivity() {
     private val binding by lazy {  ActivityNoneBinding.inflate(layoutInflater) }
+    private val maxDecodeSizePx = 1024
 
     private val scanQrCode = registerForActivityResult(ScanCustomCode(), ::handleResult)
 
@@ -83,21 +89,56 @@ class ScannerActivity : HelperBaseActivity() {
             if (uri == null) {
                 return@launchFileChooser
             }
-            try {
-                val inputStream = contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream?.close()
-
-                val text = QRCodeDecoder.syncDecodeQRCode(bitmap)
-                if (text.isNullOrEmpty()) {
-                    toast(R.string.toast_decoding_failed)
-                } else {
-                    finished(text)
+            showLoading()
+            lifecycleScope.launch(Dispatchers.IO) {
+                val result = runCatching {
+                    decodeQrFromUri(uri)
                 }
-            } catch (e: Exception) {
-                Log.e(AppConfig.TAG, "Failed to decode QR code from file", e)
-                toast(R.string.toast_decoding_failed)
+                withContext(Dispatchers.Main) {
+                    hideLoading()
+                    result.onSuccess { text ->
+                        if (text.isNullOrEmpty()) {
+                            toast(R.string.toast_decoding_failed)
+                        } else {
+                            finished(text)
+                        }
+                    }.onFailure { e ->
+                        Log.e(AppConfig.TAG, "Failed to decode QR code from file", e)
+                        toast(R.string.toast_decoding_failed)
+                    }
+                }
             }
         }
+    }
+
+    private fun decodeQrFromUri(uri: Uri): String? {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri).use { inputStream ->
+            BitmapFactory.decodeStream(inputStream, null, options)
+        }
+        options.inSampleSize = calculateInSampleSize(options, maxDecodeSizePx, maxDecodeSizePx)
+        options.inJustDecodeBounds = false
+        val bitmap = contentResolver.openInputStream(uri).use { inputStream ->
+            BitmapFactory.decodeStream(inputStream, null, options)
+        }
+        return QRCodeDecoder.syncDecodeQRCode(bitmap)
+    }
+
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
+        val height = options.outHeight
+        val width = options.outWidth
+        var inSampleSize = 1
+        if (height > reqHeight || width > reqWidth) {
+            var halfHeight = height / 2
+            var halfWidth = width / 2
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
     }
 }

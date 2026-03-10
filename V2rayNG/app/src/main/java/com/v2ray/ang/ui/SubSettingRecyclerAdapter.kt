@@ -6,25 +6,66 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.AdapterListUpdateCallback
+import androidx.recyclerview.widget.AsyncDifferConfig
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerSubSettingBinding
+import com.v2ray.ang.dto.SubscriptionCache
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.SubscriptionsViewModel
+import java.util.Collections
+import java.util.concurrent.Executors
 
 class SubSettingRecyclerAdapter(
     private val viewModel: SubscriptionsViewModel,
     private val adapterListener: BaseAdapterListener?
 ) : RecyclerView.Adapter<SubSettingRecyclerAdapter.MainViewHolder>(), ItemTouchHelperAdapter {
 
-    override fun getItemCount() = viewModel.getAll().size
+    companion object {
+        private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<SubscriptionCache>() {
+            override fun areItemsTheSame(oldItem: SubscriptionCache, newItem: SubscriptionCache): Boolean {
+                return oldItem.guid == newItem.guid
+            }
+
+            override fun areContentsTheSame(oldItem: SubscriptionCache, newItem: SubscriptionCache): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+
+    private val differ = AsyncListDiffer(
+        AdapterListUpdateCallback(this),
+        AsyncDifferConfig.Builder(DIFF_CALLBACK)
+            .setBackgroundThreadExecutor(DIFF_EXECUTOR)
+            .build()
+    )
+    private val items: List<SubscriptionCache>
+        get() = differ.currentList
+
+    init {
+        setHasStableIds(true)
+    }
+
+    fun submitList(newItems: List<SubscriptionCache>) {
+        differ.submitList(newItems.toList())
+    }
+
+    override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int): Long {
+        return items.getOrNull(position)?.guid?.hashCode()?.toLong() ?: RecyclerView.NO_ID
+    }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
-        val subscriptions = viewModel.getAll()
-        val subId = subscriptions[position].guid
-        val subItem = subscriptions[position].subscription
+        val subscription = items[position]
+        val subId = subscription.guid
+        val subItem = subscription.subscription
         holder.itemSubSettingBinding.tvName.text = subItem.remarks
         holder.itemSubSettingBinding.tvUrl.text = subItem.url
         holder.itemSubSettingBinding.chkEnable.isChecked = subItem.enabled
@@ -87,7 +128,11 @@ class SubSettingRecyclerAdapter(
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         viewModel.swap(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
+        if (fromPosition in items.indices && toPosition in items.indices) {
+            val updated = items.toMutableList()
+            Collections.swap(updated, fromPosition, toPosition)
+            differ.submitList(updated)
+        }
         return true
     }
 

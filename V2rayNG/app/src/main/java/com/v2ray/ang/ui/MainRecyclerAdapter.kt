@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.HapticFeedbackConstants
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -14,7 +15,6 @@ import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerFooterBinding
 import com.v2ray.ang.databinding.ItemRecyclerMainBinding
-import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.ServersCache
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
@@ -43,7 +43,6 @@ class MainRecyclerAdapter(
             .build()
     )
     private var selectedGuid: String = MmkvManager.getSelectServer().orEmpty()
-    private var subscriptionRemarksById: Map<String, String> = emptyMap()
     private val testDelayOverrides = mutableMapOf<String, Long>()
 
     init {
@@ -65,9 +64,52 @@ class MainRecyclerAdapter(
 
         val updatedData = newData?.toList() ?: emptyList()
         selectedGuid = MmkvManager.getSelectServer().orEmpty()
-        subscriptionRemarksById = buildSubscriptionRemarksMap(updatedData)
         testDelayOverrides.clear()
         differ.submitList(updatedData)
+    }
+
+    fun updateTestResults(newData: MutableList<ServersCache>?, positions: List<Int>) {
+        if (newData == null || positions.isEmpty()) return
+        if (data.size != newData.size) {
+            setData(newData, position = -1)
+            return
+        }
+        val distinctPositions = positions.distinct().sorted()
+        for (position in distinctPositions) {
+            if (position !in data.indices || position !in newData.indices) {
+                setData(newData, position = -1)
+                return
+            }
+            if (data[position].guid != newData[position].guid) {
+                setData(newData, position = -1)
+                return
+            }
+        }
+        val changedPositions = ArrayList<Int>(distinctPositions.size)
+        distinctPositions.forEach { position ->
+            val currentItem = data[position]
+            val newItem = newData[position]
+            val currentDelay = testDelayOverrides[currentItem.guid] ?: currentItem.testDelayMillis
+            if (currentDelay == newItem.testDelayMillis) {
+                return@forEach
+            }
+            testDelayOverrides[newItem.guid] = newItem.testDelayMillis
+            changedPositions.add(position)
+        }
+        if (changedPositions.isEmpty()) return
+        var rangeStart = changedPositions[0]
+        var prev = rangeStart
+        for (index in 1 until changedPositions.size) {
+            val pos = changedPositions[index]
+            if (pos == prev + 1) {
+                prev = pos
+            } else {
+                notifyItemRangeChanged(rangeStart, prev - rangeStart + 1, PAYLOAD_TEST_RESULT)
+                rangeStart = pos
+                prev = pos
+            }
+        }
+        notifyItemRangeChanged(rangeStart, prev - rangeStart + 1, PAYLOAD_TEST_RESULT)
     }
 
     override fun getItemCount() = data.size + 1
@@ -101,21 +143,9 @@ class MainRecyclerAdapter(
             }
             if (payloads.contains(PAYLOAD_CONTENT)) {
                 bindPrimaryContent(holder, item)
-                bindSubscription(holder, item.profile)
+                bindSubscription(holder, item)
             }
         }
-    }
-
-    /**
-     * Gets the subscription remarks information
-     * @param profile The server configuration
-     * @return Subscription remarks string, or empty string if none
-     */
-    private fun getSubscriptionRemarks(profile: ProfileItem): String {
-        if (mainViewModel.subscriptionId.isNotEmpty()) {
-            return ""
-        }
-        return subscriptionRemarksById[profile.subscriptionId].orEmpty()
     }
 
     fun removeServerSub(guid: String, position: Int) {
@@ -159,20 +189,6 @@ class MainRecyclerAdapter(
         }
     }
 
-    private fun buildSubscriptionRemarksMap(items: List<ServersCache>): Map<String, String> {
-        if (mainViewModel.subscriptionId.isNotEmpty()) {
-            return emptyMap()
-        }
-
-        return items.asSequence()
-            .map { it.profile.subscriptionId }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .associateWith { subscriptionId ->
-                MmkvManager.decodeSubscription(subscriptionId)?.remarks?.firstOrNull()?.toString().orEmpty()
-            }
-    }
-
     private fun bindFullItem(holder: MainViewHolder, position: Int) {
         val item = getItem(position)
         val guid = item.guid
@@ -180,7 +196,7 @@ class MainRecyclerAdapter(
         holder.boundItem = item
         holder.itemView.setBackgroundColor(Color.TRANSPARENT)
         bindPrimaryContent(holder, item)
-        bindSubscription(holder, profile)
+        bindSubscription(holder, item)
         bindSelectionState(holder, guid == selectedGuid)
         bindTestResult(holder, item)
     }
@@ -191,37 +207,35 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.tvType.text = item.profile.configType.name
     }
 
-    private fun bindSubscription(holder: MainViewHolder, profile: ProfileItem) {
-        val subRemarks = getSubscriptionRemarks(profile)
+    private fun bindSubscription(holder: MainViewHolder, item: ServersCache) {
+        val subRemarks = item.subscriptionRemarks
         holder.itemMainBinding.tvSubscription.text = subRemarks
         holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean) {
-        holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.9f
-        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.78f
-        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.92f else 0.82f
-        holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.98f else 0.84f
-        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 1f else 0.74f
-        val selectionChanged = holder.lastSelectionState != isSelected
+        if (holder.lastSelectionState == isSelected) {
+            return
+        }
         holder.lastSelectionState = isSelected
 
-        if (selectionChanged) {
-            if (isSelected) {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_selected_indicator)
-                holder.itemMainBinding.itemBg.strokeWidth = 1
-                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.selectionIndicator)
-                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.selectionFill)
-            } else {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.drawable.bg_item_indicator_idle)
-                holder.itemMainBinding.itemBg.strokeWidth = 1
-                holder.itemMainBinding.itemBg.setStrokeColor(holder.colors.outlineVariant)
-                holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
-            }
-            holder.itemMainBinding.itemBg.animate().cancel()
-            holder.itemMainBinding.itemBg.scaleX = 1f
-            holder.itemMainBinding.itemBg.scaleY = 1f
-        }
+        holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.92f
+        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.92f else 0.8f
+        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.94f else 0.84f
+        holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 0.98f else 0.86f
+        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 1f else 0.8f
+
+        holder.itemMainBinding.layoutIndicator.setBackgroundResource(
+            if (isSelected) R.drawable.bg_selected_indicator else R.drawable.bg_item_indicator_idle
+        )
+        holder.itemMainBinding.itemBg.strokeWidth = 1
+        holder.itemMainBinding.itemBg.setStrokeColor(
+            if (isSelected) holder.colors.selectionIndicator else holder.colors.outlineVariant
+        )
+        holder.itemMainBinding.itemBg.setCardBackgroundColor(holder.colors.surface)
+        holder.itemMainBinding.itemBg.animate().cancel()
+        holder.itemMainBinding.itemBg.scaleX = 1f
+        holder.itemMainBinding.itemBg.scaleY = 1f
         holder.itemMainBinding.itemBg.alpha = 1f
     }
 
@@ -292,7 +306,12 @@ class MainRecyclerAdapter(
 
         init {
             itemMainBinding.layoutMore.visibility = View.VISIBLE
-            UiMotion.attachPressFeedback(itemMainBinding.infoContainer, pressedScale = 0.992f)
+            UiMotion.attachPressFeedbackStroke(
+                itemMainBinding.infoContainer,
+                itemMainBinding.itemBg,
+                pressedStrokeWidth = 2,
+                pressedStrokeColor = colors.selectionIndicator
+            )
             UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
 
             itemMainBinding.layoutMore.setOnClickListener {
@@ -301,12 +320,24 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnClickListener
                 }
+                itemMainBinding.layoutMore.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                UiMotion.animatePulse(itemMainBinding.layoutMore, pulseScale = 1.02f, duration = 90L)
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
             }
 
             itemMainBinding.infoContainer.setOnClickListener {
                 val item = boundItem ?: return@setOnClickListener
                 adapterListener?.onSelectServer(item.guid)
+            }
+            itemMainBinding.infoContainer.setOnLongClickListener {
+                val item = boundItem ?: return@setOnLongClickListener false
+                val currentPosition = bindingAdapterPosition
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    return@setOnLongClickListener false
+                }
+                itemMainBinding.infoContainer.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
+                true
             }
 
             itemMainBinding.tvTestResult.setOnClickListener {

@@ -16,11 +16,15 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.handler.V2RayNativeManager
 import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CheckUpdateActivity : BaseActivity() {
 
     private val binding by lazy { ActivityCheckUpdateBinding.inflate(layoutInflater) }
+    private var checkJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,20 +51,26 @@ class CheckUpdateActivity : BaseActivity() {
         toast(R.string.update_checking_for_update)
         showLoading()
 
-        lifecycleScope.launch {
+        checkJob?.cancel()
+        checkJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val result = UpdateCheckerManager.checkForUpdate(includePreRelease)
-                if (result.hasUpdate) {
-                    showUpdateDialog(result)
-                } else {
-                    toastSuccess(R.string.update_already_latest_version)
+                withContext(Dispatchers.Main) {
+                    if (result.hasUpdate) {
+                        showUpdateDialog(result)
+                    } else {
+                        toastSuccess(R.string.update_already_latest_version)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "Failed to check for updates: ${e.message}")
-                toastError(e.message ?: getString(R.string.toast_failure))
-            }
-            finally {
-                hideLoading()
+                withContext(Dispatchers.Main) {
+                    toastError(e.message ?: getString(R.string.toast_failure))
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    hideLoading()
+                }
             }
         }
     }
