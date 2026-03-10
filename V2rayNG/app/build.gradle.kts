@@ -4,6 +4,10 @@ plugins {
     id("com.jaredsburrows.license")
 }
 
+tasks.withType<com.jaredsburrows.license.LicenseReportTask>().configureEach {
+    notCompatibleWithConfigurationCache("LicenseReportTask uses Task.project at execution time.")
+}
+
 android {
     namespace = "com.v2ray.ang"
     compileSdk = 36
