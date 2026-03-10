@@ -66,7 +66,9 @@ android {
 
     sourceSets {
         getByName("main") {
-            jniLibs.srcDir("libs")
+            jniLibs {
+                directories.setFrom(files("libs"))
+            }
         }
     }
 
@@ -82,50 +84,6 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val variant = this
-        val isFdroid = variant.productFlavors.any { it.name == "fdroid" }
-        if (isFdroid) {
-            val versionCodes =
-                mapOf(
-                    "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
-                )
-
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = output.getFilter("ABI") ?: "universal"
-                    output.outputFileName = "v2rayNG_${variant.versionName}-fdroid_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (100 * variant.versionCode + versionCodes[abi]!!).plus(5000000)
-                    } else {
-                        return@forEach
-                    }
-                }
-        } else {
-            val versionCodes =
-                mapOf("armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4)
-
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = if (output.getFilter("ABI") != null)
-                        output.getFilter("ABI")
-                    else
-                        "universal"
-
-                    output.outputFileName = "v2rayNG_${variant.versionName}_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (1000000 * versionCodes[abi]!!).plus(variant.versionCode)
-                    } else {
-                        return@forEach
-                    }
-                }
-        }
-    }
-
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -137,6 +95,47 @@ android {
         }
     }
 
+}
+
+androidComponents {
+    onVariants { variant ->
+        val isFdroid = variant.name.contains("fdroid", ignoreCase = true)
+        val versionCodes =
+            if (isFdroid) {
+                mapOf(
+                    "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
+                )
+            } else {
+                mapOf(
+                    "armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4
+                )
+            }
+
+        variant.outputs.forEach { output ->
+            val abi =
+                output.filters.firstOrNull {
+                    it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI
+                }?.identifier ?: "universal"
+
+            val baseVersionCode = output.versionCode.orNull ?: 0
+            val abiVersion = versionCodes[abi]
+            if (abiVersion != null && baseVersionCode != 0) {
+                val newVersionCode =
+                    if (isFdroid) {
+                        (100 * baseVersionCode + abiVersion) + 5_000_000
+                    } else {
+                        (1_000_000 * abiVersion) + baseVersionCode
+                    }
+                output.versionCode.set(newVersionCode)
+            }
+
+            val versionName = output.versionName.orNull
+            if (!versionName.isNullOrBlank()) {
+                val suffix = if (isFdroid) "-fdroid" else ""
+                output.outputFileName.set("v2rayNG_${versionName}${suffix}_${abi}.apk")
+            }
+        }
+    }
 }
 
 dependencies {
