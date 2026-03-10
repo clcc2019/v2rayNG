@@ -78,7 +78,7 @@ class ShadowsocksFmtTest {
         }.thenAnswer { invocation ->
             val input = invocation.arguments[0] as String
             val flags = invocation.arguments[1] as Int
-            val isUrlSafe = (flags and Base64.URL_SAFE) != 0
+            val isUrlSafe = flags and Base64.URL_SAFE != 0
 
             val decoder = if (isUrlSafe) {
                 JavaBase64.getUrlDecoder()
@@ -96,7 +96,7 @@ class ShadowsocksFmtTest {
             val input = invocation.arguments[0] as ByteArray
             val flags = invocation.arguments[1] as Int
 
-            val isUrlSafe = (flags and Base64.URL_SAFE) != 0
+            val isUrlSafe = flags and Base64.URL_SAFE != 0
             val noPadding = (flags and Base64.NO_PADDING) != 0
 
             var encoder = if (isUrlSafe) {

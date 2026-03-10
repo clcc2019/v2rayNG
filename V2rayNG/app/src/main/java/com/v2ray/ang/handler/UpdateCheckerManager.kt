@@ -110,7 +110,7 @@ object UpdateCheckerManager {
         val fDroid = "fdroid"
 
         val assetsByAbi = release.assets.filter {
-            (it.name.contains(abi, true))
+            it.name.contains(abi, true)
         }
 
         val asset = if (BuildConfig.APPLICATION_ID.contains(fDroid, ignoreCase = true)) {

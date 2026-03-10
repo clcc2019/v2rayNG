@@ -11,7 +11,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
 import com.v2ray.ang.AppConfig.PREF_ALLOW_INSECURE
@@ -338,80 +337,102 @@ class ServerActivity : BaseActivity() {
      * binding selected server config
      */
     private fun bindingServer(config: ProfileItem): Boolean {
+        bindBasicFields(config)
+        bindConfigTypeFields(config)
+        bindSecuritySelection(config)
+        bindStreamSecurity(config)
+        bindNetworkSelection(config)
+        return true
+    }
 
+    private fun bindBasicFields(config: ProfileItem) {
         et_remarks.text = Utils.getEditable(config.remarks)
         et_address.text = Utils.getEditable(config.server.orEmpty())
         et_port.text = Utils.getEditable(config.serverPort ?: DEFAULT_PORT.toString())
         et_id.text = Utils.getEditable(config.password.orEmpty())
+    }
 
-        if (config.configType == EConfigType.SOCKS || config.configType == EConfigType.HTTP) {
-            et_security?.text = Utils.getEditable(config.username.orEmpty())
-        } else if (config.configType == EConfigType.VLESS) {
-            et_security?.text = Utils.getEditable(config.method.orEmpty())
-            val flow = Utils.arrayFind(flows, config.flow.orEmpty())
-            if (flow >= 0) {
-                sp_flow?.setSelection(flow)
+    private fun bindConfigTypeFields(config: ProfileItem) {
+        when (config.configType) {
+            EConfigType.SOCKS, EConfigType.HTTP -> {
+                et_security?.text = Utils.getEditable(config.username.orEmpty())
             }
-        } else if (config.configType == EConfigType.WIREGUARD) {
-            et_id.text = Utils.getEditable(config.secretKey.orEmpty())
-            et_public_key?.text = Utils.getEditable(config.publicKey.orEmpty())
-            et_preshared_key?.visibility = View.VISIBLE
-            et_preshared_key?.text = Utils.getEditable(config.preSharedKey.orEmpty())
-            et_reserved1?.text = Utils.getEditable(config.reserved ?: "0,0,0")
-            et_local_address?.text = Utils.getEditable(
-                config.localAddress ?: WIREGUARD_LOCAL_ADDRESS_V4
-            )
-            et_local_mtu?.text = Utils.getEditable(config.mtu?.toString() ?: WIREGUARD_LOCAL_MTU)
-        } else if (config.configType == EConfigType.HYSTERIA2) {
-            et_obfs_password?.text = Utils.getEditable(config.obfsPassword)
-            et_port_hop?.text = Utils.getEditable(config.portHopping)
-            et_port_hop_interval?.text = Utils.getEditable(config.portHoppingInterval)
-            et_bandwidth_down?.text = Utils.getEditable(config.bandwidthDown)
-            et_bandwidth_up?.text = Utils.getEditable(config.bandwidthUp)
+            EConfigType.VLESS -> {
+                et_security?.text = Utils.getEditable(config.method.orEmpty())
+                val flow = Utils.arrayFind(flows, config.flow.orEmpty())
+                if (flow >= 0) {
+                    sp_flow?.setSelection(flow)
+                }
+            }
+            EConfigType.WIREGUARD -> {
+                et_id.text = Utils.getEditable(config.secretKey.orEmpty())
+                et_public_key?.text = Utils.getEditable(config.publicKey.orEmpty())
+                et_preshared_key?.visibility = View.VISIBLE
+                et_preshared_key?.text = Utils.getEditable(config.preSharedKey.orEmpty())
+                et_reserved1?.text = Utils.getEditable(config.reserved ?: "0,0,0")
+                et_local_address?.text = Utils.getEditable(
+                    config.localAddress ?: WIREGUARD_LOCAL_ADDRESS_V4
+                )
+                et_local_mtu?.text = Utils.getEditable(config.mtu?.toString() ?: WIREGUARD_LOCAL_MTU)
+            }
+            EConfigType.HYSTERIA2 -> {
+                et_obfs_password?.text = Utils.getEditable(config.obfsPassword)
+                et_port_hop?.text = Utils.getEditable(config.portHopping)
+                et_port_hop_interval?.text = Utils.getEditable(config.portHoppingInterval)
+                et_bandwidth_down?.text = Utils.getEditable(config.bandwidthDown)
+                et_bandwidth_up?.text = Utils.getEditable(config.bandwidthUp)
+            }
+            else -> Unit
         }
+    }
+
+    private fun bindSecuritySelection(config: ProfileItem) {
         val securityEncryptions =
             if (config.configType == EConfigType.SHADOWSOCKS) shadowsocksSecuritys else securitys
         val security = Utils.arrayFind(securityEncryptions, config.method.orEmpty())
         if (security >= 0) {
             sp_security?.setSelection(security)
         }
+    }
 
+    private fun bindStreamSecurity(config: ProfileItem) {
         val streamSecurity = Utils.arrayFind(streamSecuritys, config.security.orEmpty())
-        if (streamSecurity >= 0) {
-            sp_stream_security?.setSelection(streamSecurity)
-            et_sni?.text = Utils.getEditable(config.sni)
-            config.fingerPrint?.let { it ->
-                val utlsIndex = Utils.arrayFind(uTlsItems, it)
-                utlsIndex.let { sp_stream_fingerprint?.setSelection(if (it >= 0) it else 0) }
-            }
-            config.alpn?.let { it ->
-                val alpnIndex = Utils.arrayFind(alpns, it)
-                alpnIndex.let { sp_stream_alpn?.setSelection(if (it >= 0) it else 0) }
-            }
-            if (config.security == TLS) {
-                val allowinsecure = Utils.arrayFind(allowinsecures, config.insecure.toString())
-                if (allowinsecure >= 0) {
-                    sp_allow_insecure?.setSelection(allowinsecure)
-                }
-                et_ech_config_list?.text = Utils.getEditable(config.echConfigList)
-                config.echForceQuery?.let { it ->
-                    val index = Utils.arrayFind(echForceQuerys, it)
-                    index.let { sp_ech_force_query?.setSelection(if (it >= 0) it else 0) }
-                }
-                et_pinned_ca256?.text = Utils.getEditable(config.pinnedCA256)
-            } else if (config.security == REALITY) {
-                et_public_key?.text = Utils.getEditable(config.publicKey.orEmpty())
-                et_short_id?.text = Utils.getEditable(config.shortId.orEmpty())
-                et_spider_x?.text = Utils.getEditable(config.spiderX.orEmpty())
-                et_mldsa65_verify?.text = Utils.getEditable(config.mldsa65Verify.orEmpty())
-            }
-        }
+        if (streamSecurity < 0) return
 
+        sp_stream_security?.setSelection(streamSecurity)
+        et_sni?.text = Utils.getEditable(config.sni)
+        config.fingerPrint?.let {
+            val utlsIndex = Utils.arrayFind(uTlsItems, it)
+            sp_stream_fingerprint?.setSelection(if (utlsIndex >= 0) utlsIndex else 0)
+        }
+        config.alpn?.let {
+            val alpnIndex = Utils.arrayFind(alpns, it)
+            sp_stream_alpn?.setSelection(if (alpnIndex >= 0) alpnIndex else 0)
+        }
+        if (config.security == TLS) {
+            val allowinsecure = Utils.arrayFind(allowinsecures, config.insecure.toString())
+            if (allowinsecure >= 0) {
+                sp_allow_insecure?.setSelection(allowinsecure)
+            }
+            et_ech_config_list?.text = Utils.getEditable(config.echConfigList)
+            config.echForceQuery?.let {
+                val index = Utils.arrayFind(echForceQuerys, it)
+                sp_ech_force_query?.setSelection(if (index >= 0) index else 0)
+            }
+            et_pinned_ca256?.text = Utils.getEditable(config.pinnedCA256)
+        } else if (config.security == REALITY) {
+            et_public_key?.text = Utils.getEditable(config.publicKey.orEmpty())
+            et_short_id?.text = Utils.getEditable(config.shortId.orEmpty())
+            et_spider_x?.text = Utils.getEditable(config.spiderX.orEmpty())
+            et_mldsa65_verify?.text = Utils.getEditable(config.mldsa65Verify.orEmpty())
+        }
+    }
+
+    private fun bindNetworkSelection(config: ProfileItem) {
         val network = Utils.arrayFind(networks, config.network.orEmpty())
         if (network >= 0) {
             sp_network?.setSelection(network)
         }
-        return true
     }
 
     /**
@@ -626,15 +647,10 @@ class ServerActivity : BaseActivity() {
         if (editGuid.isNotEmpty()) {
             if (editGuid != MmkvManager.getSelectServer()) {
                 if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE)) {
-                    AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
-                        .setPositiveButton(android.R.string.ok) { _, _ ->
-                            MmkvManager.removeServer(editGuid)
-                            finish()
-                        }
-                        .setNegativeButton(android.R.string.cancel) { _, _ ->
-                            // do nothing
-                        }
-                        .show()
+                    ServerActionMenuHelper.showConfirmDialog(this) {
+                        MmkvManager.removeServer(editGuid)
+                        finish()
+                    }
                 } else {
                     MmkvManager.removeServer(editGuid)
                     finish()
@@ -647,33 +663,11 @@ class ServerActivity : BaseActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.action_server, menu)
-        val delButton = menu.findItem(R.id.del_config)
-        val saveButton = menu.findItem(R.id.save_config)
-
-        if (editGuid.isNotEmpty()) {
-            if (isRunning) {
-                delButton?.isVisible = false
-                saveButton?.isVisible = false
-            }
-        } else {
-            delButton?.isVisible = false
-        }
-
+        ServerActionMenuHelper.configure(menuInflater, menu, editGuid, isRunning)
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.del_config -> {
-            deleteServer()
-            true
-        }
-
-        R.id.save_config -> {
-            saveServer()
-            true
-        }
-
-        else -> super.onOptionsItemSelected(item)
-    }
+    override fun onOptionsItemSelected(item: MenuItem) =
+        ServerActionMenuHelper.handleMenuItem(item, ::deleteServer, ::saveServer)
+            ?: super.onOptionsItemSelected(item)
 }

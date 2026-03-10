@@ -754,20 +754,35 @@ object V2rayConfigManager {
             try {
                 val userHosts = MmkvManager.decodeSettingsString(AppConfig.PREF_DNS_HOSTS)
                 if (userHosts.isNotNullEmpty()) {
-                    var userHostsMap = userHosts?.split(",")
+                    val userHostsMap = mutableMapOf<String, String>()
+                    userHosts
+                        ?.split(",")
+                        ?.map { it.trim() }
                         ?.filter { it.isNotEmpty() }
-                        ?.filter { it.contains(":") }
-                        ?.associate { it.split(":").let { (k, v) -> k to v } }
-                    if (userHostsMap != null) hosts.putAll(userHostsMap)
+                        ?.forEach { entry ->
+                            val splitIndex = entry.indexOf(":")
+                            if (splitIndex <= 0 || splitIndex == entry.lastIndex) return@forEach
+                            val domain = entry.substring(0, splitIndex).trim()
+                            var address = entry.substring(splitIndex + 1).trim()
+                            if (address.startsWith("[") && address.endsWith("]")) {
+                                address = address.substring(1, address.length - 1)
+                            }
+                            if (domain.isNotEmpty() && address.isNotEmpty()) {
+                                userHostsMap[domain] = address
+                            }
+                        }
+                    if (userHostsMap.isNotEmpty()) hosts.putAll(userHostsMap)
                 }
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "Failed to configure user DNS hosts", e)
             }
 
             // DNS dns
+            val preferIpv6 = MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) == true
             v2rayConfig.dns = V2rayConfig.DnsBean(
                 servers = servers,
                 hosts = hosts,
+                queryStrategy = if (preferIpv6) "UseIP" else "UseIPv4",
                 tag = AppConfig.TAG_DNS
             )
 
@@ -889,74 +904,88 @@ object V2rayConfigManager {
      */
     private fun updateOutboundWithGlobalSettings(outbound: OutboundBean): Boolean {
         try {
-            var muxEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_MUX_ENABLED, false)
             val protocol = outbound.protocol
-            if (protocol.equals(EConfigType.SHADOWSOCKS.name, true)
-                || protocol.equals(EConfigType.SOCKS.name, true)
-                || protocol.equals(EConfigType.HTTP.name, true)
-                || protocol.equals(EConfigType.TROJAN.name, true)
-                || protocol.equals(EConfigType.WIREGUARD.name, true)
-                || protocol.equals(EConfigType.HYSTERIA2.name, true)
-                || protocol.equals(EConfigType.HYSTERIA.name, true)
-            ) {
-                muxEnabled = false
-            } else if (outbound.streamSettings?.network == NetworkType.XHTTP.type) {
-                muxEnabled = false
-            }
-
-            if (muxEnabled) {
-                outbound.mux?.enabled = true
-                outbound.mux?.concurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_CONCURRENCY, "8").orEmpty().toInt()
-                outbound.mux?.xudpConcurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "16").orEmpty().toInt()
-                outbound.mux?.xudpProxyUDP443 = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_QUIC, "reject")
-                if (protocol.equals(EConfigType.VLESS.name, true) && outbound.settings?.vnext?.first()?.users?.first()?.flow?.isNotEmpty() == true) {
-                    outbound.mux?.concurrency = -1
-                }
-            } else {
-                outbound.mux?.enabled = false
-                outbound.mux?.concurrency = -1
-            }
-
-            if (protocol.equals(EConfigType.WIREGUARD.name, true)) {
-                var localTunAddr = if (outbound.settings?.address == null) {
-                    listOf(AppConfig.WIREGUARD_LOCAL_ADDRESS_V4)
-                } else {
-                    outbound.settings?.address as List<*>
-                }
-                if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) != true) {
-                    localTunAddr = listOf(localTunAddr.first())
-                }
-                outbound.settings?.address = localTunAddr
-            }
-
-            if (outbound.streamSettings?.network == AppConfig.DEFAULT_NETWORK
-                && outbound.streamSettings?.tcpSettings?.header?.type == AppConfig.HEADER_TYPE_HTTP
-            ) {
-                val path = outbound.streamSettings?.tcpSettings?.header?.request?.path
-                val host = outbound.streamSettings?.tcpSettings?.header?.request?.headers?.Host
-
-                val requestString: String by lazy {
-                    """{"version":"1.1","method":"GET","headers":{"User-Agent":["Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.122 Mobile Safari/537.36"],"Accept-Encoding":["gzip, deflate"],"Connection":["keep-alive"],"Pragma":"no-cache"}}"""
-                }
-                outbound.streamSettings?.tcpSettings?.header?.request = JsonUtil.fromJson(
-                    requestString,
-                    StreamSettingsBean.TcpSettingsBean.HeaderBean.RequestBean::class.java
-                )
-                outbound.streamSettings?.tcpSettings?.header?.request?.path =
-                    if (path.isNullOrEmpty()) {
-                        listOf("/")
-                    } else {
-                        path
-                    }
-                outbound.streamSettings?.tcpSettings?.header?.request?.headers?.Host = host
-            }
-
-
+            applyMuxSettings(outbound, protocol, shouldEnableMux(outbound, protocol))
+            applyWireguardSettings(outbound, protocol)
+            applyTcpHttpHeader(outbound)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to update outbound with global settings", e)
             return false
         }
         return true
+    }
+
+    private fun shouldEnableMux(outbound: OutboundBean, protocol: String?): Boolean {
+        var muxEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_MUX_ENABLED, false)
+        if (protocol.equals(EConfigType.SHADOWSOCKS.name, true)
+            || protocol.equals(EConfigType.SOCKS.name, true)
+            || protocol.equals(EConfigType.HTTP.name, true)
+            || protocol.equals(EConfigType.TROJAN.name, true)
+            || protocol.equals(EConfigType.WIREGUARD.name, true)
+            || protocol.equals(EConfigType.HYSTERIA2.name, true)
+            || protocol.equals(EConfigType.HYSTERIA.name, true)
+        ) {
+            muxEnabled = false
+        } else if (outbound.streamSettings?.network == NetworkType.XHTTP.type) {
+            muxEnabled = false
+        }
+        return muxEnabled
+    }
+
+    private fun applyMuxSettings(outbound: OutboundBean, protocol: String?, muxEnabled: Boolean) {
+        if (muxEnabled) {
+            outbound.mux?.enabled = true
+            outbound.mux?.concurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_CONCURRENCY, "8").orEmpty().toInt()
+            outbound.mux?.xudpConcurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "16").orEmpty().toInt()
+            outbound.mux?.xudpProxyUDP443 = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_QUIC, "reject")
+            if (protocol.equals(EConfigType.VLESS.name, true) && outbound.settings?.vnext?.first()?.users?.first()?.flow?.isNotEmpty() == true) {
+                outbound.mux?.concurrency = -1
+            }
+        } else {
+            outbound.mux?.enabled = false
+            outbound.mux?.concurrency = -1
+        }
+    }
+
+    private fun applyWireguardSettings(outbound: OutboundBean, protocol: String?) {
+        if (!protocol.equals(EConfigType.WIREGUARD.name, true)) {
+            return
+        }
+        var localTunAddr = if (outbound.settings?.address == null) {
+            listOf(AppConfig.WIREGUARD_LOCAL_ADDRESS_V4)
+        } else {
+            outbound.settings?.address as List<*>
+        }
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) != true) {
+            localTunAddr = listOf(localTunAddr.first())
+        }
+        outbound.settings?.address = localTunAddr
+    }
+
+    private fun applyTcpHttpHeader(outbound: OutboundBean) {
+        if (outbound.streamSettings?.network != AppConfig.DEFAULT_NETWORK
+            || outbound.streamSettings?.tcpSettings?.header?.type != AppConfig.HEADER_TYPE_HTTP
+        ) {
+            return
+        }
+
+        val path = outbound.streamSettings?.tcpSettings?.header?.request?.path
+        val host = outbound.streamSettings?.tcpSettings?.header?.request?.headers?.Host
+
+        val requestString: String by lazy {
+            """{"version":"1.1","method":"GET","headers":{"User-Agent":["Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.122 Mobile Safari/537.36"],"Accept-Encoding":["gzip, deflate"],"Connection":["keep-alive"],"Pragma":"no-cache"}}"""
+        }
+        outbound.streamSettings?.tcpSettings?.header?.request = JsonUtil.fromJson(
+            requestString,
+            StreamSettingsBean.TcpSettingsBean.HeaderBean.RequestBean::class.java
+        )
+        outbound.streamSettings?.tcpSettings?.header?.request?.path =
+            if (path.isNullOrEmpty()) {
+                listOf("/")
+            } else {
+                path
+            }
+        outbound.streamSettings?.tcpSettings?.header?.request?.headers?.Host = host
     }
 
     /**

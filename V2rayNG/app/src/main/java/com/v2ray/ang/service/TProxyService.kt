@@ -20,6 +20,9 @@ class TProxyService(
     private val restartCallback: () -> Unit
 ) : Tun2SocksControl {
     companion object {
+        @Volatile
+        private var isLibLoaded = false
+
         @JvmStatic
         @Suppress("FunctionName")
         private external fun TProxyStartService(configPath: String, fd: Int)
@@ -31,14 +34,27 @@ class TProxyService(
         private external fun TProxyGetStats(): LongArray?
 
         init {
-            System.loadLibrary("hev-socks5-tunnel")
+            try {
+                System.loadLibrary("hev-socks5-tunnel")
+                isLibLoaded = true
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e(AppConfig.TAG, "hev-socks5-tunnel library not found", e)
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Failed to load hev-socks5-tunnel library", e)
+            }
         }
+
+        fun isAvailable(): Boolean = isLibLoaded
     }
 
     /**
      * Starts the tun2socks process with the appropriate parameters.
      */
     override fun startTun2Socks() {
+        if (!isLibLoaded) {
+            Log.e(AppConfig.TAG, "hev-socks5-tunnel is not available; skip tun2socks start")
+            return
+        }
 //        Log.i(AppConfig.TAG, "Starting HevSocks5Tunnel via JNI")
         val startAt = SystemClock.elapsedRealtime()
 
@@ -95,6 +111,9 @@ class TProxyService(
      * Stops the tun2socks process
      */
     override fun stopTun2Socks() {
+        if (!isLibLoaded) {
+            return
+        }
         try {
             Log.i(AppConfig.TAG, "TProxyStopService...")
             TProxyStopService()

@@ -235,6 +235,12 @@ class MainGroupTabsController(
 
     private fun bindGroupTabViewState(tabState: GroupTabViewState, selected: Boolean) {
         tabState.surfaceView.isSelected = selected
+        updateTabLabel(tabState, selected)
+        updateTabCount(tabState, selected)
+        updateTabSelectionAnimation(tabState, selected)
+    }
+
+    private fun updateTabLabel(tabState: GroupTabViewState, selected: Boolean) {
         if (tabState.lastRemarks != tabState.group.remarks) {
             tabState.labelView.text = tabState.group.remarks
             tabState.lastRemarks = tabState.group.remarks
@@ -246,46 +252,48 @@ class MainGroupTabsController(
             )
         )
         tabState.labelView.alpha = if (selected) 1f else 0.88f
+    }
 
+    private fun updateTabCount(tabState: GroupTabViewState, selected: Boolean) {
         val hasCount = tabState.group.count > 0
         tabState.countView.isVisible = hasCount
-        if (hasCount) {
-            if (tabState.lastCount != tabState.group.count) {
-                tabState.countView.text = tabState.group.count.toString()
-                tabState.lastCount = tabState.group.count
-            }
-            tabState.countView.setBackgroundResource(
-                if (selected) R.drawable.bg_group_count_badge_selected else R.drawable.bg_group_count_badge
-            )
-            tabState.countView.setTextColor(
-                ContextCompat.getColor(
-                    activity,
-                    if (selected) R.color.md_theme_onPrimary else R.color.md_theme_onSurfaceVariant
-                )
-            )
-            tabState.countView.alpha = if (selected) 1f else 0.92f
+        if (!hasCount) return
+        if (tabState.lastCount != tabState.group.count) {
+            tabState.countView.text = tabState.group.count.toString()
+            tabState.lastCount = tabState.group.count
         }
+        tabState.countView.setBackgroundResource(
+            if (selected) R.drawable.bg_group_count_badge_selected else R.drawable.bg_group_count_badge
+        )
+        tabState.countView.setTextColor(
+            ContextCompat.getColor(
+                activity,
+                if (selected) R.color.md_theme_onPrimary else R.color.md_theme_onSurfaceVariant
+            )
+        )
+        tabState.countView.alpha = if (selected) 1f else 0.92f
+    }
 
-        if (tabState.lastSelected != selected) {
-            tabState.lastSelected = selected
-            tabState.surfaceView.animate().cancel()
-            if (selected) {
-                tabState.surfaceView.scaleX = 0.985f
-                tabState.surfaceView.scaleY = 0.985f
-                tabState.surfaceView.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(140L)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            } else {
-                tabState.surfaceView.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(120L)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            }
+    private fun updateTabSelectionAnimation(tabState: GroupTabViewState, selected: Boolean) {
+        if (tabState.lastSelected == selected) return
+        tabState.lastSelected = selected
+        tabState.surfaceView.animate().cancel()
+        if (selected) {
+            tabState.surfaceView.scaleX = 0.985f
+            tabState.surfaceView.scaleY = 0.985f
+            tabState.surfaceView.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(140L)
+                .setInterpolator(motionInterpolator)
+                .start()
+        } else {
+            tabState.surfaceView.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(120L)
+                .setInterpolator(motionInterpolator)
+                .start()
         }
     }
 

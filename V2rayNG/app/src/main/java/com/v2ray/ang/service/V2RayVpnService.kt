@@ -27,6 +27,7 @@ import com.v2ray.ang.handler.NotificationManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.handler.V2RayServiceManager
+import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
 import java.lang.ref.SoftReference
@@ -138,6 +139,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")
                     isStopping.set(true)
+                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopAllService(isForced = true)
                     configDeferred.cancel()
                     return@launch
@@ -158,6 +160,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build V2Ray config")
                     isStopping.set(true)
+                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopAllService(isForced = true)
                     return@launch
                 }
@@ -219,10 +222,13 @@ class V2RayVpnService : VpnService(), ServiceControl {
             Log.e(AppConfig.TAG, "VPN configuration failed")
             return false
         }
-        Log.i(AppConfig.TAG, "VPN configure finished in ${SystemClock.elapsedRealtime() - configureStartAt}ms")
+                Log.i(AppConfig.TAG, "VPN configure finished in ${SystemClock.elapsedRealtime() - configureStartAt}ms")
 
         val tunStartAt = SystemClock.elapsedRealtime()
-        runTun2socks()
+        if (!runTun2socks()) {
+            Log.e(AppConfig.TAG, "Failed to start tun2socks")
+            return false
+        }
         Log.i(AppConfig.TAG, "tun2socks setup finished in ${SystemClock.elapsedRealtime() - tunStartAt}ms")
         Log.i(AppConfig.TAG, "VPN setup finished in ${SystemClock.elapsedRealtime() - startAt}ms")
         return true
@@ -313,14 +319,15 @@ class V2RayVpnService : VpnService(), ServiceControl {
         //if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED) == true) {
         //  builder.addDnsServer(PRIVATE_VLAN4_ROUTER)
         //} else {
-        SettingsManager.getVpnDnsServers().forEach {
+        val vpnDns = SettingsManager.getVpnDnsServers().take(2)
+        vpnDns.forEach {
             if (Utils.isPureIpAddress(it)) {
                 builder.addDnsServer(it)
             }
         }
 
         builder.setSession(V2RayServiceManager.getRunningServerName())
-        Log.i(AppConfig.TAG, "VPN routes=${if (bypassLan) AppConfig.ROUTED_IP_PREFIXES.size else 1}, dns=${SettingsManager.getVpnDnsServers().size}, ipv6=${MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) == true}, configureNetworkSettings took ${SystemClock.elapsedRealtime() - startAt}ms")
+        Log.i(AppConfig.TAG, "VPN routes=${if (bypassLan) AppConfig.ROUTED_IP_PREFIXES.size else 1}, dns=${vpnDns.size}, ipv6=${MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6) == true}, configureNetworkSettings took ${SystemClock.elapsedRealtime() - startAt}ms")
     }
 
     /**
@@ -398,12 +405,16 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * Runs the tun2socks process.
      * Starts the tun2socks process with the appropriate parameters.
      */
-    private fun runTun2socks() {
+    private fun runTun2socks(): Boolean {
         if (isStopping.get()) {
-            return
+            return false
         }
 
         if (SettingsManager.isUsingHevTun()) {
+            if (!TProxyService.isAvailable()) {
+                Log.e(AppConfig.TAG, "Hev tun requested but native library is unavailable")
+                return false
+            }
             tun2SocksService = TProxyService(
                 context = applicationContext,
                 vpnInterface = mInterface,
@@ -415,6 +426,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         }
 
         tun2SocksService?.startTun2Socks()
+        return true
     }
 
     private fun stopAllService(isForced: Boolean = true) {

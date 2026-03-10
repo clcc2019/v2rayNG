@@ -16,6 +16,8 @@ class LogcatRecyclerAdapter(
         differ.submitList(newItems.toList())
     }
 
+    fun currentLogs(): List<String> = differ.currentList.toList()
+
     override fun getItemCount() = differ.currentList.size
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {

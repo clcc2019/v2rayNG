@@ -54,7 +54,7 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
     }
 
     fun optimizeRecyclerViewForHighRefresh(recyclerView: RecyclerView) {
-        val animator = (recyclerView.itemAnimator as? DefaultItemAnimator) ?: DefaultItemAnimator()
+        val animator = recyclerView.itemAnimator as? DefaultItemAnimator ?: DefaultItemAnimator()
         animator.supportsChangeAnimations = false
         animator.addDuration = 120L
         animator.moveDuration = 120L

@@ -66,7 +66,8 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.copy_all -> {
             lifecycleScope.launch(Dispatchers.Default) {
-                val all = viewModel.getAll().joinToString("\n")
+                val snapshot = adapter.currentLogs().ifEmpty { viewModel.getAll() }
+                val all = snapshot.joinToString("\n")
                 withContext(Dispatchers.Main) {
                     Utils.setClipboard(this@LogcatActivity, all)
                     toastSuccess(R.string.toast_success)

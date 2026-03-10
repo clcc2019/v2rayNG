@@ -140,15 +140,27 @@ object V2RayServiceManager {
      */
     private fun startContextService(context: Context) {
         if (coreController.isRunning) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
             return
         }
-        val guid = pendingConfigGuid ?: MmkvManager.getSelectServer() ?: return
-        val config = MmkvManager.decodeServerConfig(guid) ?: return
+        val guid = pendingConfigGuid ?: MmkvManager.getSelectServer()
+        if (guid.isNullOrEmpty()) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+            return
+        }
+        val config = MmkvManager.decodeServerConfig(guid)
+        if (config == null) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+            return
+        }
         if (config.configType != EConfigType.CUSTOM
             && config.configType != EConfigType.POLICYGROUP
             && !Utils.isValidUrl(config.server)
             && !Utils.isPureIpAddress(config.server.orEmpty())
-        ) return
+        ) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+            return
+        }
 //        val result = V2rayConfigUtil.getV2rayConfig(context, guid)
 //        if (!result.status) return
 
@@ -184,8 +196,16 @@ object V2RayServiceManager {
         stopInProgress.set(false)
 
         val service = getService() ?: return false
-        val guid = prebuiltConfig?.guid ?: pendingConfigGuid ?: MmkvManager.getSelectServer() ?: return false
-        val config = MmkvManager.decodeServerConfig(guid) ?: return false
+        val guid = prebuiltConfig?.guid ?: pendingConfigGuid ?: MmkvManager.getSelectServer()
+        if (guid.isNullOrEmpty()) {
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+            return false
+        }
+        val config = MmkvManager.decodeServerConfig(guid)
+        if (config == null) {
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+            return false
+        }
 
         val configStartAt = SystemClock.elapsedRealtime()
         val result = if (prebuiltConfig != null
@@ -198,8 +218,10 @@ object V2RayServiceManager {
             V2rayConfigManager.getV2rayConfig(service, guid)
         }
         val configElapsed = SystemClock.elapsedRealtime() - configStartAt
-        if (!result.status)
+        if (!result.status) {
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
             return false
+        }
         Log.i(AppConfig.TAG, "V2Ray config build finished in ${configElapsed}ms")
 
         try {
@@ -211,6 +233,7 @@ object V2RayServiceManager {
             receiverRegistered.set(true)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to register broadcast receiver", e)
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
             return false
         }
 
@@ -227,6 +250,7 @@ object V2RayServiceManager {
             Log.i(AppConfig.TAG, "V2Ray core startLoop finished in ${SystemClock.elapsedRealtime() - loopStartAt}ms")
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to start Core loop", e)
+            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
             cleanupStartArtifacts(service)
             return false
         }

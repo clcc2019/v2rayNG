@@ -392,33 +392,10 @@ object AngConfigManager {
                 return null
             }
 
-            val config = if (str.startsWith(EConfigType.VMESS.protocolScheme)) {
-                VmessFmt.parse(str)
-            } else if (str.startsWith(EConfigType.SHADOWSOCKS.protocolScheme)) {
-                ShadowsocksFmt.parse(str)
-            } else if (str.startsWith(EConfigType.SOCKS.protocolScheme)) {
-                SocksFmt.parse(str)
-            } else if (str.startsWith(EConfigType.TROJAN.protocolScheme)) {
-                TrojanFmt.parse(str)
-            } else if (str.startsWith(EConfigType.VLESS.protocolScheme)) {
-                VlessFmt.parse(str)
-            } else if (str.startsWith(EConfigType.WIREGUARD.protocolScheme)) {
-                WireguardFmt.parse(str)
-            } else if (str.startsWith(EConfigType.HYSTERIA2.protocolScheme) || str.startsWith(HY2)) {
-                Hysteria2Fmt.parse(str)
-            } else {
-                null
-            }
+            val config = parseByScheme(str) ?: return null
 
-            if (config == null) {
+            if (!matchesSubscriptionFilter(config, subItem)) {
                 return null
-            }
-
-            // Apply filter
-            if (subItem?.filter.isNotNullEmpty() && config.remarks.isNotNullEmpty()) {
-                val matched = Regex(pattern = subItem?.filter.orEmpty())
-                    .containsMatchIn(input = config.remarks)
-                if (!matched) return null
             }
 
             config.subscriptionId = subid
@@ -429,6 +406,26 @@ object AngConfigManager {
             Log.e(AppConfig.TAG, "Failed to parse config", e)
             return null
         }
+    }
+
+    private fun parseByScheme(str: String): ProfileItem? {
+        return when {
+            str.startsWith(EConfigType.VMESS.protocolScheme) -> VmessFmt.parse(str)
+            str.startsWith(EConfigType.SHADOWSOCKS.protocolScheme) -> ShadowsocksFmt.parse(str)
+            str.startsWith(EConfigType.SOCKS.protocolScheme) -> SocksFmt.parse(str)
+            str.startsWith(EConfigType.TROJAN.protocolScheme) -> TrojanFmt.parse(str)
+            str.startsWith(EConfigType.VLESS.protocolScheme) -> VlessFmt.parse(str)
+            str.startsWith(EConfigType.WIREGUARD.protocolScheme) -> WireguardFmt.parse(str)
+            str.startsWith(EConfigType.HYSTERIA2.protocolScheme) || str.startsWith(HY2) -> Hysteria2Fmt.parse(str)
+            else -> null
+        }
+    }
+
+    private fun matchesSubscriptionFilter(config: ProfileItem, subItem: SubscriptionItem?): Boolean {
+        if (!subItem?.filter.isNotNullEmpty() || !config.remarks.isNotNullEmpty()) {
+            return true
+        }
+        return Regex(pattern = subItem?.filter.orEmpty()).containsMatchIn(input = config.remarks)
     }
 
     /**
