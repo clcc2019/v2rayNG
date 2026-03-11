@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +15,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ActivityRoutingSettingBinding
+import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
@@ -22,19 +24,25 @@ import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
+import com.v2ray.ang.viewmodel.UserAssetViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.DateFormat
+import java.util.Date
 
 class RoutingSettingActivity : HelperBaseActivity() {
     private val binding by lazy { ActivityRoutingSettingBinding.inflate(layoutInflater) }
     private val ownerActivity: RoutingSettingActivity
         get() = this
     private val viewModel: RoutingSettingsViewModel by viewModels()
+    private val assetViewModel: UserAssetViewModel by viewModels()
     private lateinit var adapter: RoutingSettingRecyclerAdapter
     private var mItemTouchHelper: ItemTouchHelper? = null
     private var refreshJob: Job? = null
+    private val extDir by lazy { File(Utils.userAssetPath(this)) }
     private val routing_domain_strategy: Array<out String> by lazy {
         resources.getStringArray(R.array.routing_domain_strategy)
     }
@@ -49,7 +57,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
         adapter = RoutingSettingRecyclerAdapter(viewModel, ActivityAdapterListener())
 
-        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.adapter = adapter
@@ -61,10 +69,23 @@ class RoutingSettingActivity : HelperBaseActivity() {
         binding.layoutDomainStrategy.setOnClickListener {
             setDomainStrategy()
         }
+        binding.layoutRoutingAssets.setOnClickListener {
+            startActivity(Intent(this, UserAssetActivity::class.java))
+        }
+        binding.layoutRoutingAssetsRefresh.setOnClickListener {
+            refreshRoutingAssets()
+        }
+        binding.layoutRoutingAssetsRefresh.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                view.parent?.requestDisallowInterceptTouchEvent(true)
+            }
+            false
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        updateRoutingAssetsUpdatedAt()
         refreshData()
     }
 
@@ -189,6 +210,40 @@ class RoutingSettingActivity : HelperBaseActivity() {
             }
             .show()
         return true
+    }
+
+    private fun getGeoFilesSources(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_GEO_FILES_SOURCES) ?: AppConfig.GEO_FILES_SOURCES.first()
+    }
+
+    private fun refreshRoutingAssets() {
+        showLoading()
+        toast(R.string.msg_downloading_content)
+        val httpPort = SettingsManager.getHttpPort()
+        lifecycleScope.launch(Dispatchers.IO) {
+            assetViewModel.reload(getGeoFilesSources())
+            val result = assetViewModel.downloadGeoFiles(extDir, httpPort)
+            withContext(Dispatchers.Main) {
+                if (result.successCount > 0) {
+                    toast(getString(R.string.title_update_config_count, result.successCount))
+                } else {
+                    toastError(R.string.toast_failure)
+                }
+                updateRoutingAssetsUpdatedAt()
+                hideLoading()
+            }
+        }
+    }
+
+    private fun updateRoutingAssetsUpdatedAt() {
+        val files = extDir.listFiles()
+        if (files.isNullOrEmpty()) {
+            binding.tvRoutingAssetsUpdated.text = getString(R.string.routing_assets_updated_unknown)
+            return
+        }
+        val latest = files.maxOfOrNull { it.lastModified() } ?: return
+        val formatted = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(latest))
+        binding.tvRoutingAssetsUpdated.text = getString(R.string.routing_assets_updated_at, formatted)
     }
 
     fun refreshData() {

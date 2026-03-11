@@ -46,7 +46,7 @@ class UserAssetActivity : HelperBaseActivity() {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_user_asset_setting))
 
-        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         adapter = UserAssetAdapter(ActivityAdapterListener())

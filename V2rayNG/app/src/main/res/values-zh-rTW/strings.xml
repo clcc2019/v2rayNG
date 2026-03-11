@@ -246,8 +246,6 @@
     <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">Telegram 頻道</string>
 
-    <string name="title_pref_promotion">推廣</string>
-
     <string name="title_pref_auto_update_subscription">自動更新訂閱</string>
     <string name="summary_pref_auto_update_subscription">在後台以一定時間間隔自動更新您的訂閱。受設備影響，此功能不一定總是有效</string>
     <string name="title_pref_auto_update_interval">自動更新間隔（分鐘，最小值 15）</string>
@@ -272,7 +270,7 @@
     <string name="title_del_duplicate_config">刪除重複設定</string>
     <string name="title_del_invalid_config">刪除無效設定</string>
     <string name="title_export_all">匯出設定至剪貼簿</string>
-    <string name="title_sub_setting">訂閱分組設定</string>
+    <string name="title_sub_setting">訂閱</string>
     <string name="sub_setting_remarks">備註</string>
     <string name="sub_setting_url">可選位址(url)</string>
     <string name="sub_setting_user_agent">User Agent</string>
@@ -286,7 +284,7 @@
     <string name="title_sub_update">更新訂閱</string>
     <string name="title_ping_all_server">偵測設定 Tcping</string>
     <string name="title_real_ping_all_server">偵測設定真延遲</string>
-    <string name="title_user_asset_setting">資源檔案</string>
+    <string name="title_user_asset_setting">路由檔案</string>
     <string name="title_sort_by_test_results">依偵測結果排序</string>
     <string name="title_filter_config">過濾設定</string>
     <string name="filter_config_all">所有</string>
@@ -302,7 +300,7 @@
 
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">網域策略</string>
-    <string name="routing_settings_title">轉送設定</string>
+    <string name="routing_settings_title">路由</string>
     <string name="routing_settings_tips">以半形逗號「,」分隔,domain和ip二選一填寫</string>
     <string name="routing_settings_save">儲存</string>
     <string name="routing_settings_delete">清除</string>
@@ -314,6 +312,7 @@
     <string name="routing_settings_import_rulesets_from_qrcode">從二維碼匯入規則集</string>
     <string name="routing_settings_export_rulesets_to_clipboard">匯出規則集至剪貼簿</string>
     <string name="routing_settings_locked">鎖定中，匯入預設時不刪除此規則</string>
+    <string name="summary_routing_assets">管理路由檔案</string>
 
     <string name="connection_test_pending">"測試連線能力"</string>
     <string name="connection_test_testing">"測試中……"</string>

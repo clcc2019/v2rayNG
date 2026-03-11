@@ -2,26 +2,30 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/item_bg"
-    style="@style/Widget.V2Ray.Card.Section"
+    style="@style/Widget.V2Ray.Card.ListItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp6"
-    android:layout_marginBottom="@dimen/padding_spacing_dp6">
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="@dimen/padding_spacing_dp4"
+    android:layout_marginBottom="@dimen/padding_spacing_dp4"
+    android:maxWidth="@dimen/list_card_max_width"
+    android:clipToOutline="true"
+    app:cardBackgroundColor="@color/md_theme_surface">
 
     <LinearLayout
         android:id="@+id/info_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/bg_list_item_ripple"
         android:clickable="true"
         android:focusable="true"
-        android:gravity="center"
+        android:gravity="center_vertical"
         android:nextFocusRight="@+id/layout_edit"
         android:orientation="horizontal"
         android:paddingStart="@dimen/padding_spacing_dp12"
-        android:paddingTop="@dimen/padding_spacing_dp12"
+        android:paddingTop="@dimen/padding_spacing_dp14"
         android:paddingEnd="@dimen/padding_spacing_dp12"
-        android:paddingBottom="@dimen/padding_spacing_dp12">
+        android:paddingBottom="@dimen/padding_spacing_dp14">
 
         <LinearLayout
             android:layout_width="0dp"

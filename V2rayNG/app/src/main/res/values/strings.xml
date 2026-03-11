@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">XrayNew</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">First use of this feature, please use the app to add server</string>
@@ -260,8 +260,6 @@
     <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">Telegram channel</string>
 
-    <string name="title_pref_promotion">Promotion</string>
-
     <string name="title_pref_auto_update_subscription">Automatic update subscriptions</string>
     <string name="summary_pref_auto_update_subscription">Update your subscriptions automatically at set intervals in the background. Depending on the device, this feature may not always work</string>
     <string name="title_pref_auto_update_interval">Auto Update Interval (Minutes, Min value 15)</string>
@@ -282,11 +280,11 @@
     <string name="logcat_copy">Copy</string>
     <string name="logcat_clear">Clear</string>
     <string name="title_service_restart">Restart</string>
-    <string name="title_del_all_config">Delete config</string>
+    <string name="title_del_all_config">Delete all configs</string>
     <string name="title_del_duplicate_config">Delete duplicate config</string>
     <string name="title_del_invalid_config">Delete invalid config</string>
     <string name="title_export_all">Export configs to clipboard</string>
-    <string name="title_sub_setting">Subscription group setting</string>
+    <string name="title_sub_setting">Subscription</string>
     <string name="sub_setting_remarks">remarks</string>
     <string name="sub_setting_url">Optional URL</string>
     <string name="sub_setting_user_agent">User Agent</string>
@@ -300,7 +298,7 @@
     <string name="title_sub_update">Update subscription</string>
     <string name="title_ping_all_server">Tcping config</string>
     <string name="title_real_ping_all_server">Real delay config</string>
-    <string name="title_user_asset_setting">Asset files</string>
+    <string name="title_user_asset_setting">Routing files</string>
     <string name="title_sort_by_test_results">Sorting by test results</string>
     <string name="title_filter_config">Filter config</string>
     <string name="filter_config_all">All</string>
@@ -317,7 +315,7 @@
 
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Domain strategy</string>
-    <string name="routing_settings_title">Routing Settings</string>
+    <string name="routing_settings_title">Routing</string>
     <string name="routing_settings_tips">Separated by commas(,), choose domain or ip</string>
     <string name="routing_settings_save">Save</string>
     <string name="routing_settings_delete">Clear</string>
@@ -329,6 +327,10 @@
     <string name="routing_settings_import_rulesets_from_qrcode">Import ruleset from QRcode</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
+    <string name="summary_routing_assets">Manage routing files</string>
+    <string name="routing_assets_refresh">Update routing files</string>
+    <string name="routing_assets_updated_at">Updated %1$s</string>
+    <string name="routing_assets_updated_unknown">Updated --</string>
     <string name="routing_settings_domain" translatable="false">domain</string>
     <string name="routing_settings_ip" translatable="false">ip</string>
     <string name="routing_settings_port" translatable="false">port</string>

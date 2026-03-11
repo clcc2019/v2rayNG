@@ -247,8 +247,6 @@
     <string name="title_oss_license">موجوزا کود بونچک</string>
     <string name="title_tg_channel">تورگه تلگرام</string>
 
-    <string name="title_pref_promotion">تبلیقات</string>
-
     <string name="title_pref_auto_update_subscription">ورۊ کردن خوتکار اشتراکا</string>
     <string name="summary_pref_auto_update_subscription">اشتراکا خوتۉ ن و تۉر خوتکار وا فاسله زمۊوی من پس زمینه ورۊ کۊنین. ای ویژیی من پوی دسگایل گاشڌ همیشه کار نکونه</string>
     <string name="title_pref_auto_update_interval">فاسله ورۊ کردن خوتکار (اقلن وا 15 دؽقه بۊ)</string>
@@ -273,7 +271,7 @@
     <string name="title_del_duplicate_config">پاک کردن کانفیگا تکراری بونکۊ سکویی</string>
     <string name="title_del_invalid_config">پاک کردن کانفیگا نا موئتبر بونکۊ سکویی</string>
     <string name="title_export_all">و در کشیڌن کانفیگا غیر سفارشی بونکۊ سکویی من کلیپ بورد</string>
-    <string name="title_sub_setting">سامووا بونکۊ اشتراک</string>
+    <string name="title_sub_setting">اشتراک</string>
     <string name="sub_setting_remarks">نیشتنا</string>
     <string name="sub_setting_url">نشۊوی اینترنتی اختیاری</string>
     <string name="sub_setting_user_agent">User Agent</string>
@@ -287,7 +285,7 @@
     <string name="title_sub_update">ورۊ کردن اشتراک بونکۊ سکویی</string>
     <string name="title_ping_all_server">Tcping کانفیگا بونکۊ سکویی</string>
     <string name="title_real_ping_all_server">تئخیر واقعی کانفیگا بونکۊ سکویی</string>
-    <string name="title_user_asset_setting">فایلا بونچک جوقرافیایی</string>
+    <string name="title_user_asset_setting">فایل‌های مسیریابی</string>
     <string name="title_sort_by_test_results">ترتیب و ری نتیجه یل آزمایش</string>
     <string name="title_filter_config">فیلتر کردن کانفیگا</string>
     <string name="filter_config_all">پوی بونکۊ یل کانفیگ</string>
@@ -304,7 +302,7 @@
 
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">نشقه دامنه</string>
-    <string name="routing_settings_title">سامووا تور جوستن</string>
+    <string name="routing_settings_title">مسیریابی</string>
     <string name="routing_settings_tips">وا کاما ز یک جوڌا ابۊن (،) پسند دامنه یا آی پی</string>
     <string name="routing_settings_save">زفت کردن</string>
     <string name="routing_settings_delete">روفتن</string>

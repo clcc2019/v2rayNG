@@ -162,10 +162,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
-        binding.layoutRestart.setOnClickListener { handleRestartClick() }
         UiMotion.attachPressFeedback(binding.fab)
         UiMotion.attachPressFeedback(binding.layoutTest)
-        UiMotion.attachPressFeedback(binding.layoutRestart)
         setupHomeMotion(runInitialEntrance = savedInstanceState == null)
 
         setupViewModel()
@@ -461,7 +459,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             isCurrentPingTesting = false
         }
         updateTestButtonState(state)
-        updateRestartButtonState(state)
         connectionCardController.render(state)
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
         updateToolbarSubtitle()
@@ -586,70 +583,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         )
     }
 
-    private fun updateRestartButtonState(state: ServiceUiState) {
-        val isRunning = state == ServiceUiState.RUNNING
-        animateRestartVisibility(isRunning)
-        binding.layoutRestart.isEnabled = isRunning
-        binding.layoutRestart.isClickable = isRunning
-        binding.layoutRestart.isFocusable = isRunning
-        binding.layoutRestart.alpha = if (isRunning) 1f else 0.72f
-    }
-
-    private fun animateRestartVisibility(visible: Boolean) {
-        val view = binding.layoutRestart
-        view.setTag(R.id.tag_visibility_target, visible)
-        if (visible) {
-            if (view.isVisible && view.alpha == 1f && view.scaleX == 1f && view.scaleY == 1f) {
-                return
-            }
-            view.animate().cancel()
-            if (!view.isVisible) {
-                view.alpha = 0f
-                view.scaleX = 0.96f
-                view.scaleY = 0.96f
-                view.isVisible = true
-            }
-            view.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(MotionTokens.RELEASE_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
-            return
-        }
-        if (!view.isVisible) {
-            return
-        }
-        view.animate().cancel()
-        view.animate()
-            .alpha(0f)
-            .scaleX(0.96f)
-            .scaleY(0.96f)
-            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .withEndAction {
-                val targetVisible = (view.getTag(R.id.tag_visibility_target) as? Boolean) == true
-                if (!targetVisible) {
-                    view.isVisible = false
-                } else {
-                    view.alpha = 1f
-                    view.scaleX = 1f
-                    view.scaleY = 1f
-                }
-            }
-            .start()
-    }
-
-    private fun handleRestartClick() {
-        if (serviceUiState != ServiceUiState.RUNNING) {
-            return
-        }
-        binding.layoutRestart.hapticClick()
-        UiMotion.animatePulse(binding.layoutRestart, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM)
-        restartV2Ray()
-    }
-
     private fun animateTestButtonAlpha(state: ServiceUiState) {
         val targetAlpha = when {
             state != ServiceUiState.RUNNING -> 0.72f
@@ -766,9 +699,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             R.id.sub_setting -> requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
             R.id.per_app_proxy_settings -> requestActivityLauncher.launch(Intent(this, PerAppProxyActivity::class.java))
             R.id.routing_setting -> requestActivityLauncher.launch(Intent(this, RoutingSettingActivity::class.java))
-            R.id.user_asset_setting -> requestActivityLauncher.launch(Intent(this, UserAssetActivity::class.java))
             R.id.settings -> requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
-            R.id.promotion -> Utils.openUri(this, "${Utils.decode(AppConfig.APP_PROMOTION_URL)}?t=${System.currentTimeMillis()}")
             R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
             R.id.check_for_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
             R.id.backup_restore -> requestActivityLauncher.launch(Intent(this, BackupActivity::class.java))

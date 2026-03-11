@@ -247,8 +247,6 @@
     <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">قناة Telegram</string>
 
-    <string name="title_pref_promotion">ترويج</string>
-
     <string name="title_pref_auto_update_subscription">اشتراكات التحديث التلقائي</string>
     <string name="summary_pref_auto_update_subscription">قم بتحديث اشتراكاتك تلقائيًا بفترة زمنية في الخلفية. اعتمادًا على الجهاز، قد لا تعمل هذه الميزة دائمًا</string>
     <string name="title_pref_auto_update_interval">فاصل التحديث التلقائي (بالدقائق، الحد الأدنى للقيمة 15)</string>
@@ -273,7 +271,7 @@
     <string name="title_del_duplicate_config">حذف الإعدادات المكررة (2)</string>
     <string name="title_del_invalid_config">حذف الإعدادات غير الصالحة (بعد الاختبار؛ 4)</string>
     <string name="title_export_all">تصدير الإعدادات غير المخصصة إلى الحافظة</string>
-    <string name="title_sub_setting">إعداد مجموعة الاشتراك</string>
+    <string name="title_sub_setting">اشتراك</string>
     <string name="sub_setting_remarks">ملاحظات</string>
     <string name="sub_setting_url">عنوان URL اختياري</string>
     <string name="sub_setting_user_agent">User Agent</string>
@@ -287,7 +285,7 @@
     <string name="title_sub_update">تحديث الاشتراك (أول خطوة)</string>
     <string name="title_ping_all_server">Tcping لجميع الإعدادات</string>
     <string name="title_real_ping_all_server"> اختبر جميع الإعدادات (3)</string>
-    <string name="title_user_asset_setting">Asset files</string>
+    <string name="title_user_asset_setting">ملفات التوجيه</string>
     <string name="title_sort_by_test_results">الفرز حسب نتائج الاختبار (5)</string>
     <string name="title_filter_config">تصفية ملف التكوين</string>
     <string name="filter_config_all">All</string>
@@ -304,7 +302,7 @@
 
     <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">استراتيجية النطاق</string>
-    <string name="routing_settings_title">إعدادات التوجيه</string>
+    <string name="routing_settings_title">توجيه</string>
     <string name="routing_settings_tips">مفصولة بفواصل (،)، تذكر الحفظ</string>
     <string name="routing_settings_save">حفظ</string>
     <string name="routing_settings_delete">مسح</string>

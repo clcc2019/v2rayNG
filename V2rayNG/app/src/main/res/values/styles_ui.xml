@@ -68,7 +68,7 @@
     </style>
 
     <style name="Widget.V2Ray.Card" parent="Widget.Material3.CardView.Filled">
-        <item name="cardCornerRadius">28dp</item>
+        <item name="cardCornerRadius">22dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeColor">@color/color_card_outline</item>
         <item name="strokeWidth">1dp</item>
@@ -84,7 +84,7 @@
 
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">
         <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
-        <item name="cardCornerRadius">22dp</item>
+        <item name="cardCornerRadius">18dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.TabGroup" parent="Widget.V2Ray.Card.Subtle">
@@ -93,7 +93,7 @@
     </style>
 
     <style name="Widget.V2Ray.Card.TopTabs" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">19dp</item>
+        <item name="cardCornerRadius">16dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeWidth">0dp</item>
         <item name="cardBackgroundColor">@android:color/transparent</item>
@@ -101,13 +101,26 @@
 
     <style name="Widget.V2Ray.Card.ListItem" parent="Widget.V2Ray.Card.TabGroup">
         <item name="cardBackgroundColor">@color/md_theme_surface</item>
-        <item name="cardCornerRadius">20dp</item>
+        <item name="cardCornerRadius">16dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.HomeConnection" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">28dp</item>
+        <item name="cardCornerRadius">22dp</item>
         <item name="cardBackgroundColor">@android:color/transparent</item>
         <item name="strokeColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.RoutingSection" parent="Widget.V2Ray.Card.ListItem" />
+
+    <style name="Widget.V2Ray.Routing.Row" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center|start</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">@dimen/padding_spacing_dp16</item>
     </style>
 
     <style name="Widget.V2Ray.Chip.Protocol" parent="">
