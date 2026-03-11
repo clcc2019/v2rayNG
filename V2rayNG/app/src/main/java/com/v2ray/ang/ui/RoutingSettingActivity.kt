@@ -30,8 +30,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 class RoutingSettingActivity : HelperBaseActivity() {
     private val binding by lazy { ActivityRoutingSettingBinding.inflate(layoutInflater) }
@@ -242,7 +243,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
             return
         }
         val latest = files.maxOfOrNull { it.lastModified() } ?: return
-        val formatted = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(latest))
+        val formatted = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(latest))
         binding.tvRoutingAssetsUpdated.text = getString(R.string.routing_assets_updated_at, formatted)
     }
 

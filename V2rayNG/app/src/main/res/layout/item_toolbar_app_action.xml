@@ -26,8 +26,8 @@
         android:layout_marginStart="@dimen/padding_spacing_dp8"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textAppearance="@style/TextAppearance.V2Ray.Support"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textAppearance="@style/TextAppearance.V2Ray.ScreenTitle"
+        android:textColor="@color/md_theme_primary"
         android:visibility="gone" />
 
 </LinearLayout>

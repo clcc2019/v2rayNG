@@ -322,8 +322,8 @@
     <string name="routing_settings_locked">锁定中，导入预设时不删除此规则</string>
     <string name="summary_routing_assets">管理路由文件</string>
     <string name="routing_assets_refresh">更新路由文件</string>
-    <string name="routing_assets_updated_at">更新于 %1$s</string>
-    <string name="routing_assets_updated_unknown">更新于 --</string>
+    <string name="routing_assets_updated_at">%1$s</string>
+    <string name="routing_assets_updated_unknown">--</string>
 
     <string name="connection_test_pending">"测试代理连接"</string>
     <string name="connection_test_short">测试</string>

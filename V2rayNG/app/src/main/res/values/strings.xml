@@ -329,8 +329,8 @@
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
     <string name="summary_routing_assets">Manage routing files</string>
     <string name="routing_assets_refresh">Update routing files</string>
-    <string name="routing_assets_updated_at">Updated %1$s</string>
-    <string name="routing_assets_updated_unknown">Updated --</string>
+    <string name="routing_assets_updated_at">%1$s</string>
+    <string name="routing_assets_updated_unknown">--</string>
     <string name="routing_settings_domain" translatable="false">domain</string>
     <string name="routing_settings_ip" translatable="false">ip</string>
     <string name="routing_settings_port" translatable="false">port</string>

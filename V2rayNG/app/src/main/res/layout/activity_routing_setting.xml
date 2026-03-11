@@ -93,11 +93,21 @@
 
                     </LinearLayout>
 
+                    <TextView
+                        android:id="@+id/tv_routing_assets_updated"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/padding_spacing_dp8"
+                        android:layout_marginEnd="@dimen/padding_spacing_dp8"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
                     <LinearLayout
                         android:id="@+id/layout_routing_assets_refresh"
                         android:layout_width="@dimen/view_size_dp36"
                         android:layout_height="@dimen/view_size_dp36"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
                         android:background="@drawable/bg_list_icon_button_ripple"
                         android:clickable="true"
                         android:contentDescription="@string/routing_assets_refresh"
@@ -114,16 +124,6 @@
                             app:tint="?attr/colorOnSurfaceVariant" />
 
                     </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tv_routing_assets_updated"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

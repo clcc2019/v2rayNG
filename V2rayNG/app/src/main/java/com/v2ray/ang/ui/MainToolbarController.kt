@@ -60,7 +60,8 @@ class MainToolbarController(
             serviceUiState == ServiceUiState.STOPPING -> R.string.connection_stopping_short
             else -> null
         }
-        applyStatus(statusResId?.let { activity.getString(it) })
+        val message = statusResId?.let { activity.getString(it) } ?: activity.getString(R.string.app_name)
+        applyStatus(message)
     }
 
     fun showTransientMessage(message: CharSequence, duration: Long = 2200L) {
