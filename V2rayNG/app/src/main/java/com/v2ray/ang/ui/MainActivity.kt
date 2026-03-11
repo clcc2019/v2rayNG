@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.view.WindowInsetsCompat
@@ -171,7 +172,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun schedulePostLaunchWork() {
-        binding.root.post {
+        runAfterFirstFrame {
             mainViewModel.startListenBroadcast()
             mainViewModel.initAssets(assets)
             setupGroupTab()
@@ -180,6 +181,12 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             refreshConnectionCard()
             checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
             }
+        }
+    }
+
+    private fun runAfterFirstFrame(action: () -> Unit) {
+        binding.root.doOnPreDraw {
+            binding.root.post { action() }
         }
     }
 

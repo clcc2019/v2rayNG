@@ -290,7 +290,7 @@
     <string name="title_pref_hev_tunnel_loglevel">HevTun 日志级别</string>
     <string name="title_pref_hev_tunnel_rw_timeout">HevTun 读写超时(秒) (tcp,udp 默认 300,60)</string>
 
-    <string name="title_logcat">Logcat</string>
+    <string name="title_logcat">日志</string>
     <string name="logcat_copy">复制</string>
     <string name="logcat_clear">清除</string>
     <string name="title_service_restart">重启</string>

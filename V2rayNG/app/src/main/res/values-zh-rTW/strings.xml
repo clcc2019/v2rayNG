@@ -266,7 +266,7 @@
     <string name="title_pref_hev_tunnel_loglevel">HevTun 日誌級別</string>
     <string name="title_pref_hev_tunnel_rw_timeout">HevTun 讀寫逾時(秒) (tcp,udp 預設 300,60)</string>
 
-    <string name="title_logcat">Logcat</string>
+    <string name="title_logcat">日誌</string>
     <string name="logcat_copy">複製</string>
     <string name="logcat_clear">清除</string>
     <string name="title_service_restart">重啟服務</string>
