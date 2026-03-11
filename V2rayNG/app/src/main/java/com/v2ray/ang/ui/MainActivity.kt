@@ -38,6 +38,7 @@ import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
+import com.v2ray.ang.util.StartupTracer
 import com.v2ray.ang.viewmodel.MainViewModel
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -116,59 +117,65 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        configureLaunchSplashScreen()
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-        setupToolbar(binding.toolbar, false, getString(R.string.app_name))
-        supportActionBar?.setDisplayShowTitleEnabled(false)
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        supportActionBar?.setHomeButtonEnabled(false)
-        binding.toolbar.title = null
-        binding.toolbar.subtitle = null
-        binding.toolbar.logo = null
-        binding.toolbar.logoDescription = getString(R.string.app_name)
-        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
-        binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
-        toolbarController.attach()
-        toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
-        defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
-        defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
+        StartupTracer.beginSection("MainActivity.onCreate")
+        try {
+            configureLaunchSplashScreen()
+            super.onCreate(savedInstanceState)
+            setContentView(binding.root)
+            setupToolbar(binding.toolbar, false, getString(R.string.app_name))
+            supportActionBar?.setDisplayShowTitleEnabled(false)
+            supportActionBar?.setDisplayHomeAsUpEnabled(false)
+            supportActionBar?.setHomeButtonEnabled(false)
+            binding.toolbar.title = null
+            binding.toolbar.subtitle = null
+            binding.toolbar.logo = null
+            binding.toolbar.logoDescription = getString(R.string.app_name)
+            binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
+            binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+            toolbarController.attach()
+            toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
+            defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
+            defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
-        // setup viewpager and tablayout
-        groupTabsController.initialize()
+            // setup viewpager and tablayout
+            groupTabsController.initialize()
 
-        // setup navigation drawer
-        val toggle = ActionBarDrawerToggle(
-            this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        toggle.isDrawerIndicatorEnabled = false
-        binding.toolbar.navigationIcon = null
-        setupDrawerMotion(toggle)
-        toggle.syncState()
-        binding.toolbar.navigationIcon = null
-        binding.navView.setNavigationItemSelectedListener(this)
-        setupNavigationDrawerInsets()
-        setupMainContentInsets()
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
+            // setup navigation drawer
+            val toggle = ActionBarDrawerToggle(
+                this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
+            )
+            toggle.isDrawerIndicatorEnabled = false
+            binding.toolbar.navigationIcon = null
+            setupDrawerMotion(toggle)
+            toggle.syncState()
+            binding.toolbar.navigationIcon = null
+            binding.navView.setNavigationItemSelectedListener(this)
+            setupNavigationDrawerInsets()
+            setupMainContentInsets()
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                        binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
                 }
-            }
-        })
+            })
 
-        binding.fab.setOnClickListener { handleFabAction() }
-        binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
-        UiMotion.attachPressFeedback(binding.fab)
-        UiMotion.attachPressFeedback(binding.layoutTest)
-        setupHomeMotion(runInitialEntrance = savedInstanceState == null)
+            binding.fab.setOnClickListener { handleFabAction() }
+            binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
+            UiMotion.attachPressFeedback(binding.fab)
+            UiMotion.attachPressFeedback(binding.layoutTest)
+            setupHomeMotion(runInitialEntrance = savedInstanceState == null)
 
-        setupViewModel()
-        schedulePostLaunchWork()
+            setupViewModel()
+            schedulePostLaunchWork()
+            StartupTracer.mark("MainActivity.onCreate.end")
+        } finally {
+            StartupTracer.endSection()
+        }
     }
 
     private fun schedulePostLaunchWork() {
@@ -186,6 +193,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     private fun runAfterFirstFrame(action: () -> Unit) {
         binding.root.doOnPreDraw {
+            StartupTracer.mark("MainActivity.firstFrame")
             binding.root.post { action() }
         }
     }
