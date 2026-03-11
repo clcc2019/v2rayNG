@@ -20,9 +20,9 @@
     <string name="empty_server_subtitle">Import or add a server to get started</string>
     <string name="empty_search_title">No matching configurations</string>
     <string name="empty_search_subtitle">Try a different keyword or clear the filter</string>
-    <string name="action_qrcode">QR code</string>
-    <string name="action_export_clipboard">Export to clipboard</string>
-    <string name="action_export_full_clipboard">Export full config</string>
+    <string name="action_qrcode">Show QR</string>
+    <string name="action_export_clipboard">Copy to clipboard</string>
+    <string name="action_export_full_clipboard">Copy full config</string>
     <string name="toast_services_start">Start Services</string>
     <string name="toast_services_stop">Stop Services</string>
     <string name="toast_services_success">Start Services Success</string>
@@ -32,8 +32,8 @@
     <string name="title_server">Config</string>
     <string name="menu_item_add_config">Add config</string>
     <string name="menu_item_save_config">Save config</string>
-    <string name="menu_item_edit_config">Edit config</string>
-    <string name="menu_item_del_config">Delete config</string>
+    <string name="menu_item_edit_config">Edit</string>
+    <string name="menu_item_del_config">Delete</string>
     <string name="menu_item_import_config_qrcode">Import from QRcode</string>
     <string name="menu_item_import_config_clipboard">Import from Clipboard</string>
     <string name="menu_item_import_config_local">Import from locally</string>
@@ -344,6 +344,7 @@
     <string name="routing_priority_high">Higher priority</string>
     <string name="routing_priority_low">Lower priority</string>
     <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
+    <string name="routing_priority_summary">Higher → lower priority, stop at first match</string>
     <string name="routing_settings_add_rule">Add rule</string>
     <string name="routing_settings_import_predefined_rulesets">Import predefined rulesets</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>

@@ -1,5 +1,7 @@
 package com.v2ray.ang.ui
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.animation.TimeInterpolator
 import android.content.Context
 import android.content.res.ColorStateList
@@ -8,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -27,7 +30,9 @@ class MainConnectionCardController(
     private data class ChipUiModel(
         val backgroundColorRes: Int,
         val textColorRes: Int,
-        val iconRes: Int? = null
+        val iconRes: Int? = null,
+        val backgroundAlpha: Float = 1f,
+        val forceTextOpaque: Boolean = false
     )
 
     private data class StatusBadgeUiModel(
@@ -37,6 +42,7 @@ class MainConnectionCardController(
 
     private var lastConnectionSnapshot: ServersCache? = null
     private var lastConnectionState: ServiceUiState? = null
+    private var statusDotAnimator: ObjectAnimator? = null
 
     fun updateVisibility(visible: Boolean) {
         UiMotion.animateVisibility(binding.cardConnection, visible, translationOffsetDp = 18f)
@@ -61,6 +67,8 @@ class MainConnectionCardController(
 
         val metaLine = buildConnectionMetaLine(snapshot, state)
         setTextWithVisibility(binding.tvConnectionMetaLine, metaLine, shouldAnimate)
+
+        updateStatusDot(state, snapshot)
 
         val badgeUiModel = buildConnectionBadgeUiModel(state, snapshot)
         if (binding.tvConnectionBadge.text.toString() != badgeUiModel.text.toString() && shouldAnimate) {
@@ -189,8 +197,17 @@ class MainConnectionCardController(
     }
 
     private fun applyChipUiModel(target: TextView, model: ChipUiModel) {
-        DrawableCompat.setTint(target.background.mutate(), ContextCompat.getColor(context, model.backgroundColorRes))
-        target.setTextColor(ContextCompat.getColor(context, model.textColorRes))
+        val baseColor = ContextCompat.getColor(context, model.backgroundColorRes)
+        val tintedColor = if (model.backgroundAlpha >= 1f) {
+            baseColor
+        } else {
+            ColorUtils.setAlphaComponent(baseColor, (255 * model.backgroundAlpha).toInt())
+        }
+        DrawableCompat.setTint(target.background.mutate(), tintedColor)
+        val textColor = ContextCompat.getColor(context, model.textColorRes).let { color ->
+            if (model.forceTextOpaque) ColorUtils.setAlphaComponent(color, 255) else color
+        }
+        target.setTextColor(textColor)
         target.setCompoundDrawablesRelativeWithIntrinsicBounds(
             model.iconRes?.let { createFeedbackIconForRes(it, model.textColorRes) },
             null,
@@ -219,22 +236,35 @@ class MainConnectionCardController(
     private fun statusBadge(
         text: CharSequence,
         backgroundColorRes: Int,
-        textColorRes: Int
+        textColorRes: Int,
+        backgroundAlpha: Float = 1f,
+        forceTextOpaque: Boolean = false
     ) = StatusBadgeUiModel(
         text = text,
         chip = ChipUiModel(
             backgroundColorRes = backgroundColorRes,
-            textColorRes = textColorRes
+            textColorRes = textColorRes,
+            backgroundAlpha = backgroundAlpha,
+            forceTextOpaque = forceTextOpaque
         )
     )
 
     private fun buildConnectionBadgeUiModel(state: ServiceUiState, snapshot: ServersCache?): StatusBadgeUiModel {
         val latencyText = buildConnectionLatencyText(snapshot)
         if (state == ServiceUiState.RUNNING && !latencyText.isNullOrBlank()) {
+            val delay = snapshot?.testDelayMillis ?: 0L
+            val (backgroundRes, textRes) = when {
+                delay <= 0L -> R.color.color_latency_bg_idle to R.color.md_theme_onSurfaceVariant
+                delay < 150L -> R.color.color_latency_bg_good to R.color.md_theme_success
+                delay < 300L -> R.color.color_latency_bg_warn to R.color.md_theme_warning
+                else -> R.color.color_latency_bg_bad to R.color.md_theme_error
+            }
             return statusBadge(
                 text = latencyText,
-                backgroundColorRes = R.color.md_theme_tertiaryContainer,
-                textColorRes = R.color.md_theme_onTertiaryContainer
+                backgroundColorRes = backgroundRes,
+                textColorRes = textRes,
+                backgroundAlpha = 1f,
+                forceTextOpaque = true
             )
         }
 
@@ -259,8 +289,8 @@ class MainConnectionCardController(
 
             ServiceUiState.STOPPED -> statusBadge(
                 text = context.getString(R.string.connection_not_connected_short),
-                backgroundColorRes = R.color.md_theme_surfaceVariant,
-                textColorRes = R.color.md_theme_onSurfaceVariant
+                backgroundColorRes = R.color.md_theme_surface,
+                textColorRes = R.color.md_theme_onSurface
             )
         }
     }
@@ -303,6 +333,51 @@ class MainConnectionCardController(
         return when {
             delayMillis > 0L -> "$delayMillis ms"
             else -> null
+        }
+    }
+
+    private fun updateStatusDot(state: ServiceUiState, snapshot: ServersCache?) {
+        val dotView = binding.viewStatusDot
+        val colorRes = when (state) {
+            ServiceUiState.RUNNING -> {
+                val delay = snapshot?.testDelayMillis ?: 0L
+                when {
+                    delay <= 0L -> R.color.md_theme_secondary
+                    delay < 150L -> R.color.md_theme_success
+                    delay < 300L -> R.color.md_theme_warning
+                    else -> R.color.md_theme_error
+                }
+            }
+
+            ServiceUiState.STARTING -> R.color.md_theme_secondary
+            ServiceUiState.STOPPING -> R.color.md_theme_warning
+            ServiceUiState.STOPPED -> R.color.colorStatusIdle
+        }
+        dotView.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, colorRes))
+        updateStatusDotMotion(state == ServiceUiState.RUNNING)
+    }
+
+    private fun updateStatusDotMotion(isRunning: Boolean) {
+        if (!isRunning) {
+            statusDotAnimator?.cancel()
+            statusDotAnimator = null
+            binding.viewStatusDot.alpha = 1f
+            binding.viewStatusDot.scaleX = 1f
+            binding.viewStatusDot.scaleY = 1f
+            return
+        }
+        if (statusDotAnimator?.isRunning == true) {
+            return
+        }
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1f, 0.6f, 1f)
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.12f, 1f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.12f, 1f)
+        statusDotAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.viewStatusDot, alpha, scaleX, scaleY).apply {
+            duration = MotionTokens.PULSE_LONG * 2
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.REVERSE
+            interpolator = motionInterpolator
+            start()
         }
     }
 

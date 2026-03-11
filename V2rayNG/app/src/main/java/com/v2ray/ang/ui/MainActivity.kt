@@ -15,8 +15,11 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
+import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
@@ -51,7 +54,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val backgroundColorRes: Int,
         val contentColorRes: Int,
         val strokeWidth: Int,
-        val strokeColorRes: Int? = null
+        val strokeColorRes: Int? = null,
+        val backgroundDrawableRes: Int? = null
     )
 
     private val binding by lazy {
@@ -531,10 +535,10 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             ServiceUiState.STOPPED -> ActionButtonUiModel(
                 textResId = R.string.tasker_start_service,
                 iconRes = R.drawable.ic_play_24dp,
-                backgroundColorRes = R.color.md_theme_surface,
-                contentColorRes = R.color.md_theme_onSurface,
-                strokeWidth = 1,
-                strokeColorRes = R.color.md_theme_outlineVariant
+                backgroundColorRes = R.color.md_theme_primary,
+                contentColorRes = R.color.md_theme_onPrimary,
+                strokeWidth = 0,
+                backgroundDrawableRes = R.drawable.bg_button_glossy_primary
             )
         }
     }
@@ -542,7 +546,12 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     private fun applyActionButtonUiModel(model: ActionButtonUiModel) {
         binding.fab.setIconResource(model.iconRes)
         binding.fab.text = getString(model.textResId)
-        binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.backgroundColorRes))
+        if (model.backgroundDrawableRes != null) {
+            binding.fab.backgroundTintList = null
+            binding.fab.background = AppCompatResources.getDrawable(this, model.backgroundDrawableRes)
+        } else {
+            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.backgroundColorRes))
+        }
         binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, model.contentColorRes))
         binding.fab.setTextColor(ContextCompat.getColor(this, model.contentColorRes))
         binding.fab.strokeWidth = model.strokeWidth
@@ -711,17 +720,37 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.sub_setting -> requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
-            R.id.routing_setting -> requestActivityLauncher.launch(Intent(this, RoutingSettingActivity::class.java))
-            R.id.settings -> requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
-            R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
-            R.id.check_for_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
-            R.id.backup_restore -> requestActivityLauncher.launch(Intent(this, BackupActivity::class.java))
-            R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
+            R.id.sub_setting -> launchFromDrawer(Intent(this, SubSettingActivity::class.java), forResult = true)
+            R.id.routing_setting -> launchFromDrawer(Intent(this, RoutingSettingActivity::class.java), forResult = true)
+            R.id.settings -> launchFromDrawer(Intent(this, SettingsActivity::class.java), forResult = true)
+            R.id.logcat -> launchFromDrawer(Intent(this, LogcatActivity::class.java))
+            R.id.check_for_update -> launchFromDrawer(Intent(this, CheckUpdateActivity::class.java))
+            R.id.backup_restore -> launchFromDrawer(Intent(this, BackupActivity::class.java), forResult = true)
+            R.id.about -> launchFromDrawer(Intent(this, AboutActivity::class.java))
         }
 
-        binding.drawerLayout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    private fun launchFromDrawer(intent: Intent, forResult: Boolean = false) {
+        val options = ActivityOptionsCompat.makeCustomAnimation(
+            this,
+            R.anim.activity_open_enter,
+            R.anim.activity_open_exit
+        )
+        val launch = {
+            if (forResult) {
+                requestActivityLauncher.launch(intent, options)
+            } else {
+                ActivityCompat.startActivity(this, intent, options.toBundle())
+            }
+        }
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            binding.drawerLayout.postDelayed(launch, MotionTokens.SHORT_ANIMATION_DURATION)
+        } else {
+            launch()
+        }
     }
 
     override fun onDestroy() {

@@ -19,9 +19,9 @@
     <string name="empty_server_subtitle">导入或添加一个节点后，即可开始连接</string>
     <string name="empty_search_title">没有匹配的配置</string>
     <string name="empty_search_subtitle">试试更换关键词，或清空当前筛选</string>
-    <string name="action_qrcode">二维码</string>
-    <string name="action_export_clipboard">导出至剪贴板</string>
-    <string name="action_export_full_clipboard">导出完整配置</string>
+    <string name="action_qrcode">显示二维码</string>
+    <string name="action_export_clipboard">复制到剪贴板</string>
+    <string name="action_export_full_clipboard">复制完整配置</string>
     <string name="toast_services_start">启动服务中</string>
     <string name="toast_services_stop">关闭中</string>
     <string name="toast_services_success">启动服务成功</string>
@@ -31,8 +31,8 @@
     <string name="title_server">配置项</string>
     <string name="menu_item_add_config">添加配置</string>
     <string name="menu_item_save_config">保存配置</string>
-    <string name="menu_item_edit_config">编辑配置</string>
-    <string name="menu_item_del_config">删除配置</string>
+    <string name="menu_item_edit_config">编辑</string>
+    <string name="menu_item_del_config">删除</string>
     <string name="menu_item_import_config_qrcode">扫描二维码</string>
     <string name="menu_item_import_config_clipboard">从剪贴板导入</string>
     <string name="menu_item_import_config_local">从本地导入</string>
@@ -337,6 +337,7 @@
     <string name="routing_priority_high">高优先级</string>
     <string name="routing_priority_low">低优先级</string>
     <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
+    <string name="routing_priority_summary">高→低优先级，命中即停止</string>
     <string name="routing_settings_add_rule">添加规则</string>
     <string name="routing_settings_import_predefined_rulesets">导入预定义规则集</string>
     <string name="routing_settings_import_rulesets_tip">将删除现有的规则集，是否确定继续？</string>

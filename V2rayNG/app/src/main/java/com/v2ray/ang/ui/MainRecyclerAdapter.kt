@@ -1,13 +1,16 @@
 package com.v2ray.ang.ui
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.R
@@ -248,7 +251,9 @@ class MainRecyclerAdapter(
         val testResult = delayMillis.takeIf { it != 0L }?.let { "${it}ms" }.orEmpty()
         holder.itemMainBinding.tvTestResult.text = testResult
         holder.itemMainBinding.tvTestResult.visibility = if (testResult.isBlank()) View.GONE else View.VISIBLE
-        holder.itemMainBinding.tvTestResult.setTextColor(if (delayMillis < 0L) holder.colors.pingRed else holder.colors.ping)
+        if (holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
+            applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResult, delayMillis)
+        }
         if (shouldAnimateResult && holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
             UiMotion.animatePulse(holder.itemMainBinding.tvTestResult, pulseScale = 1.03f)
         }
@@ -433,5 +438,17 @@ class MainRecyclerAdapter(
                 else -> null
             }
         }
+    }
+
+    private fun applyLatencyBadgeStyle(target: TextView, delayMillis: Long) {
+        val context = target.context
+        val (backgroundRes, textRes) = when {
+            delayMillis < 0L -> R.color.color_latency_bg_bad to R.color.md_theme_error
+            delayMillis < 150L -> R.color.color_latency_bg_good to R.color.md_theme_success
+            delayMillis < 300L -> R.color.color_latency_bg_warn to R.color.md_theme_warning
+            else -> R.color.color_latency_bg_bad to R.color.md_theme_error
+        }
+        target.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, backgroundRes))
+        target.setTextColor(ContextCompat.getColor(context, textRes))
     }
 }

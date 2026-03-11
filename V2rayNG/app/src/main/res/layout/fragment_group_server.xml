@@ -24,8 +24,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="0dp"
+        android:layout_marginStart="@dimen/padding_spacing_dp16"
+        android:layout_marginEnd="@dimen/padding_spacing_dp16"
         android:visibility="gone">
 
         <LinearLayout
@@ -35,12 +35,20 @@
             android:orientation="vertical"
             android:padding="@dimen/padding_spacing_dp24">
 
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:alpha="0.46"
-                app:srcCompat="@drawable/ic_subscriptions_24dp"
-                app:tint="?attr/colorOnSurfaceVariant" />
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_empty_state_icon"
+                android:foregroundGravity="center"
+                android:padding="10dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    app:srcCompat="@drawable/ic_subscriptions_24dp"
+                    app:tint="?attr/colorOnPrimaryContainer" />
+
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tv_empty_title"
@@ -49,6 +57,7 @@
                 android:layout_marginTop="@dimen/padding_spacing_dp12"
                 android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                 android:textColor="?attr/colorOnSurface"
+                android:alpha="0.92"
                 tools:text="暂无配置" />
 
             <TextView
@@ -58,7 +67,8 @@
                 android:layout_marginTop="@dimen/padding_spacing_dp6"
                 android:gravity="center"
                 android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorOnSurface"
+                android:alpha="0.72"
                 tools:text="导入或添加一个节点后，即可开始连接" />
 
         </LinearLayout>

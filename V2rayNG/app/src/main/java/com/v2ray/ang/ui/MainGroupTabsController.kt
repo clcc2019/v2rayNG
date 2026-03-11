@@ -248,7 +248,7 @@ class MainGroupTabsController(
         tabState.labelView.setTextColor(
             ContextCompat.getColor(
                 activity,
-                if (selected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                if (selected) R.color.md_theme_onPrimaryContainer else R.color.md_theme_onSurfaceVariant
             )
         )
         tabState.labelView.alpha = if (selected) 1f else 0.88f

@@ -8,43 +8,43 @@
     </style>
 
     <style name="TextAppearance.V2Ray.ScreenTitle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.V2Ray.CardTitle" parent="TextAppearance.AppCompat.Subhead">
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:letterSpacing">0</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
         <item name="android:lineSpacingExtra">0dp</item>
     </style>
 
     <style name="TextAppearance.V2Ray.BodyStrong" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Body" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Support" parent="TextAppearance.AppCompat.Small">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">10sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Badge" parent="TextAppearance.AppCompat.Small">
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">10sp</item>
         <item name="android:textStyle">normal</item>
     </style>
 
     <style name="TextAppearance.V2Ray.Tab" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:letterSpacing">0</item>
     </style>
@@ -55,14 +55,14 @@
     </style>
 
     <style name="TextAppearance.V2Ray.FormLabel" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:letterSpacing">0.01</item>
+        <item name="android:letterSpacing">0</item>
         <item name="android:textColor">@color/md_theme_onSurfaceVariant</item>
     </style>
 
     <style name="TextAppearance.V2Ray.MenuItem" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
     </style>
@@ -101,13 +101,17 @@
 
     <style name="Widget.V2Ray.Card.ListItem" parent="Widget.V2Ray.Card.TabGroup">
         <item name="cardBackgroundColor">@color/md_theme_surface</item>
-        <item name="cardCornerRadius">16dp</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="strokeColor">@color/color_card_outline</item>
+        <item name="strokeWidth">0.75dp</item>
+        <item name="cardElevation">0dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.HomeConnection" parent="Widget.V2Ray.Card.Primary">
         <item name="cardCornerRadius">22dp</item>
         <item name="cardBackgroundColor">@android:color/transparent</item>
         <item name="strokeColor">@android:color/transparent</item>
+        <item name="cardElevation">0dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.RoutingSection" parent="Widget.V2Ray.Card.ListItem" />
@@ -128,25 +132,26 @@
         <item name="android:gravity">center</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:minHeight">@dimen/view_height_dp26</item>
+        <item name="android:minHeight">20dp</item>
         <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
-        <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingTop">1dp</item>
         <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
-        <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingBottom">1dp</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
         <item name="android:textColor">@color/colorConfigType</item>
+        <item name="android:textSize">9sp</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="Widget.V2Ray.Badge.Connection" parent="">
         <item name="android:background">@drawable/bg_connection_badge</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingStart">@dimen/padding_spacing_dp10</item>
-        <item name="android:paddingTop">@dimen/padding_spacing_dp4</item>
-        <item name="android:paddingEnd">@dimen/padding_spacing_dp10</item>
-        <item name="android:paddingBottom">@dimen/padding_spacing_dp4</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
     </style>
 
     <style name="Widget.V2Ray.Badge.ConnectionCompact" parent="">
@@ -156,8 +161,8 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
         <item name="android:paddingBottom">2dp</item>
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Small</item>
-        <item name="android:textSize">11sp</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
     </style>
 
     <style name="Widget.V2Ray.Badge.Metric" parent="">
@@ -170,6 +175,7 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp4</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorPing</item>
     </style>
 
@@ -255,6 +261,7 @@
         <item name="android:background">@color/md_theme_background</item>
         <item name="titleTextColor">@color/md_theme_onBackground</item>
         <item name="subtitleTextColor">@color/md_theme_onSurfaceVariant</item>
+        <item name="navigationIconTint">@color/md_theme_onSurface</item>
         <item name="popupTheme">@style/ThemeOverlay.V2Ray.PopupMenu</item>
     </style>
 

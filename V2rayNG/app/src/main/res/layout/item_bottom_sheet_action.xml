@@ -2,29 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp4"
+    android:layout_marginTop="@dimen/padding_spacing_dp6"
     android:background="@drawable/bg_bottom_sheet_action_item"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="@dimen/view_height_dp56"
+    android:minHeight="52dp"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/padding_spacing_dp12"
-    android:paddingTop="@dimen/padding_spacing_dp12"
-    android:paddingEnd="@dimen/padding_spacing_dp12"
-    android:paddingBottom="@dimen/padding_spacing_dp12">
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp10"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp10">
 
     <ImageView
         android:id="@+id/iv_icon"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:alpha="0.8" />
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:alpha="0.82" />
 
     <TextView
         android:id="@+id/tv_label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/padding_spacing_dp12"
+        android:layout_marginStart="@dimen/padding_spacing_dp10"
         android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="1"

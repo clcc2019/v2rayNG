@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:layout_marginTop="@dimen/padding_spacing_dp4"
-    android:layout_marginBottom="@dimen/padding_spacing_dp4"
+    android:layout_marginTop="@dimen/padding_spacing_dp8"
+    android:layout_marginBottom="@dimen/padding_spacing_dp8"
     android:maxWidth="@dimen/list_card_max_width"
     android:clipToOutline="true"
     app:cardBackgroundColor="@color/md_theme_surface">
@@ -22,10 +22,10 @@
         android:gravity="center_vertical"
         android:nextFocusRight="@+id/layout_edit"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_spacing_dp12"
-        android:paddingTop="@dimen/padding_spacing_dp14"
+        android:paddingStart="@dimen/padding_spacing_dp16"
+        android:paddingTop="@dimen/padding_spacing_dp12"
         android:paddingEnd="@dimen/padding_spacing_dp12"
-        android:paddingBottom="@dimen/padding_spacing_dp14">
+        android:paddingBottom="@dimen/padding_spacing_dp12">
 
         <LinearLayout
             android:id="@+id/priority_container"
@@ -33,7 +33,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingEnd="@dimen/padding_spacing_dp12">
+            android:paddingEnd="@dimen/padding_spacing_dp10">
 
             <TextView
                 android:id="@+id/tv_priority"
@@ -43,9 +43,9 @@
                 android:gravity="center"
                 android:minWidth="28dp"
                 android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="@dimen/padding_spacing_dp4"
+                android:paddingTop="@dimen/padding_spacing_dp3"
                 android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="@dimen/padding_spacing_dp4"
+                android:paddingBottom="@dimen/padding_spacing_dp3"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -93,22 +93,22 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/domainIp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:lines="1"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+            android:id="@+id/domainIp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp6"
+            android:lines="1"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <TextView
-                android:id="@+id/outboundTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:lines="1"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+        <TextView
+            android:id="@+id/outboundTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp6"
+            android:lines="1"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
 

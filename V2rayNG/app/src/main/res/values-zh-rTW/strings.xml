@@ -15,6 +15,9 @@
     <string name="toast_permission_denied">無法取得此權限</string>
     <string name="toast_permission_denied_notification">無法取得此通知權限</string>
     <string name="notification_action_more">瞭解更多</string>
+    <string name="action_qrcode">顯示二維碼</string>
+    <string name="action_export_clipboard">複製到剪貼簿</string>
+    <string name="action_export_full_clipboard">複製完整設定</string>
     <string name="toast_services_start">啟動服務</string>
     <string name="toast_services_stop">停止服務</string>
     <string name="toast_services_success">啟動服務成功</string>
@@ -24,8 +27,8 @@
     <string name="title_server">設定檔</string>
     <string name="menu_item_add_config">新增設定</string>
     <string name="menu_item_save_config">儲存設定</string>
-    <string name="menu_item_edit_config">Edit configuration</string>
-    <string name="menu_item_del_config">刪除設定</string>
+    <string name="menu_item_edit_config">編輯</string>
+    <string name="menu_item_del_config">刪除</string>
     <string name="menu_item_import_config_qrcode">從 QR Code 匯入設定</string>
     <string name="menu_item_import_config_clipboard">從剪貼簿匯入設定</string>
     <string name="menu_item_import_config_local">從本地匯入</string>
@@ -309,6 +312,7 @@
     <string name="routing_settings_save">儲存</string>
     <string name="routing_settings_delete">清除</string>
     <string name="routing_settings_rule_title">路由規則設定</string>
+    <string name="routing_priority_summary">高→低優先順序，命中即停止</string>
     <string name="routing_settings_add_rule">新增規則</string>
     <string name="routing_settings_import_predefined_rulesets">匯入預先定義的規則集</string>
     <string name="routing_settings_import_rulesets_tip">將刪除現有的規則集，是否確定繼續？ </string>
