@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.androidx.baselineprofile)
     id("com.jaredsburrows.license")
 }
 
@@ -187,7 +186,6 @@ dependencies {
 
     // Baseline Profile
     implementation(libs.androidx.profileinstaller)
-    baselineProfile(project(":baselineprofile"))
 
     // Multidex Support
     implementation(libs.multidex)
