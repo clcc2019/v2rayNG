@@ -94,8 +94,9 @@ object Hysteria2Fmt : FmtBase() {
         profileItem.alpn = "h3"
 
         outboundBean.settings?.let { server ->
+            val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
             server.address = getServerAddress(profileItem)
-            server.port = profileItem.serverPort.orEmpty().toInt()
+            server.port = port
             server.version = 2
         }
 

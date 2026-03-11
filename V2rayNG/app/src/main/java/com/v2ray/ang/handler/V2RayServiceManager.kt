@@ -41,6 +41,7 @@ object V2RayServiceManager {
     private val mMsgReceive = ReceiveMessageHandler()
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var restartJob: Job? = null
+    private var measureDelayJob: Job? = null
     private var currentConfig: ProfileItem? = null
     private var pendingConfigGuid: String? = null
     private val receiverRegistered = AtomicBoolean(false)
@@ -219,7 +220,12 @@ object V2RayServiceManager {
         }
         val configElapsed = SystemClock.elapsedRealtime() - configStartAt
         if (!result.status) {
-            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+            val errorResId = result.errorResId ?: 0
+            MessageUtil.sendMsg2UI(
+                service,
+                AppConfig.MSG_STATE_START_FAILURE,
+                if (errorResId > 0) errorResId else ""
+            )
             return false
         }
         Log.i(AppConfig.TAG, "V2Ray config build finished in ${configElapsed}ms")
@@ -288,6 +294,8 @@ object V2RayServiceManager {
         val startAt = SystemClock.elapsedRealtime()
 
         try {
+            measureDelayJob?.cancel()
+            measureDelayJob = null
             if (coreController.isRunning) {
                 try {
                     coreController.stopLoop()
@@ -326,7 +334,11 @@ object V2RayServiceManager {
             return
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        if (measureDelayJob?.isActive == true) {
+            return
+        }
+
+        measureDelayJob = restartScope.launch(Dispatchers.IO) {
             val service = getService() ?: return@launch
             var time = -1L
             var errorStr = ""

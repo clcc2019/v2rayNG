@@ -56,19 +56,26 @@ class RoutingSettingActivity : HelperBaseActivity() {
         //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.routing_settings_title))
 
-        adapter = RoutingSettingRecyclerAdapter(viewModel, ActivityAdapterListener())
+        adapter = RoutingSettingRecyclerAdapter(viewModel, ActivityAdapterListener()) { viewHolder ->
+            mItemTouchHelper?.startDrag(viewHolder)
+        }
 
         binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.adapter = adapter
 
-        mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
+        mItemTouchHelper = ItemTouchHelper(
+            SimpleItemTouchHelperCallback(adapter, allowLongPressDrag = false)
+        )
         mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
 
         binding.tvDomainStrategySummary.text = getDomainStrategy()
         binding.layoutDomainStrategy.setOnClickListener {
             setDomainStrategy()
+        }
+        binding.layoutPerAppProxySettings.setOnClickListener {
+            startActivity(Intent(this, PerAppProxyActivity::class.java))
         }
         binding.layoutRoutingAssets.setOnClickListener {
             startActivity(Intent(this, UserAssetActivity::class.java))

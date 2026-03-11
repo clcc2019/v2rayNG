@@ -269,7 +269,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
         // Create a new interface using the builder and save the parameters
         try {
             val establishStartAt = SystemClock.elapsedRealtime()
-            mInterface = builder.establish()!!
+            val iface = builder.establish()
+            if (iface == null) {
+                Log.e(AppConfig.TAG, "Failed to establish VPN interface: builder returned null")
+                return false
+            }
+            mInterface = iface
             isRunning = true
             Log.i(AppConfig.TAG, "VPN interface established in ${SystemClock.elapsedRealtime() - establishStartAt}ms")
             Log.i(AppConfig.TAG, "VPN configureVpnService total ${SystemClock.elapsedRealtime() - startAt}ms")

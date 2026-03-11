@@ -34,10 +34,14 @@ import kotlin.math.sign
  *
  * @author Paul Burke (ipaulpro)
  */
-class SimpleItemTouchHelperCallback(private val mAdapter: ItemTouchHelperAdapter, private val allowSwipe: Boolean = false) : ItemTouchHelper.Callback() {
+class SimpleItemTouchHelperCallback(
+    private val mAdapter: ItemTouchHelperAdapter,
+    private val allowSwipe: Boolean = false,
+    private val allowLongPressDrag: Boolean = true
+) : ItemTouchHelper.Callback() {
     private var mReturnAnimator: ValueAnimator? = null
 
-    override fun isLongPressDragEnabled(): Boolean = true
+    override fun isLongPressDragEnabled(): Boolean = allowLongPressDrag
 
     override fun isItemViewSwipeEnabled(): Boolean = allowSwipe
 

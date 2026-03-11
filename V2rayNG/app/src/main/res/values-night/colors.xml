@@ -5,13 +5,13 @@
     <color name="colorConfigType">#A0BAFF</color>
     <color name="color_fab_active">#76A0FF</color>
     <color name="color_fab_inactive">#67788B</color>
-    <color name="divider_color_light">#1C2430</color>
+    <color name="divider_color_light">#334355</color>
     <color name="colorSelectionIndicator">#34558C</color>
-    <color name="colorSelectionFill">#0B0E12</color>
+    <color name="colorSelectionFill">#16202B</color>
     <color name="colorDrawerHeaderStart">#14223B</color>
     <color name="colorDrawerHeaderEnd">#111A2B</color>
-    <color name="colorStatusIdle">#586878</color>
-    <color name="color_card_outline">#1C2430</color>
+    <color name="colorStatusIdle">#7A889A</color>
+    <color name="color_card_outline">#3E4F64</color>
 
     <color name="md_theme_primary">#76A0FF</color>
     <color name="md_theme_onPrimary">#0A1932</color>
@@ -33,18 +33,18 @@
     <color name="md_theme_onError">#690005</color>
     <color name="md_theme_onErrorContainer">#FFDAD6</color>
 
-    <color name="md_theme_background">#000000</color>
-    <color name="md_theme_onBackground">#E4E9F1</color>
+    <color name="md_theme_background">#06080C</color>
+    <color name="md_theme_onBackground">#ECF0F6</color>
 
-    <color name="md_theme_surface">#0A0D11</color>
+    <color name="md_theme_surface">#111823</color>
     <color name="md_theme_onSurface">#E4E9F1</color>
-    <color name="md_theme_surfaceVariant">#131922</color>
-    <color name="md_theme_onSurfaceVariant">#9AA7B9</color>
+    <color name="md_theme_surfaceVariant">#202A3A</color>
+    <color name="md_theme_onSurfaceVariant">#B3C0D2</color>
     <color name="md_theme_inverseSurface">#E4E9F1</color>
     <color name="md_theme_inverseOnSurface">#000000</color>
 
-    <color name="md_theme_outline">#293342</color>
-    <color name="md_theme_outlineVariant">#1B2230</color>
+    <color name="md_theme_outline">#53647C</color>
+    <color name="md_theme_outlineVariant">#324153</color>
 
     <color name="md_theme_inversePrimary">#2D63E9</color>
     <color name="md_theme_shadow">#000000</color>

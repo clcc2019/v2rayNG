@@ -481,6 +481,28 @@ class ServerActivity : BaseActivity() {
                 return false
             }
         }
+        if (createConfigType == EConfigType.HYSTERIA2) {
+            val hopping = et_port_hop?.text?.toString()
+            if (!hopping.isNullOrBlank() && !Utils.isValidPortHopping(hopping)) {
+                toast(R.string.toast_invalid_port_hop)
+                return false
+            }
+            val interval = et_port_hop_interval?.text?.toString()?.trim()
+            if (!interval.isNullOrEmpty()) {
+                val value = interval.toIntOrNull()
+                if (value == null || value < 5) {
+                    toast(R.string.toast_invalid_port_hop_interval)
+                    return false
+                }
+            }
+        }
+        if (createConfigType == EConfigType.WIREGUARD) {
+            val reserved = et_reserved1?.text?.toString()
+            if (!Utils.isValidWireguardReserved(reserved)) {
+                toast(R.string.toast_invalid_wireguard_reserved)
+                return false
+            }
+        }
         val config =
             MmkvManager.decodeServerConfig(editGuid) ?: ProfileItem.create(createConfigType)
         if (config.configType != EConfigType.SOCKS

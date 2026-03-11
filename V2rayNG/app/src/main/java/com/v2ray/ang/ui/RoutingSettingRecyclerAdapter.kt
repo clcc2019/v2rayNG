@@ -1,9 +1,10 @@
 package com.v2ray.ang.ui
 
-import android.graphics.Color
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
@@ -11,17 +12,20 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.contracts.BaseAdapterListener
+import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ItemRecyclerRoutingSettingBinding
 import com.v2ray.ang.dto.RulesetItem
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
+import com.v2ray.ang.ui.hapticLongPress
 import java.util.Collections
 import java.util.concurrent.Executors
 
 class RoutingSettingRecyclerAdapter(
     private val viewModel: RoutingSettingsViewModel,
-    private val adapterListener: BaseAdapterListener?
+    private val adapterListener: BaseAdapterListener?,
+    private val onStartDrag: ((RecyclerView.ViewHolder) -> Unit)?
 ) : RecyclerView.Adapter<RoutingSettingRecyclerAdapter.MainViewHolder>(),
     ItemTouchHelperAdapter {
 
@@ -61,10 +65,21 @@ class RoutingSettingRecyclerAdapter(
         holder.itemRoutingSettingBinding.outboundTag.text = ruleset.outboundTag
         holder.itemRoutingSettingBinding.chkEnable.isChecked = ruleset.enabled
         holder.itemRoutingSettingBinding.imgLocked.isVisible = ruleset.locked == true
-        holder.itemView.setBackgroundColor(Color.TRANSPARENT)
+        holder.itemRoutingSettingBinding.tvPriority.text = (position + 1).toString()
+        holder.itemView.setBackgroundColor(
+            ContextCompat.getColor(holder.itemView.context, R.color.md_theme_surface)
+        )
 
         holder.itemRoutingSettingBinding.layoutEdit.setOnClickListener {
             adapterListener?.onEdit("", position)
+        }
+
+        holder.itemRoutingSettingBinding.imgDragHandle.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                holder.itemRoutingSettingBinding.imgDragHandle.hapticLongPress()
+                onStartDrag?.invoke(holder)
+            }
+            false
         }
 
         holder.itemRoutingSettingBinding.chkEnable.setOnCheckedChangeListener { it, isChecked ->
@@ -89,11 +104,15 @@ class RoutingSettingRecyclerAdapter(
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY)
+            itemView.setBackgroundColor(
+                ContextCompat.getColor(itemView.context, R.color.colorSelectionFill)
+            )
         }
 
         fun onItemClear() {
-            itemView.setBackgroundColor(0)
+            itemView.setBackgroundColor(
+                ContextCompat.getColor(itemView.context, R.color.md_theme_surface)
+            )
         }
     }
 

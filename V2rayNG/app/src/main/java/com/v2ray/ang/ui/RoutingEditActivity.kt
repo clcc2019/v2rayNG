@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 class RoutingEditActivity : BaseActivity() {
     private val binding by lazy { ActivityRoutingEditBinding.inflate(layoutInflater) }
     private val position by lazy { intent.getIntExtra("position", -1) }
+    private var advancedExpanded = false
 
     private val outbound_tag: Array<out String> by lazy {
         resources.getStringArray(R.array.outbound_tag)
@@ -35,6 +36,10 @@ class RoutingEditActivity : BaseActivity() {
         } else {
             clearServer()
         }
+
+        binding.layoutAdvancedToggle.setOnClickListener {
+            updateAdvancedSection(!advancedExpanded)
+        }
     }
 
     private fun bindingServer(rulesetItem: RulesetItem): Boolean {
@@ -47,6 +52,9 @@ class RoutingEditActivity : BaseActivity() {
         binding.etNetwork.text = Utils.getEditable(rulesetItem.network)
         val outbound = Utils.arrayFind(outbound_tag, rulesetItem.outboundTag)
         binding.spOutboundTag.setSelection(outbound)
+        updateAdvancedSection(
+            !rulesetItem.protocol.isNullOrEmpty() || !rulesetItem.network.isNullOrEmpty()
+        )
 
         return true
     }
@@ -54,7 +62,15 @@ class RoutingEditActivity : BaseActivity() {
     private fun clearServer(): Boolean {
         binding.etRemarks.text = null
         binding.spOutboundTag.setSelection(0)
+        updateAdvancedSection(false)
         return true
+    }
+
+    private fun updateAdvancedSection(expanded: Boolean) {
+        advancedExpanded = expanded
+        binding.layoutAdvancedContent.visibility = if (expanded) android.view.View.VISIBLE else android.view.View.GONE
+        binding.imgAdvancedToggle.animate().cancel()
+        binding.imgAdvancedToggle.animate().rotation(if (expanded) 180f else 0f).setDuration(180L).start()
     }
 
     private fun saveServer(): Boolean {

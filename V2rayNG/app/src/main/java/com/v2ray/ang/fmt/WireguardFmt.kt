@@ -113,12 +113,16 @@ object WireguardFmt : FmtBase() {
             wireguard.secretKey = profileItem.secretKey
             wireguard.address = (profileItem.localAddress ?: WIREGUARD_LOCAL_ADDRESS_V4).split(",")
             wireguard.peers?.firstOrNull()?.let { peer ->
+                val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
                 peer.publicKey = profileItem.publicKey.orEmpty()
                 peer.preSharedKey = profileItem.preSharedKey?.nullIfBlank()
-                peer.endpoint = Utils.getIpv6Address(profileItem.server) + ":${profileItem.serverPort}"
+                peer.endpoint = Utils.getIpv6Address(profileItem.server) + ":$port"
             }
             wireguard.mtu = profileItem.mtu
-            wireguard.reserved = profileItem.reserved?.takeIf { it.isNotBlank() }?.split(",")?.filter { it.isNotBlank() }?.map { it.trim().toInt() }
+            wireguard.reserved = profileItem.reserved
+                ?.takeIf { it.isNotBlank() }
+                ?.split(",")
+                ?.mapNotNull { it.trim().toIntOrNull() }
         }
 
         return outboundBean

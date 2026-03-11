@@ -385,8 +385,11 @@ object SettingsManager {
      *         if no valid selection is found or if the stored index is invalid.
      */
     fun getCurrentVpnInterfaceAddressConfig(): VpnInterfaceAddressConfig {
-        val selectedIndex = MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX, "0")?.toInt()
-        return VpnInterfaceAddressConfig.getConfigByIndex(selectedIndex ?: 0)
+        val selectedIndex = Utils.parseInt(
+            MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX, "0"),
+            0
+        )
+        return VpnInterfaceAddressConfig.getConfigByIndex(selectedIndex)
     }
 
     /**

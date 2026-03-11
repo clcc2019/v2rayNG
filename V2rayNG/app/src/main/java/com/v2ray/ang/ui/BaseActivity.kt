@@ -61,8 +61,8 @@ abstract class BaseActivity : AppCompatActivity() {
         super.attachBaseContext(MyContextWrapper.wrap(newBase ?: return, SettingsManager.getLocale()))
     }
 
-    protected fun addCustomDividerToRecyclerView(recyclerView: RecyclerView, context: Context?, drawableResId: Int, orientation: Int = DividerItemDecoration.VERTICAL) {
-        val drawable = ContextCompat.getDrawable(context!!, drawableResId)
+    protected fun addCustomDividerToRecyclerView(recyclerView: RecyclerView, context: Context, drawableResId: Int, orientation: Int = DividerItemDecoration.VERTICAL) {
+        val drawable = ContextCompat.getDrawable(context, drawableResId)
         requireNotNull(drawable) { "Drawable resource not found" }
         recyclerView.addItemDecoration(CustomDividerItemDecoration(drawable, orientation))
     }

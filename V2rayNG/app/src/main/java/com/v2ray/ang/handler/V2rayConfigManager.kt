@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.util.Log
 import com.google.gson.JsonArray
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.R
 import com.v2ray.ang.dto.ConfigResult
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.RulesetItem
@@ -229,6 +230,9 @@ object V2rayConfigManager {
                 return result
             }
         }
+        if (!validateServerPort(config, result)) return result
+        if (!validateHysteriaPortHopping(config, result)) return result
+        if (!validateWireguardReserved(config, result)) return result
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
         val routingRulesets = MmkvManager.decodeRoutingRulesets()
@@ -267,8 +271,13 @@ object V2rayConfigManager {
     }
 
     private fun getV2rayMultipleConfig(context: Context, config: ProfileItem, configList: List<ProfileItem>): V2rayConfig? {
-        val validConfigs = configList.asSequence().filter { it.server.isNotNullEmpty() }
-            .filter { !Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
+        val validConfigs = configList.asSequence()
+            .filter { it.server.isNotNullEmpty() }
+            .filter { config ->
+                val server = config.server ?: return@filter false
+                !Utils.isPureIpAddress(server) || Utils.isValidUrl(server)
+            }
+            .filter { Utils.parsePortOrNull(it.serverPort) != null }
             .filter { it.configType != EConfigType.CUSTOM }
             .filter { it.configType != EConfigType.POLICYGROUP }
             .toList()
@@ -342,6 +351,9 @@ object V2rayConfigManager {
                 return result
             }
         }
+        if (!validateServerPort(config, result)) return result
+        if (!validateHysteriaPortHopping(config, result)) return result
+        if (!validateWireguardReserved(config, result)) return result
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
 
@@ -935,8 +947,8 @@ object V2rayConfigManager {
     private fun applyMuxSettings(outbound: OutboundBean, protocol: String?, muxEnabled: Boolean) {
         if (muxEnabled) {
             outbound.mux?.enabled = true
-            outbound.mux?.concurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_CONCURRENCY, "8").orEmpty().toInt()
-            outbound.mux?.xudpConcurrency = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "16").orEmpty().toInt()
+            outbound.mux?.concurrency = Utils.parseInt(MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_CONCURRENCY, "8"), 8)
+            outbound.mux?.xudpConcurrency = Utils.parseInt(MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "16"), 16)
             outbound.mux?.xudpProxyUDP443 = MmkvManager.decodeSettingsString(AppConfig.PREF_MUX_XUDP_QUIC, "reject")
             if (protocol.equals(EConfigType.VLESS.name, true) && outbound.settings?.vnext?.first()?.users?.first()?.flow?.isNotEmpty() == true) {
                 outbound.mux?.concurrency = -1
@@ -1229,6 +1241,44 @@ object V2rayConfigManager {
             EConfigType.POLICYGROUP -> null
             else -> null
         }
+    }
+
+    private fun validateServerPort(profileItem: ProfileItem, result: ConfigResult): Boolean {
+        val port = Utils.parsePortOrNull(profileItem.serverPort)
+        if (port == null) {
+            Log.w(AppConfig.TAG, "Invalid server port: ${profileItem.serverPort}")
+            result.errorResId = R.string.toast_invalid_port
+            return false
+        }
+        return true
+    }
+
+    private fun validateHysteriaPortHopping(profileItem: ProfileItem, result: ConfigResult): Boolean {
+        if (profileItem.configType != EConfigType.HYSTERIA2) return true
+        val hopping = profileItem.portHopping
+        if (hopping.isNullOrBlank()) return true
+        if (!Utils.isValidPortHopping(hopping)) {
+            result.errorResId = R.string.toast_invalid_port_hop
+            return false
+        }
+        val interval = profileItem.portHoppingInterval?.trim()
+        if (!interval.isNullOrEmpty()) {
+            val value = interval.toIntOrNull()
+            if (value == null || value < 5) {
+                result.errorResId = R.string.toast_invalid_port_hop_interval
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun validateWireguardReserved(profileItem: ProfileItem, result: ConfigResult): Boolean {
+        if (profileItem.configType != EConfigType.WIREGUARD) return true
+        if (!Utils.isValidWireguardReserved(profileItem.reserved)) {
+            result.errorResId = R.string.toast_invalid_wireguard_reserved
+            return false
+        }
+        return true
     }
 
     /**

@@ -915,8 +915,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 AppConfig.MSG_STATE_START_FAILURE -> {
+                    val errorResId = intent.getIntExtra("content", 0)
                     serviceFeedbackAction.value = ServiceFeedback(
-                        messageResId = R.string.connection_start_failed,
+                        messageResId = if (errorResId != 0) errorResId else R.string.connection_start_failed,
                         style = ServiceFeedback.Style.ERROR
                     )
                     isRunning.value = false

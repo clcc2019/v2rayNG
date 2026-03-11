@@ -100,6 +100,10 @@
     <string name="toast_failure">Failure</string>
     <string name="toast_none_data">There is nothing</string>
     <string name="toast_incorrect_protocol">Incorrect protocol</string>
+    <string name="toast_invalid_port">Invalid port</string>
+    <string name="toast_invalid_port_hop">Invalid port hopping</string>
+    <string name="toast_invalid_port_hop_interval">Invalid port hopping interval (min 5s)</string>
+    <string name="toast_invalid_wireguard_reserved">Invalid WireGuard reserved bytes</string>
     <string name="toast_decoding_failed">Decoding failed</string>
     <string name="title_file_chooser">Select a config</string>
     <string name="toast_require_file_manager">Please install a File Manager.</string>
@@ -153,6 +157,23 @@
 
     <!-- Preferences -->
     <string name="title_settings">Settings</string>
+    <string name="title_basic_settings">Basics &amp; UI</string>
+    <string name="title_connection_settings">Connection &amp; VPN</string>
+    <string name="title_dns_settings">DNS &amp; Routing</string>
+    <string name="title_common_settings">Common</string>
+    <string name="title_advanced_settings">Advanced</string>
+    <string name="title_transport_optimization">Transport Optimization</string>
+    <string name="summary_common_settings">Frequently used settings</string>
+    <string name="summary_advanced_settings">Less common or expert options</string>
+    <string name="summary_basic_settings">Appearance and daily-use preferences</string>
+    <string name="summary_connection_settings">Mode, VPN, and tunnel controls</string>
+    <string name="summary_dns_settings">DNS, hosts, and domain resolve strategy</string>
+    <string name="summary_core_settings">Core behavior, ports, and logging</string>
+    <string name="summary_transport_optimization">Mux and fragmentation tuning</string>
+    <string name="summary_sub_setting">Subscription update controls</string>
+    <string name="summary_advanced_category">Diagnostics and advanced options</string>
+    <string name="action_search">Search</string>
+    <string name="hint_search_settings">Search settings</string>
     <string name="title_advanced">Advanced Settings</string>
     <string name="title_core_settings">Core Settings</string>
     <string name="title_vpn_settings">VPN Settings</string>
@@ -320,6 +341,9 @@
     <string name="routing_settings_save">Save</string>
     <string name="routing_settings_delete">Clear</string>
     <string name="routing_settings_rule_title">Routing Rule Settings</string>
+    <string name="routing_priority_high">Higher priority</string>
+    <string name="routing_priority_low">Lower priority</string>
+    <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
     <string name="routing_settings_add_rule">Add rule</string>
     <string name="routing_settings_import_predefined_rulesets">Import predefined rulesets</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
@@ -334,6 +358,8 @@
     <string name="routing_settings_domain" translatable="false">domain</string>
     <string name="routing_settings_ip" translatable="false">ip</string>
     <string name="routing_settings_port" translatable="false">port</string>
+    <string name="routing_settings_match_conditions">Match conditions</string>
+    <string name="routing_settings_advanced">Advanced conditions</string>
     <string name="routing_settings_protocol" translatable="false">protocol</string>
     <string name="routing_settings_protocol_tip" translatable="false">[http,tls,bittorrent]</string>
     <string name="routing_settings_network" translatable="false">network</string>

@@ -5,6 +5,7 @@ import com.v2ray.ang.dto.V2rayConfig.OutboundBean
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.V2rayConfigManager
+import com.v2ray.ang.util.Utils
 
 object HttpFmt : FmtBase() {
     /**
@@ -17,8 +18,9 @@ object HttpFmt : FmtBase() {
         val outboundBean = V2rayConfigManager.createInitOutbound(EConfigType.HTTP)
 
         outboundBean?.settings?.servers?.first()?.let { server ->
+            val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
             server.address = getServerAddress(profileItem)
-            server.port = profileItem.serverPort.orEmpty().toInt()
+            server.port = port
             if (profileItem.username.isNotNullEmpty()) {
                 val socksUsersBean = OutboundBean.OutSettingsBean.ServersBean.SocksUsersBean()
                 socksUsersBean.user = profileItem.username.orEmpty()

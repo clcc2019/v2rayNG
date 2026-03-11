@@ -64,8 +64,9 @@ object SocksFmt : FmtBase() {
         val outboundBean = V2rayConfigManager.createInitOutbound(EConfigType.SOCKS)
 
         outboundBean?.settings?.servers?.first()?.let { server ->
+            val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
             server.address = getServerAddress(profileItem)
-            server.port = profileItem.serverPort.orEmpty().toInt()
+            server.port = port
             if (profileItem.username.isNotNullEmpty()) {
                 val socksUsersBean = OutboundBean.OutSettingsBean.ServersBean.SocksUsersBean()
                 socksUsersBean.user = profileItem.username.orEmpty()

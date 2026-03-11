@@ -64,8 +64,9 @@ object TrojanFmt : FmtBase() {
         val outboundBean = V2rayConfigManager.createInitOutbound(EConfigType.TROJAN)
 
         outboundBean?.settings?.servers?.first()?.let { server ->
+            val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
             server.address = getServerAddress(profileItem)
-            server.port = profileItem.serverPort.orEmpty().toInt()
+            server.port = port
             server.password = profileItem.password
             server.flow = profileItem.flow
         }

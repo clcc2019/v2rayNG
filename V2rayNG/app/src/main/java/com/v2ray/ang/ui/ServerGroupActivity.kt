@@ -51,7 +51,7 @@ class ServerGroupActivity : BaseActivity() {
         binding.etRemarks.text = Utils.getEditable(config.remarks)
         binding.etPolicyGroupFilter.text = Utils.getEditable(config.policyGroupFilter)
 
-        val type = config.policyGroupType?.toInt() ?: 0
+        val type = config.policyGroupType?.toIntOrNull() ?: 0
         binding.spPolicyGroupType.setSelection(type)
 
         val pos = subIds.indexOf(config.policyGroupSubscriptionId ?: "").let { if (it >= 0) it else 0 }

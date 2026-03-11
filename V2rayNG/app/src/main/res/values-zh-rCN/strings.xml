@@ -99,6 +99,10 @@
     <string name="toast_failure">失败</string>
     <string name="toast_none_data">没有数据</string>
     <string name="toast_incorrect_protocol">不正确的协议</string>
+    <string name="toast_invalid_port">端口无效</string>
+    <string name="toast_invalid_port_hop">跳跃端口无效</string>
+    <string name="toast_invalid_port_hop_interval">端口跳跃间隔无效（至少 5 秒）</string>
+    <string name="toast_invalid_wireguard_reserved">WireGuard 保留字节无效</string>
     <string name="toast_decoding_failed">解码失败</string>
     <string name="title_file_chooser">选择一个配置</string>
     <string name="toast_require_file_manager">请安装一个文件管理器</string>
@@ -150,6 +154,23 @@
 
     <!-- Preferences -->
     <string name="title_settings">设置</string>
+    <string name="title_basic_settings">基础与界面</string>
+    <string name="title_connection_settings">连接与 VPN</string>
+    <string name="title_dns_settings">DNS 与路由</string>
+    <string name="title_common_settings">常用</string>
+    <string name="title_advanced_settings">高级</string>
+    <string name="title_transport_optimization">传输优化</string>
+    <string name="summary_common_settings">常用功能与日常操作相关设置</string>
+    <string name="summary_advanced_settings">不常用或需要经验的高级选项</string>
+    <string name="summary_basic_settings">界面展示与常用偏好</string>
+    <string name="summary_connection_settings">模式、VPN 与隧道相关配置</string>
+    <string name="summary_dns_settings">DNS、Hosts 与域名解析策略</string>
+    <string name="summary_core_settings">核心行为、端口与日志</string>
+    <string name="summary_transport_optimization">Mux 与分片相关调优</string>
+    <string name="summary_sub_setting">订阅更新与频率设置</string>
+    <string name="summary_advanced_category">诊断与高级选项</string>
+    <string name="action_search">搜索</string>
+    <string name="hint_search_settings">搜索设置项</string>
     <string name="title_advanced">进阶设置</string>
     <string name="title_core_settings">核心设置</string>
     <string name="title_vpn_settings">VPN 设置</string>
@@ -313,6 +334,9 @@
     <string name="routing_settings_save">保存</string>
     <string name="routing_settings_delete">清空</string>
     <string name="routing_settings_rule_title">路由规则设置</string>
+    <string name="routing_priority_high">高优先级</string>
+    <string name="routing_priority_low">低优先级</string>
+    <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
     <string name="routing_settings_add_rule">添加规则</string>
     <string name="routing_settings_import_predefined_rulesets">导入预定义规则集</string>
     <string name="routing_settings_import_rulesets_tip">将删除现有的规则集，是否确定继续？</string>
@@ -320,6 +344,8 @@
     <string name="routing_settings_import_rulesets_from_qrcode">从 QRcode 导入规则集</string>
     <string name="routing_settings_export_rulesets_to_clipboard">导出规则集至剪贴板</string>
     <string name="routing_settings_locked">锁定中，导入预设时不删除此规则</string>
+    <string name="routing_settings_match_conditions">匹配条件</string>
+    <string name="routing_settings_advanced">高级条件</string>
     <string name="summary_routing_assets">管理路由文件</string>
     <string name="routing_assets_refresh">更新路由文件</string>
     <string name="routing_assets_updated_at">%1$s</string>

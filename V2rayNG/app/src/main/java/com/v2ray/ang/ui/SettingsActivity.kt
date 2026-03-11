@@ -1,6 +1,8 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.preference.CheckBoxPreference
@@ -9,6 +11,7 @@ import androidx.preference.ListPreference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceFragmentCompat
+import androidx.appcompat.widget.SearchView
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.multiprocess.RemoteWorkManager
@@ -27,6 +30,40 @@ class SettingsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(R.layout.activity_settings, showHomeAsUp = true, title = getString(R.string.title_settings))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_settings, menu)
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as? SearchView
+        searchView?.apply {
+            queryHint = getString(R.string.hint_search_settings)
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    getSettingsFragment()?.filterPreferences(query)
+                    return true
+                }
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    getSettingsFragment()?.filterPreferences(newText)
+                    return true
+                }
+            })
+        }
+
+        searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem): Boolean = true
+
+            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                getSettingsFragment()?.filterPreferences("")
+                return true
+            }
+        })
+        return true
+    }
+
+    private fun getSettingsFragment(): SettingsFragment? {
+        return supportFragmentManager.findFragmentById(R.id.fragment_settings) as? SettingsFragment
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
@@ -209,6 +246,39 @@ class SettingsActivity : BaseActivity() {
 
             // Initialize auto-update interval state
             autoUpdateInterval?.isEnabled = MmkvManager.decodeSettingsBool(AppConfig.SUBSCRIPTION_AUTO_UPDATE, false)
+        }
+
+        fun filterPreferences(query: String?) {
+            val keyword = query?.trim()?.lowercase().orEmpty()
+            val showAll = keyword.isBlank()
+            preferenceScreen?.let { screen ->
+                filterGroup(screen, keyword, forceVisible = showAll)
+            }
+        }
+
+        private fun filterGroup(group: PreferenceGroup, keyword: String, forceVisible: Boolean): Boolean {
+            val groupMatches = !forceVisible && matchesPreference(group, keyword)
+            val childForceVisible = forceVisible || groupMatches
+            var anyVisible = false
+
+            for (index in 0 until group.preferenceCount) {
+                val preference = group.getPreference(index)
+                val visible = when (preference) {
+                    is PreferenceGroup -> filterGroup(preference, keyword, childForceVisible)
+                    else -> childForceVisible || matchesPreference(preference, keyword)
+                }
+                preference.isVisible = visible
+                if (visible) anyVisible = true
+            }
+
+            return anyVisible || groupMatches || forceVisible
+        }
+
+        private fun matchesPreference(preference: androidx.preference.Preference, keyword: String): Boolean {
+            if (keyword.isBlank()) return true
+            val title = preference.title?.toString()?.lowercase().orEmpty()
+            val summary = preference.summary?.toString()?.lowercase().orEmpty()
+            return title.contains(keyword) || summary.contains(keyword)
         }
 
         private fun updateMode(value: String?) {

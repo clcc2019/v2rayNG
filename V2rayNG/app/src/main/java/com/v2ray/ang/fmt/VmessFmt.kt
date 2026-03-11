@@ -184,8 +184,9 @@ object VmessFmt : FmtBase() {
         val outboundBean = V2rayConfigManager.createInitOutbound(EConfigType.VMESS)
 
         outboundBean?.settings?.vnext?.first()?.let { vnext ->
+            val port = Utils.parsePortOrNull(profileItem.serverPort) ?: return null
             vnext.address = getServerAddress(profileItem)
-            vnext.port = profileItem.serverPort.orEmpty().toInt()
+            vnext.port = port
             vnext.users[0].id = profileItem.password.orEmpty()
             vnext.users[0].security = profileItem.method
         }

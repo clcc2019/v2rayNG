@@ -16,7 +16,7 @@ import com.v2ray.ang.helper.CustomDividerItemDecoration
 abstract class BaseFragment<VB : ViewBinding> : Fragment() {
     private var _binding: VB? = null
     protected val binding: VB
-        get() = _binding!!
+        get() = requireNotNull(_binding) { "ViewBinding is only valid between onCreateView and onDestroyView." }
 
     protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): VB
 

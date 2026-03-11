@@ -697,7 +697,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.sub_setting -> requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
-            R.id.per_app_proxy_settings -> requestActivityLauncher.launch(Intent(this, PerAppProxyActivity::class.java))
             R.id.routing_setting -> requestActivityLauncher.launch(Intent(this, RoutingSettingActivity::class.java))
             R.id.settings -> requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
             R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))

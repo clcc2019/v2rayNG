@@ -69,6 +69,53 @@ object Utils {
     }
 
     /**
+     * Parse a string to a valid TCP/UDP port number.
+     *
+     * @param str The string to parse.
+     * @return The port number (1..65535), or null if invalid.
+     */
+    fun parsePortOrNull(str: String?): Int? {
+        val value = str?.trim()?.toIntOrNull() ?: return null
+        return if (value in 1..65535) value else null
+    }
+
+    /**
+     * Validate a port hopping string. Supports comma-separated ports and ranges.
+     * Example: "1000,2000-3000,443"
+     */
+    fun isValidPortHopping(value: String?): Boolean {
+        val raw = value?.trim().orEmpty()
+        if (raw.isEmpty()) return false
+        val tokens = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (tokens.isEmpty()) return false
+        return tokens.all { token ->
+            if (token.contains("-")) {
+                val parts = token.split("-").map { it.trim() }
+                if (parts.size != 2) return@all false
+                val start = parsePortOrNull(parts[0]) ?: return@all false
+                val end = parsePortOrNull(parts[1]) ?: return@all false
+                start <= end
+            } else {
+                parsePortOrNull(token) != null
+            }
+        }
+    }
+
+    /**
+     * Validate WireGuard reserved bytes (three integers 0..255).
+     */
+    fun isValidWireguardReserved(value: String?): Boolean {
+        val raw = value?.trim().orEmpty()
+        if (raw.isEmpty()) return true
+        val parts = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (parts.size != 3) return false
+        return parts.all { part ->
+            val num = part.toIntOrNull() ?: return@all false
+            num in 0..255
+        }
+    }
+
+    /**
      * Get text from the clipboard.
      *
      * @param context The context to use.
@@ -570,7 +617,7 @@ object Utils {
 
             // Parse CIDR (e.g., "192.168.1.0/24")
             val (cidrIp, prefixLen) = cidr.split("/")
-            val prefixLength = prefixLen.toInt()
+            val prefixLength = prefixLen.toIntOrNull() ?: return false
 
             // Convert IP and CIDR's IP portion to Long
             val ipLong = inetAddressToLong(InetAddress.getByName(ip))

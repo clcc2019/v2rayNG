@@ -28,6 +28,40 @@
         android:paddingBottom="@dimen/padding_spacing_dp14">
 
         <LinearLayout
+            android:id="@+id/priority_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/padding_spacing_dp12">
+
+            <TextView
+                android:id="@+id/tv_priority"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_metric_badge"
+                android:gravity="center"
+                android:minWidth="28dp"
+                android:paddingStart="@dimen/padding_spacing_dp8"
+                android:paddingTop="@dimen/padding_spacing_dp4"
+                android:paddingEnd="@dimen/padding_spacing_dp8"
+                android:paddingBottom="@dimen/padding_spacing_dp4"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <ImageView
+                android:id="@+id/img_drag_handle"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:alpha="0.56"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_drag_handle_20dp"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
