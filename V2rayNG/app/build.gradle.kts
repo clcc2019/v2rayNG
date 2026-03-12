@@ -1,7 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    id("com.jaredsburrows.license")
 }
 
 android {
@@ -14,9 +12,8 @@ android {
         targetSdk = 36
         versionCode = 716
         versionName = "2.0.18"
-        multiDexEnabled = true
 
-        val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
+        val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
         splits {
             abi {
                 isEnable = true
@@ -63,7 +60,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            jniLibs.srcDirs("libs")
+            jniLibs.srcDir("libs")
         }
     }
 
@@ -79,50 +76,6 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val variant = this
-        val isFdroid = variant.productFlavors.any { it.name == "fdroid" }
-        if (isFdroid) {
-            val versionCodes =
-                mapOf(
-                    "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
-                )
-
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = output.getFilter("ABI") ?: "universal"
-                    output.outputFileName = "v2rayNG_${variant.versionName}-fdroid_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (100 * variant.versionCode + versionCodes[abi]!!).plus(5000000)
-                    } else {
-                        return@forEach
-                    }
-                }
-        } else {
-            val versionCodes =
-                mapOf("armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4)
-
-            variant.outputs
-                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-                .forEach { output ->
-                    val abi = if (output.getFilter("ABI") != null)
-                        output.getFilter("ABI")
-                    else
-                        "universal"
-
-                    output.outputFileName = "v2rayNG_${variant.versionName}_${abi}.apk"
-                    if (versionCodes.containsKey(abi)) {
-                        output.versionCodeOverride =
-                            (1000000 * versionCodes[abi]!!).plus(variant.versionCode)
-                    } else {
-                        return@forEach
-                    }
-                }
-        }
-    }
-
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -134,6 +87,31 @@ android {
         }
     }
 
+}
+
+androidComponents {
+    onVariants { variant ->
+        val isFdroid = variant.productFlavors.any { it.second == "fdroid" }
+        val baseVersionCode = android.defaultConfig.versionCode ?: return@onVariants
+        val versionCodes = if (isFdroid) {
+            mapOf("armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0)
+        } else {
+            mapOf("armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4)
+        }
+
+        variant.outputs.forEach { output ->
+            val abi = output.filters
+                .firstOrNull { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }
+                ?.identifier ?: "universal"
+            val abiCode = versionCodes[abi] ?: return@forEach
+            val versionCodeOverride = if (isFdroid) {
+                (100 * baseVersionCode + abiCode) + 5_000_000
+            } else {
+                (1_000_000 * abiCode) + baseVersionCode
+            }
+            output.versionCode.set(versionCodeOverride)
+        }
+    }
 }
 
 dependencies {
@@ -186,9 +164,6 @@ dependencies {
 
     // Baseline Profile
     implementation(libs.androidx.profileinstaller)
-
-    // Multidex Support
-    implementation(libs.multidex)
 
     // Testing Libraries
     testImplementation(libs.junit)
