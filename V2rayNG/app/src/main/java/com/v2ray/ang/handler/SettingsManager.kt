@@ -42,11 +42,12 @@ object SettingsManager {
     fun initAppFast(context: Context) {
         ensureDefaultSettings()
         ensureDefaultSubscription()
+        // Routing defaults are consumed by the routing page and config generation on first launch.
+        initRoutingRulesets(context)
         migrateServerListToSubscriptions()
     }
 
     fun initAppDeferred(context: Context) {
-        initRoutingRulesets(context)
         migrateHysteria2PinSHA256()
     }
 
