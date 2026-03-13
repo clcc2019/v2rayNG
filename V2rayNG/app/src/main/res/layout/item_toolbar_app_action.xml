@@ -3,19 +3,19 @@
     android:id="@+id/toolbar_app_action_root"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:background="?attr/selectableItemBackgroundBorderless"
+    android:background="@android:color/transparent"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="?attr/actionBarSize"
-    android:paddingStart="0dp"
-    android:paddingEnd="@dimen/padding_spacing_dp8">
+    android:minHeight="44dp"
+    android:paddingStart="@dimen/padding_spacing_dp6"
+    android:paddingEnd="@dimen/padding_spacing_dp12">
 
     <ImageView
         android:id="@+id/toolbar_app_icon"
         android:layout_width="46dp"
         android:layout_height="46dp"
-        android:contentDescription="@string/navigation_drawer_open"
+        android:contentDescription="@string/bottom_nav_more"
         android:scaleType="centerInside"
         android:src="@drawable/ic_toolbar_brand" />
 
@@ -26,8 +26,8 @@
         android:layout_marginStart="@dimen/padding_spacing_dp8"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textAppearance="@style/TextAppearance.V2Ray.ScreenTitle"
-        android:textColor="@color/md_theme_primary"
+        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+        android:textColor="@color/md_theme_onSurface"
         android:visibility="gone" />
 
 </LinearLayout>

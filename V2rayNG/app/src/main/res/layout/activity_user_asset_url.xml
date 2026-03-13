@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16"
     tools:context=".ui.UserAssetUrlActivity">
 
     <LinearLayout
@@ -11,34 +18,34 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/padding_spacing_dp16">
+            android:text="@string/menu_item_add_asset"
+            android:textAppearance="@style/TextAppearance.V2Ray.Body"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:text="@string/sub_setting_remarks"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/menu_item_add_asset"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_remarks" />
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
 
                 <EditText
                     android:id="@+id/et_remarks"
@@ -48,17 +55,29 @@
 
             </LinearLayout>
 
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/title_url"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/title_url" />
-
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
 
                 <EditText
                     android:id="@+id/et_url"
@@ -72,15 +91,7 @@
 
             </LinearLayout>
 
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical" />
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

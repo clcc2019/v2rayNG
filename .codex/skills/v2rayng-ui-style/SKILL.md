@@ -1,56 +1,153 @@
 ---
 name: v2rayng-ui-style
-description: Apply and maintain the V2rayNG UI style system (backgrounds, cards, popups, bottom sheets, list items, settings/profile pages, night mode). Use whenever editing V2rayNG layouts, colors, drawables, or view logic so new or updated pages match the established design tokens, grouped-card treatments, and interaction patterns.
+description: 用于修改、设计、优化 V2rayNG 的 APP UI。适用于布局、颜色、drawable、交互结构、列表样式、设置页、首页、弹窗和夜间模式的一致性调整。
 ---
 
-# V2rayNG UI Style
+# V2rayNG APP UI 技能
 
-## Overview
+## 作用
 
-Keep V2rayNG pages visually consistent with the current design system: gray page background, white or soft-gray cards, unified card outlines, gray bottom sheets with white action rows, calm grouped settings panels, and true-black night mode.
+这个技能不是维护某一套抽象风格体系，而是直接用于：
 
-## Workflow
+- 修改现有页面视觉效果
+- 统一不同页面的布局与层级
+- 根据参考图重做 APP 页面
+- 收紧圆角、留白、颜色、按钮样式
+- 修正“同一应用里像两套界面”的问题
 
-1. Load the current tokens and mapping from `references/design-tokens.md`.
-2. Confirm the scope (which pages/components are being edited).
-3. Apply the tokens to layouts/drawables/styles:
-   - Backgrounds should use `md_theme_background`.
-   - Card surfaces should use `md_theme_surface`.
-   - All card strokes should use `color_card_outline`.
-4. For settings, profile, account, and about pages, use grouped rounded cards with subtle dividers and restrained accent colors.
-5. Verify list cards remain white in light mode, even when selected.
-6. For night mode, use true black background and darker surfaces as defined in tokens.
+## 使用方式
 
-## Rules (Do/Don't)
+开始修改前先做三件事：
 
-- Do set list card backgrounds to `md_theme_surface` in code and XML.
-- Do use grouped rounded containers for settings-style pages instead of dense flat rows.
-- Do keep settings icons monochrome and outline-based where practical.
-- Do isolate destructive actions such as logout or delete in their own rounded container.
-- Do keep bottom sheet container gray and action rows white.
-- Do keep all card strokes aligned to `color_card_outline`.
-- Don’t introduce new ad‑hoc grays; update tokens instead.
-- Don’t flood settings rows with accent color; keep blue and red semantic and local.
-- Don’t use gradients or colored overlays in light mode unless explicitly requested.
+1. 查看参考规范：`references/design-tokens.md`
+2. 读取当前页面 XML / drawable / style，确认现状
+3. 判断页面类型，再决定修改力度
 
-## Files Most Often Touched
+页面类型分为两类：
 
+- 设置式页面
+  - 更多
+  - 设置
+  - 关于
+  - 备份与还原
+  - 路由设置
+  - 偏好页
+- 列表 / 工具 / 首页页面
+  - 节点列表
+  - 订阅列表
+  - 日志
+  - 资产列表
+  - 连接控制区
+
+## 核心原则
+
+### 1. 先保证统一，再谈装饰
+
+- 同一级页面的背景必须一致
+- 同类型分组的圆角必须一致
+- 同类按钮的尺寸、触感、颜色必须一致
+- 不允许一个页面是“整组面板”，另一个页面还是“独立小白卡 + 小按钮”
+
+### 2. 设置式页面严格贴近参考图
+
+- 页面背景用浅暖灰，不要冷白
+- 内容按逻辑分组为整块面板，不要堆很多独立小卡片
+- 图标直接放，不要额外图标底板
+- 分隔线要轻，不能抢视觉
+- 头部信息要轻，不要占太高
+- 危险操作只有在真实存在时才出现，不能为了占位硬加一组
+
+### 3. 列表页允许更强结构感，但不能脱离整体
+
+- 首页、订阅、规则列表可以保留卡片化结构
+- 但它们的圆角、背景灰阶、按钮处理必须与设置页属于同一套界面语言
+- 操作按钮优先内嵌，不做突兀的小白块
+
+## 严格规格
+
+### 页面背景
+
+- 亮色模式：接近 `#F5F4F1`
+- 设置组背景：接近 `#ECEAE8`
+- 分隔线：接近 `#DDD8D3` 到 `#E3DFDA`
+
+### 圆角
+
+- 设置页分组圆角：`18dp`
+- 设置页行点击背景圆角：`18dp`
+- 首页 / 列表项圆角：`16dp` 到 `18dp`
+- 小按钮圆角：`16dp`
+- 禁止出现 `24dp`、`28dp` 这一类偏夸张大圆角，除非用户明确要求
+
+### 间距
+
+- 页面左右内边距：`16dp`
+- 页面顶部正文起始间距：`8dp` 到 `12dp`
+- 分组标题与上一组间距：`20dp`
+- 行最小高度：`68dp`
+- 行左右内边距：`16dp`
+- 行上下内边距：`12dp`
+- 图标与文字间距：`14dp`
+- 分隔线左缩进：`52dp`
+
+### 文本
+
+- 行标题：`15sp` 到 `16sp`，加粗
+- 行副标题：`12sp` 到 `13sp`
+- 分组标题：弱化显示，不抢正文
+- 页面说明：短句即可，不要写成长段
+
+### 图标与按钮
+
+- 设置式页面图标统一为单色线性图标
+- 不使用图标底板
+- 主 CTA 按钮允许使用蓝色，但只使用 `#2785FF`
+- 除主 CTA 外，不把蓝色铺满到普通列表行、分组卡片、顶部入口按钮
+- 右侧操作按钮优先做成无底板或弱底板的内嵌操作
+
+## 修改时必须检查
+
+- 有没有多余的图标底板
+- 有没有过大的圆角
+- 有没有无意义描边
+- 有没有偏白、偏蓝、偏冷的独立卡片跳出来
+- 有没有把一个分组错误拆成多个卡片
+- 有没有加了并不存在的功能入口
+
+## 常见处理方式
+
+### 当页面是“更多 / 设置 / 关于”
+
+- 直接按整组面板重做
+- 去掉头部大卡片
+- 去掉图标底板
+- 去掉无意义箭头或徽标
+- 把危险项独立，但仅在功能真实存在时保留
+
+### 当页面是“首页配置列表 / 订阅列表”
+
+- 保留列表感
+- 收小圆角
+- 降低按钮存在感
+- 保持整体灰阶接近设置页
+
+### 当页面是“工具页 / 日志页”
+
+- 结构可以更直接
+- 但背景、面板、圆角和文字层级仍然要统一
+
+## 常改文件
+
+- `app/src/main/res/layout/*.xml`
+- `app/src/main/res/drawable/*.xml`
 - `app/src/main/res/values/colors.xml`
-- `app/src/main/res/values-night/colors.xml`
 - `app/src/main/res/values/styles_ui.xml`
-- `app/src/main/res/drawable/bg_home_surface.xml`
-- `app/src/main/res/drawable/bg_bottom_sheet_surface.xml`
-- `app/src/main/res/drawable/bg_bottom_sheet_action_item.xml`
-- `app/src/main/res/drawable/bg_popup_surface.xml`
-- `app/src/main/res/drawable/bg_menu_surface.xml`
-- `app/src/main/res/drawable/bg_list_item_ripple.xml`
-- `app/src/main/res/drawable/bg_nav_header_panel.xml`
-- `app/src/main/res/layout/activity_main.xml`
-- `app/src/main/res/layout/fragment_group_server.xml`
-- `app/src/main/res/layout/fragment_settings.xml`
-- `app/src/main/res/layout/item_recycler_main.xml`
-- `app/src/main/java/com/v2ray/ang/ui/MainRecyclerAdapter.kt`
+- `app/src/main/res/values-night/*.xml`
 
-## References
+## 完成后的验收
 
-- `references/design-tokens.md`
+- 同一应用内所有新改页面看起来像一个产品
+- 更多页、设置页、关于页应尽量接近参考图
+- 圆角不能再偏大
+- 颜色关系必须稳定
+- 编译必须通过

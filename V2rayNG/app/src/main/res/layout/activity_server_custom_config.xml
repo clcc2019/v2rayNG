@@ -1,79 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16"
     tools:context=".ui.ServerCustomConfigActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp16">
+        android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/server_lab_need_inbound"
+            android:textAppearance="@style/TextAppearance.V2Ray.Body"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_need_inbound"
-                android:textAppearance="@style/TextAppearance.AppCompat.Tooltip" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/title_server"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/title_server"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-        </LinearLayout>
-
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_remarks" />
-
-            <EditText
-                android:id="@+id/et_remarks"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
 
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/server_lab_remarks"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <LinearLayout
+                <EditText
+                    android:id="@+id/et_remarks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    android:inputType="text" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/server_lab_content"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
-            <com.blacksquircle.ui.editorkit.widget.TextProcessor
-                android:id="@+id/editor"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="top|start" />
-        </LinearLayout>
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
+
+                <com.blacksquircle.ui.editorkit.widget.TextProcessor
+                    android:id="@+id/editor"
+                    android:layout_width="match_parent"
+                    android:layout_height="360dp"
+                    android:background="@drawable/bg_form_field"
+                    android:gravity="top|start"
+                    android:padding="@dimen/padding_spacing_dp14" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
+
 </ScrollView>

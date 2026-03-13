@@ -1,186 +1,76 @@
-# V2rayNG UI Style Tokens (Optimized)
+# V2rayNG APP UI 参考规范
 
-## 颜色令牌 (Color Tokens)
+这个文件用于给实际页面改版提供明确尺寸和视觉边界，不讨论抽象术语，只给可以直接落地的规范。
 
-### 🌕 Light Mode (亮色模式)
+## 一、参考图对应的设置页规格
 
-#### 基础层 (Base Surface)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_background` | `#F5F4F1` | 页面/背景灰 |
-| `md_theme_surface` | `#FFFFFF` | 卡片/浮层基础色 |
-| `md_theme_surfaceVariant` | `#F3F4F7` | 次要表面 |
-| `md_theme_onSurface` | `#1B2330` | 主文字色 |
-| `md_theme_onSurfaceVariant` | `#636F82` | 次要文字色 |
-| `md_theme_outline` | `#C6CEDA` | 描边主色 |
-| `md_theme_outlineVariant` | `#E5E9F0` | 描边次色 |
-| `color_card_outline` | `#E4E8EF` | 统一卡片描边 |
-| `colorSelectionFill` | `#FFFFFF` | 列表选中填充（与 surface 一致） |
+### 背景关系
 
-#### 品牌主色 (Primary — Electric Blue)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_primary` | `#2D63E9` | 品牌主色、主要按钮、激活状态 |
-| `md_theme_primaryContainer` | `#E8EDFF` | 主色调容器背景 (如 Drawer Header) |
-| `md_theme_onPrimaryContainer` | `#1A2B55` | 容器内文字与图标色 |
-| `md_theme_surfaceTint` | `#2D63E9` | 表面着色 |
-| `color_fab_active` | `#2D63E9` | 悬浮按钮激活色 |
-| `colorSelectionIndicator` | `#C6D7FF` | 列表选中指示器 |
-| `colorConfigType` | `#1E4FBF` | 配置类型高亮色 |
+- 页面背景：`#F5F4F1`
+- 分组面板背景：`#ECEAE8`
+- 分隔线：`#DDD8D3` 到 `#E3DFDA`
+- 主文字：`#1F1F1F`
+- 次文字：`#7C7772`
+- 主 CTA 蓝色：`#2785FF`
+- 主 CTA 浅色容器：`#E7F1FF`
+- 危险文字 / 图标：`#E15B5B`
 
-#### 强调次色 (Secondary — Teal/Cyan)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_secondary` | `#2A8684` | 强调色，与主色形成冷暖/明暗对比 |
-| `md_theme_secondaryContainer` | `#D7EEEC` | 次要容器背景 |
-| `md_theme_onSecondaryContainer` | `#143C3A` | 次要容器内文字色 |
+### 圆角与尺寸
 
-#### 语义状态色 (Semantic Status)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_error` | `#D25757` | 错误、断开连接、删除警告 |
-| `md_theme_warning` | `#E08A2E` | 警告、高延迟 (Ping)、即将过期 |
-| `md_theme_success` | `#2C9567` | 成功、已连接、低延迟 (Ping) |
+- 设置页分组圆角：`18dp`
+- 设置行背景圆角：`18dp`
+- 列表卡片圆角：`16dp` 到 `18dp`
+- 小按钮圆角：`16dp`
+- 页面左右留白：`16dp`
+- 页面顶部正文间距：`8dp` 到 `12dp`
+- 分组标题与上一组间距：`20dp`
+- 行最小高度：`68dp`
+- 行左右内边距：`16dp`
+- 行上下内边距：`12dp`
+- 图标大小：`20dp`
+- 图标与文字间距：`14dp`
+- 分隔线左缩进：`52dp`
 
----
+### 文本层级
 
-### 🌑 Dark Mode (暗色模式)
+- 页面标题：`20sp` 左右，粗体
+- 分组标题：`11sp` 到 `12sp`
+- 行标题：`15sp` 到 `16sp`，粗体
+- 行副标题：`12sp` 到 `13sp`
+- 版本信息：`11sp` 到 `12sp`
 
-#### 基础层 (Base Surface)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_background` | `#000000` | 系统真黑（OLED 省电） |
-| `md_theme_surface` | `#0A0D11` | 卡片基础色 |
-| `md_theme_surfaceVariant` | `#131922` | 次要表面 |
-| `md_theme_onSurface` | `#E4E9F1` | 主文字色 |
-| `md_theme_onSurfaceVariant` | `#9AA7B9` | 次要文字色 |
-| `md_theme_outline` | `#293342` | 描边主色 |
-| `md_theme_outlineVariant` | `#1B2230` | 描边次色 |
-| `color_card_outline` | `#1C2430` | 统一卡片描边 |
-| `colorSelectionFill` | `#0B0E12` | 列表选中填充 |
+## 二、设置式页面必须满足
 
-#### 品牌主色 (Primary — Electric Blue)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_primary` | `#76A0FF` | 品牌主色、主要按钮、激活状态 |
-| `md_theme_primaryContainer` | `#1B2A4D` | 主色调容器背景 (如 Drawer Header) |
-| `md_theme_onPrimaryContainer` | `#DCE9FF` | 容器内文字与图标色 |
-| `md_theme_surfaceTint` | `#76A0FF` | 表面着色 |
-| `color_fab_active` | `#76A0FF` | 悬浮按钮激活色 |
-| `colorSelectionIndicator` | `#34558C` | 列表选中指示器 |
-| `colorConfigType` | `#A0BAFF` | 配置类型高亮色 |
+- 页面头部轻量
+- 不用大卡片头
+- 不给图标加底板
+- 只有主 CTA 使用 `#2785FF`
+- 普通行、分组面板、顶部入口不使用纯蓝底
+- 不堆很多独立小白卡片
+- 每个分组看起来像一个完整面板
+- 危险操作只有真实存在时才展示
 
-#### 强调次色 (Secondary — Teal/Cyan)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_secondary` | `#56BDB9` | 强调色，与主色形成对比 |
-| `md_theme_secondaryContainer` | `#0D3837` | 次要容器背景 |
-| `md_theme_onSecondaryContainer` | `#CAE9E8` | 次要容器内文字色 |
+## 三、列表页必须满足
 
-#### 语义状态色 (Semantic Status)
-| Token | Value | 说明 |
-|-------|-------|------|
-| `md_theme_error` | `#FF7373` | 错误、断开连接、删除警告 |
-| `md_theme_warning` | `#FFC067` | 警告、高延迟 (Ping)、即将过期 |
-| `md_theme_success` | `#53CE8F` | 成功、已连接、低延迟 (Ping) |
+- 可以保留卡片结构
+- 但圆角不能比设置页更大
+- 操作按钮不能像另外一套组件
+- 背景灰阶要与设置页一致
 
----
+## 四、禁止项
 
-## 令牌应用规范 (Component Application Rules)
+- 禁止超过 `18dp` 的设置页分组圆角
+- 禁止出现圆形图标底板
+- 禁止重描边、重阴影
+- 禁止冷白背景上叠很多纯白卡片
+- 禁止为了“占位”增加不存在的功能入口
 
-> 💡 **设计原则**：按 UI 组件分类应用 Token，而非硬编码绑定 XML 文件路径，以便于后续的重构与维护。
+## 五、改版后的检查清单
 
-### 1. 页面背景 (Screen Backgrounds)
-* **适用场景**：主 Activity 背景、Fragment 根节点、AppBarLayout 等大面积底层视图。
-* **应用 Token**：统一使用 `md_theme_background`。
-
-### 2. 卡片与容器 (Cards & Containers)
-* **适用场景**：节点列表项、设置项面板、信息卡片。
-* **应用 Token**：
-  * **背景 (Background)**：使用 `md_theme_surface`（亮色下为纯白，暗色下为 `#0F0F0F`）。
-  * **描边 (Stroke/Border)**：统一使用 `color_card_outline`。
-  * **选中状态 (Selected)**：背景保持 `md_theme_surface` 不变，仅通过改变指示器 (Indicator) 颜色来区分，避免大面积色块跳跃。
-
-### 3. 底部弹窗与弹出层 (Bottom Sheets & Popups)
-* **适用场景**：底部操作菜单、下拉选项弹窗。
-* **应用 Token**：
-  * **弹窗底层背景**：使用 `md_theme_background`（亮色模式下产生灰色背景，与操作行形成物理层级区分）。
-  * **操作行/菜单项背景**：使用 `md_theme_surface`（白底色）。
-  * **悬浮层描边**：通常无需额外描边，依靠系统阴影 (Elevation) 区分。
-
-### 4. 导航抽屉头部 (Navigation Drawer Header)
-* **适用场景**：侧边栏顶部用户信息与状态区域。
-* **应用 Token**：
-  * 废弃原有的微弱渐变，统一使用 `md_theme_primaryContainer` 作为底色，以符合 MD3 扁平化规范。
-
-### 5. 设置页分组卡片 (Settings/Profile Grouped Cards)
-* **适用场景**：设置页、关于页、账号页、偏好设置页。
-* **布局原则**：
-  * 页面采用灰底承托卡片，不使用纯白满屏背景。
-  * 内容按逻辑分组为独立卡片组，组间保留明显留白。
-  * 行结构遵循左图标、中间标题/副标题、右状态/箭头三段式对齐。
-* **应用 Token**：
-  * **页面背景**：使用 `md_theme_background`。
-  * **分组卡片背景**：优先使用 `md_theme_surfaceVariant`；需要更强对比时使用 `md_theme_surface`。
-  * **分组描边**：使用 `color_card_outline`，保持低对比细描边。
-  * **主文字**：使用 `md_theme_onSurface`。
-  * **次文字**：使用 `md_theme_onSurfaceVariant`。
-  * **强调色**：仅局部使用 `md_theme_primary` 表达当前主题/选中值。
-  * **危险操作**：使用 `md_theme_error` 表达退出登录、删除等动作，且必须独立成组。
----
-## 2. 交互设计规范 (Interaction Design)
-
-### ⚡ 核心连接逻辑 (Connection Logic)
-* **连接按钮状态 (FAB/Button)**: 
-    * **未连接**: 使用 `md_theme_outline` (灰色)，点击后开始旋转动画。
-    * **连接中**: 按钮呈现呼吸灯效果（不透明度在 60%-100% 循环）。
-    * **已连接**: 瞬间变为 `md_theme_primary` 并伴随轻微的回弹 (Bounce) 动画。
-* **延迟显示**: 点击节点后，Ping 值显示区域先显示 `---ms`，并在 300ms 内通过淡入动画替换为具体数值。
-
-### 👆 手势操作 (Gestures)
-* **侧滑快捷操作**: 
-    * 列表项向左滑动 25%：显示“编辑”与“分享”。
-    * 列表项向左滑动 >50%：触发“测试延迟”并伴随震动反馈。
-* **长按管理**: 长按卡片触发多选模式，顶部 Toolbar 切换为 `md_theme_surfaceVariant` 色调。
-* **全局下拉**: 主界面下拉不仅更新订阅，还应触发所有活动节点的健康检查。
-
-### 🎨 动效与视觉反馈 (Motion & Feedback)
-* **微动效 (Micro-interactions)**: 
-    * 切换开关 (Switch) 时，滑块应有 150ms 的位移过渡。
-    * 列表加载时，使用从左向右滑动的骨架屏渐变 (Shimmer Effect)。
-    * 设置项按下时使用 90-120ms 的轻微压暗或透明度变化，不使用强烈波纹。
-    * 可展开设置项使用 200-300ms 的内容展开和箭头 180 度旋转。
-    * 页面跳转使用水平 Push/Pop，保持系统原生感。
-* **触感反馈 (Haptics)**: 
-    * 成功连接：`HapticFeedback.LIGHT_IMPACT`。
-    * 节点切换：`HapticFeedback.VIRTUAL_KEY`。
-    * 严重错误：`HapticFeedback.LONG_PRESS` 连续两次。
-
-### ♿ 无障碍与易用性 (Accessibility)
-* **色彩辅助**: 延迟数值除颜色区分外（绿/黄/红），应根据状态附带小图标（如 ✅/⚠️/❌），照顾色弱用户。
-* **点击区域**: 所有按钮和可点击列表项的高度不低于 **48dp**，确保高频操作不误触。
-
----
-
-## 3. 组件应用规范 (Component Application Rules)
-
-| 组件类型 | 背景 Token | 描边/指示器 Token | 交互行为描述 |
-|:---|:---|:---|:---|
-| **节点卡片** | `md_theme_surface` | `color_card_outline` | 选中时添加 `colorSelectionIndicator` 左侧装饰条 |
-| **底部弹窗** | `md_theme_background` | 无 | 内容项使用 `md_theme_surface` 承载，产生浮层感 |
-| **配置页组** | `md_theme_surfaceVariant` | `md_theme_outlineVariant` | 用于区分不同协议段落的背景色 |
-| **设置页分组** | `md_theme_surfaceVariant` / `md_theme_surface` | `color_card_outline` | 使用大圆角卡片和轻分割线组织设置项，强调色仅作小范围点缀 |
-| **危险操作卡片** | `md_theme_surface` | `color_card_outline` | 动作文字和图标用 `md_theme_error`，并与普通设置分组拉开间距 |
-| **通知栏** | N/A | N/A | 连接状态应在系统通知栏同步显示品牌主色图标 |
-
----
-
-## 4. UI 变更快速检查清单 (Checklist)
-
-- [ ] **视觉一致性**: 列表背景是否为 `#F2F2F2` (Light) 或 `#000000` (Dark)？
-- [ ] **对比度检查**: 状态色文字在卡片上的对比度是否满足 WCAG AA 级标准？
-- [ ] **层级验证**: 底部弹窗的操作项是否使用了 `md_theme_surface` 以区别于底色？
-- [ ] **反馈闭环**: 用户执行连接、删除、更新订阅后，是否有明确的 Toast 或触感反馈？
-- [ ] **描边统一**: 是否所有容器均撤销了硬编码色值，统一改用 `color_card_outline`？
-- [ ] **设置页风格**: 设置项是否采用分组卡片、大圆角、低对比灰阶，而不是普通列表？
-- [ ] **强调色克制**: 蓝色和红色是否只用于语义状态、当前值和危险操作，而非大面积铺色？
+- 页面背景是否统一
+- 分组背景是否统一
+- 圆角是否统一
+- 分隔线是否足够轻
+- 按钮是否收敛
+- 图标是否直接放置
+- 页面是否真的接近参考图

@@ -292,8 +292,6 @@
     <string name="title_language">Language</string>
     <string name="title_ui_settings">UI settings</string>
     <string name="title_pref_ui_mode_night">UI mode settings</string>
-    <string name="title_pref_use_hev_tunnel">Enable Hev TUN Feature</string>
-    <string name="summary_pref_use_hev_tunnel">When enabled, TUN will use hev-socks5-tunnel; otherwise, it will use xray-core.</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
     <string name="title_pref_hev_tunnel_rw_timeout">Hev Tun read/write timeout (seconds) (tcp,udp default 300,60)</string>
 
@@ -345,6 +343,9 @@
     <string name="routing_priority_low">Lower priority</string>
     <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
     <string name="routing_priority_summary">Higher → lower priority, stop at first match</string>
+    <string name="routing_page_overview">Manage routing strategy, app-based rules and custom assets in one place.</string>
+    <string name="routing_group_preferences">Routing preferences</string>
+    <string name="routing_group_rules">Rule priority</string>
     <string name="routing_settings_add_rule">Add rule</string>
     <string name="routing_settings_import_predefined_rulesets">Import predefined rulesets</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
@@ -418,6 +419,17 @@
     <string name="title_configuration_share">Share config</string>
     <string name="title_webdav_config_setting">WebDAV Settings</string>
     <string name="title_webdav_config_setting_unknown">Please configure WebDAV first.</string>
+    <string name="backup_page_overview">Export, import and sync your current configuration safely.</string>
+    <string name="backup_group_local">Local operations</string>
+    <string name="backup_group_sync">Cloud sync</string>
+    <string name="backup_summary_backup">Create a local backup file from current settings.</string>
+    <string name="backup_summary_share">Share configuration as a file or text export.</string>
+    <string name="backup_summary_restore">Restore a previous backup into this app.</string>
+    <string name="backup_summary_webdav">Configure remote sync and backup destination.</string>
+    <string name="about_page_overview">Project links, licenses, privacy and support channels.</string>
+    <string name="about_group_project">Project</string>
+    <string name="about_group_community">Community</string>
+    <string name="logcat_page_overview">Inspect runtime logs for troubleshooting and diagnostics.</string>
     <string name="title_webdav_url">WebDAV server URL</string>
     <string name="title_webdav_user">Username</string>
     <string name="title_webdav_pass">Password</string>
@@ -484,8 +496,22 @@
         <item>Local</item>
         <item>WebDAV</item>
     </string-array>
-    <string name="nav_header_subtitle">Fast, clean, ready.</string>
     <string name="drawer_group_manage">Manage</string>
     <string name="drawer_group_tools">Tools</string>
+    <string name="more_group_configuration">Configuration</string>
+    <string name="more_group_preferences">Preferences</string>
+    <string name="more_group_tools">Diagnostics</string>
+    <string name="more_group_information">Information</string>
+    <string name="more_sign_out_placeholder">Sign out</string>
     <string name="bottom_nav_more">More</string>
+    <string name="more_title">More</string>
+    <string name="more_subtitle">Manage configuration, tools and app info.</string>
+    <string name="more_version_format">v%s</string>
+    <string name="more_summary_subscriptions">Manage subscription sources and update switches.</string>
+    <string name="more_summary_routing">Adjust routing rules, bypass lists and policies.</string>
+    <string name="more_summary_settings">Tune connection, DNS and advanced preferences.</string>
+    <string name="more_summary_backup">Export, import and sync your app configuration.</string>
+    <string name="more_summary_logcat">Inspect runtime logs for troubleshooting.</string>
+    <string name="more_summary_update">Check the latest app and core version info.</string>
+    <string name="more_summary_about">View project details, links and acknowledgements.</string>
 </resources>

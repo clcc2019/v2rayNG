@@ -432,7 +432,6 @@ object V2rayConfigManager {
             policyGroupHash,
             MmkvManager.decodeRoutingRulesets().hashCode(),
             SettingsManager.isVpnMode().hashCode(),
-            SettingsManager.isUsingHevTun().hashCode(),
             SettingsManager.getVpnMtu(),
             SettingsManager.getCurrentVpnInterfaceAddressConfig().hashCode(),
             SettingsManager.getSocksPort(),
@@ -496,9 +495,7 @@ object V2rayConfigManager {
 
     //region some sub function
 
-    private fun needTun(): Boolean {
-        return SettingsManager.isVpnMode() && !SettingsManager.isUsingHevTun()
-    }
+    private fun needTun(): Boolean = false
 
     /**
      * Configures the inbound settings for V2ray.
@@ -661,25 +658,14 @@ object V2rayConfigManager {
                 )
             }
 
-            if(SettingsManager.isVpnMode()) {
-                if (SettingsManager.isUsingHevTun()) {
-                    //hev-socks5-tunnel dns routing
-                    v2rayConfig.routing.rules.add(
-                        0, RulesBean(
-                            inboundTag = arrayListOf("socks"),
-                            outboundTag = "dns-out",
-                            port = "53",
-                        )
+            if (SettingsManager.isVpnMode()) {
+                v2rayConfig.routing.rules.add(
+                    0, RulesBean(
+                        inboundTag = arrayListOf("socks"),
+                        outboundTag = "dns-out",
+                        port = "53",
                     )
-                } else {
-                    v2rayConfig.routing.rules.add(
-                        0, RulesBean(
-                            inboundTag = arrayListOf("tun"),
-                            outboundTag = "dns-out",
-                            port = "53",
-                        )
-                    )
-                }
+                )
             }
 
             // DNS outbound

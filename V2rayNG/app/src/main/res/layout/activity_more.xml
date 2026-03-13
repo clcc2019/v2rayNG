@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp4"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp24">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp6"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/more_group_configuration"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/md_theme_surface"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/row_sub_setting"
+                    layout="@layout/item_more_action_subscriptions" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="54dp"
+                    android:background="@color/color_card_outline" />
+
+                <include
+                    android:id="@+id/row_routing_setting"
+                    layout="@layout/item_more_action_routing" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="54dp"
+                    android:background="@color/color_card_outline" />
+
+                <include
+                    android:id="@+id/row_backup_restore"
+                    layout="@layout/item_more_action_backup" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp18"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/more_group_preferences"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/md_theme_surface"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/row_settings"
+                    layout="@layout/item_more_action_settings" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp18"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/more_group_tools"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/md_theme_surface"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/row_logcat"
+                    layout="@layout/item_more_action_logcat" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="54dp"
+                    android:background="@color/color_card_outline" />
+
+                <include
+                    android:id="@+id/row_check_update"
+                    layout="@layout/item_more_action_update" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp18"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/more_group_information"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/md_theme_surface"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/row_about"
+                    layout="@layout/item_more_action_about" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</ScrollView>

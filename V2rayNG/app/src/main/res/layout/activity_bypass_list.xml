@@ -17,7 +17,9 @@
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.V2Ray.Card.Section"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+        app:strokeWidth="0dp">
 
         <LinearLayout
             android:id="@+id/header_view"
@@ -33,28 +35,30 @@
                 android:paddingEnd="@dimen/padding_spacing_dp16"
                 android:paddingBottom="@dimen/padding_spacing_dp8"
                 android:text="@string/title_pref_per_app_proxy"
-                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <LinearLayout
                 android:id="@+id/container_per_app_proxy"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="@drawable/bg_settings_item_ripple"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:minHeight="56dp"
+                android:minHeight="68dp"
                 android:orientation="horizontal"
                 android:paddingStart="@dimen/padding_spacing_dp16"
-                android:paddingEnd="@dimen/padding_spacing_dp12">
+                android:paddingTop="@dimen/padding_spacing_dp12"
+                android:paddingEnd="@dimen/padding_spacing_dp12"
+                android:paddingBottom="@dimen/padding_spacing_dp12">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/per_app_proxy_settings_enable"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                     android:textColor="?attr/colorOnSurface" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -69,22 +73,23 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginStart="@dimen/padding_spacing_dp16"
-                android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                android:background="?attr/colorOutlineVariant" />
+                android:layout_marginStart="52dp"
+                android:background="@color/color_card_outline" />
 
             <LinearLayout
                 android:id="@+id/container_bypass_apps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="@drawable/bg_settings_item_ripple"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:minHeight="56dp"
+                android:minHeight="68dp"
                 android:orientation="horizontal"
                 android:paddingStart="@dimen/padding_spacing_dp16"
-                android:paddingEnd="@dimen/padding_spacing_dp12">
+                android:paddingTop="@dimen/padding_spacing_dp12"
+                android:paddingEnd="@dimen/padding_spacing_dp12"
+                android:paddingBottom="@dimen/padding_spacing_dp12">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -97,24 +102,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/switch_bypass_apps_mode"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                         android:textColor="?attr/colorOnSurface" />
 
                     <LinearLayout
                         android:id="@+id/layout_switch_bypass_apps_tips"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:layout_marginStart="@dimen/padding_spacing_dp4"
-                        android:background="?attr/selectableItemBackgroundBorderless"
                         android:clickable="true"
                         android:contentDescription="@string/switch_bypass_apps_mode"
                         android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
                         android:gravity="center"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:padding="0dp">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
                             android:alpha="0.72"
                             android:importantForAccessibility="no"
                             app:srcCompat="@drawable/ic_about_24dp"
@@ -141,7 +146,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/padding_spacing_dp12"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+        app:strokeWidth="0dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"

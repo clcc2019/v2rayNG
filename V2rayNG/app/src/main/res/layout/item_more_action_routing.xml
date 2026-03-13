@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.V2Ray.MoreAction.Row">
+
+    <ImageView
+        style="@style/Widget.V2Ray.MoreAction.Icon"
+        android:src="@drawable/ic_routing_24dp" />
+
+    <LinearLayout
+        style="@style/Widget.V2Ray.MoreAction.Content">
+
+        <TextView
+            style="@style/Widget.V2Ray.MoreAction.Title"
+            android:text="@string/routing_settings_title"
+            />
+
+        <TextView
+            style="@style/Widget.V2Ray.MoreAction.Subtitle"
+            android:text="@string/more_summary_routing"
+            />
+
+    </LinearLayout>
+
+    <ImageView
+        style="@style/Widget.V2Ray.MoreAction.Chevron"
+        android:src="@drawable/ic_chevron_right_20dp" />
+
+</LinearLayout>

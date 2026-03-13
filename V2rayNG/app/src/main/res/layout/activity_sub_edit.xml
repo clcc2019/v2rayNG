@@ -4,7 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16"
     tools:context=".ui.SubEditActivity">
 
     <LinearLayout
@@ -12,59 +18,60 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/padding_spacing_dp16">
+            android:text="@string/title_sub_setting"
+            android:textAppearance="@style/TextAppearance.V2Ray.Body"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:text="@string/title_sub_setting"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/title_sub_setting"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_remarks" />
+                    android:text="@string/sub_setting_remarks"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_remarks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:inputType="text" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
-
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_url" />
-
+                    android:layout_marginTop="@dimen/padding_spacing_dp12"
+                    android:text="@string/sub_setting_url"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_url"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:gravity="top"
                     android:inputType="textMultiLine"
                     android:maxLines="10"
@@ -72,160 +79,210 @@
                     android:scrollbars="vertical"
                     tools:ignore="TextFields" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_user_agent" />
+                    android:layout_marginTop="@dimen/padding_spacing_dp12"
+                    android:text="@string/sub_setting_user_agent"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_user_agent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:inputType="text" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_filter" />
+                    android:layout_marginTop="@dimen/padding_spacing_dp12"
+                    android:text="@string/sub_setting_filter"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_filter"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:inputType="text" />
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="horizontal">
+        </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.0"
-                    android:text="@string/sub_setting_enable" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/title_settings"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/chk_enable"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
-
-            </LinearLayout>
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.0"
-                    android:text="@string/sub_auto_update" />
-
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/auto_update_check"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.0"
-                    android:text="@string/sub_allow_insecure_url" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/allow_insecure_url"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    app:theme="@style/BrandedSwitch" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
                 android:orientation="vertical">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_item_ripple"
+                    android:gravity="center_vertical"
+                    android:minHeight="68dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp12"
+                    android:paddingEnd="@dimen/padding_spacing_dp12"
+                    android:paddingBottom="@dimen/padding_spacing_dp12">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sub_setting_enable"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/chk_enable"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:theme="@style/BrandedSwitch" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="52dp"
+                    android:background="@color/color_card_outline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_item_ripple"
+                    android:gravity="center_vertical"
+                    android:minHeight="68dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp12"
+                    android:paddingEnd="@dimen/padding_spacing_dp12"
+                    android:paddingBottom="@dimen/padding_spacing_dp12">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sub_auto_update"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/auto_update_check"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:theme="@style/BrandedSwitch" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="52dp"
+                    android:background="@color/color_card_outline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_item_ripple"
+                    android:gravity="center_vertical"
+                    android:minHeight="68dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp12"
+                    android:paddingEnd="@dimen/padding_spacing_dp12"
+                    android:paddingBottom="@dimen/padding_spacing_dp12">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sub_allow_insecure_url"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/allow_insecure_url"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:theme="@style/BrandedSwitch" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/sub_setting_pre_profile"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_pre_profile" />
+                    android:text="@string/sub_setting_pre_profile"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_pre_profile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:hint="@string/sub_setting_pre_profile_tip"
                     android:inputType="text" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp16"
-                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sub_setting_next_profile" />
+                    android:layout_marginTop="@dimen/padding_spacing_dp12"
+                    android:text="@string/sub_setting_next_profile"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
                 <EditText
                     android:id="@+id/et_next_profile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:hint="@string/sub_setting_pre_profile_tip"
                     android:inputType="text" />
 
             </LinearLayout>
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical" />
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

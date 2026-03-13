@@ -1,83 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
+    android:fitsSystemWindows="true"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16">
 
-    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center|start"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_spacing_dp16">
+            android:text="@string/update_check_for_update"
+            android:textAppearance="@style/TextAppearance.V2Ray.Body"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <ImageView
-                android:layout_width="@dimen/image_size_dp24"
-                android:layout_height="@dimen/image_size_dp24"
-                android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_source_code_24dp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/check_pre_release"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:paddingStart="@dimen/padding_spacing_dp16"
-                android:text="@string/update_check_pre_release"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                app:theme="@style/BrandedSwitch" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/layout_check_update"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center|start"
-            android:orientation="horizontal"
-            android:padding="@dimen/padding_spacing_dp16">
+            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:text="@string/title_settings"
+            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <ImageView
-                android:layout_width="@dimen/image_size_dp24"
-                android:layout_height="@dimen/image_size_dp24"
-                android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_check_update_24dp" />
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:strokeWidth="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/padding_spacing_dp16"
-                android:text="@string/update_check_for_update"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                android:orientation="vertical">
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_item_ripple"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="68dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp12"
+                    android:paddingEnd="@dimen/padding_spacing_dp12"
+                    android:paddingBottom="@dimen/padding_spacing_dp12">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:alpha="0.88"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_source_code_24dp"
+                        app:tint="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/padding_spacing_dp14"
+                        android:layout_weight="1"
+                        android:text="@string/update_check_pre_release"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/check_pre_release"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:theme="@style/BrandedSwitch" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="52dp"
+                    android:background="@color/color_card_outline" />
+
+                <LinearLayout
+                    android:id="@+id/layout_check_update"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_item_ripple"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="68dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingTop="@dimen/padding_spacing_dp12"
+                    android:paddingEnd="@dimen/padding_spacing_dp16"
+                    android:paddingBottom="@dimen/padding_spacing_dp12">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:alpha="0.88"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_check_update_24dp"
+                        app:tint="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/padding_spacing_dp14"
+                        android:text="@string/update_check_for_update"
+                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                        android:textColor="?attr/colorOnSurface" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:padding="@dimen/padding_spacing_dp16">
+            android:paddingTop="@dimen/padding_spacing_dp20"
+            android:paddingBottom="@dimen/padding_spacing_dp8">
 
             <TextView
                 android:id="@+id/tv_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/title_about"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
     </LinearLayout>
 
 </ScrollView>
-

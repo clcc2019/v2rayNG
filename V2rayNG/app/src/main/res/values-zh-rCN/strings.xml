@@ -285,8 +285,6 @@
     <string name="title_language">语言</string>
     <string name="title_ui_settings">用户界面设置</string>
     <string name="title_pref_ui_mode_night">界面颜色设置</string>
-    <string name="title_pref_use_hev_tunnel">启用 Hev TUN 功能</string>
-    <string name="summary_pref_use_hev_tunnel">选择启用后 TUN 将使用 hev-socks5-tunnel 否则使用 xray-core</string>
     <string name="title_pref_hev_tunnel_loglevel">HevTun 日志级别</string>
     <string name="title_pref_hev_tunnel_rw_timeout">HevTun 读写超时(秒) (tcp,udp 默认 300,60)</string>
 
@@ -338,6 +336,9 @@
     <string name="routing_priority_low">低优先级</string>
     <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
     <string name="routing_priority_summary">高→低优先级，命中即停止</string>
+    <string name="routing_page_overview">在这里集中管理路由策略、分应用规则和自定义资源。</string>
+    <string name="routing_group_preferences">路由偏好</string>
+    <string name="routing_group_rules">规则优先级</string>
     <string name="routing_settings_add_rule">添加规则</string>
     <string name="routing_settings_import_predefined_rulesets">导入预定义规则集</string>
     <string name="routing_settings_import_rulesets_tip">将删除现有的规则集，是否确定继续？</string>
@@ -405,6 +406,17 @@
     <string name="title_configuration_share">分享配置</string>
     <string name="title_webdav_config_setting">WebDAV 设置</string>
     <string name="title_webdav_config_setting_unknown">请先设置 WebDAV</string>
+    <string name="backup_page_overview">安全地导出、导入并同步当前配置。</string>
+    <string name="backup_group_local">本地操作</string>
+    <string name="backup_group_sync">云端同步</string>
+    <string name="backup_summary_backup">将当前设置导出为本地备份文件。</string>
+    <string name="backup_summary_share">以文件或文本形式分享当前配置。</string>
+    <string name="backup_summary_restore">将历史备份恢复到当前应用。</string>
+    <string name="backup_summary_webdav">配置远程同步和备份存储位置。</string>
+    <string name="about_page_overview">查看项目链接、许可证、隐私说明和支持渠道。</string>
+    <string name="about_group_project">项目资料</string>
+    <string name="about_group_community">社区与支持</string>
+    <string name="logcat_page_overview">查看运行日志，便于排查和诊断问题。</string>
     <string name="title_webdav_url">WebDAV 服务器地址</string>WebDAV server address
     <string name="title_webdav_user">用户名</string>
     <string name="title_webdav_pass">密码</string>
@@ -470,8 +482,22 @@
         <item>本地</item>
         <item>WebDAV</item>
     </string-array>
-    <string name="nav_header_subtitle">更轻、更快、更克制。</string>
     <string name="drawer_group_manage">管理</string>
     <string name="drawer_group_tools">工具</string>
+    <string name="more_group_configuration">配置管理</string>
+    <string name="more_group_preferences">应用偏好</string>
+    <string name="more_group_tools">诊断工具</string>
+    <string name="more_group_information">信息与支持</string>
+    <string name="more_sign_out_placeholder">退出登录</string>
     <string name="bottom_nav_more">更多</string>
+    <string name="more_title">更多</string>
+    <string name="more_subtitle">集中管理配置、工具和应用信息。</string>
+    <string name="more_version_format">v%s</string>
+    <string name="more_summary_subscriptions">管理订阅源、更新频率和启用状态。</string>
+    <string name="more_summary_routing">调整路由规则、绕过列表和策略行为。</string>
+    <string name="more_summary_settings">配置连接、DNS 和其他高级偏好。</string>
+    <string name="more_summary_backup">导出、导入或同步当前应用配置。</string>
+    <string name="more_summary_logcat">查看运行日志，便于排查问题。</string>
+    <string name="more_summary_update">检查当前应用和内核的版本更新。</string>
+    <string name="more_summary_about">查看项目介绍、链接和相关说明。</string>
 </resources>

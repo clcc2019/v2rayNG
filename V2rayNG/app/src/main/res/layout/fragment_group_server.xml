@@ -26,6 +26,8 @@
         android:layout_gravity="center"
         android:layout_marginStart="@dimen/padding_spacing_dp16"
         android:layout_marginEnd="@dimen/padding_spacing_dp16"
+        android:maxWidth="@dimen/list_card_max_width"
+        app:cardCornerRadius="16dp"
         android:visibility="gone">
 
         <LinearLayout
@@ -33,11 +35,14 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="@dimen/padding_spacing_dp24">
+            android:paddingStart="@dimen/padding_spacing_dp24"
+            android:paddingTop="@dimen/padding_spacing_dp28"
+            android:paddingEnd="@dimen/padding_spacing_dp24"
+            android:paddingBottom="@dimen/padding_spacing_dp28">
 
             <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="@drawable/bg_empty_state_icon"
                 android:foregroundGravity="center"
                 android:padding="10dp">
@@ -57,7 +62,8 @@
                 android:layout_marginTop="@dimen/padding_spacing_dp12"
                 android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                 android:textColor="?attr/colorOnSurface"
-                android:alpha="0.92"
+                android:textSize="14sp"
+                android:alpha="0.94"
                 tools:text="暂无配置" />
 
             <TextView
@@ -66,9 +72,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp6"
                 android:gravity="center"
+                android:maxWidth="220dp"
                 android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurface"
-                android:alpha="0.72"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="11sp"
+                android:alpha="0.82"
                 tools:text="导入或添加一个节点后，即可开始连接" />
 
         </LinearLayout>

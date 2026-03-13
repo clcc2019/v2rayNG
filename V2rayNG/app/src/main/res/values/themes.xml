@@ -64,6 +64,8 @@
         <item name="android:actionOverflowMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
         <item name="actionOverflowMenuStyle">@style/Widget.V2Ray.PopupMenu</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.V2Ray.BottomSheetDialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.V2Ray.AppCompatAlertDialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.V2Ray.AlertDialog</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->

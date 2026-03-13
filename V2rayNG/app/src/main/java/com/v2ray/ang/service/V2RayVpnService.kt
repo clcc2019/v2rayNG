@@ -415,20 +415,17 @@ class V2RayVpnService : VpnService(), ServiceControl {
             return false
         }
 
-        if (SettingsManager.isUsingHevTun()) {
-            if (!TProxyService.isAvailable()) {
-                Log.e(AppConfig.TAG, "Hev tun requested but native library is unavailable")
-                return false
-            }
-            tun2SocksService = TProxyService(
-                context = applicationContext,
-                vpnInterface = mInterface,
-                isRunningProvider = { isRunning },
-                restartCallback = { runTun2socks() }
-            )
-        } else {
-            tun2SocksService = null
+        if (!TProxyService.isAvailable()) {
+            Log.e(AppConfig.TAG, "Hev tun native library is unavailable")
+            return false
         }
+
+        tun2SocksService = TProxyService(
+            context = applicationContext,
+            vpnInterface = mInterface,
+            isRunningProvider = { isRunning },
+            restartCallback = { runTun2socks() }
+        )
 
         tun2SocksService?.startTun2Socks()
         return true

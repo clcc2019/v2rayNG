@@ -2,10 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
+    android:background="@drawable/bg_settings_item_ripple"
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
+    android:minHeight="68dp"
     android:paddingStart="@dimen/padding_spacing_dp16"
     android:paddingTop="@dimen/padding_spacing_dp12"
     android:paddingEnd="@dimen/padding_spacing_dp16"
@@ -16,7 +17,7 @@
         style="@style/Widget.V2Ray.Badge.ConnectionCompact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        />
+        android:textColor="?attr/colorOnSecondaryContainer" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/log_content"
@@ -25,7 +26,8 @@
         android:layout_marginTop="@dimen/padding_spacing_dp8"
         android:fontFamily="monospace"
         android:lineSpacingExtra="2dp"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="?attr/colorOnSurface" />
+        android:textAppearance="@style/TextAppearance.V2Ray.Support"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="12sp" />
 
 </LinearLayout>

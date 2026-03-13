@@ -245,10 +245,7 @@ object V2RayServiceManager {
 
         currentConfig = config
         pendingConfigGuid = null
-        var tunFd = vpnInterface?.fd ?: 0
-        if (SettingsManager.isUsingHevTun()) {
-            tunFd = 0
-        }
+        val tunFd = 0
 
         try {
             val loopStartAt = SystemClock.elapsedRealtime()

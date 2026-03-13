@@ -400,13 +400,7 @@ object SettingsManager {
         return Utils.parseInt(MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_MTU), AppConfig.VPN_MTU)
     }
 
-    /**
-     * Check if HEV TUN is being used.
-     * @return True if HEV TUN is used, false otherwise.
-     */
-    fun isUsingHevTun(): Boolean {
-        return MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, true)
-    }
+    fun isUsingHevTun(): Boolean = true
 
     /**
      * Check if VPN mode is enabled.
