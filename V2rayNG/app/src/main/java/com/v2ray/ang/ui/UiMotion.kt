@@ -1,5 +1,10 @@
 package com.v2ray.ang.ui
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -153,6 +158,107 @@ object UiMotion {
                     .start()
             }
             .start()
+    }
+
+    fun animateEntranceOnce(
+        view: View,
+        key: Any?,
+        translationOffsetDp: Float = 18f,
+        scaleFrom: Float = 0.985f,
+        startDelay: Long = 0L,
+        duration: Long = MotionTokens.LIST_ITEM_ENTRANCE_DURATION
+    ) {
+        val lastKey = view.getTag(R.id.tag_motion_animated_once)
+        if (lastKey == key) {
+            return
+        }
+        view.setTag(R.id.tag_motion_animated_once, key)
+        val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
+        view.animate().cancel()
+        view.alpha = 0f
+        view.translationY = offsetPx
+        view.scaleX = scaleFrom
+        view.scaleY = scaleFrom
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setStartDelay(startDelay)
+            .setDuration(duration)
+            .setInterpolator(motionInterpolator)
+            .start()
+    }
+
+    fun animateStatePulse(
+        view: View,
+        expandScale: Float = 1.016f,
+        contractScale: Float = 0.992f,
+        duration: Long = MotionTokens.STATUS_TRANSITION_DURATION
+    ) {
+        (view.getTag(R.id.tag_motion_running_animator) as? Animator)?.cancel()
+
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, expandScale, contractScale, 1f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, expandScale, contractScale, 1f)
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1f, 0.98f, 1f)
+        val animator = ObjectAnimator.ofPropertyValuesHolder(view, scaleX, scaleY, alpha).apply {
+            interpolator = motionInterpolator
+            this.duration = duration
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    view.setTag(R.id.tag_motion_running_animator, null)
+                    view.scaleX = 1f
+                    view.scaleY = 1f
+                    view.alpha = 1f
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    view.setTag(R.id.tag_motion_running_animator, null)
+                    view.scaleX = 1f
+                    view.scaleY = 1f
+                    view.alpha = 1f
+                }
+            })
+        }
+        view.setTag(R.id.tag_motion_running_animator, animator)
+        animator.start()
+    }
+
+    fun animateFocusShift(
+        primary: View,
+        secondary: View? = null,
+        translationOffsetDp: Float = 8f,
+        duration: Long = MotionTokens.EMPHASIS_DURATION
+    ) {
+        val offsetPx = primary.resources.displayMetrics.density * translationOffsetDp
+        primary.animate().cancel()
+        secondary?.animate()?.cancel()
+
+        primary.translationY = offsetPx * 0.35f
+        primary.alpha = 0.94f
+        val primaryAnimator = primary.animate()
+            .translationY(0f)
+            .alpha(1f)
+            .setDuration(duration)
+            .setInterpolator(motionInterpolator)
+
+        if (secondary == null) {
+            primaryAnimator.start()
+            return
+        }
+
+        secondary.translationY = offsetPx * 0.28f
+        secondary.alpha = 0.82f
+        val secondarySet = AnimatorSet().apply {
+            playTogether(
+                ObjectAnimator.ofFloat(secondary, View.TRANSLATION_Y, secondary.translationY, 0f),
+                ObjectAnimator.ofFloat(secondary, View.ALPHA, secondary.alpha, 1f)
+            )
+            interpolator = motionInterpolator
+            this.duration = duration
+        }
+        primaryAnimator.start()
+        secondarySet.start()
     }
 
     fun animateVisibility(

@@ -5,11 +5,11 @@
     android:background="@color/md_theme_background"
     android:gravity="bottom"
     android:orientation="vertical"
-    android:layout_marginBottom="@dimen/padding_spacing_dp12"
+    android:layout_marginBottom="@dimen/padding_spacing_dp8"
     android:paddingStart="@dimen/padding_spacing_dp16"
-    android:paddingTop="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
     android:paddingEnd="@dimen/padding_spacing_dp16"
-    android:paddingBottom="@dimen/padding_spacing_dp20">
+    android:paddingBottom="@dimen/padding_spacing_dp12">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,10 @@
         android:background="@drawable/bg_nav_header_panel"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="@dimen/padding_spacing_dp18">
+        android:paddingStart="@dimen/padding_spacing_dp16"
+        android:paddingTop="@dimen/padding_spacing_dp14"
+        android:paddingEnd="@dimen/padding_spacing_dp16"
+        android:paddingBottom="@dimen/padding_spacing_dp14">
 
         <FrameLayout
             android:layout_width="56dp"
@@ -49,7 +52,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp4"
+                android:layout_marginTop="@dimen/padding_spacing_dp2"
                 android:text="@string/nav_header_subtitle"
                 android:textAppearance="@style/TextAppearance.V2Ray.Support"
                 android:textColor="?attr/colorOnSurfaceVariant" />

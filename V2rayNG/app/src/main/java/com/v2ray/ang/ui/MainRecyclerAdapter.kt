@@ -53,6 +53,7 @@ class MainRecyclerAdapter(
 
     private val data: List<ServersCache>
         get() = differ.currentList
+    private var hasAnimatedInitialList = false
 
     fun setData(newData: MutableList<ServersCache>?, position: Int = -1) {
         if (position >= 0) {
@@ -66,6 +67,9 @@ class MainRecyclerAdapter(
 
         val updatedData = newData?.toList() ?: emptyList()
         selectedGuid = MmkvManager.getSelectServer().orEmpty()
+        if (updatedData.isEmpty()) {
+            hasAnimatedInitialList = false
+        }
         testDelayOverrides.clear()
         differ.submitList(updatedData)
     }
@@ -194,13 +198,31 @@ class MainRecyclerAdapter(
     private fun bindFullItem(holder: MainViewHolder, position: Int) {
         val item = getItem(position)
         val guid = item.guid
-        val profile = item.profile
         holder.boundItem = item
         holder.itemView.setBackgroundColor(Color.TRANSPARENT)
         bindPrimaryContent(holder, item)
         bindSubscription(holder, item)
         bindSelectionState(holder, guid == selectedGuid)
         bindTestResult(holder, item)
+        bindEntranceMotion(holder, position, item)
+    }
+
+    private fun bindEntranceMotion(holder: MainViewHolder, position: Int, item: ServersCache) {
+        val startDelay = if (!hasAnimatedInitialList) {
+            (position.coerceAtMost(7) * MotionTokens.LIST_ITEM_STAGGER_DELAY)
+        } else {
+            0L
+        }
+        UiMotion.animateEntranceOnce(
+            view = holder.itemMainBinding.itemBg,
+            key = item.guid,
+            translationOffsetDp = if (position == 0) 18f else 14f,
+            scaleFrom = 0.988f,
+            startDelay = startDelay
+        )
+        if (!hasAnimatedInitialList && position >= data.lastIndex.coerceAtMost(7)) {
+            hasAnimatedInitialList = true
+        }
     }
 
     private fun bindPrimaryContent(holder: MainViewHolder, item: ServersCache) {
@@ -219,6 +241,7 @@ class MainRecyclerAdapter(
         if (holder.lastSelectionState == isSelected) {
             return
         }
+        val previousSelection = holder.lastSelectionState
         holder.lastSelectionState = isSelected
 
         holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.92f
@@ -239,6 +262,13 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.itemBg.scaleX = 1f
         holder.itemMainBinding.itemBg.scaleY = 1f
         holder.itemMainBinding.itemBg.alpha = 1f
+        if (previousSelection != null) {
+            if (isSelected) {
+                UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.layoutIndicator)
+            } else {
+                UiMotion.animatePulse(holder.itemMainBinding.layoutIndicator, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
+            }
+        }
     }
 
     private fun bindTestResult(holder: MainViewHolder, item: ServersCache) {
@@ -256,6 +286,7 @@ class MainRecyclerAdapter(
         }
         if (shouldAnimateResult && holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
             UiMotion.animatePulse(holder.itemMainBinding.tvTestResult, pulseScale = 1.03f)
+            UiMotion.animateFocusShift(holder.itemMainBinding.tvStatistics, holder.itemMainBinding.tvTestResult, translationOffsetDp = 6f)
         }
         holder.boundGuid = item.guid
         holder.lastTestDelay = item.testDelayMillis

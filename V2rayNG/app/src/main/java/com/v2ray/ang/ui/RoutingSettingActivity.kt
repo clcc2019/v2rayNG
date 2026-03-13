@@ -60,9 +60,11 @@ class RoutingSettingActivity : HelperBaseActivity() {
             mItemTouchHelper?.startDrag(viewHolder)
         }
 
-        binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        // Routing list lives in a NestedScrollView and uses wrap_content height, so it must remeasure
+        // after async list updates instead of being treated as a fixed-size RecyclerView.
+        binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.adapter = adapter
 
         mItemTouchHelper = ItemTouchHelper(
@@ -260,7 +262,9 @@ class RoutingSettingActivity : HelperBaseActivity() {
             viewModel.reload()
             val items = viewModel.getAll()
             withContext(Dispatchers.Main) {
-                adapter.submitList(items)
+                adapter.submitList(items) {
+                    binding.recyclerView.requestLayout()
+                }
             }
         }
     }

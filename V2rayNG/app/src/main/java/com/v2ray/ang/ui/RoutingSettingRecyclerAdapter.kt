@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ItemRecyclerRoutingSettingBinding
@@ -51,8 +52,8 @@ class RoutingSettingRecyclerAdapter(
     private val items: List<RulesetItem>
         get() = differ.currentList
 
-    fun submitList(newItems: List<RulesetItem>) {
-        differ.submitList(newItems.toList())
+    fun submitList(newItems: List<RulesetItem>, onCommitted: (() -> Unit)? = null) {
+        differ.submitList(newItems.toList(), onCommitted)
     }
 
     override fun getItemCount() = items.size
@@ -66,9 +67,7 @@ class RoutingSettingRecyclerAdapter(
         holder.itemRoutingSettingBinding.chkEnable.isChecked = ruleset.enabled
         holder.itemRoutingSettingBinding.imgLocked.isVisible = ruleset.locked == true
         holder.itemRoutingSettingBinding.tvPriority.text = (position + 1).toString()
-        holder.itemView.setBackgroundColor(
-            ContextCompat.getColor(holder.itemView.context, R.color.md_theme_surface)
-        )
+        holder.resetCardStyle()
 
         holder.itemRoutingSettingBinding.layoutEdit.setOnClickListener {
             adapterListener?.onEdit("", position)
@@ -103,16 +102,38 @@ class RoutingSettingRecyclerAdapter(
         BaseViewHolder(itemRoutingSettingBinding.root), ItemTouchHelperViewHolder
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val itemCardView = itemView as MaterialCardView
+        private val colors by lazy { ItemColors.from(itemCardView) }
+
+        fun resetCardStyle() {
+            itemCardView.setCardBackgroundColor(colors.surface)
+            itemCardView.strokeColor = colors.outline
+        }
+
         fun onItemSelected() {
-            itemView.setBackgroundColor(
-                ContextCompat.getColor(itemView.context, R.color.colorSelectionFill)
-            )
+            itemCardView.setCardBackgroundColor(colors.surface)
+            itemCardView.strokeColor = colors.selectionIndicator
         }
 
         fun onItemClear() {
-            itemView.setBackgroundColor(
-                ContextCompat.getColor(itemView.context, R.color.md_theme_surface)
-            )
+            resetCardStyle()
+        }
+    }
+
+    data class ItemColors(
+        val selectionIndicator: Int,
+        val outline: Int,
+        val surface: Int
+    ) {
+        companion object {
+            fun from(view: View): ItemColors {
+                val context = view.context
+                return ItemColors(
+                    selectionIndicator = ContextCompat.getColor(context, R.color.colorSelectionIndicator),
+                    outline = ContextCompat.getColor(context, R.color.color_card_outline),
+                    surface = ContextCompat.getColor(context, R.color.md_theme_surface)
+                )
+            }
         }
     }
 

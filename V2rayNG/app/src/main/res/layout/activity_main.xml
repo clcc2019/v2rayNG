@@ -315,18 +315,13 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
+        style="@style/Widget.V2Ray.NavigationDrawer"
         android:layout_width="320dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/md_theme_background"
-        app:elevation="0dp"
+        android:paddingTop="@dimen/padding_spacing_dp8"
+        android:paddingBottom="@dimen/padding_spacing_dp8"
         app:headerLayout="@layout/nav_header"
-        app:itemBackground="@android:color/transparent"
-        app:itemHorizontalPadding="@dimen/padding_spacing_dp16"
-        app:itemVerticalPadding="@dimen/padding_spacing_dp10"
-        app:itemIconPadding="@dimen/padding_spacing_dp16"
-        app:itemIconTint="@color/drawer_item_color"
-        app:itemTextColor="@color/drawer_item_color"
         app:menu="@menu/menu_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

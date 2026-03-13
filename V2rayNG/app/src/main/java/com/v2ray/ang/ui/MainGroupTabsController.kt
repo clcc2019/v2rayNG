@@ -281,12 +281,8 @@ class MainGroupTabsController(
         if (selected) {
             tabState.surfaceView.scaleX = 0.985f
             tabState.surfaceView.scaleY = 0.985f
-            tabState.surfaceView.animate()
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(MotionTokens.RELEASE_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
+            UiMotion.animateStatePulse(tabState.surfaceView, expandScale = 1.02f, contractScale = 0.992f, duration = MotionTokens.EMPHASIS_DURATION)
+            UiMotion.animateFocusShift(tabState.labelView, tabState.countView, translationOffsetDp = 5f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
         } else {
             tabState.surfaceView.animate()
                 .scaleX(1f)
@@ -303,9 +299,12 @@ class MainGroupTabsController(
 
         val targetAlpha = if (visible) 1f else 0f
         val targetTranslationY = if (visible) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.45f
+        val targetScale = if (visible) 1f else 0.985f
         if (immediate) {
             binding.cardTabGroup.alpha = targetAlpha
             binding.cardTabGroup.translationY = targetTranslationY
+            binding.cardTabGroup.scaleX = targetScale
+            binding.cardTabGroup.scaleY = targetScale
             return
         }
 
@@ -314,6 +313,8 @@ class MainGroupTabsController(
         binding.cardTabGroup.animate()
             .alpha(targetAlpha)
             .translationY(targetTranslationY)
+            .scaleX(targetScale)
+            .scaleY(targetScale)
             .setDuration(MotionTokens.REVEAL_DURATION)
             .setInterpolator(motionInterpolator)
             .start()

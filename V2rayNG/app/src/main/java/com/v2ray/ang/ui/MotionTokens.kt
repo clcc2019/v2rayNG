@@ -6,16 +6,20 @@ object MotionTokens {
     const val REVEAL_DURATION = 240L
     const val STAGGER_DELAY = 36L
     const val STAGGER_START_DELAY = 50L
+    const val LIST_ITEM_ENTRANCE_DURATION = 260L
+    const val LIST_ITEM_STAGGER_DELAY = 24L
 
     const val SHORT_ANIMATION_DURATION = 160L
     const val FAST_ANIMATION_DURATION = 110L
     const val MEDIUM_ANIMATION_DURATION = 220L
     const val SPLASH_EXIT_DURATION = 320L
+    const val EMPHASIS_DURATION = 260L
 
     const val PULSE_QUICK = 140L
     const val PULSE_MEDIUM = 180L
     const val PULSE_DEFAULT = 220L
     const val PULSE_LONG = 280L
+    const val STATUS_TRANSITION_DURATION = 720L
 
     const val DRAWER_SHIFT_DP = 12f
     const val DRAWER_CONTENT_SCALE_DELTA = 0.018f

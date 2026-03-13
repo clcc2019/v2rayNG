@@ -81,7 +81,8 @@ class MainConnectionCardController(
             previousGuid != snapshot?.guid || (previousState != null && previousState != state)
         )
         if (shouldPulseCard) {
-            UiMotion.animatePulse(binding.cardConnection, pulseScale = 1.01f, duration = MotionTokens.PULSE_LONG)
+            UiMotion.animateStatePulse(binding.cardConnection)
+            UiMotion.animateFocusShift(binding.tvActiveServer, binding.tvConnectionAddress, translationOffsetDp = 7f)
         }
         lastConnectionSnapshot = snapshot
         lastConnectionState = state
@@ -89,13 +90,23 @@ class MainConnectionCardController(
 
     fun updateStateVisuals(state: ServiceUiState, animate: Boolean) {
         val targetAlpha = if (state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING) 0.92f else 1f
+        val targetScale = if (state == ServiceUiState.RUNNING) 1f else 0.992f
+        val targetTranslationY = if (state == ServiceUiState.RUNNING) 0f else {
+            context.resources.displayMetrics.density * 1.5f
+        }
         binding.layoutConnectionSurface.animate().cancel()
         if (!animate) {
             binding.layoutConnectionSurface.alpha = targetAlpha
+            binding.layoutConnectionSurface.scaleX = targetScale
+            binding.layoutConnectionSurface.scaleY = targetScale
+            binding.layoutConnectionSurface.translationY = targetTranslationY
             return
         }
         binding.layoutConnectionSurface.animate()
             .alpha(targetAlpha)
+            .scaleX(targetScale)
+            .scaleY(targetScale)
+            .translationY(targetTranslationY)
             .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
             .setInterpolator(motionInterpolator)
             .start()
@@ -354,11 +365,11 @@ class MainConnectionCardController(
             ServiceUiState.STOPPED -> R.color.colorStatusIdle
         }
         dotView.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, colorRes))
-        updateStatusDotMotion(state == ServiceUiState.RUNNING)
+        updateStatusDotMotion(state)
     }
 
-    private fun updateStatusDotMotion(isRunning: Boolean) {
-        if (!isRunning) {
+    private fun updateStatusDotMotion(state: ServiceUiState) {
+        if (state == ServiceUiState.STOPPED) {
             statusDotAnimator?.cancel()
             statusDotAnimator = null
             binding.viewStatusDot.alpha = 1f
@@ -369,11 +380,13 @@ class MainConnectionCardController(
         if (statusDotAnimator?.isRunning == true) {
             return
         }
-        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1f, 0.6f, 1f)
-        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.12f, 1f)
-        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.12f, 1f)
+        val minAlpha = if (state == ServiceUiState.RUNNING) 0.6f else 0.72f
+        val maxScale = if (state == ServiceUiState.RUNNING) 1.12f else 1.08f
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1f, minAlpha, 1f)
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, maxScale, 1f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, maxScale, 1f)
         statusDotAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.viewStatusDot, alpha, scaleX, scaleY).apply {
-            duration = MotionTokens.PULSE_LONG * 2
+            duration = if (state == ServiceUiState.RUNNING) MotionTokens.PULSE_LONG * 2 else MotionTokens.STATUS_TRANSITION_DURATION
             repeatCount = ObjectAnimator.INFINITE
             repeatMode = ObjectAnimator.REVERSE
             interpolator = motionInterpolator

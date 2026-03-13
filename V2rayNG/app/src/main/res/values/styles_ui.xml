@@ -64,7 +64,20 @@
     <style name="TextAppearance.V2Ray.MenuItem" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
+    </style>
+
+    <style name="Widget.V2Ray.NavigationDrawer" parent="Widget.Material3.NavigationView">
+        <item name="android:background">@color/md_theme_background</item>
+        <item name="elevation">0dp</item>
+        <item name="itemBackground">@drawable/bg_drawer_item</item>
+        <item name="itemHorizontalPadding">@dimen/padding_spacing_dp14</item>
+        <item name="itemVerticalPadding">@dimen/padding_spacing_dp12</item>
+        <item name="itemIconPadding">@dimen/padding_spacing_dp14</item>
+        <item name="itemIconTint">@color/drawer_item_color</item>
+        <item name="itemTextColor">@color/drawer_item_color</item>
+        <item name="itemTextAppearance">@style/TextAppearance.V2Ray.MenuItem</item>
     </style>
 
     <style name="Widget.V2Ray.Card" parent="Widget.Material3.CardView.Filled">

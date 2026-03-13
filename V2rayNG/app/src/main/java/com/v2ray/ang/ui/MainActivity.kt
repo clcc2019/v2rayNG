@@ -8,15 +8,12 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
@@ -28,7 +25,6 @@ import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.view.WindowInsetsCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.google.android.material.navigation.NavigationView
 import com.v2ray.ang.AppConfig
@@ -56,6 +52,12 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         val strokeWidth: Int,
         val strokeColorRes: Int? = null,
         val backgroundDrawableRes: Int? = null
+    )
+
+    private data class DrawerDestination(
+        @IdRes val itemId: Int,
+        val intentFactory: () -> Intent,
+        val launchesForResult: Boolean = false
     )
 
     private val binding by lazy {
@@ -97,6 +99,23 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         )
     }
     private val motionInterpolator = FastOutSlowInInterpolator()
+    private val drawerController by lazy {
+        MainDrawerController(
+            activity = this,
+            binding = binding
+        )
+    }
+    private val drawerDestinations by lazy {
+        listOf(
+            DrawerDestination(R.id.sub_setting, { Intent(this, SubSettingActivity::class.java) }, launchesForResult = true),
+            DrawerDestination(R.id.routing_setting, { Intent(this, RoutingSettingActivity::class.java) }, launchesForResult = true),
+            DrawerDestination(R.id.settings, { Intent(this, SettingsActivity::class.java) }, launchesForResult = true),
+            DrawerDestination(R.id.logcat, { Intent(this, LogcatActivity::class.java) }),
+            DrawerDestination(R.id.check_for_update, { Intent(this, CheckUpdateActivity::class.java) }),
+            DrawerDestination(R.id.backup_restore, { Intent(this, BackupActivity::class.java) }, launchesForResult = true),
+            DrawerDestination(R.id.about, { Intent(this, AboutActivity::class.java) })
+        ).associateBy(DrawerDestination::itemId)
+    }
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
             renderServiceUiState(ServiceUiState.STARTING)
@@ -144,29 +163,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             // setup viewpager and tablayout
             groupTabsController.initialize()
 
-            // setup navigation drawer
-            val toggle = ActionBarDrawerToggle(
-                this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-            )
-            toggle.isDrawerIndicatorEnabled = false
-            binding.toolbar.navigationIcon = null
-            setupDrawerMotion(toggle)
-            toggle.syncState()
-            binding.toolbar.navigationIcon = null
-            binding.navView.setNavigationItemSelectedListener(this)
-            setupNavigationDrawerInsets()
+            drawerController.attach(this)
             setupMainContentInsets()
-            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                        binding.drawerLayout.closeDrawer(GravityCompat.START)
-                    } else {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
-                        isEnabled = true
-                    }
-                }
-            })
 
             binding.fab.setOnClickListener { handleFabAction() }
             binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
@@ -232,48 +230,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     override fun onResume() {
         super.onResume()
         updateConnectionCardVisibility()
-    }
-
-    private fun setupNavigationDrawerInsets() {
-        val headerView = binding.navView.getHeaderView(0)
-        val headerTopPadding = headerView.paddingTop
-        val navBottomPadding = binding.navView.paddingBottom
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.navView) { _, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            headerView.updatePadding(top = headerTopPadding + systemBars.top)
-            binding.navView.updatePadding(bottom = navBottomPadding + systemBars.bottom)
-            insets
-        }
-        ViewCompat.requestApplyInsets(binding.navView)
-    }
-
-    private fun setupDrawerMotion(toggle: ActionBarDrawerToggle) {
-        binding.drawerLayout.addDrawerListener(toggle)
-        binding.drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                if (drawerView !== binding.navView) return
-                val progress = slideOffset.coerceIn(0f, 1f)
-                val shiftPx = resources.displayMetrics.density * MotionTokens.DRAWER_SHIFT_DP * progress
-                val contentScale = 1f - (MotionTokens.DRAWER_CONTENT_SCALE_DELTA * progress)
-                val toolbarScale = 1f - (MotionTokens.DRAWER_TOOLBAR_SCALE_DELTA * progress)
-
-                binding.toolbar.translationX = shiftPx * 0.45f
-                binding.toolbar.scaleX = toolbarScale
-                binding.toolbar.scaleY = toolbarScale
-                binding.mainContent.translationX = shiftPx
-                binding.mainContent.scaleX = contentScale
-                binding.mainContent.scaleY = contentScale
-                binding.mainContent.alpha = 1f - (MotionTokens.DRAWER_CONTENT_ALPHA_DELTA * progress)
-                applyNavigationDrawerProgress(progress)
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                if (drawerView !== binding.navView) return
-                resetDrawerDrivenTransforms()
-                applyNavigationDrawerProgress(0f)
-            }
-        })
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
@@ -681,33 +637,6 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         else -> if (actionsController.handleOptionsItem(item.itemId)) true else super.onOptionsItemSelected(item)
     }
 
-    private fun applyNavigationDrawerProgress(progress: Float) {
-        val clamped = progress.coerceIn(0f, 1f)
-        val offsetPx = resources.displayMetrics.density * 16f * (1f - clamped)
-        val headerView = binding.navView.getHeaderView(0)
-        headerView.alpha = clamped
-        headerView.translationY = offsetPx
-        val menuView = binding.navView.getChildAt(0) as? ViewGroup ?: return
-        for (index in 0 until menuView.childCount) {
-            val child = menuView.getChildAt(index)
-            val itemProgress = ((clamped - (index * 0.04f)) / 0.92f).coerceIn(0f, 1f)
-            child.alpha = itemProgress
-            child.translationY = resources.displayMetrics.density * 10f * (1f - itemProgress)
-        }
-    }
-
-    private fun resetDrawerDrivenTransforms() {
-        binding.toolbar.animate().cancel()
-        binding.mainContent.animate().cancel()
-        binding.toolbar.translationX = 0f
-        binding.toolbar.scaleX = 1f
-        binding.toolbar.scaleY = 1f
-        binding.mainContent.translationX = 0f
-        binding.mainContent.scaleX = 1f
-        binding.mainContent.scaleY = 1f
-        binding.mainContent.alpha = 1f
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_BUTTON_B) {
             moveTaskToBack(false)
@@ -718,18 +647,13 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.sub_setting -> launchFromDrawer(Intent(this, SubSettingActivity::class.java), forResult = true)
-            R.id.routing_setting -> launchFromDrawer(Intent(this, RoutingSettingActivity::class.java), forResult = true)
-            R.id.settings -> launchFromDrawer(Intent(this, SettingsActivity::class.java), forResult = true)
-            R.id.logcat -> launchFromDrawer(Intent(this, LogcatActivity::class.java))
-            R.id.check_for_update -> launchFromDrawer(Intent(this, CheckUpdateActivity::class.java))
-            R.id.backup_restore -> launchFromDrawer(Intent(this, BackupActivity::class.java), forResult = true)
-            R.id.about -> launchFromDrawer(Intent(this, AboutActivity::class.java))
-        }
-
+        launchDrawerDestination(item.itemId)
         return true
+    }
+
+    private fun launchDrawerDestination(@IdRes itemId: Int) {
+        val destination = drawerDestinations[itemId] ?: return
+        launchFromDrawer(destination.intentFactory(), forResult = destination.launchesForResult)
     }
 
     private fun launchFromDrawer(intent: Intent, forResult: Boolean = false) {

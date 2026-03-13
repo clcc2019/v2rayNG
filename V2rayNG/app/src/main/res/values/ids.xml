@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="tag_visibility_target" type="id" />
+    <item name="tag_motion_animated_once" type="id" />
+    <item name="tag_motion_running_animator" type="id" />
 </resources>
