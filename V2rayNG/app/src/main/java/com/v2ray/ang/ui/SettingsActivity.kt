@@ -173,18 +173,19 @@ class SettingsActivity : BaseActivity() {
             setDividerHeight(0)
         }
 
-        private fun applyPreferenceVisuals(group: PreferenceGroup) {
+        private fun applyPreferenceVisuals(group: PreferenceGroup, depth: Int = 0) {
             for (index in 0 until group.preferenceCount) {
                 val preference = group.getPreference(index)
                 preference.isIconSpaceReserved = false
                 when (preference) {
                     is PreferenceCategory -> {
-                        preference.layoutResource = R.layout.preference_category_modern
-                        applyPreferenceVisuals(preference)
+                        preference.layoutResource =
+                            if (depth == 0) R.layout.preference_category_primary else R.layout.preference_category_modern
+                        applyPreferenceVisuals(preference, depth + 1)
                     }
                     is PreferenceGroup -> {
                         preference.layoutResource = R.layout.preference_item_modern
-                        applyPreferenceVisuals(preference)
+                        applyPreferenceVisuals(preference, depth + 1)
                     }
                     else -> {
                         preference.layoutResource = R.layout.preference_item_modern

@@ -1,6 +1,5 @@
 package com.v2ray.ang.ui
 
-import android.graphics.Color
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -70,7 +69,8 @@ class SubSettingRecyclerAdapter(
         holder.itemSubSettingBinding.tvUrl.text = subItem.url
         holder.itemSubSettingBinding.chkEnable.isChecked = subItem.enabled
         holder.itemSubSettingBinding.tvLastUpdated.text = Utils.formatTimestamp(subItem.lastUpdated)
-        holder.itemView.setBackgroundColor(Color.TRANSPARENT)
+        holder.itemView.alpha = 1f
+        holder.itemView.translationZ = 0f
 
         holder.itemSubSettingBinding.layoutEdit.setOnClickListener {
             adapterListener?.onEdit(subId, position)
@@ -118,11 +118,13 @@ class SubSettingRecyclerAdapter(
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY)
+            itemView.alpha = 0.92f
+            itemView.translationZ = 8f
         }
 
         fun onItemClear() {
-            itemView.setBackgroundColor(0)
+            itemView.alpha = 1f
+            itemView.translationZ = 0f
         }
     }
 

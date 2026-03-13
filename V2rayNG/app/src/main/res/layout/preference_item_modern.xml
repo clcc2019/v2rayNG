@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_gravity="center_horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp8"
-    android:layout_marginBottom="@dimen/padding_spacing_dp8"
-    style="@style/Widget.V2Ray.Card.Primary">
+    android:layout_marginTop="@dimen/padding_spacing_dp4"
+    android:layout_marginBottom="@dimen/padding_spacing_dp4"
+    android:maxWidth="@dimen/list_card_max_width"
+    style="@style/Widget.V2Ray.Card.SettingsItem">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/bg_settings_item_ripple"
         android:gravity="center_vertical"
-        android:minHeight="@dimen/view_height_dp72"
+        android:minHeight="@dimen/view_height_dp64"
         android:orientation="horizontal"
         android:paddingStart="@dimen/padding_spacing_dp18"
-        android:paddingTop="@dimen/padding_spacing_dp14"
+        android:paddingTop="@dimen/padding_spacing_dp12"
         android:paddingEnd="@dimen/padding_spacing_dp18"
-        android:paddingBottom="@dimen/padding_spacing_dp14">
+        android:paddingBottom="@dimen/padding_spacing_dp12">
 
         <LinearLayout
             android:id="@android:id/icon_frame"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/view_size_dp36"
+            android:layout_height="@dimen/view_size_dp36"
             android:layout_marginEnd="@dimen/padding_spacing_dp14"
+            android:background="@drawable/bg_settings_icon_container"
             android:gravity="center"
             android:visibility="gone">
 
             <ImageView
                 android:id="@android:id/icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:alpha="0.72"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:alpha="0.82"
+                android:tint="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -53,7 +57,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp4"
-                android:maxLines="3"
+                android:maxLines="4"
                 android:textAppearance="@style/TextAppearance.V2Ray.Support"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -64,6 +68,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/padding_spacing_dp12"
+            android:minHeight="@dimen/view_height_dp36"
             android:gravity="center_vertical"
             android:orientation="horizontal" />
 

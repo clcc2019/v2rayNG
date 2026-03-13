@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
 
@@ -41,6 +42,7 @@ class MainDrawerController(
 
     private fun setupNavigationDrawerInsets() {
         val headerView = binding.navView.getHeaderView(0)
+        headerView.findViewById<android.widget.TextView>(R.id.tv_drawer_version)?.text = "v${BuildConfig.VERSION_NAME}"
         val headerTopPadding = headerView.paddingTop
         val navBottomPadding = binding.navView.paddingBottom
 

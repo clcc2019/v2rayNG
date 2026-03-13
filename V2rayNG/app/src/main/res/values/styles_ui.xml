@@ -68,6 +68,13 @@
         <item name="android:textColor">@color/md_theme_onSurface</item>
     </style>
 
+    <style name="TextAppearance.V2Ray.DrawerSubheader" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
     <style name="Widget.V2Ray.NavigationDrawer" parent="Widget.Material3.NavigationView">
         <item name="android:background">@color/md_theme_background</item>
         <item name="elevation">0dp</item>
@@ -75,9 +82,16 @@
         <item name="itemHorizontalPadding">@dimen/padding_spacing_dp14</item>
         <item name="itemVerticalPadding">@dimen/padding_spacing_dp12</item>
         <item name="itemIconPadding">@dimen/padding_spacing_dp14</item>
+        <item name="itemIconSize">20dp</item>
         <item name="itemIconTint">@color/drawer_item_color</item>
         <item name="itemTextColor">@color/drawer_item_color</item>
         <item name="itemTextAppearance">@style/TextAppearance.V2Ray.MenuItem</item>
+        <item name="subheaderTextAppearance">@style/TextAppearance.V2Ray.DrawerSubheader</item>
+        <item name="subheaderColor">@color/md_theme_onSurfaceVariant</item>
+        <item name="subheaderInsetStart">@dimen/padding_spacing_dp16</item>
+        <item name="subheaderInsetEnd">@dimen/padding_spacing_dp16</item>
+        <item name="dividerInsetStart">@dimen/padding_spacing_dp16</item>
+        <item name="dividerInsetEnd">@dimen/padding_spacing_dp16</item>
     </style>
 
     <style name="Widget.V2Ray.Card" parent="Widget.Material3.CardView.Filled">
@@ -98,6 +112,13 @@
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">
         <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
         <item name="cardCornerRadius">18dp</item>
+    </style>
+
+    <style name="Widget.V2Ray.Card.SettingsItem" parent="Widget.V2Ray.Card.Subtle">
+        <item name="cardCornerRadius">20dp</item>
+        <item name="strokeColor">@color/color_card_outline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.TabGroup" parent="Widget.V2Ray.Card.Subtle">

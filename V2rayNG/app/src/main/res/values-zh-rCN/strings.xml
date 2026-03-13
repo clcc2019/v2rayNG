@@ -471,5 +471,7 @@
         <item>WebDAV</item>
     </string-array>
     <string name="nav_header_subtitle">更轻、更快、更克制。</string>
+    <string name="drawer_group_manage">管理</string>
+    <string name="drawer_group_tools">工具</string>
     <string name="bottom_nav_more">更多</string>
 </resources>
