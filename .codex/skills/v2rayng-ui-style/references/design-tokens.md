@@ -112,6 +112,21 @@
 * **适用场景**：侧边栏顶部用户信息与状态区域。
 * **应用 Token**：
   * 废弃原有的微弱渐变，统一使用 `md_theme_primaryContainer` 作为底色，以符合 MD3 扁平化规范。
+
+### 5. 设置页分组卡片 (Settings/Profile Grouped Cards)
+* **适用场景**：设置页、关于页、账号页、偏好设置页。
+* **布局原则**：
+  * 页面采用灰底承托卡片，不使用纯白满屏背景。
+  * 内容按逻辑分组为独立卡片组，组间保留明显留白。
+  * 行结构遵循左图标、中间标题/副标题、右状态/箭头三段式对齐。
+* **应用 Token**：
+  * **页面背景**：使用 `md_theme_background`。
+  * **分组卡片背景**：优先使用 `md_theme_surfaceVariant`；需要更强对比时使用 `md_theme_surface`。
+  * **分组描边**：使用 `color_card_outline`，保持低对比细描边。
+  * **主文字**：使用 `md_theme_onSurface`。
+  * **次文字**：使用 `md_theme_onSurfaceVariant`。
+  * **强调色**：仅局部使用 `md_theme_primary` 表达当前主题/选中值。
+  * **危险操作**：使用 `md_theme_error` 表达退出登录、删除等动作，且必须独立成组。
 ---
 ## 2. 交互设计规范 (Interaction Design)
 
@@ -133,6 +148,9 @@
 * **微动效 (Micro-interactions)**: 
     * 切换开关 (Switch) 时，滑块应有 150ms 的位移过渡。
     * 列表加载时，使用从左向右滑动的骨架屏渐变 (Shimmer Effect)。
+    * 设置项按下时使用 90-120ms 的轻微压暗或透明度变化，不使用强烈波纹。
+    * 可展开设置项使用 200-300ms 的内容展开和箭头 180 度旋转。
+    * 页面跳转使用水平 Push/Pop，保持系统原生感。
 * **触感反馈 (Haptics)**: 
     * 成功连接：`HapticFeedback.LIGHT_IMPACT`。
     * 节点切换：`HapticFeedback.VIRTUAL_KEY`。
@@ -151,6 +169,8 @@
 | **节点卡片** | `md_theme_surface` | `color_card_outline` | 选中时添加 `colorSelectionIndicator` 左侧装饰条 |
 | **底部弹窗** | `md_theme_background` | 无 | 内容项使用 `md_theme_surface` 承载，产生浮层感 |
 | **配置页组** | `md_theme_surfaceVariant` | `md_theme_outlineVariant` | 用于区分不同协议段落的背景色 |
+| **设置页分组** | `md_theme_surfaceVariant` / `md_theme_surface` | `color_card_outline` | 使用大圆角卡片和轻分割线组织设置项，强调色仅作小范围点缀 |
+| **危险操作卡片** | `md_theme_surface` | `color_card_outline` | 动作文字和图标用 `md_theme_error`，并与普通设置分组拉开间距 |
 | **通知栏** | N/A | N/A | 连接状态应在系统通知栏同步显示品牌主色图标 |
 
 ---
@@ -162,3 +182,5 @@
 - [ ] **层级验证**: 底部弹窗的操作项是否使用了 `md_theme_surface` 以区别于底色？
 - [ ] **反馈闭环**: 用户执行连接、删除、更新订阅后，是否有明确的 Toast 或触感反馈？
 - [ ] **描边统一**: 是否所有容器均撤销了硬编码色值，统一改用 `color_card_outline`？
+- [ ] **设置页风格**: 设置项是否采用分组卡片、大圆角、低对比灰阶，而不是普通列表？
+- [ ] **强调色克制**: 蓝色和红色是否只用于语义状态、当前值和危险操作，而非大面积铺色？
