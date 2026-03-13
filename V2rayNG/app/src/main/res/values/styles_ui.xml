@@ -81,7 +81,7 @@
 
     <style name="Widget.V2Ray.Card.Section" parent="Widget.V2Ray.Card.Primary">
         <item name="cardCornerRadius">18dp</item>
-        <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
+        <item name="cardBackgroundColor">@color/md_theme_surface</item>
     </style>
 
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">

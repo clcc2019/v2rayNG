@@ -2,6 +2,7 @@
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_surface"
     android:clipToPadding="false"
     android:fillViewport="true"
     android:overScrollMode="ifContentScrolls">
@@ -11,9 +12,9 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="@dimen/padding_spacing_dp16"
-        android:paddingTop="@dimen/padding_spacing_dp12"
+        android:paddingTop="@dimen/padding_spacing_dp10"
         android:paddingEnd="@dimen/padding_spacing_dp16"
-        android:paddingBottom="@dimen/padding_spacing_dp20">
+        android:paddingBottom="@dimen/padding_spacing_dp24">
 
         <View
             android:layout_width="36dp"
@@ -26,21 +27,23 @@
             android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp10"
+            android:layout_marginTop="@dimen/padding_spacing_dp12"
             android:ellipsize="end"
             android:maxLines="2"
             android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?attr/colorOnSurface" 
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/tv_subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp2"
+            android:layout_marginTop="@dimen/padding_spacing_dp4"
             android:ellipsize="end"
             android:maxLines="2"
             android:textAppearance="@style/TextAppearance.V2Ray.Support"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp" />
 
         <LinearLayout
             android:id="@+id/layout_actions"

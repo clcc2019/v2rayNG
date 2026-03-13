@@ -10,7 +10,7 @@
     android:layout_marginBottom="6dp"
     android:maxWidth="@dimen/list_card_max_width"
     android:clipToOutline="true"
-    app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+    app:cardBackgroundColor="@color/md_theme_surface"
     app:strokeWidth="0dp">
 
     <LinearLayout

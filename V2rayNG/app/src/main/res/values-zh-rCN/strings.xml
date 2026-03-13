@@ -413,7 +413,7 @@
     <string name="backup_summary_share">以文件或文本形式分享当前配置。</string>
     <string name="backup_summary_restore">将历史备份恢复到当前应用。</string>
     <string name="backup_summary_webdav">配置远程同步和备份存储位置。</string>
-    <string name="about_page_overview">查看项目链接、许可证、隐私说明和支持渠道。</string>
+    <string name="about_page_overview">查看版本信息、项目源码、许可证与隐私说明。</string>
     <string name="about_group_project">项目资料</string>
     <string name="about_group_community">社区与支持</string>
     <string name="logcat_page_overview">查看运行日志，便于排查和诊断问题。</string>

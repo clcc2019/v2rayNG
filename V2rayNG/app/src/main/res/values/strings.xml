@@ -426,7 +426,7 @@
     <string name="backup_summary_share">Share configuration as a file or text export.</string>
     <string name="backup_summary_restore">Restore a previous backup into this app.</string>
     <string name="backup_summary_webdav">Configure remote sync and backup destination.</string>
-    <string name="about_page_overview">Project links, licenses, privacy and support channels.</string>
+    <string name="about_page_overview">View version details, source code, licenses and privacy information.</string>
     <string name="about_group_project">Project</string>
     <string name="about_group_community">Community</string>
     <string name="logcat_page_overview">Inspect runtime logs for troubleshooting and diagnostics.</string>

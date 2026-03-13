@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout
@@ -114,50 +114,6 @@
                         android:textColor="?attr/colorOnSurface" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="52dp"
-                    android:background="@color/color_card_outline" />
-
-                <LinearLayout
-                    android:id="@+id/layout_feedback"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="68dp"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp12"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:paddingBottom="@dimen/padding_spacing_dp12">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.88"
-                        android:importantForAccessibility="no"
-                        app:srcCompat="@drawable/ic_feedback_24dp"
-                        app:tint="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="14dp"
-                        android:text="@string/title_pref_feedback"
-                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                        android:textColor="?attr/colorOnSurface" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="52dp"
-                    android:background="@color/color_card_outline" />
-
                 <LinearLayout
                     android:id="@+id/layout_privacy_policy"
                     android:layout_width="match_parent"
@@ -193,63 +149,6 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp20"
-            android:text="@string/about_group_community"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/layout_tg_channel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="68dp"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp12"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:paddingBottom="@dimen/padding_spacing_dp12">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.88"
-                        android:importantForAccessibility="no"
-                        app:srcCompat="@drawable/ic_telegram_24dp"
-                        app:tint="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="14dp"
-                        android:text="@string/title_tg_channel"
-                        android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                        android:textColor="?attr/colorOnSurface" />
-                </LinearLayout>
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

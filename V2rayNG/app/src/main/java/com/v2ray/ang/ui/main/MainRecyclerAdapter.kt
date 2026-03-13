@@ -292,13 +292,16 @@ class MainRecyclerAdapter(
             item.testDelayMillis != 0L
 
         val delayMillis = item.testDelayMillis
-        val testResult = delayMillis.takeIf { it != 0L }?.let { "${it}ms" }.orEmpty()
-        holder.itemMainBinding.tvTestResult.text = testResult
-        holder.itemMainBinding.tvTestResult.visibility = if (testResult.isBlank()) View.GONE else View.VISIBLE
-        if (holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
-            applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResult, delayMillis)
+        val context = holder.itemMainBinding.root.context
+        val testResult = when {
+            delayMillis > 0L -> "${delayMillis}ms"
+            delayMillis < 0L -> context.getString(R.string.connection_test_fail)
+            else -> "--"
         }
-        if (shouldAnimateResult && holder.itemMainBinding.tvTestResult.visibility == View.VISIBLE) {
+        holder.itemMainBinding.tvTestResult.text = testResult
+        holder.itemMainBinding.tvTestResult.visibility = View.VISIBLE
+        applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResult, delayMillis)
+        if (shouldAnimateResult && delayMillis != 0L) {
             UiMotion.animatePulse(holder.itemMainBinding.tvTestResult, pulseScale = 1.03f)
             UiMotion.animateFocusShift(holder.itemMainBinding.tvStatistics, holder.itemMainBinding.tvTestResult, translationOffsetDp = 6f)
         }
@@ -484,6 +487,7 @@ class MainRecyclerAdapter(
     private fun applyLatencyBadgeStyle(target: TextView, delayMillis: Long) {
         val context = target.context
         val (backgroundRes, textRes) = when {
+            delayMillis == 0L -> R.color.color_latency_bg_idle to R.color.md_theme_onSurfaceVariant
             delayMillis < 0L -> R.color.color_latency_bg_bad to R.color.md_theme_error
             delayMillis < 150L -> R.color.color_latency_bg_good to R.color.md_theme_success
             delayMillis < 300L -> R.color.color_latency_bg_warn to R.color.md_theme_warning
@@ -491,5 +495,6 @@ class MainRecyclerAdapter(
         }
         target.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, backgroundRes))
         target.setTextColor(ContextCompat.getColor(context, textRes))
+        target.alpha = if (delayMillis == 0L) 0.84f else 1f
     }
 }

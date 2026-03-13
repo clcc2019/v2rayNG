@@ -185,35 +185,40 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <LinearLayout
+                            <androidx.constraintlayout.widget.ConstraintLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
+                                android:layout_marginEnd="@dimen/padding_spacing_dp4">
 
                                 <TextView
                                     android:id="@+id/tv_active_server"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:ellipsize="end"
                                     android:maxLines="1"
+                                    android:paddingEnd="10dp"
                                     android:text="@string/connection_not_connected"
                                     android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                                    android:textSize="18sp"
+                                    android:textColor="?attr/colorOnSurface"
                                     android:textStyle="bold"
-                                    android:textColor="?attr/colorOnSurface" />
+                                    android:textSize="18sp"
+                                    app:layout_constrainedWidth="true"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <View
                                     android:id="@+id/view_status_dot"
                                     android:layout_width="6dp"
                                     android:layout_height="6dp"
-                                    android:layout_marginStart="4dp"
-                                    android:layout_marginTop="1dp"
-                                    android:background="@drawable/bg_status_dot" />
+                                    android:layout_marginStart="2dp"
+                                    android:layout_marginTop="4dp"
+                                    android:background="@drawable/bg_status_dot"
+                                    app:layout_constraintStart_toEndOf="@id/tv_active_server"
+                                    app:layout_constraintTop_toTopOf="@id/tv_active_server" />
 
-                            </LinearLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
 
                             <LinearLayout
                                 android:layout_width="wrap_content"

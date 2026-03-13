@@ -8,7 +8,7 @@
     android:layout_marginBottom="@dimen/padding_spacing_dp4"
     android:maxWidth="@dimen/list_card_max_width"
     style="@style/Widget.V2Ray.Card.SettingsItem"
-    app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+    app:cardBackgroundColor="@color/md_theme_surface"
     app:strokeWidth="0dp">
 
     <LinearLayout

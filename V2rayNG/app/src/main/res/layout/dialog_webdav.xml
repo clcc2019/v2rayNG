@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+            app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout

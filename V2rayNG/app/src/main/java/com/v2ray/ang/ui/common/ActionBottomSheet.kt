@@ -73,14 +73,18 @@ fun AppCompatActivity.showActionBottomSheet(
     sheetBinding.tvSubtitle.isVisible = hasSubtitle
 
     if (!hasTitle) {
-        val topPadding = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp12)
+        val topPadding = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
         sheetBinding.tvSubtitle.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = topPadding
         }
     }
 
     if (!hasSubtitle) {
-        val topPadding = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp12)
+        val topPadding = if (hasTitle) {
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp10)
+        } else {
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+        }
         sheetBinding.layoutActions.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = topPadding
         }
@@ -113,7 +117,7 @@ fun AppCompatActivity.showActionBottomSheet(
                 ).also { params ->
                     params.marginStart = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16) +
                         resources.getDimensionPixelSize(R.dimen.padding_spacing_dp14) +
-                        resources.getDimensionPixelSize(R.dimen.padding_spacing_dp18)
+                        resources.getDimensionPixelSize(R.dimen.padding_spacing_dp20)
                 }
                 setBackgroundColor(ContextCompat.getColor(context, R.color.color_card_outline))
             }

@@ -47,7 +47,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
                 android:maxWidth="@dimen/list_card_max_width"
-                app:cardBackgroundColor="@color/md_theme_surfaceVariant"
+                app:cardBackgroundColor="@color/md_theme_surface"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -60,7 +60,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="68dp"
-                        android:background="@drawable/bg_settings_item_ripple"
+                        android:background="@drawable/bg_routing_settings_item_ripple"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
@@ -114,7 +114,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="68dp"
-                        android:background="@drawable/bg_settings_item_ripple"
+                        android:background="@drawable/bg_routing_settings_item_ripple"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
@@ -168,7 +168,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="68dp"
-                        android:background="@drawable/bg_settings_item_ripple"
+                        android:background="@drawable/bg_routing_settings_item_ripple"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
