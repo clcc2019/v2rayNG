@@ -1,14 +1,15 @@
 package com.v2ray.ang.ui
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.TimeInterpolator
+import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.R
@@ -28,6 +29,7 @@ class MainGroupTabsController(
         val surfaceView: View,
         val labelView: TextView,
         val countView: TextView,
+        val indicatorView: View,
         var lastSelected: Boolean? = null,
         var lastRemarks: String? = null,
         var lastCount: Int? = null
@@ -37,6 +39,17 @@ class MainGroupTabsController(
     private var tabMediator: TabLayoutMediator? = null
     private var isGroupTabHidden = false
     private var lastRenderedGroupCount = -1
+    private var accumulatedScrollDy = 0
+    private var groupTabSlotAnimator: ValueAnimator? = null
+    private val hideThresholdPx by lazy {
+        (activity.resources.displayMetrics.density * 24f).toInt()
+    }
+    private val showThresholdPx by lazy {
+        (activity.resources.displayMetrics.density * 12f).toInt()
+    }
+    private val expandedSlotHeightPx by lazy {
+        activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+    }
 
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
@@ -53,7 +66,7 @@ class MainGroupTabsController(
 
     fun initialize() {
         binding.viewPager.adapter = groupPagerAdapter
-        binding.viewPager.isUserInputEnabled = true
+        binding.viewPager.isUserInputEnabled = false
     }
 
     fun setupGroupTabs() {
@@ -62,6 +75,7 @@ class MainGroupTabsController(
 
     fun renderGroupTabs(groups: List<GroupMapItem>) {
         if (groups.isEmpty()) {
+            accumulatedScrollDy = 0
             groupPagerAdapter.update(emptyList())
             tabMediator?.detach()
             tabMediator = null
@@ -69,13 +83,14 @@ class MainGroupTabsController(
             binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
             binding.tabGroup.isVisible = false
             binding.cardTabGroup.isVisible = false
+            binding.layoutGroupTabSlot.isVisible = false
             setGroupTabVisible(false, immediate = true)
-            updateGroupTabContentInset()
             activity.refreshConnectionCard()
             return
         }
 
         val updateResult = groupPagerAdapter.update(groups)
+        accumulatedScrollDy = 0
         configureGroupTabLayout(groups.size)
         val targetOffscreenLimit = maxOf(1, minOf(2, groups.size))
         if (binding.viewPager.offscreenPageLimit != targetOffscreenLimit) {
@@ -104,30 +119,34 @@ class MainGroupTabsController(
         }
         syncGroupTabSelection()
 
+        binding.layoutGroupTabSlot.isVisible = groups.size > 1
         binding.tabGroup.isVisible = groups.size > 1
         binding.cardTabGroup.isVisible = groups.size > 1
         setGroupTabVisible(groups.size > 1, immediate = true)
-        binding.cardTabGroup.post { updateGroupTabContentInset() }
         activity.refreshConnectionCard()
         lastRenderedGroupCount = groups.size
     }
 
     fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
         if (!binding.cardTabGroup.isVisible) return
-        when {
-            !canScrollUp -> setGroupTabVisible(true)
-            dy > 6 -> setGroupTabVisible(false)
-            dy < -6 -> setGroupTabVisible(true)
-        }
+        accumulatedScrollDy = 0
+        setGroupTabVisible(true)
     }
 
     fun scrollCurrentServerListToTop(animate: Boolean = true) {
+        findCurrentFragment()?.scrollToTop(animate = animate)
+    }
+
+    fun notifyCurrentFragmentSearchUiChanged() {
+        findCurrentFragment()?.onSearchUiChanged()
+    }
+
+    private fun findCurrentFragment(): GroupServerFragment? {
         val position = binding.viewPager.currentItem
-        if (position !in 0 until groupPagerAdapter.itemCount) return
+        if (position !in 0 until groupPagerAdapter.itemCount) return null
         val itemId = groupPagerAdapter.getItemId(position)
         val tag = "f$itemId"
-        val fragment = activity.supportFragmentManager.findFragmentByTag(tag) as? GroupServerFragment
-        fragment?.scrollToTop(animate = animate)
+        return activity.supportFragmentManager.findFragmentByTag(tag) as? GroupServerFragment
     }
 
     fun onDestroy() {
@@ -146,27 +165,18 @@ class MainGroupTabsController(
         }
 
         val cardHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
-        val cardTopMargin = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
-        val cardLayoutParams = binding.cardTabGroup.layoutParams as CoordinatorLayout.LayoutParams
-        val sideMargin = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
-        val targetWidth = if (useAdaptiveWidth) CoordinatorLayout.LayoutParams.WRAP_CONTENT else CoordinatorLayout.LayoutParams.MATCH_PARENT
-        val targetHorizontalMargin = if (useAdaptiveWidth) 0 else sideMargin
+        val cardLayoutParams = binding.cardTabGroup.layoutParams as ViewGroup.MarginLayoutParams
+        val targetWidth = if (useAdaptiveWidth) ViewGroup.LayoutParams.WRAP_CONTENT else ViewGroup.LayoutParams.MATCH_PARENT
         if (cardLayoutParams.width != targetWidth
             || cardLayoutParams.height != cardHeight
-            || cardLayoutParams.topMargin != cardTopMargin
-            || cardLayoutParams.marginStart != targetHorizontalMargin
-            || cardLayoutParams.marginEnd != targetHorizontalMargin
         ) {
             cardLayoutParams.width = targetWidth
             cardLayoutParams.height = cardHeight
-            cardLayoutParams.topMargin = cardTopMargin
-            cardLayoutParams.marginStart = targetHorizontalMargin
-            cardLayoutParams.marginEnd = targetHorizontalMargin
             binding.cardTabGroup.layoutParams = cardLayoutParams
         }
 
         binding.tabGroup.layoutParams = binding.tabGroup.layoutParams.apply {
-            width = if (useAdaptiveWidth) CoordinatorLayout.LayoutParams.WRAP_CONTENT else CoordinatorLayout.LayoutParams.MATCH_PARENT
+            width = if (useAdaptiveWidth) ViewGroup.LayoutParams.WRAP_CONTENT else ViewGroup.LayoutParams.MATCH_PARENT
             height = cardHeight
         }
         binding.tabGroup.minimumHeight = 0
@@ -181,7 +191,8 @@ class MainGroupTabsController(
             group = group,
             surfaceView = tabBinding.layoutTabSurface,
             labelView = tabBinding.tvTabLabel,
-            countView = tabBinding.tvTabCount
+            countView = tabBinding.tvTabCount,
+            indicatorView = tabBinding.viewTabIndicator
         )
         bindGroupTabViewState(tabState, selected = false)
         tabBinding.root.tag = tabState
@@ -214,7 +225,7 @@ class MainGroupTabsController(
     }
 
     private fun applyCompactGroupTabHeight() {
-        val compactHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp32)
+        val compactHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
         binding.tabGroup.minimumHeight = compactHeight
 
         val slidingTabIndicator = binding.tabGroup.getChildAt(0) as? ViewGroup ?: return
@@ -236,6 +247,7 @@ class MainGroupTabsController(
         tabState.surfaceView.isSelected = selected
         updateTabLabel(tabState, selected)
         updateTabCount(tabState, selected)
+        tabState.indicatorView.visibility = if (selected) View.VISIBLE else View.INVISIBLE
         updateTabSelectionAnimation(tabState, selected)
     }
 
@@ -247,7 +259,7 @@ class MainGroupTabsController(
         tabState.labelView.setTextColor(
             ContextCompat.getColor(
                 activity,
-                if (selected) R.color.md_theme_onSurface else R.color.md_theme_onSurfaceVariant
+                if (selected) R.color.color_home_on_surface else R.color.color_home_on_surface_muted
             )
         )
         tabState.labelView.alpha = if (selected) 1f else 0.9f
@@ -267,7 +279,7 @@ class MainGroupTabsController(
         tabState.countView.setTextColor(
             ContextCompat.getColor(
                 activity,
-                if (selected) R.color.md_theme_primary else R.color.md_theme_onSurfaceVariant
+                if (selected) R.color.color_home_on_primary else R.color.color_home_on_surface_muted
             )
         )
         tabState.countView.alpha = if (selected) 1f else 0.94f
@@ -278,11 +290,16 @@ class MainGroupTabsController(
         tabState.lastSelected = selected
         tabState.surfaceView.animate().cancel()
         if (selected) {
-            tabState.surfaceView.scaleX = 0.985f
-            tabState.surfaceView.scaleY = 0.985f
-            UiMotion.animateStatePulse(tabState.surfaceView, expandScale = 1.02f, contractScale = 0.992f, duration = MotionTokens.EMPHASIS_DURATION)
-            UiMotion.animateFocusShift(tabState.labelView, tabState.countView, translationOffsetDp = 5f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
+            UiMotion.animateFocusShift(tabState.labelView, tabState.countView, translationOffsetDp = 4f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
+            tabState.indicatorView.alpha = 0.72f
+            tabState.indicatorView.animate()
+                .alpha(1f)
+                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
         } else {
+            tabState.indicatorView.animate().cancel()
+            tabState.indicatorView.alpha = 0f
             tabState.surfaceView.animate()
                 .scaleX(1f)
                 .scaleY(1f)
@@ -299,7 +316,15 @@ class MainGroupTabsController(
         val targetAlpha = if (visible) 1f else 0f
         val targetTranslationY = if (visible) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.45f
         val targetScale = if (visible) 1f else 0.985f
+        binding.cardTabGroup.isClickable = visible
+        binding.cardTabGroup.isFocusable = visible
+        binding.tabGroup.isEnabled = visible
+        binding.cardTabGroup.importantForAccessibility =
+            if (visible) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         if (immediate) {
+            groupTabSlotAnimator?.cancel()
+            binding.layoutGroupTabSlot.isVisible = visible
+            updateGroupTabSlotHeight(if (visible) expandedSlotHeightPx else 0)
             binding.cardTabGroup.alpha = targetAlpha
             binding.cardTabGroup.translationY = targetTranslationY
             binding.cardTabGroup.scaleX = targetScale
@@ -307,6 +332,31 @@ class MainGroupTabsController(
             return
         }
 
+        if (visible) {
+            binding.layoutGroupTabSlot.isVisible = true
+        }
+        groupTabSlotAnimator?.cancel()
+        val startHeight = binding.layoutGroupTabSlot.layoutParams.height
+        val endHeight = if (visible) expandedSlotHeightPx else 0
+        groupTabSlotAnimator = ValueAnimator.ofInt(startHeight, endHeight).apply {
+            duration = MotionTokens.REVEAL_DURATION
+            interpolator = motionInterpolator
+            addUpdateListener { animator ->
+                updateGroupTabSlotHeight(animator.animatedValue as Int)
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!visible) {
+                        binding.layoutGroupTabSlot.isVisible = false
+                    }
+                    groupTabSlotAnimator = null
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    groupTabSlotAnimator = null
+                }
+            })
+        }
         binding.cardTabGroup.animate()
             .cancel()
         binding.cardTabGroup.animate()
@@ -317,17 +367,13 @@ class MainGroupTabsController(
             .setDuration(MotionTokens.REVEAL_DURATION)
             .setInterpolator(motionInterpolator)
             .start()
+        groupTabSlotAnimator?.start()
     }
 
-    private fun updateGroupTabContentInset() {
-        val listGap = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
-        val cardTopMargin = (binding.cardTabGroup.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin ?: 0
-        val topPadding = if (binding.cardTabGroup.isVisible) {
-            cardTopMargin + binding.cardTabGroup.height + listGap
-        } else {
-            listGap
-        }
-        binding.viewPager.updatePadding(top = topPadding)
+    private fun updateGroupTabSlotHeight(height: Int) {
+        val layoutParams = binding.layoutGroupTabSlot.layoutParams
+        if (layoutParams.height == height) return
+        layoutParams.height = height
+        binding.layoutGroupTabSlot.layoutParams = layoutParams
     }
-
 }

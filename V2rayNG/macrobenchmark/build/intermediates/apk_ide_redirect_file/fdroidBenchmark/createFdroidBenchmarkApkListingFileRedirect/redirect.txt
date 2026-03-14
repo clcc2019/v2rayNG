@@ -1,0 +1,2 @@
+#- File Locator -
+listingFile=../../../../outputs/apk/fdroid/benchmark/output-metadata.json

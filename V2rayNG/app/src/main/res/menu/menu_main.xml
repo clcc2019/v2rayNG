@@ -11,10 +11,10 @@
         android:id="@+id/action_add_sheet"
         android:icon="@drawable/ic_add_24dp"
         android:title="@string/menu_item_add_config"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_more_sheet"
         android:icon="@drawable/ic_more_vert_24dp"
-        android:title="@string/notification_action_more"
-        app:showAsAction="ifRoom" />
+        android:title="@string/action_more"
+        app:showAsAction="always" />
 </menu>

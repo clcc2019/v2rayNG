@@ -22,6 +22,8 @@ class TProxyService(
     companion object {
         @Volatile
         private var isLibLoaded = false
+        @Volatile
+        private var lastConfigContent: String? = null
 
         @JvmStatic
         @Suppress("FunctionName")
@@ -60,11 +62,10 @@ class TProxyService(
 
         val configContent = buildConfig()
         val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml")
-        if (!configFile.exists() || configFile.readText() != configContent) {
+        if (lastConfigContent != configContent || !configFile.exists()) {
             configFile.writeText(configContent)
+            lastConfigContent = configContent
         }
-//        Log.i(AppConfig.TAG, "Config file created: ${configFile.absolutePath}")
-        Log.d(AppConfig.TAG, "HevSocks5Tunnel Config content:\n$configContent")
 
         try {
 //            Log.i(AppConfig.TAG, "TProxyStartService...")

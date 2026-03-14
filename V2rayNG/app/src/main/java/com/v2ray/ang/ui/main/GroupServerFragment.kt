@@ -1,12 +1,11 @@
 package com.v2ray.ang.ui
 
 import android.content.Intent
-import android.graphics.Canvas
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EdgeEffect
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -29,9 +28,9 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.ui.common.ActionBottomSheetItem
 import com.v2ray.ang.ui.common.actionBottomSheetItem
+import com.v2ray.ang.ui.common.hapticClick
 import com.v2ray.ang.ui.common.runWithRemovalConfirmation
 import com.v2ray.ang.ui.common.showActionBottomSheet
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,6 +38,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
+    private enum class EmptyStateMode {
+        DEFAULT,
+        SEARCH_IDLE,
+        SEARCH_RESULT
+    }
+
     private val ownerActivity: MainActivity
         get() = requireActivity() as MainActivity
     private val mainViewModel: MainViewModel by activityViewModels()
@@ -50,7 +55,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     private var pendingListFadeIn = false
     private var lastEmptyStateVisible: Boolean? = null
     private var storedCountRequestVersion = 0
-    private var lastFilterBlank: Boolean? = null
+    private var lastEmptyStateMode: EmptyStateMode? = null
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -65,6 +70,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = MainRecyclerAdapter(mainViewModel, ActivityAdapterListener())
         setupRecyclerView()
+        setupEmptyStateActions()
         pendingListFadeIn = true
         if (mainViewModel.keywordFilter.isBlank()) {
             fetchStoredItemCount()
@@ -109,37 +115,40 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             lastKnownItemCount = mainViewModel.serversCache.size
         }
         updateEmptyState()
+        ownerActivity.onServerListContextChanged(
+            isEmpty = binding.layoutEmptyState.isVisible,
+            canScrollUp = binding.recyclerView.canScrollVertically(-1),
+            resetContext = true
+        )
+        ownerActivity.onServerListScrollStateChanged(binding.recyclerView.scrollState, binding.recyclerView.canScrollVertically(-1))
         ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
     }
 
     private fun setupRecyclerView() {
         binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.setItemViewCacheSize(10)
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), getSpanCount())
         binding.recyclerView.itemAnimator = null
-        binding.recyclerView.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
-            override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
-                return object : EdgeEffect(view.context) {
-                    override fun onPull(deltaDistance: Float) {
-                        // No-op to disable stretch/glow.
-                    }
-
-                    override fun onPull(deltaDistance: Float, displacement: Float) {
-                        // No-op to disable stretch/glow.
-                    }
-
-                    override fun onPullDistance(deltaDistance: Float, displacement: Float): Float {
-                        return 0f
-                    }
-
-                    override fun draw(canvas: Canvas): Boolean {
-                        return false
-                    }
-                }
-            }
-        }
+        binding.recyclerView.overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> view.parent?.requestDisallowInterceptTouchEvent(true)
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> view.parent?.requestDisallowInterceptTouchEvent(false)
+            }
+            false
+        }
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (mainViewModel.subscriptionId != subId) {
+                    return
+                }
+                ownerActivity.onServerListScrollStateChanged(newState, recyclerView.canScrollVertically(-1))
+            }
+
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (mainViewModel.subscriptionId != subId) {
                     return
@@ -147,7 +156,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
                 ownerActivity.onServerListScrolled(dy, recyclerView.canScrollVertically(-1))
             }
         })
-        ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
+        ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false, allowLongPressDrag = false))
             .attachToRecyclerView(binding.recyclerView)
     }
 
@@ -195,15 +204,151 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             UiMotion.setVisibility(binding.layoutEmptyState, shouldShowEmptyState)
         }
         lastEmptyStateVisible = shouldShowEmptyState
-        val filterBlank = mainViewModel.keywordFilter.isBlank()
-        if (lastFilterBlank != filterBlank) {
-            binding.tvEmptyTitle.setText(
-                if (filterBlank) R.string.empty_server_title else R.string.empty_search_title
+        if (mainViewModel.subscriptionId == subId) {
+            ownerActivity.onServerListContextChanged(
+                isEmpty = shouldShowEmptyState,
+                canScrollUp = binding.recyclerView.canScrollVertically(-1),
+                resetContext = false
             )
-            binding.tvEmptySubtitle.setText(
-                if (filterBlank) R.string.empty_server_subtitle else R.string.empty_search_subtitle
+        }
+        val emptyStateMode = when {
+            mainViewModel.keywordFilter.isNotBlank() -> EmptyStateMode.SEARCH_RESULT
+            ownerActivity.isSearchUiActive() -> EmptyStateMode.SEARCH_IDLE
+            else -> EmptyStateMode.DEFAULT
+        }
+        if (lastEmptyStateMode != emptyStateMode) {
+            when (emptyStateMode) {
+                EmptyStateMode.DEFAULT -> {
+                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_subscriptions_24dp)
+                    binding.tvEmptyTitle.setText(R.string.empty_server_title)
+                    binding.tvEmptySubtitle.setText(R.string.empty_server_subtitle)
+                    binding.layoutEmptyActions.isVisible = true
+                }
+                EmptyStateMode.SEARCH_IDLE -> {
+                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_search_24dp)
+                    binding.tvEmptyTitle.setText(R.string.empty_search_idle_title)
+                    binding.tvEmptySubtitle.setText(R.string.empty_search_idle_subtitle)
+                    binding.layoutEmptyActions.isVisible = false
+                }
+                EmptyStateMode.SEARCH_RESULT -> {
+                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_search_24dp)
+                    binding.tvEmptyTitle.setText(R.string.empty_search_title)
+                    binding.tvEmptySubtitle.setText(R.string.empty_search_subtitle)
+                    binding.layoutEmptyActions.isVisible = false
+                }
+            }
+            lastEmptyStateMode = emptyStateMode
+        }
+    }
+
+    fun onSearchUiChanged() {
+        if (!isAdded || mainViewModel.subscriptionId != subId) return
+        updateEmptyState()
+    }
+
+    private fun setupEmptyStateActions() {
+        binding.actionAddConnection.setOnClickListener {
+            it.hapticClick()
+            showManualAddSheet()
+        }
+        binding.actionScanQrcode.setOnClickListener {
+            it.hapticClick()
+            importQRcode()
+        }
+        binding.actionAddSubscription.setOnClickListener {
+            it.hapticClick()
+            shouldRefreshOnResume = true
+            ownerActivity.startActivity(Intent(ownerActivity, SubEditActivity::class.java))
+        }
+    }
+
+    private fun showManualAddSheet() {
+        ownerActivity.showActionBottomSheet(
+            title = getString(R.string.empty_action_add_connection),
+            subtitle = getString(R.string.empty_action_add_connection_hint),
+            actions = listOf(
+                actionBottomSheetItem(R.string.menu_item_import_config_policy_group, R.drawable.ic_subscriptions_24dp) {
+                    importManually(EConfigType.POLICYGROUP)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_vmess, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.VMESS)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_vless, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.VLESS)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_ss, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.SHADOWSOCKS)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_socks, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.SOCKS)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_http, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.HTTP)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_trojan, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.TROJAN)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_wireguard, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.WIREGUARD)
+                },
+                actionBottomSheetItem(R.string.menu_item_import_config_manually_hysteria2, R.drawable.ic_add_24dp) {
+                    importManually(EConfigType.HYSTERIA2)
+                }
             )
-            lastFilterBlank = filterBlank
+        )
+    }
+
+    private fun importManually(type: EConfigType) {
+        shouldRefreshOnResume = true
+        if (type == EConfigType.POLICYGROUP) {
+            ownerActivity.startActivity(
+                Intent(ownerActivity, ServerGroupActivity::class.java)
+                    .putExtra("subscriptionId", mainViewModel.subscriptionId)
+            )
+        } else {
+            ownerActivity.startActivity(
+                Intent(ownerActivity, ServerActivity::class.java)
+                    .putExtra("createConfigType", type.value)
+                    .putExtra("subscriptionId", mainViewModel.subscriptionId)
+            )
+        }
+    }
+
+    private fun importQRcode(): Boolean {
+        ownerActivity.launchQRCodeScanner { scanResult ->
+            if (scanResult != null) {
+                importBatchConfig(scanResult)
+            }
+        }
+        return true
+    }
+
+    private fun importBatchConfig(server: String?) {
+        ownerActivity.showLoadingIndicator()
+        ownerActivity.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val (count, countSub) = AngConfigManager.importBatchConfig(server, mainViewModel.subscriptionId, true)
+                withContext(Dispatchers.Main) {
+                    when {
+                        count > 0 -> {
+                            ownerActivity.toast(getString(R.string.title_import_config_count, count))
+                            mainViewModel.reloadServerList()
+                        }
+                        countSub > 0 -> {
+                            ownerActivity.toastSuccess(R.string.toast_success)
+                            shouldRefreshOnResume = true
+                            mainViewModel.loadSubscriptions(ownerActivity.applicationContext)
+                        }
+                        else -> ownerActivity.toastError(R.string.toast_failure)
+                    }
+                    ownerActivity.hideLoadingIndicator()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    ownerActivity.toastError(R.string.toast_failure)
+                    ownerActivity.hideLoadingIndicator()
+                }
+            }
         }
     }
 
@@ -300,7 +445,10 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
         ivBinding.ivQcode.setImageBitmap(AngConfigManager.share2QRCode(guid))
         ivBinding.ivQcode.contentDescription = getString(R.string.action_qrcode)
-        ownerActivity.v2rayAlertDialogBuilder().setView(ivBinding.root).show()
+        ownerActivity.showActionBottomSheet(
+            title = getString(R.string.action_qrcode),
+            contentView = ivBinding.root
+        )
     }
 
     /**
@@ -412,7 +560,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             mainViewModel.prewarmSelectedConfig(guid)
 
             if (mainViewModel.isRunning.value == true) {
-                ownerActivity.restartV2Ray()
+                ownerActivity.restartV2Ray(guid)
             }
         }
     }

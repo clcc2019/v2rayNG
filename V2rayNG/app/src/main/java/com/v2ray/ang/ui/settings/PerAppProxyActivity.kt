@@ -17,6 +17,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.extension.v2RayApplication
+import com.v2ray.ang.extension.ensureToastyConfigured
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
@@ -69,6 +70,7 @@ class PerAppProxyActivity : BaseActivity() {
         }
 
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
+            ensureToastyConfigured()
             Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
         }
     }

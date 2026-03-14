@@ -30,6 +30,8 @@ import com.v2ray.ang.fmt.WireguardFmt
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
+import java.util.HashMap
+import java.util.HashSet
 import java.util.LinkedHashMap
 
 object V2rayConfigManager {
@@ -229,8 +231,8 @@ object V2rayConfigManager {
         if (!validateWireguardReserved(config, result)) return result
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
-        val routingRulesets = MmkvManager.decodeRoutingRulesets()
-        val routingDomains = buildRoutingDomainBuckets(routingRulesets)
+        val routingRulesets = SettingsManager.getRoutingRulesetsSnapshot(context)
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getRoutingRulesetsSignature(context))
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
@@ -282,8 +284,8 @@ object V2rayConfigManager {
         }
 
         val v2rayConfig = initV2rayConfig(context) ?: return null
-        val routingRulesets = MmkvManager.decodeRoutingRulesets()
-        val routingDomains = buildRoutingDomainBuckets(routingRulesets)
+        val routingRulesets = SettingsManager.getRoutingRulesetsSnapshot(context)
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getRoutingRulesetsSignature(context))
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
@@ -405,8 +407,13 @@ object V2rayConfigManager {
         val subscription = config.subscriptionId.takeIf { it.isNotEmpty() }?.let {
             MmkvManager.decodeSubscription(it)
         }
-        val prevProfile = subscription?.prevProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks)
-        val nextProfile = subscription?.nextProfile?.takeIf { it.isNotBlank() }?.let(SettingsManager::getServerViaRemarks)
+        val prevProfileRemark = subscription?.prevProfile?.takeIf { it.isNotBlank() }
+        val nextProfileRemark = subscription?.nextProfile?.takeIf { it.isNotBlank() }
+        val chainedProfileLookup = resolveProfilesByRemarks(
+            setOfNotNull(prevProfileRemark, nextProfileRemark)
+        )
+        val prevProfileHash = prevProfileRemark?.let { chainedProfileLookup[it]?.hashCode() ?: 0 } ?: 0
+        val nextProfileHash = nextProfileRemark?.let { chainedProfileLookup[it]?.hashCode() ?: 0 } ?: 0
         val policyGroupHash = if (config.configType == EConfigType.POLICYGROUP) {
             MmkvManager.decodeAllServerList()
                 .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
@@ -421,10 +428,12 @@ object V2rayConfigManager {
             config.hashCode(),
             if (config.configType == EConfigType.CUSTOM) MmkvManager.decodeServerRaw(guid)?.hashCode() ?: 0 else 0,
             subscription.hashCode(),
-            prevProfile.hashCode(),
-            nextProfile.hashCode(),
+            prevProfileRemark.hashCode(),
+            nextProfileRemark.hashCode(),
+            prevProfileHash,
+            nextProfileHash,
             policyGroupHash,
-            MmkvManager.decodeRoutingRulesets().hashCode(),
+            SettingsManager.getRoutingRulesetsSignature(),
             SettingsManager.isVpnMode().hashCode(),
             SettingsManager.getVpnMtu(),
             SettingsManager.getCurrentVpnInterfaceAddressConfig().hashCode(),
@@ -790,12 +799,17 @@ object V2rayConfigManager {
         }
         try {
             val subItem = MmkvManager.decodeSubscription(subscriptionId) ?: return false
+            val prevProfileRemark = subItem.prevProfile?.takeIf { it.isNotBlank() }
+            val nextProfileRemark = subItem.nextProfile?.takeIf { it.isNotBlank() }
+            val chainedProfileLookup = resolveProfilesByRemarks(
+                setOfNotNull(prevProfileRemark, nextProfileRemark)
+            )
 
             //current proxy
             val outbound = v2rayConfig.outbounds[0]
 
             //Previous proxy
-            val prevNode = SettingsManager.getServerViaRemarks(subItem.prevProfile)
+            val prevNode = prevProfileRemark?.let { chainedProfileLookup[it] }
             if (prevNode != null) {
                 val prevOutbound = convertProfile2Outbound(prevNode)
                 if (prevOutbound != null) {
@@ -807,7 +821,7 @@ object V2rayConfigManager {
             }
 
             //Next proxy
-            val nextNode = SettingsManager.getServerViaRemarks(subItem.nextProfile)
+            val nextNode = nextProfileRemark?.let { chainedProfileLookup[it] }
             if (nextNode != null) {
                 val nextOutbound = convertProfile2Outbound(nextNode)
                 if (nextOutbound != null) {
@@ -845,6 +859,27 @@ object V2rayConfigManager {
             return false
         }
         return true
+    }
+
+    private fun resolveProfilesByRemarks(remarks: Set<String>): Map<String, ProfileItem> {
+        if (remarks.isEmpty()) {
+            return emptyMap()
+        }
+
+        val unresolvedRemarks = HashSet(remarks)
+        val resolvedProfiles = HashMap<String, ProfileItem>(remarks.size)
+        val serverGuids = MmkvManager.decodeAllServerList()
+        for (guid in serverGuids) {
+            if (unresolvedRemarks.isEmpty()) {
+                break
+            }
+            val profile = MmkvManager.decodeServerConfig(guid) ?: continue
+            val profileRemarks = profile.remarks
+            if (profileRemarks.isNotEmpty() && unresolvedRemarks.remove(profileRemarks)) {
+                resolvedProfiles[profileRemarks] = profile
+            }
+        }
+        return resolvedProfiles
     }
 
     private fun shouldEnableMux(outbound: OutboundBean, protocol: String?): Boolean {

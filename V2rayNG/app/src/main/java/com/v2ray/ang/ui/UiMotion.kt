@@ -5,6 +5,8 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +17,10 @@ import com.v2ray.ang.R
 object UiMotion {
     private val motionInterpolator = FastOutSlowInInterpolator()
 
+    private fun isMotionEnabled(view: View): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    }
+
     fun attachPressFeedback(
         view: View,
         pressedScale: Float = 0.975f
@@ -22,6 +28,9 @@ object UiMotion {
         view.setOnTouchListener { target, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!isMotionEnabled(target)) {
+                        return@setOnTouchListener false
+                    }
                     target.animate().cancel()
                     target.animate()
                         .scaleX(pressedScale)
@@ -33,6 +42,11 @@ object UiMotion {
 
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_CANCEL -> {
+                    if (!isMotionEnabled(target)) {
+                        target.scaleX = 1f
+                        target.scaleY = 1f
+                        return@setOnTouchListener false
+                    }
                     target.animate().cancel()
                     target.animate()
                         .scaleX(1f)
@@ -54,6 +68,9 @@ object UiMotion {
         source.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!isMotionEnabled(target)) {
+                        return@setOnTouchListener false
+                    }
                     target.animate().cancel()
                     target.animate()
                         .alpha(pressedAlpha)
@@ -64,6 +81,10 @@ object UiMotion {
 
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_CANCEL -> {
+                    if (!isMotionEnabled(target)) {
+                        target.alpha = 1f
+                        return@setOnTouchListener false
+                    }
                     target.animate().cancel()
                     target.animate()
                         .alpha(1f)
@@ -108,6 +129,14 @@ object UiMotion {
         duration: Long = MotionTokens.REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
+        if (!isMotionEnabled(view)) {
+            view.alpha = 1f
+            view.translationY = 0f
+            if (!view.isVisible) {
+                view.isVisible = true
+            }
+            return
+        }
         view.animate().cancel()
         view.alpha = 0f
         view.translationY = offsetPx
@@ -127,6 +156,15 @@ object UiMotion {
         startDelay: Long = 0L
     ) {
         val offsetPx = container.resources.displayMetrics.density * translationOffsetDp
+        if (!isMotionEnabled(container)) {
+            for (index in 0 until container.childCount) {
+                container.getChildAt(index).apply {
+                    alpha = 1f
+                    translationY = 0f
+                }
+            }
+            return
+        }
         for (index in 0 until container.childCount) {
             val child = container.getChildAt(index)
             child.animate().cancel()
@@ -143,6 +181,11 @@ object UiMotion {
     }
 
     fun animatePulse(view: View, pulseScale: Float = 1.04f, duration: Long = MotionTokens.PULSE_DEFAULT) {
+        if (!isMotionEnabled(view)) {
+            view.scaleX = 1f
+            view.scaleY = 1f
+            return
+        }
         view.animate().cancel()
         view.animate()
             .scaleX(pulseScale)
@@ -173,6 +216,13 @@ object UiMotion {
             return
         }
         view.setTag(R.id.tag_motion_animated_once, key)
+        if (!isMotionEnabled(view)) {
+            view.alpha = 1f
+            view.translationY = 0f
+            view.scaleX = 1f
+            view.scaleY = 1f
+            return
+        }
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
         view.animate().cancel()
         view.alpha = 0f
@@ -196,6 +246,12 @@ object UiMotion {
         contractScale: Float = 0.992f,
         duration: Long = MotionTokens.STATUS_TRANSITION_DURATION
     ) {
+        if (!isMotionEnabled(view)) {
+            view.scaleX = 1f
+            view.scaleY = 1f
+            view.alpha = 1f
+            return
+        }
         (view.getTag(R.id.tag_motion_running_animator) as? Animator)?.cancel()
 
         val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, expandScale, contractScale, 1f)
@@ -231,6 +287,13 @@ object UiMotion {
         duration: Long = MotionTokens.EMPHASIS_DURATION
     ) {
         val offsetPx = primary.resources.displayMetrics.density * translationOffsetDp
+        if (!isMotionEnabled(primary)) {
+            primary.translationY = 0f
+            primary.alpha = 1f
+            secondary?.translationY = 0f
+            secondary?.alpha = 1f
+            return
+        }
         primary.animate().cancel()
         secondary?.animate()?.cancel()
 
@@ -269,6 +332,10 @@ object UiMotion {
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
         view.setTag(R.id.tag_visibility_target, visible)
+        if (!isMotionEnabled(view)) {
+            setVisibility(view, visible)
+            return
+        }
 
         if (visible) {
             if (view.isVisible && view.alpha == 1f && view.translationY == 0f) {

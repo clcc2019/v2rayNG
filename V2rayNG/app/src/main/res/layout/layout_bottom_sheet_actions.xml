@@ -39,8 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp4"
-            android:ellipsize="end"
-            android:maxLines="2"
+            android:maxLines="12"
             android:textAppearance="@style/TextAppearance.V2Ray.Support"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />

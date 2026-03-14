@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
@@ -14,7 +15,8 @@ import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.handler.V2RayNativeManager
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
+import com.v2ray.ang.ui.common.actionBottomSheetItem
+import com.v2ray.ang.ui.common.showMessageBottomSheet
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,6 +30,10 @@ class CheckUpdateActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.update_check_for_update))
+        applyPressMotion(binding.layoutCheckUpdate)
+        (binding.root.getChildAt(0) as? ViewGroup)?.let {
+            postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
+        }
 
         binding.layoutCheckUpdate.setOnClickListener {
             checkForUpdates(binding.checkPreRelease.isChecked)
@@ -68,15 +74,18 @@ class CheckUpdateActivity : BaseActivity() {
     }
 
     private fun showUpdateDialog(result: CheckUpdateResult) {
-        v2rayAlertDialogBuilder()
-            .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
-            .setMessage(result.releaseNotes)
-            .setPositiveButton(R.string.update_now) { _, _ ->
-                result.downloadUrl?.let {
-                    Utils.openUri(this, it)
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        UiMotion.animatePulse(binding.layoutCheckUpdate, pulseScale = 1.012f, duration = MotionTokens.PULSE_QUICK)
+        showMessageBottomSheet(
+            title = getString(R.string.update_new_version_found, result.latestVersion),
+            message = result.releaseNotes.orEmpty(),
+            actions = listOf(
+                actionBottomSheetItem(getString(R.string.update_now), R.drawable.ic_check_update_24dp) {
+                    result.downloadUrl?.let {
+                        Utils.openUri(this, it)
+                    }
+                },
+                actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+            )
+        )
     }
 }

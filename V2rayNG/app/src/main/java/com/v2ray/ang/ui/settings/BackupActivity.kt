@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.app.Activity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.tencent.mmkv.MMKV
@@ -19,7 +20,8 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.WebDavManager
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
+import com.v2ray.ang.ui.common.actionBottomSheetItem
+import com.v2ray.ang.ui.common.showActionBottomSheet
 import com.v2ray.ang.util.ZipUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,15 +44,13 @@ class BackupActivity : HelperBaseActivity() {
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_configuration_backup_restore))
 
         binding.layoutBackup.setOnClickListener {
-            v2rayAlertDialogBuilder()
-                .setTitle(R.string.title_configuration_backup)
-                .setItems(config_backup_options) { dialog, which ->
-                    when (which) {
-                        0 -> backupViaLocal()
-                        1 -> backupViaWebDav()
-                    }
-                }
-                .show()
+            showActionBottomSheet(
+                title = getString(R.string.title_configuration_backup),
+                actions = listOf(
+                    actionBottomSheetItem(config_backup_options[0], R.drawable.ic_file_24dp) { backupViaLocal() },
+                    actionBottomSheetItem(config_backup_options[1], R.drawable.ic_cloud_download_24dp) { backupViaWebDav() }
+                )
+            )
         }
 
         binding.layoutShare.setOnClickListener {
@@ -90,15 +90,13 @@ class BackupActivity : HelperBaseActivity() {
         }
 
         binding.layoutRestore.setOnClickListener {
-            v2rayAlertDialogBuilder()
-                .setTitle(R.string.title_configuration_restore)
-                .setItems(config_backup_options) { dialog, which ->
-                    when (which) {
-                        0 -> restoreViaLocal()
-                        1 -> restoreViaWebDav()
-                    }
-                }
-                .show()
+            showActionBottomSheet(
+                title = getString(R.string.title_configuration_restore),
+                actions = listOf(
+                    actionBottomSheetItem(config_backup_options[0], R.drawable.ic_restore_24dp) { restoreViaLocal() },
+                    actionBottomSheetItem(config_backup_options[1], R.drawable.ic_cloud_download_24dp) { restoreViaWebDav() }
+                )
+            )
         }
 
         binding.layoutWebdavConfigSetting.setOnClickListener {
@@ -168,6 +166,7 @@ class BackupActivity : HelperBaseActivity() {
                 }
                 withContext(Dispatchers.Main) {
                     if (restored) {
+                        setResult(Activity.RESULT_OK)
                         toastSuccess(R.string.toast_success)
                     } else {
                         toastError(R.string.toast_failure)
@@ -298,12 +297,13 @@ class BackupActivity : HelperBaseActivity() {
                 }
 
                 val restored = restoreConfiguration(target)
-                withContext(Dispatchers.Main) {
-                    if (restored) {
-                        toastSuccess(R.string.toast_success)
-                    } else {
-                        toastError(R.string.toast_failure)
-                    }
+                    withContext(Dispatchers.Main) {
+                        if (restored) {
+                            setResult(Activity.RESULT_OK)
+                            toastSuccess(R.string.toast_success)
+                        } else {
+                            toastError(R.string.toast_failure)
+                        }
                 }
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "WebDAV download error", e)
@@ -330,10 +330,11 @@ class BackupActivity : HelperBaseActivity() {
             dialogBinding.etWebdavRemotePath.setText(cfg.remoteBasePath ?: "/")
         }
 
-        v2rayAlertDialogBuilder()
-            .setTitle(R.string.title_webdav_config_setting)
-            .setView(dialogBinding.root)
-            .setPositiveButton(R.string.menu_item_save_config) { _, _ ->
+        showActionBottomSheet(
+            title = getString(R.string.title_webdav_config_setting),
+            contentView = dialogBinding.root,
+            actions = listOf(
+                actionBottomSheetItem(getString(R.string.menu_item_save_config), R.drawable.ic_save_24dp) {
                 val url = dialogBinding.etWebdavUrl.text.toString().trim()
                 val user = dialogBinding.etWebdavUser.text.toString().trim().ifEmpty { null }
                 val pass = dialogBinding.etWebdavPass.text.toString()
@@ -341,8 +342,9 @@ class BackupActivity : HelperBaseActivity() {
                 val cfg = WebDavConfig(baseUrl = url, username = user, password = pass, remoteBasePath = remotePath)
                 MmkvManager.encodeWebDavConfig(cfg)
                 toastSuccess(R.string.toast_success)
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+                },
+                actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+            )
+        )
     }
 }

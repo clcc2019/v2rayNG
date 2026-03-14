@@ -30,6 +30,8 @@ class MainToolbarController(
     private var waveAnimator: Animator? = null
     private var transientMessage: CharSequence? = null
     private var transientClearRunnable: Runnable? = null
+    private var lastAppliedMessage: CharSequence? = null
+    private var waveAnimationActive = false
 
     fun attach() {
         val actionView = activity.layoutInflater.inflate(R.layout.item_toolbar_app_action, binding.toolbar, false)
@@ -42,6 +44,7 @@ class MainToolbarController(
         binding.toolbar.addView(actionView, 0, layoutParams)
         statusText = actionView.findViewById(R.id.toolbar_status_text)
         appIcon = actionView.findViewById(R.id.toolbar_app_icon)
+        UiMotion.attachPressFeedback(actionView, pressedScale = 0.985f)
         val openMoreAction: (View) -> Unit = { view ->
             view.hapticClick()
             onOpenMorePage()
@@ -52,7 +55,7 @@ class MainToolbarController(
 
     fun updateStatus(serviceUiState: ServiceUiState, isTesting: Boolean) {
         transientMessage?.let { message ->
-            applyStatus(message)
+            applyStatus(message, animateIcon = true)
             return
         }
         val statusResId = when {
@@ -61,13 +64,13 @@ class MainToolbarController(
             serviceUiState == ServiceUiState.STOPPING -> R.string.connection_stopping_short
             else -> null
         }
-        val message = statusResId?.let { activity.getString(it) } ?: activity.getString(R.string.app_name)
-        applyStatus(message)
+        val message = statusResId?.let { activity.getString(it) }
+        applyStatus(message, animateIcon = statusResId != null)
     }
 
     fun showTransientMessage(message: CharSequence, duration: Long = 2200L) {
         transientMessage = message
-        applyStatus(message)
+        applyStatus(message, animateIcon = true)
         val targetView = statusText
         transientClearRunnable?.let { targetView?.removeCallbacks(it) }
         val runnable = Runnable {
@@ -85,22 +88,31 @@ class MainToolbarController(
         stopWaveAnimation()
     }
 
-    private fun applyStatus(message: CharSequence?) {
+    private fun applyStatus(message: CharSequence?, animateIcon: Boolean) {
         val view = statusText ?: return
         if (message.isNullOrBlank()) {
+            lastAppliedMessage = null
             view.isVisible = false
             stopWaveAnimation()
             return
         }
-        view.text = message
+        if (lastAppliedMessage?.toString() != message.toString()) {
+            view.text = message
+            lastAppliedMessage = message
+        }
         view.isVisible = true
-        startWaveAnimation()
+        if (animateIcon) {
+            startWaveAnimation()
+        } else {
+            stopWaveAnimation()
+        }
     }
 
     private fun startWaveAnimation() {
         val iconView = appIcon ?: return
-        val running = waveAnimator?.isRunning == true
-        if (running) return
+        if (waveAnimationActive && waveAnimator?.isRunning == true) return
+        stopWaveAnimation()
+        waveAnimationActive = true
 
         val scaleX = PropertyValuesHolder.ofKeyframe(
             View.SCALE_X,
@@ -153,6 +165,7 @@ class MainToolbarController(
     }
 
     private fun stopWaveAnimation() {
+        waveAnimationActive = false
         waveAnimator?.cancel()
         waveAnimator = null
         appIcon?.apply {

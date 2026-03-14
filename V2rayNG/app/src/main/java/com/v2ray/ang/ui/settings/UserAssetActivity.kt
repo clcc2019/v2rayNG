@@ -21,8 +21,8 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.ui.common.showChoiceBottomSheet
 import com.v2ray.ang.ui.common.showConfirmDialog
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.UserAssetViewModel
 import kotlinx.coroutines.Dispatchers
@@ -83,7 +83,11 @@ class UserAssetActivity : HelperBaseActivity() {
     }
 
     private fun setGeoFilesSources() {
-        v2rayAlertDialogBuilder().setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
+        showChoiceBottomSheet(
+            title = getString(R.string.title_user_asset_setting),
+            options = AppConfig.GEO_FILES_SOURCES,
+            iconRes = R.drawable.ic_cloud_download_24dp
+        ) { i ->
             try {
                 val value = AppConfig.GEO_FILES_SOURCES[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_GEO_FILES_SOURCES, value)
@@ -91,7 +95,7 @@ class UserAssetActivity : HelperBaseActivity() {
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "Failed to set geo files sources", e)
             }
-        }.show()
+        }
     }
 
     private fun showFileChooser() {
@@ -218,7 +222,11 @@ class UserAssetActivity : HelperBaseActivity() {
             val assets = viewModel.getAssets()
             val fileMeta = buildAssetFileMeta(extDir.listFiles())
             withContext(Dispatchers.Main) {
-                adapter.submitList(assets, fileMeta)
+                // This list sits inside a NestedScrollView with wrap_content height, so it must
+                // request a fresh measurement after async diff updates or rows may stay collapsed.
+                adapter.submitList(assets, fileMeta) {
+                    binding.recyclerView.requestLayout()
+                }
             }
         }
     }

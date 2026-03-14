@@ -55,12 +55,6 @@
                     android:id="@+id/row_routing_setting"
                     layout="@layout/item_more_action_routing" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -122,8 +116,8 @@
                 android:orientation="vertical">
 
                 <include
-                    android:id="@+id/row_logcat"
-                    layout="@layout/item_more_action_logcat" />
+                    android:id="@+id/row_backup_restore"
+                    layout="@layout/item_more_action_backup" />
 
                 <View
                     android:layout_width="match_parent"
@@ -134,6 +128,16 @@
                 <include
                     android:id="@+id/row_check_update"
                     layout="@layout/item_more_action_update" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="54dp"
+                    android:background="@color/color_card_outline" />
+
+                <include
+                    android:id="@+id/row_logcat"
+                    layout="@layout/item_more_action_logcat" />
 
             </LinearLayout>
 
@@ -162,16 +166,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <include
-                    android:id="@+id/row_backup_restore"
-                    layout="@layout/item_more_action_backup" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
 
                 <include
                     android:id="@+id/row_about"

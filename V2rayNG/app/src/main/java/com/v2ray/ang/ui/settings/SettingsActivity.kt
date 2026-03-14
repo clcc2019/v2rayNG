@@ -35,21 +35,13 @@ class SettingsActivity : BaseActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_settings, menu)
         val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as? SearchView
-        searchView?.apply {
-            queryHint = getString(R.string.hint_search_settings)
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    getSettingsFragment()?.filterPreferences(query)
-                    return true
-                }
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    getSettingsFragment()?.filterPreferences(newText)
-                    return true
-                }
-            })
-        }
+        setupSearchView(
+            menuItem = searchItem,
+            hint = getString(R.string.hint_search_settings),
+            onQueryChanged = { query ->
+                getSettingsFragment()?.filterPreferences(query)
+            }
+        )
 
         searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean = true
@@ -67,6 +59,9 @@ class SettingsActivity : BaseActivity() {
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
+        companion object {
+            private const val SETTINGS_OVERVIEW_KEY = "settings_overview"
+        }
 
         private val localDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
         private val fakeDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FAKE_DNS_ENABLED) }
@@ -166,6 +161,14 @@ class SettingsActivity : BaseActivity() {
             }
             setDivider(null)
             setDividerHeight(0)
+            view.post {
+                UiMotion.animateEntrance(
+                    view = listView,
+                    translationOffsetDp = 8f,
+                    startDelay = 48L,
+                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                )
+            }
         }
 
         private fun applyPreferenceVisuals(group: PreferenceGroup, depth: Int = 0) {
@@ -174,8 +177,11 @@ class SettingsActivity : BaseActivity() {
                 preference.isIconSpaceReserved = false
                 when (preference) {
                     is PreferenceCategory -> {
-                        preference.layoutResource =
-                            if (depth == 0) R.layout.preference_category_primary else R.layout.preference_category_modern
+                        preference.layoutResource = if (depth == 0) {
+                            R.layout.preference_category_primary
+                        } else {
+                            R.layout.preference_category_modern
+                        }
                         applyPreferenceVisuals(preference, depth + 1)
                     }
                     is PreferenceGroup -> {
@@ -183,7 +189,11 @@ class SettingsActivity : BaseActivity() {
                         applyPreferenceVisuals(preference, depth + 1)
                     }
                     else -> {
-                        preference.layoutResource = R.layout.preference_item_modern
+                        preference.layoutResource = if (preference.key == SETTINGS_OVERVIEW_KEY) {
+                            R.layout.preference_page_intro
+                        } else {
+                            R.layout.preference_item_modern
+                        }
                     }
                 }
             }

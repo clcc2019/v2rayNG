@@ -6,7 +6,9 @@
     <dimen name="padding_spacing_dp4">4dp</dimen>
     <dimen name="padding_spacing_dp5">5dp</dimen>
     <dimen name="padding_spacing_dp6">6dp</dimen>
+    <dimen name="padding_spacing_dp7">7dp</dimen>
     <dimen name="padding_spacing_dp8">8dp</dimen>
+    <dimen name="padding_spacing_dp9">9dp</dimen>
     <dimen name="padding_spacing_dp10">10dp</dimen>
     <dimen name="padding_spacing_dp12">12dp</dimen>
     <dimen name="padding_spacing_dp14">14dp</dimen>
@@ -18,6 +20,8 @@
     <dimen name="padding_spacing_dp32">32dp</dimen>
     <dimen name="shape_corner_dp16">10dp</dimen>
     <dimen name="shape_corner_dp20">12dp</dimen>
+    <dimen name="image_size_dp18">18dp</dimen>
+    <dimen name="image_size_dp22">22dp</dimen>
     <dimen name="image_size_dp24">24dp</dimen>
     <dimen name="view_height_dp36">36dp</dimen>
     <dimen name="view_height_dp40">40dp</dimen>
@@ -25,12 +29,14 @@
     <dimen name="view_height_dp48">48dp</dimen>
     <dimen name="view_height_dp30">30dp</dimen>
     <dimen name="view_height_dp28">28dp</dimen>
+    <dimen name="view_height_dp22">22dp</dimen>
     <dimen name="view_height_dp26">26dp</dimen>
     <dimen name="view_height_dp32">32dp</dimen>
     <dimen name="view_size_dp36">36dp</dimen>
     <dimen name="view_size_dp40">40dp</dimen>
     <dimen name="view_size_dp44">44dp</dimen>
     <dimen name="view_width_delay_badge">54dp</dimen>
+    <dimen name="view_width_delay_badge_compact">46dp</dimen>
     <dimen name="view_height_dp56">56dp</dimen>
     <dimen name="view_height_dp64">64dp</dimen>
     <dimen name="view_height_dp72">72dp</dimen>

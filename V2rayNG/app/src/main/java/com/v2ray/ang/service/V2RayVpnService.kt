@@ -47,6 +47,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isStarting = AtomicBoolean(false)
     private val isStopping = AtomicBoolean(false)
+    private val networkCallbackRegistered = AtomicBoolean(false)
 
     /**destroy
      * Unfortunately registerDefaultNetworkCallback is going to return our VPN interface: https://android.googlesource.com/platform/frameworks/base/+/dda156ab0c5d66ad82bdcf76cda07cbc0a9c8a2e
@@ -103,6 +104,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
 
     override fun onDestroy() {
         NotificationManager.cancelNotification()
+        V2RayServiceManager.onServiceDestroyed(this)
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -170,6 +172,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                     stopAllService(isForced = true)
                     return@launch
                 }
+                registerPlatformNetworkCallback()
                 Log.i(AppConfig.TAG, "VPN start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
                 isStarting.set(false)
@@ -186,6 +189,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         serviceScope.launch {
             try {
                 stopAllService(true)
+                V2RayServiceManager.onServiceStopCompleted(this@V2RayVpnService)
             } finally {
                 isStarting.set(false)
                 isStopping.set(false)
@@ -261,10 +265,10 @@ class V2RayVpnService : VpnService(), ServiceControl {
             Log.w(AppConfig.TAG, "Failed to close old interface", e)
         }
 
-        // Configure platform-specific features
+        // Configure non-blocking platform builder features only.
         val platformStartAt = SystemClock.elapsedRealtime()
         configurePlatformFeatures(builder)
-        Log.i(AppConfig.TAG, "VPN platform features configured in ${SystemClock.elapsedRealtime() - platformStartAt}ms")
+        Log.i(AppConfig.TAG, "VPN builder platform features configured in ${SystemClock.elapsedRealtime() - platformStartAt}ms")
 
         // Create a new interface using the builder and save the parameters
         try {
@@ -341,20 +345,28 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * @param builder The VPN Builder to configure
      */
     private fun configurePlatformFeatures(builder: Builder) {
-        // Android P (API 28) and above: Configure network callbacks
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            try {
-                connectivity.requestNetwork(defaultNetworkRequest, defaultNetworkCallback)
-            } catch (e: Exception) {
-                Log.e(AppConfig.TAG, "Failed to request default network", e)
-            }
-        }
-
         // Android Q (API 29) and above: Configure metering and HTTP proxy
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             builder.setMetered(false)
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_APPEND_HTTP_PROXY)) {
                 builder.setHttpProxy(ProxyInfo.buildDirectProxy(LOOPBACK, SettingsManager.getHttpPort()))
+            }
+        }
+    }
+
+    private fun registerPlatformNetworkCallback() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return
+        }
+        if (!networkCallbackRegistered.compareAndSet(false, true)) {
+            return
+        }
+        serviceScope.launch {
+            try {
+                connectivity.requestNetwork(defaultNetworkRequest, defaultNetworkCallback)
+            } catch (e: Exception) {
+                networkCallbackRegistered.set(false)
+                Log.e(AppConfig.TAG, "Failed to request default network", e)
             }
         }
     }
@@ -438,7 +450,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
 //        val info = loadVpnNetworkInfo(configName, emptyInfo)!! + (lastNetworkInfo ?: emptyInfo)
 //        saveVpnNetworkInfo(configName, info)
         isRunning = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && networkCallbackRegistered.compareAndSet(true, false)) {
             try {
                 connectivity.unregisterNetworkCallback(defaultNetworkCallback)
             } catch (e: Exception) {

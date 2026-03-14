@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "android-device-automation": {
+      "source": "web-infra-dev/midscene-skills",
+      "sourceType": "github",
+      "computedHash": "2f0f385b874bf03091a97c66dc13595b81bbec27d55eb8195eb2a08a926e2694"
+    },
+    "android-kotlin": {
+      "source": "alinaqi/claude-bootstrap",
+      "sourceType": "github",
+      "computedHash": "08562cabf7a3afb5c10800334a4b4bbb99cdc88773f6bb63d55ac924c3160489"
+    },
+    "mobile-android-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "0dfa08663016e0faa2db0611420bd5c17ba2d635a057e17a6b71c2a0c3f2ed79"
+    }
+  }
+}

@@ -25,7 +25,8 @@ import kotlinx.coroutines.withContext
 class MainActionsController(
     private val activity: HelperBaseActivity,
     private val mainViewModel: MainViewModel,
-    private val onSetupGroupTabs: () -> Unit
+    private val onSetupGroupTabs: () -> Unit,
+    private val onOpenSearch: () -> Unit
 ) {
     private data class ManualImportAction(
         val type: EConfigType,
@@ -47,7 +48,15 @@ class MainActionsController(
         }
     }
 
-    private fun showAddSheet() {
+    fun showMoreSheet() {
+        activity.showActionBottomSheet(
+            title = activity.getString(R.string.action_more),
+            subtitle = null,
+            actions = buildToolbarMoreActions()
+        )
+    }
+
+    fun showAddSheet() {
         activity.showActionBottomSheet(
             title = activity.getString(R.string.menu_item_add_config),
             subtitle = activity.getString(R.string.current_config),
@@ -55,12 +64,9 @@ class MainActionsController(
         )
     }
 
-    private fun showMoreSheet() {
-        activity.showActionBottomSheet(
-            title = "",
-            subtitle = null,
-            actions = buildHomeMoreActions()
-        )
+    private fun buildToolbarMoreActions(): List<ActionBottomSheetItem> = buildList {
+        add(actionBottomSheetItem(R.string.menu_item_search, R.drawable.ic_search_24dp) { onOpenSearch() })
+        addAll(buildHomeMoreActions())
     }
 
     private fun buildHomeAddActions(): List<ActionBottomSheetItem> {

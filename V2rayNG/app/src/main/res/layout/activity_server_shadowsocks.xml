@@ -1,72 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16"
     android:scrollbars="none"
     tools:context=".ui.ServerActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp16">
+        android:orientation="vertical">
 
         <include layout="@layout/layout_address_port" />
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            app:cardBackgroundColor="@color/md_theme_surface"
+            app:strokeWidth="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_id3"
-                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
-
-            <EditText
-                android:id="@+id/et_id"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:orientation="vertical"
+                android:padding="@dimen/padding_spacing_dp16">
 
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/group_basic_info"
+                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp16"
+                    android:text="@string/server_lab_id3"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+                <EditText
+                    android:id="@+id/et_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    android:inputType="text" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_security3"
-                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp12"
+                    android:text="@string/server_lab_security3"
+                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-            <Spinner
-                android:id="@+id/sp_security"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginBottom="@dimen/padding_spacing_dp8"
-                android:entries="@array/ss_securitys" />
-        </LinearLayout>
+                <Spinner
+                    android:id="@+id/sp_security"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    android:layout_marginBottom="@dimen/padding_spacing_dp8"
+                    android:entries="@array/ss_securitys" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <include layout="@layout/layout_transport" />
 
         <include layout="@layout/layout_tls" />
 
-        <LinearLayout
+        <Space
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical" />
+            android:layout_height="@dimen/padding_spacing_dp8" />
 
     </LinearLayout>
 </ScrollView>

@@ -10,7 +10,7 @@ class MainSearchController(
     private val activity: MainActivity,
     private val groupTabsController: MainGroupTabsController,
     private val mainViewModel: MainViewModel,
-    private val onSearchUiChanged: () -> Unit
+    private val onSearchUiChanged: (Boolean) -> Unit
 ) {
     private var homeSearchView: SearchView? = null
     private var lastSearchQuery: String = ""
@@ -31,8 +31,9 @@ class MainSearchController(
                 }
             },
             onClosed = {
+                homeSearchView?.let { activity.updateToolbarSearchActionLayout(it, expanded = false) }
                 isSearchUiActive = false
-                onSearchUiChanged()
+                onSearchUiChanged(false)
                 lastSearchQuery = ""
                 mainViewModel.filterConfig("")
                 dismissSearchFocus()
@@ -41,18 +42,16 @@ class MainSearchController(
             debounceMillis = 180L
         )?.also { searchView ->
             searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-                isSearchUiActive = hasFocus
-                onSearchUiChanged()
+                updateSearchUiState(hasFocus)
             }
             searchView.setOnSearchClickListener {
-                isSearchUiActive = true
-                onSearchUiChanged()
+                activity.updateToolbarSearchActionLayout(searchView, expanded = true)
+                updateSearchUiState(true)
                 scrollCurrentServerListToTop()
             }
             searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)
                 ?.setOnEditorActionListener { v, actionId, _ ->
-                    isSearchUiActive = v.hasFocus()
-                    onSearchUiChanged()
+                    updateSearchUiState(v.hasFocus())
                     if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                         dismissSearchFocus()
                         true
@@ -62,28 +61,26 @@ class MainSearchController(
                 }
             searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)
                 ?.setOnFocusChangeListener { _, hasFocus ->
-                    isSearchUiActive = hasFocus
-                    onSearchUiChanged()
+                    updateSearchUiState(hasFocus)
                 }
         }
     }
 
     fun onMenuItemCollapsed() {
-        isSearchUiActive = false
-        onSearchUiChanged()
+        homeSearchView?.let { activity.updateToolbarSearchActionLayout(it, expanded = false) }
+        updateSearchUiState(false)
         dismissSearchFocus()
     }
 
     fun onMenuItemExpanded() {
-        isSearchUiActive = true
-        onSearchUiChanged()
+        homeSearchView?.let { activity.updateToolbarSearchActionLayout(it, expanded = true) }
+        updateSearchUiState(true)
     }
 
     fun onInsetsChanged(insets: WindowInsetsCompat) {
         val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
         if (imeInsets.bottom == 0 && isSearchUiActive && homeSearchView?.isIconified == true) {
-            isSearchUiActive = false
-            onSearchUiChanged()
+            updateSearchUiState(false)
         }
     }
 
@@ -98,6 +95,14 @@ class MainSearchController(
         if (token != null) {
             imm?.hideSoftInputFromWindow(token, 0)
         }
+    }
+
+    private fun updateSearchUiState(active: Boolean) {
+        if (isSearchUiActive == active) {
+            return
+        }
+        isSearchUiActive = active
+        onSearchUiChanged(active)
     }
 
 }

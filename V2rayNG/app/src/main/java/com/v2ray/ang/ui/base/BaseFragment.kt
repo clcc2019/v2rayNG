@@ -64,6 +64,5 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
         (recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(16)
-        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
     }
 }

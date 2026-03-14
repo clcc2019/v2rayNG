@@ -5,32 +5,55 @@
     <color name="colorConfigType">#6F93C8</color>
     <color name="color_fab_active">#6F93C8</color>
     <color name="color_fab_inactive">#67788B</color>
-    <color name="divider_color_light">#2A3442</color>
-    <color name="colorSelectionIndicator">#2F4666</color>
-    <color name="colorSelectionFill">#0E131E</color>
-    <color name="colorDrawerHeaderStart">#142235</color>
-    <color name="colorDrawerHeaderEnd">#111B2A</color>
-    <color name="colorStatusIdle">#78869A</color>
-    <color name="color_card_outline">#222B36</color>
+    <color name="divider_color_light">#242930</color>
+    <color name="colorSelectionIndicator">#304865</color>
+    <color name="colorSelectionFill">#101419</color>
+    <color name="colorDrawerHeaderStart">#1A2634</color>
+    <color name="colorDrawerHeaderEnd">#141C27</color>
+    <color name="colorStatusIdle">#758191</color>
+    <color name="color_card_outline">#262B32</color>
     <color name="color_card_glow">#33FFFFFF</color>
-    <color name="color_latency_bg_good">#1B2420</color>
-    <color name="color_latency_bg_warn">#241F18</color>
-    <color name="color_latency_bg_bad">#241A1A</color>
-    <color name="color_latency_bg_idle">#181E26</color>
+    <color name="color_latency_bg_good">#162019</color>
+    <color name="color_latency_bg_warn">#231D14</color>
+    <color name="color_latency_bg_bad">#221717</color>
+    <color name="color_latency_bg_idle">#14181D</color>
+    <color name="color_section_action_surface">#181C21</color>
+    <color name="color_section_action_surface_pressed">#20252B</color>
+    <color name="color_form_field_surface">#12161B</color>
+    <color name="color_home_background">#000000</color>
+    <color name="color_home_surface">#0E1115</color>
+    <color name="color_home_surface_raised">#12161A</color>
+    <color name="color_home_surface_selected">#1A2430</color>
+    <color name="color_home_surface_soft">#171B20</color>
+    <color name="color_home_on_surface">#F4F7FA</color>
+    <color name="color_home_on_surface_muted">#A4AFBC</color>
+    <color name="color_home_outline">#292E35</color>
+    <color name="color_home_indicator_idle">#404751</color>
+    <color name="color_home_primary">#F4F7FA</color>
+    <color name="color_home_on_primary">#000000</color>
+    <color name="color_home_chip_protocol">#F4F7FA</color>
+    <color name="color_home_metric_idle">#1B2026</color>
+    <color name="color_home_metric_idle_text">#909CAB</color>
+    <color name="color_home_metric_good">#16281D</color>
+    <color name="color_home_metric_warn">#2A2316</color>
+    <color name="color_home_metric_bad">#2A1C1C</color>
+    <color name="color_home_metric_good_text">#7CDFA3</color>
+    <color name="color_home_metric_warn_text">#F3C777</color>
+    <color name="color_home_metric_bad_text">#FF9B98</color>
 
     <color name="md_theme_primary">#2785FF</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#123462</color>
+    <color name="md_theme_primaryContainer">#1E3958</color>
     <color name="md_theme_onPrimaryContainer">#D7E8FF</color>
 
     <color name="md_theme_secondary">#2785FF</color>
     <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#123462</color>
+    <color name="md_theme_secondaryContainer">#1E3958</color>
     <color name="md_theme_onSecondaryContainer">#D7E8FF</color>
 
     <color name="md_theme_tertiary">#2785FF</color>
     <color name="md_theme_onTertiary">#FFFFFF</color>
-    <color name="md_theme_tertiaryContainer">#123462</color>
+    <color name="md_theme_tertiaryContainer">#1E3958</color>
     <color name="md_theme_onTertiaryContainer">#D7E8FF</color>
 
     <color name="md_theme_error">#FF7A7A</color>
@@ -43,15 +66,15 @@
     <color name="md_theme_background">#000000</color>
     <color name="md_theme_onBackground">#FFFFFF</color>
 
-    <color name="md_theme_surface">#0B0D12</color>
+    <color name="md_theme_surface">#101317</color>
     <color name="md_theme_onSurface">#FFFFFF</color>
-    <color name="md_theme_surfaceVariant">#141B24</color>
-    <color name="md_theme_onSurfaceVariant">#A9B4C3</color>
+    <color name="md_theme_surfaceVariant">#171C22</color>
+    <color name="md_theme_onSurfaceVariant">#A4AFBC</color>
     <color name="md_theme_inverseSurface">#E4E9F1</color>
     <color name="md_theme_inverseOnSurface">#000000</color>
 
-    <color name="md_theme_outline">#2A3340</color>
-    <color name="md_theme_outlineVariant">#1C2430</color>
+    <color name="md_theme_outline">#2E343D</color>
+    <color name="md_theme_outlineVariant">#232931</color>
 
     <color name="md_theme_inversePrimary">#2785FF</color>
     <color name="md_theme_shadow">#000000</color>

@@ -4,14 +4,14 @@
 
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/md_theme_surfaceVariant" />
+            <solid android:color="@color/color_home_surface_soft" />
             <corners android:radius="16dp" />
         </shape>
     </item>
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
-            <solid android:color="@color/md_theme_surfaceVariant" />
+            <solid android:color="@color/color_home_surface_soft" />
             <corners android:radius="16dp" />
         </shape>
     </item>

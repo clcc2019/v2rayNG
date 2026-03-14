@@ -1,11 +1,9 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
-import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivitySubEditBinding
 import com.v2ray.ang.dto.SubscriptionItem
@@ -21,71 +19,67 @@ import kotlinx.coroutines.launch
 class SubEditActivity : BaseActivity() {
     private val binding by lazy { ActivitySubEditBinding.inflate(layoutInflater) }
 
-    private var del_config: MenuItem? = null
-    private var save_config: MenuItem? = null
+    private var deleteMenuItem: MenuItem? = null
 
     private val editSubId by lazy { intent.getStringExtra("subId").orEmpty() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
-        setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_sub_setting))
+        setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_subscription_details))
 
         SettingsChangeManager.makeSetupGroupTab()
-        val subItem = MmkvManager.decodeSubscription(editSubId)
-        if (subItem != null) {
-            bindingServer(subItem)
-        } else {
-            clearServer()
+        renderSubscription(MmkvManager.decodeSubscription(editSubId))
+    }
+
+    private fun renderSubscription(subItem: SubscriptionItem?) {
+        if (subItem == null) {
+            resetForm()
+            return
+        }
+        binding.apply {
+            etRemarks.text = Utils.getEditable(subItem.remarks)
+            etUrl.text = Utils.getEditable(subItem.url)
+            etUserAgent.text = Utils.getEditable(subItem.userAgent)
+            etFilter.text = Utils.getEditable(subItem.filter)
+            chkEnable.isChecked = subItem.enabled
+            autoUpdateCheck.isChecked = subItem.autoUpdate
+            allowInsecureUrl.isChecked = subItem.allowInsecureUrl
+            etPreProfile.text = Utils.getEditable(subItem.prevProfile)
+            etNextProfile.text = Utils.getEditable(subItem.nextProfile)
         }
     }
 
-    /**
-     * binding selected server config
-     */
-    private fun bindingServer(subItem: SubscriptionItem): Boolean {
-        binding.etRemarks.text = Utils.getEditable(subItem.remarks)
-        binding.etUrl.text = Utils.getEditable(subItem.url)
-        binding.etUserAgent.text = Utils.getEditable(subItem.userAgent)
-        binding.etFilter.text = Utils.getEditable(subItem.filter)
-        binding.chkEnable.isChecked = subItem.enabled
-        binding.autoUpdateCheck.isChecked = subItem.autoUpdate
-        binding.allowInsecureUrl.isChecked = subItem.allowInsecureUrl
-        binding.etPreProfile.text = Utils.getEditable(subItem.prevProfile)
-        binding.etNextProfile.text = Utils.getEditable(subItem.nextProfile)
-        return true
+    private fun resetForm() {
+        binding.apply {
+            etRemarks.text = null
+            etUrl.text = null
+            etUserAgent.text = null
+            etFilter.text = null
+            chkEnable.isChecked = true
+            autoUpdateCheck.isChecked = false
+            allowInsecureUrl.isChecked = false
+            etPreProfile.text = null
+            etNextProfile.text = null
+        }
     }
 
-    /**
-     * clear or init server config
-     */
-    private fun clearServer(): Boolean {
-        binding.etRemarks.text = null
-        binding.etUrl.text = null
-        binding.etFilter.text = null
-        binding.chkEnable.isChecked = true
-        binding.etPreProfile.text = null
-        binding.etNextProfile.text = null
-        return true
+    private fun buildSubscriptionItem(): SubscriptionItem {
+        val existing = MmkvManager.decodeSubscription(editSubId) ?: SubscriptionItem()
+        return existing.apply {
+            remarks = binding.etRemarks.text?.toString().orEmpty().trim()
+            url = binding.etUrl.text?.toString().orEmpty().trim()
+            userAgent = binding.etUserAgent.text?.toString().orEmpty().trim()
+            filter = binding.etFilter.text?.toString().orEmpty().trim()
+            enabled = binding.chkEnable.isChecked
+            autoUpdate = binding.autoUpdateCheck.isChecked
+            prevProfile = binding.etPreProfile.text?.toString().orEmpty().trim()
+            nextProfile = binding.etNextProfile.text?.toString().orEmpty().trim()
+            allowInsecureUrl = binding.allowInsecureUrl.isChecked
+        }
     }
 
-    /**
-     * save server config
-     */
-    private fun saveServer(): Boolean {
-        val subItem = MmkvManager.decodeSubscription(editSubId) ?: SubscriptionItem()
-
-        subItem.remarks = binding.etRemarks.text.toString()
-        subItem.url = binding.etUrl.text.toString()
-        subItem.userAgent = binding.etUserAgent.text.toString()
-        subItem.filter = binding.etFilter.text.toString()
-        subItem.enabled = binding.chkEnable.isChecked
-        subItem.autoUpdate = binding.autoUpdateCheck.isChecked
-        subItem.prevProfile = binding.etPreProfile.text.toString()
-        subItem.nextProfile = binding.etNextProfile.text.toString()
-        subItem.allowInsecureUrl = binding.allowInsecureUrl.isChecked
-
-        if (TextUtils.isEmpty(subItem.remarks)) {
+    private fun validateSubscription(subItem: SubscriptionItem): Boolean {
+        if (subItem.remarks.isBlank()) {
             toast(R.string.sub_setting_remarks)
             return false
         }
@@ -102,32 +96,37 @@ class SubEditActivity : BaseActivity() {
                 }
             }
         }
+        return true
+    }
 
+    private fun saveServer(): Boolean {
+        val subItem = buildSubscriptionItem()
+        if (!validateSubscription(subItem)) {
+            return false
+        }
         MmkvManager.encodeSubscription(editSubId, subItem)
         toastSuccess(R.string.toast_success)
         finish()
         return true
     }
 
-    /**
-     * save server config
-     */
     private fun deleteServer(): Boolean {
-        if (editSubId.isNotEmpty()) {
-            if (!MmkvManager.canRemoveSubscription(editSubId)) {
-                toast(R.string.toast_action_not_allowed)
-                return false
-            }
-            runWithRemovalConfirmation {
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val removed = MmkvManager.removeSubscription(editSubId)
-                    launch(Dispatchers.Main) {
-                        if (removed) {
-                            SettingsChangeManager.makeSetupGroupTab()
-                            finish()
-                        } else {
-                            toast(R.string.toast_action_not_allowed)
-                        }
+        if (editSubId.isBlank()) {
+            return true
+        }
+        if (!MmkvManager.canRemoveSubscription(editSubId)) {
+            toast(R.string.toast_action_not_allowed)
+            return false
+        }
+        runWithRemovalConfirmation {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val removed = MmkvManager.removeSubscription(editSubId)
+                launch(Dispatchers.Main) {
+                    if (removed) {
+                        SettingsChangeManager.makeSetupGroupTab()
+                        finish()
+                    } else {
+                        toast(R.string.toast_action_not_allowed)
                     }
                 }
             }
@@ -137,10 +136,8 @@ class SubEditActivity : BaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_server, menu)
-        del_config = menu.findItem(R.id.del_config)
-        save_config = menu.findItem(R.id.save_config)
-
-        del_config?.isVisible = editSubId.isNotEmpty() && MmkvManager.canRemoveSubscription(editSubId)
+        deleteMenuItem = menu.findItem(R.id.del_config)
+        deleteMenuItem?.isVisible = editSubId.isNotEmpty() && MmkvManager.canRemoveSubscription(editSubId)
 
         return super.onCreateOptionsMenu(menu)
     }

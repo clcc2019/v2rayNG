@@ -48,10 +48,6 @@ class AngApplication : Application() {
             SettingsManager.initAppFast(this)
             SettingsManager.setNightMode()
 
-            es.dmoral.toasty.Toasty.Config.getInstance()
-                .setGravity(android.view.Gravity.BOTTOM, 0, 300)
-                .apply()
-
             CoroutineScope(Dispatchers.Default).launch {
                 SettingsManager.initAppDeferred(this@AngApplication)
             }

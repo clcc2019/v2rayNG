@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -66,20 +67,18 @@ class UrlSchemeActivity : BaseActivity() {
         Log.i(AppConfig.TAG, uriString)
 
         var decodedUrl = URLDecoder.decode(uriString, "UTF-8")
-        val uri = Uri.parse(decodedUrl)
-        if (uri != null) {
-            if (uri.fragment.isNullOrEmpty() && !fragment.isNullOrEmpty()) {
-                decodedUrl += "#${fragment}"
-            }
-            Log.i(AppConfig.TAG, decodedUrl)
-            lifecycleScope.launch(Dispatchers.IO) {
-                val (count, countSub) = AngConfigManager.importBatchConfig(decodedUrl, "", false)
-                withContext(Dispatchers.Main) {
-                    if (count + countSub > 0) {
-                        toast(R.string.import_subscription_success)
-                    } else {
-                        toast(R.string.import_subscription_failure)
-                    }
+        val uri = decodedUrl.toUri()
+        if (uri.fragment.isNullOrEmpty() && !fragment.isNullOrEmpty()) {
+            decodedUrl += "#${fragment}"
+        }
+        Log.i(AppConfig.TAG, decodedUrl)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val (count, countSub) = AngConfigManager.importBatchConfig(decodedUrl, "", false)
+            withContext(Dispatchers.Main) {
+                if (count + countSub > 0) {
+                    toast(R.string.import_subscription_success)
+                } else {
+                    toast(R.string.import_subscription_failure)
                 }
             }
         }

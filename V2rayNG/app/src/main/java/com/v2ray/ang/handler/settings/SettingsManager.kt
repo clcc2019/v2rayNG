@@ -1,5 +1,6 @@
 package com.v2ray.ang.handler
 
+import com.v2ray.ang.AngApplication
 import android.content.Context
 import android.content.res.AssetManager
 import android.text.TextUtils
@@ -33,6 +34,15 @@ import java.util.Collections
 import java.util.Locale
 
 object SettingsManager {
+    private const val DEFAULT_SETTINGS_VERSION = 1
+    private const val KEY_DEFAULT_SETTINGS_VERSION = "default_settings_version"
+    private const val DEFAULT_SUBSCRIPTION_VERSION = 1
+    private const val KEY_DEFAULT_SUBSCRIPTION_VERSION = "default_subscription_version"
+    private val routingRulesetsInitLock = Any()
+    private val routingRulesetsCacheLock = Any()
+    @Volatile
+    private var cachedRoutingRulesetsRaw: String? = null
+    private var cachedRoutingRulesetsSnapshot: List<RulesetItem> = emptyList()
 
     fun initApp(context: Context) {
         initAppFast(context)
@@ -40,14 +50,13 @@ object SettingsManager {
     }
 
     fun initAppFast(context: Context) {
-        ensureDefaultSettings()
-        ensureDefaultSubscription()
-        // Routing defaults are consumed by the routing page and config generation on first launch.
-        initRoutingRulesets(context)
+        ensureDefaultSettingsInitialized()
+        ensureDefaultSubscriptionInitialized()
         migrateServerListToSubscriptions()
     }
 
     fun initAppDeferred(context: Context) {
+        ensureRoutingRulesetsInitialized(context)
         migrateHysteria2PinSHA256()
     }
 
@@ -55,11 +64,54 @@ object SettingsManager {
      * Initialize routing rulesets.
      * @param context The application context.
      */
-    private fun initRoutingRulesets(context: Context) {
-        val exist = MmkvManager.decodeRoutingRulesets()
-        if (exist.isNullOrEmpty()) {
-            val rulesetList = getPresetRoutingRulesets(context)
+    fun ensureRoutingRulesetsInitialized(context: Context = AngApplication.application) {
+        if (!MmkvManager.decodeRoutingRulesets().isNullOrEmpty()) {
+            return
+        }
+        synchronized(routingRulesetsInitLock) {
+            if (!MmkvManager.decodeRoutingRulesets().isNullOrEmpty()) {
+                return
+            }
+            val rulesetList = getPresetRoutingRulesets(context.applicationContext, RoutingType.BLACK.ordinal) ?: return
             MmkvManager.encodeRoutingRulesets(rulesetList)
+        }
+    }
+
+    fun getRoutingRulesets(context: Context = AngApplication.application): MutableList<RulesetItem> {
+        refreshRoutingRulesetsCacheIfNeeded(context)
+        synchronized(routingRulesetsCacheLock) {
+            return cachedRoutingRulesetsSnapshot.map { it.copy() }.toMutableList()
+        }
+    }
+
+    fun getRoutingRulesetsSnapshot(context: Context = AngApplication.application): List<RulesetItem> {
+        refreshRoutingRulesetsCacheIfNeeded(context)
+        synchronized(routingRulesetsCacheLock) {
+            return cachedRoutingRulesetsSnapshot
+        }
+    }
+
+    fun getRoutingRulesetsSignature(context: Context = AngApplication.application): Int {
+        refreshRoutingRulesetsCacheIfNeeded(context)
+        synchronized(routingRulesetsCacheLock) {
+            return cachedRoutingRulesetsRaw?.hashCode() ?: 0
+        }
+    }
+
+    private fun refreshRoutingRulesetsCacheIfNeeded(context: Context) {
+        ensureRoutingRulesetsInitialized(context)
+        val rawRulesets = MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_RULESET).orEmpty()
+        synchronized(routingRulesetsCacheLock) {
+            if (cachedRoutingRulesetsRaw != rawRulesets) {
+                cachedRoutingRulesetsRaw = rawRulesets
+                cachedRoutingRulesetsSnapshot = if (rawRulesets.isEmpty()) {
+                    emptyList()
+                } else {
+                    JsonUtil.fromJson(rawRulesets, Array<RulesetItem>::class.java)
+                        ?.map { it.copy() }
+                        ?: emptyList()
+                }
+            }
         }
     }
 
@@ -69,7 +121,7 @@ object SettingsManager {
      * @param index The index of the routing type.
      * @return A mutable list of RulesetItem.
      */
-    private fun getPresetRoutingRulesets(context: Context, index: Int = 0): MutableList<RulesetItem>? {
+    private fun getPresetRoutingRulesets(context: Context, index: Int = RoutingType.BLACK.ordinal): MutableList<RulesetItem>? {
         val fileName = RoutingType.fromIndex(index).fileName
         val assets = Utils.readTextFromAssets(context, fileName)
         if (TextUtils.isEmpty(assets)) {
@@ -137,7 +189,7 @@ object SettingsManager {
     fun getRoutingRuleset(index: Int): RulesetItem? {
         if (index < 0) return null
 
-        val rulesetList = MmkvManager.decodeRoutingRulesets()
+        val rulesetList = getRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) return null
 
         return rulesetList[index]
@@ -151,7 +203,7 @@ object SettingsManager {
     fun saveRoutingRuleset(index: Int, ruleset: RulesetItem?) {
         if (ruleset == null) return
 
-        var rulesetList = MmkvManager.decodeRoutingRulesets()
+        var rulesetList = getRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) {
             rulesetList = mutableListOf()
         }
@@ -171,7 +223,7 @@ object SettingsManager {
     fun removeRoutingRuleset(index: Int) {
         if (index < 0) return
 
-        val rulesetList = MmkvManager.decodeRoutingRulesets()
+        val rulesetList = getRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) return
 
         rulesetList.removeAt(index)
@@ -201,7 +253,7 @@ object SettingsManager {
             return exist == true
         }
 
-        val rulesetItems = MmkvManager.decodeRoutingRulesets()
+        val rulesetItems = getRoutingRulesets()
         val exist = rulesetItems?.filter { it.enabled && it.outboundTag == TAG_DIRECT }?.any {
             it.domain?.contains(GEOSITE_PRIVATE) == true || it.ip?.contains(GEOIP_PRIVATE) == true
         }
@@ -214,7 +266,7 @@ object SettingsManager {
      * @param toPosition The position to swap to.
      */
     fun swapRoutingRuleset(fromPosition: Int, toPosition: Int) {
-        val rulesetList = MmkvManager.decodeRoutingRulesets()
+        val rulesetList = getRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) return
 
         Collections.swap(rulesetList, fromPosition, toPosition)
@@ -370,10 +422,13 @@ object SettingsManager {
      * Set night mode.
      */
     fun setNightMode() {
-        when (MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0")) {
-            "0" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            "1" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            "2" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        val targetMode = when (MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0")) {
+            "1" -> AppCompatDelegate.MODE_NIGHT_NO
+            "2" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        if (AppCompatDelegate.getDefaultNightMode() != targetMode) {
+            AppCompatDelegate.setDefaultNightMode(targetMode)
         }
     }
 
@@ -414,9 +469,20 @@ object SettingsManager {
     /**
      * Ensure default settings are present in MMKV.
      */
+    private fun ensureDefaultSettingsInitialized() {
+        val currentVersion = MmkvManager.decodeSettingsString(KEY_DEFAULT_SETTINGS_VERSION, "0")
+            ?.toIntOrNull() ?: 0
+        if (currentVersion >= DEFAULT_SETTINGS_VERSION) {
+            return
+        }
+        ensureDefaultSettings()
+        MmkvManager.encodeSettings(KEY_DEFAULT_SETTINGS_VERSION, DEFAULT_SETTINGS_VERSION.toString())
+    }
+
     private fun ensureDefaultSettings() {
         // Write defaults in the exact order requested by the user
         ensureDefaultValue(AppConfig.PREF_MODE, AppConfig.VPN)
+        ensureDefaultValue(AppConfig.PREF_LOCAL_DNS_ENABLED, true)
         ensureDefaultValue(AppConfig.PREF_VPN_DNS, AppConfig.DNS_VPN)
         ensureDefaultValue(AppConfig.PREF_VPN_MTU, AppConfig.VPN_MTU.toString())
         ensureDefaultValue(AppConfig.SUBSCRIPTION_AUTO_UPDATE_INTERVAL, AppConfig.SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL)
@@ -432,8 +498,24 @@ object SettingsManager {
         ensureDefaultValue(AppConfig.PREF_FRAGMENT_INTERVAL, "10-20")
     }
 
+    private fun ensureDefaultSubscriptionInitialized() {
+        val currentVersion = MmkvManager.decodeSettingsString(KEY_DEFAULT_SUBSCRIPTION_VERSION, "0")
+            ?.toIntOrNull() ?: 0
+        if (currentVersion >= DEFAULT_SUBSCRIPTION_VERSION) {
+            return
+        }
+        ensureDefaultSubscription()
+        MmkvManager.encodeSettings(KEY_DEFAULT_SUBSCRIPTION_VERSION, DEFAULT_SUBSCRIPTION_VERSION.toString())
+    }
+
     private fun ensureDefaultValue(key: String, default: String) {
         if (MmkvManager.decodeSettingsString(key).isNullOrEmpty()) {
+            MmkvManager.encodeSettings(key, default)
+        }
+    }
+
+    private fun ensureDefaultValue(key: String, default: Boolean) {
+        if (MmkvManager.decodeSettingsString(key) == null) {
             MmkvManager.encodeSettings(key, default)
         }
     }
@@ -477,9 +559,6 @@ object SettingsManager {
             return
         }
 
-        // Ensure default subscription exists before migration
-        ensureDefaultSubscription()
-
         // Read existing server list from legacy KEY_ANG_CONFIGS
         val oldJson = MmkvManager.readLegacyServerList()
         if (oldJson.isNullOrBlank()) {
@@ -519,16 +598,17 @@ object SettingsManager {
      * Made public for migration in SettingsManager.
      */
     private fun ensureDefaultSubscription() {
-        if (decodeSubscription(DEFAULT_SUBSCRIPTION_ID) == null) {
+        val subsList = decodeSubsList()
+        if (!subsList.contains(DEFAULT_SUBSCRIPTION_ID) || decodeSubscription(DEFAULT_SUBSCRIPTION_ID) == null) {
             val defaultSub = SubscriptionItem(
                 remarks = "Default",
             )
             encodeSubscription(DEFAULT_SUBSCRIPTION_ID, defaultSub)
 
             // Move top
-            val subsList = decodeSubsList()
-            if (subsList.count() > 1) {
-                swapSubscriptions(0, subsList.count() - 1)
+            val updatedSubsList = decodeSubsList()
+            if (updatedSubsList.count() > 1) {
+                swapSubscriptions(0, updatedSubsList.count() - 1)
             }
         }
     }

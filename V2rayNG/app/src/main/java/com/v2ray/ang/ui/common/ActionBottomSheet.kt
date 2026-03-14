@@ -1,13 +1,15 @@
 package com.v2ray.ang.ui.common
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -54,12 +56,14 @@ fun actionBottomSheetItem(
     )
 }
 
-fun AppCompatActivity.showActionBottomSheet(
+fun Context.showActionBottomSheet(
     title: CharSequence,
     subtitle: CharSequence? = null,
-    actions: List<ActionBottomSheetItem>
+    actions: List<ActionBottomSheetItem> = emptyList(),
+    contentView: View? = null
 ) {
-    val sheetBinding = LayoutBottomSheetActionsBinding.inflate(layoutInflater)
+    val inflater = LayoutInflater.from(this)
+    val sheetBinding = LayoutBottomSheetActionsBinding.inflate(inflater)
     val bottomSheetDialog = BottomSheetDialog(this)
 
     val titleText = title.toString()
@@ -90,8 +94,26 @@ fun AppCompatActivity.showActionBottomSheet(
         }
     }
 
+    contentView?.let {
+        sheetBinding.layoutActions.addView(it)
+    }
+
+    if (contentView != null && actions.isNotEmpty()) {
+        val divider = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                resources.getDimensionPixelSize(R.dimen.padding_spacing_dp1)
+            ).also { params ->
+                params.topMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+                params.bottomMargin = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+            }
+            setBackgroundColor(ContextCompat.getColor(context, R.color.color_card_outline))
+        }
+        sheetBinding.layoutActions.addView(divider)
+    }
+
     actions.forEach { action ->
-        val itemBinding = ItemBottomSheetActionBinding.inflate(layoutInflater, sheetBinding.layoutActions, false)
+        val itemBinding = ItemBottomSheetActionBinding.inflate(inflater, sheetBinding.layoutActions, false)
         val iconColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurfaceVariant
         val textColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
 
@@ -130,4 +152,43 @@ fun AppCompatActivity.showActionBottomSheet(
         UiMotion.animateStaggeredChildren(sheetBinding.layoutActions)
     }
     bottomSheetDialog.show()
+}
+
+fun Context.showMessageBottomSheet(
+    title: CharSequence,
+    message: CharSequence,
+    actions: List<ActionBottomSheetItem>
+) {
+    val contentView = TextView(this).apply {
+        text = message
+        setTextColor(ContextCompat.getColor(context, R.color.md_theme_onSurfaceVariant))
+        setTextAppearance(R.style.TextAppearance_V2Ray_Body)
+        setLineSpacing(resources.getDimension(R.dimen.padding_spacing_dp2), 1f)
+        setPadding(
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16),
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp14),
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16),
+            resources.getDimensionPixelSize(R.dimen.padding_spacing_dp14)
+        )
+        background = ContextCompat.getDrawable(context, R.drawable.bg_bottom_sheet_group)
+    }
+    showActionBottomSheet(title = title, actions = actions, contentView = contentView)
+}
+
+fun Context.showChoiceBottomSheet(
+    title: CharSequence,
+    subtitle: CharSequence? = null,
+    options: List<CharSequence>,
+    @DrawableRes iconRes: Int,
+    onSelected: (Int) -> Unit
+) {
+    showActionBottomSheet(
+        title = title,
+        subtitle = subtitle,
+        actions = options.mapIndexed { index, option ->
+            actionBottomSheetItem(option, iconRes) {
+                onSelected(index)
+            }
+        }
+    )
 }

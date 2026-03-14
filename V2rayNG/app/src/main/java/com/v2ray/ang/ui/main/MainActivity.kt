@@ -2,11 +2,13 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.VpnService
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.StringRes
@@ -14,9 +16,12 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnLayout
+import androidx.core.view.WindowCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -36,16 +41,14 @@ import com.v2ray.ang.ui.common.hapticReject
 import com.v2ray.ang.ui.common.hapticVirtualKey
 import com.v2ray.ang.ui.common.launchActivityWithDefaultTransition
 import com.v2ray.ang.util.StartupTracer
+import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 
 class MainActivity : HelperBaseActivity() {
     private data class ActionButtonUiModel(
         @param:StringRes val textResId: Int,
         val iconRes: Int,
-        val backgroundColorRes: Int,
-        val contentColorRes: Int,
-        val strokeWidth: Int,
-        val strokeColorRes: Int? = null
+        val contentColorRes: Int
     )
 
     private val binding by lazy {
@@ -60,23 +63,28 @@ class MainActivity : HelperBaseActivity() {
         MainGroupTabsController(this, binding, mainViewModel, motionInterpolator)
     }
     private val searchController by lazy {
-        MainSearchController(this, groupTabsController, mainViewModel) {
-            updateConnectionCardVisibility()
+        MainSearchController(this, groupTabsController, mainViewModel) { active ->
+            renderChromeState(chromeStateReducer.onSearchStateChanged(active), event = "search_ui")
+            groupTabsController.notifyCurrentFragmentSearchUiChanged()
         }
     }
     private val actionsController by lazy {
         MainActionsController(
             activity = this,
             mainViewModel = mainViewModel,
-            onSetupGroupTabs = { groupTabsController.setupGroupTabs() }
+            onSetupGroupTabs = { groupTabsController.setupGroupTabs() },
+            onOpenSearch = { openToolbarSearch() }
         )
     }
     private var serviceUiState = ServiceUiState.STOPPED
+    private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
     private var defaultConnectionCardBottomMargin = 0
     private var isImeVisible = false
     private var isCurrentPingTesting = false
-    private var pendingRestart = false
+    private var toolbarSearchMenuItem: MenuItem? = null
+    private val toolbarActionViews = mutableListOf<FrameLayout>()
+    private var currentChromeState: AppChromeState? = null
     private val toolbarController by lazy {
         MainToolbarController(
             activity = this,
@@ -86,25 +94,34 @@ class MainActivity : HelperBaseActivity() {
             statusProvider = { ToolbarStatusState(serviceUiState, isCurrentPingTesting) }
         )
     }
+    private val chromeStateReducer by lazy {
+        AppChromeStateReducer(AppChromePageKind.HOME)
+    }
+    private val topBarRenderer by lazy {
+        MainTopBarRenderer(binding.appBarHome.background, motionInterpolator)
+    }
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
             renderServiceUiState(ServiceUiState.STARTING)
-            startV2Ray()
+            startSelectedV2Ray()
         } else {
             renderServiceUiState(if (mainViewModel.isRunning.value == true) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
     private val requestActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         val shouldRestart = SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true
+        val shouldRefreshGroups = SettingsChangeManager.consumeSetupGroupTab()
         if (shouldRestart) {
             mainViewModel.prewarmSelectedConfig()
             restartV2Ray()
         }
-        if (SettingsChangeManager.consumeSetupGroupTab()) {
+        if (shouldRefreshGroups) {
             setupGroupTab()
+            mainViewModel.reloadServerList()
+            refreshConnectionCard()
         }
-        if (!shouldRestart) {
+        if (!shouldRestart && !shouldRefreshGroups) {
             mainViewModel.prewarmSelectedConfig()
         }
     }
@@ -116,7 +133,9 @@ class MainActivity : HelperBaseActivity() {
             configureLaunchSplashScreen()
             super.onCreate(savedInstanceState)
             setContentView(binding.root)
+            configureHomeChrome()
             configureToolbar()
+            defaultViewPagerTopPadding = binding.viewPager.paddingTop
             defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
             defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
@@ -124,6 +143,7 @@ class MainActivity : HelperBaseActivity() {
             setupMainContentInsets()
             setupActionControls()
             setupHomeMotion(runInitialEntrance = savedInstanceState == null)
+            renderChromeState(chromeStateReducer.currentState(), event = "initial", animate = false)
 
             setupViewModel()
             schedulePostLaunchWork()
@@ -138,14 +158,33 @@ class MainActivity : HelperBaseActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.setHomeButtonEnabled(false)
+        binding.toolbar.setContentInsetsRelative(0, 0)
+        binding.toolbar.contentInsetStartWithNavigation = 0
+        binding.toolbar.contentInsetEndWithActions = 0
+        binding.toolbar.titleMarginStart = 0
+        binding.toolbar.titleMarginEnd = 0
         binding.toolbar.title = null
         binding.toolbar.subtitle = null
         binding.toolbar.logo = null
         binding.toolbar.logoDescription = getString(R.string.app_name)
-        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.md_theme_primary))
-        binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+        binding.toolbar.setBackgroundColor(Color.TRANSPARENT)
+        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.color_home_on_surface))
+        binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
+        binding.toolbar.navigationIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
+        binding.toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
         toolbarController.attach()
         toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
+    }
+
+    private fun configureHomeChrome() {
+        val isDarkMode = Utils.getDarkModeStatus(this)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !isDarkMode
+            isAppearanceLightNavigationBars = !isDarkMode
+        }
     }
 
     private fun setupActionControls() {
@@ -178,18 +217,18 @@ class MainActivity : HelperBaseActivity() {
     private fun configureLaunchSplashScreen() {
         val splashScreen = installSplashScreen()
         splashScreen.setOnExitAnimationListener { splashScreenView ->
-            val iconView = splashScreenView.iconView
-
-            iconView.pivotX = iconView.width / 2f
-            iconView.pivotY = iconView.height / 2f
-            iconView.animate()
-                .alpha(0f)
-                .scaleX(0.86f)
-                .scaleY(0.86f)
-                .translationY(-iconView.height * 0.08f)
-                .setDuration(MotionTokens.SPLASH_EXIT_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
+            runCatching { splashScreenView.iconView }.getOrNull()?.let { iconView ->
+                iconView.pivotX = iconView.width / 2f
+                iconView.pivotY = iconView.height / 2f
+                iconView.animate()
+                    .alpha(0f)
+                    .scaleX(0.86f)
+                    .scaleY(0.86f)
+                    .translationY(-iconView.height * 0.08f)
+                    .setDuration(MotionTokens.SPLASH_EXIT_DURATION)
+                    .setInterpolator(motionInterpolator)
+                    .start()
+            }
 
             splashScreenView.view.animate()
                 .alpha(0f)
@@ -230,39 +269,69 @@ class MainActivity : HelperBaseActivity() {
 
     private fun setupMainContentInsets() {
         val imeSpacing = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
+        val fallbackTopChromeHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp56)
+        binding.cardConnection.doOnLayout {
+            syncConnectionDockUnderlay((it.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin)
+        }
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainContent) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
+            val floatingBottomInset = (systemBars.bottom * 0.18f).toInt()
             isImeVisible = imeVisible
             searchController.onInsetsChanged(insets)
-
-            val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
-            val targetCardBottomMargin = defaultConnectionCardBottomMargin + systemBars.bottom
-            if (cardLayoutParams.bottomMargin != targetCardBottomMargin) {
-                cardLayoutParams.bottomMargin = targetCardBottomMargin
-                binding.cardConnection.layoutParams = cardLayoutParams
-            }
+            binding.appBarHome.updatePadding(top = systemBars.top)
+            val chromeContentHeight = binding.appBarHome.height.takeIf { it > 0 } ?: fallbackTopChromeHeight
+            val targetListTopPadding = maxOf(defaultViewPagerTopPadding, chromeContentHeight)
+            updateConnectionDockLayout(floatingBottomInset)
 
             val targetListBottomPadding = if (imeVisible) {
                 imeInsets.bottom + imeSpacing
             } else {
-                defaultViewPagerBottomPadding + systemBars.bottom
+                defaultViewPagerBottomPadding + floatingBottomInset
             }
-            binding.viewPager.updatePadding(bottom = targetListBottomPadding)
-            updateConnectionCardVisibility()
+            binding.viewPager.updatePadding(
+                top = targetListTopPadding,
+                bottom = targetListBottomPadding
+            )
+            renderChromeState(chromeStateReducer.onImeStateChanged(imeVisible), event = "ime_insets")
             insets
         }
         ViewCompat.requestApplyInsets(binding.mainContent)
     }
 
+    private fun updateConnectionDockLayout(floatingBottomInset: Int) {
+        val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
+        val targetCardBottomMargin = defaultConnectionCardBottomMargin + floatingBottomInset
+        if (cardLayoutParams.bottomMargin != targetCardBottomMargin || cardLayoutParams.width != ViewGroup.LayoutParams.MATCH_PARENT) {
+            cardLayoutParams.bottomMargin = targetCardBottomMargin
+            cardLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.cardConnection.layoutParams = cardLayoutParams
+        }
+        syncConnectionDockUnderlay(targetCardBottomMargin)
+    }
+
+    private fun syncConnectionDockUnderlay(cardBottomMargin: Int) {
+        val fallbackDockHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp72)
+        val cardHeight = binding.cardConnection.height.takeIf { it > 0 } ?: fallbackDockHeight
+        val underlayLayoutParams = binding.viewConnectionDockUnderlay.layoutParams as CoordinatorLayout.LayoutParams
+        val targetUnderlayHeight = cardHeight + cardBottomMargin
+        if (underlayLayoutParams.height != targetUnderlayHeight || underlayLayoutParams.bottomMargin != 0) {
+            underlayLayoutParams.height = targetUnderlayHeight
+            underlayLayoutParams.bottomMargin = 0
+            binding.viewConnectionDockUnderlay.layoutParams = underlayLayoutParams
+        }
+    }
+
     private fun updateConnectionCardVisibility() {
-        connectionCardController.updateVisibility(shouldShowConnectionCard())
+        renderChromeState(chromeStateReducer.currentState(), event = "visibility_sync", animate = false, force = true)
     }
 
     private fun shouldShowConnectionCard(): Boolean {
-        return !isImeVisible && !searchController.isSearchActive()
+        return currentChromeState?.showBottomBar ?: chromeStateReducer.currentState().showBottomBar
     }
+
+    fun isSearchUiActive(): Boolean = searchController.isSearchActive()
 
     private fun setupViewModel() {
         mainViewModel.updateGroupsAction.observe(this) { groups ->
@@ -286,18 +355,49 @@ class MainActivity : HelperBaseActivity() {
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
-            if (!isRunning && pendingRestart) {
-                pendingRestart = false
-                startAfterRestart()
-            }
         }
     }
 
     private fun setupGroupTab() {
         groupTabsController.setupGroupTabs()
     }
+
+    fun onServerListContextChanged(isEmpty: Boolean, canScrollUp: Boolean, resetContext: Boolean) {
+        val state = if (resetContext) {
+            chromeStateReducer.onGroupContextChanged(isEmpty = isEmpty, canScrollUp = canScrollUp)
+        } else {
+            chromeStateReducer.onContentStateChanged(isEmpty = isEmpty, canScrollUp = canScrollUp)
+        }
+        renderChromeState(state, event = if (resetContext) "group_context" else "content_state")
+    }
+
+    fun onServerListScrollStateChanged(scrollState: Int, canScrollUp: Boolean) {
+        val phase = when (scrollState) {
+            androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING -> AppChromeScrollPhase.DRAGGING
+            androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING -> AppChromeScrollPhase.SETTLING
+            androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE -> AppChromeScrollPhase.IDLE
+            else -> {
+                AppChromeDebugTracer.recordInvalidTransition("scroll_state", "unknown=$scrollState")
+                AppChromeScrollPhase.IDLE
+            }
+        }
+        renderChromeState(chromeStateReducer.onScrollPhaseChanged(phase, canScrollUp), event = "scroll_phase")
+    }
+
     fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
         groupTabsController.onServerListScrolled(dy, canScrollUp)
+        renderChromeState(chromeStateReducer.onScrollPositionChanged(canScrollUp), event = "scroll_position")
+    }
+
+    private fun renderChromeState(state: AppChromeState, event: String, animate: Boolean = true, force: Boolean = false) {
+        val previous = currentChromeState
+        if (!force && previous == state) {
+            AppChromeDebugTracer.recordRenderSkip("render_state:$event")
+            return
+        }
+        topBarRenderer.renderChromeState(state, animate = animate)
+        connectionCardController.renderChromeState(state, animate = animate)
+        currentChromeState = state
     }
 
     private fun handleFabAction() {
@@ -313,20 +413,32 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    private fun startV2Ray() {
-        if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+    private fun startV2Ray(guid: String) {
+        MmkvManager.setSelectServer(guid)
+        V2RayServiceManager.startVService(this, guid)
+    }
+
+    private fun startSelectedV2Ray() {
+        val selectedGuid = MmkvManager.getSelectServer()
+        if (selectedGuid.isNullOrEmpty()) {
             renderServiceUiState(ServiceUiState.STOPPED)
             toast(R.string.title_file_chooser)
             return
         }
-        V2RayServiceManager.startVService(this)
+        startV2Ray(selectedGuid)
     }
 
-    private fun startAfterRestart() {
-        startServiceWithVpnPreparation()
+    private fun startAfterRestart(guid: String) {
+        startServiceWithVpnPreparation(guid)
     }
 
-    private fun startServiceWithVpnPreparation() {
+    private fun startServiceWithVpnPreparation(guid: String? = null) {
+        if (guid != null) {
+            MmkvManager.setSelectServer(guid)
+            mainViewModel.prewarmSelectedConfig(guid)
+        } else {
+            mainViewModel.prewarmSelectedConfig()
+        }
         if (SettingsManager.isVpnMode()) {
             val intent = VpnService.prepare(this)
             if (intent != null) {
@@ -335,7 +447,11 @@ class MainActivity : HelperBaseActivity() {
             }
         }
         renderServiceUiState(ServiceUiState.STARTING)
-        startV2Ray()
+        if (guid != null) {
+            startV2Ray(guid)
+        } else {
+            startSelectedV2Ray()
+        }
     }
 
     private fun handleLayoutTestClick() {
@@ -354,13 +470,16 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    fun restartV2Ray() {
-        if (V2RayServiceManager.isRunning()) {
-            pendingRestart = true
+    fun restartV2Ray(guid: String? = null) {
+        val targetGuid = guid ?: MmkvManager.getSelectServer()
+        if (targetGuid.isNullOrEmpty()) {
+            return
+        }
+        if (mainViewModel.isRunning.value == true) {
             renderServiceUiState(ServiceUiState.STOPPING)
-            V2RayServiceManager.stopVService(this)
+            V2RayServiceManager.restartVService(this, targetGuid)
         } else {
-            startAfterRestart()
+            startAfterRestart(targetGuid)
         }
     }
 
@@ -395,7 +514,7 @@ class MainActivity : HelperBaseActivity() {
             isCurrentPingTesting = false
         }
         syncStatusControls(state)
-        connectionCardController.render(state)
+        connectionCardController.render()
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
         updateToolbarSubtitle()
         animateServiceStateChange(previousState, state)
@@ -466,21 +585,14 @@ class MainActivity : HelperBaseActivity() {
     ) = ActionButtonUiModel(
         textResId = textResId,
         iconRes = iconRes,
-        backgroundColorRes = R.color.md_theme_primary,
-        contentColorRes = R.color.md_theme_onPrimary,
-        strokeWidth = 0
+        contentColorRes = R.color.color_home_on_primary
     )
 
     private fun applyActionButtonUiModel(model: ActionButtonUiModel) {
-        binding.fab.setIconResource(model.iconRes)
-        binding.fab.text = getString(model.textResId)
-        binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.backgroundColorRes))
-        binding.fab.iconTint = ColorStateList.valueOf(ContextCompat.getColor(this, model.contentColorRes))
-        binding.fab.setTextColor(ContextCompat.getColor(this, model.contentColorRes))
-        binding.fab.strokeWidth = model.strokeWidth
-        binding.fab.strokeColor = model.strokeColorRes?.let {
-            ColorStateList.valueOf(ContextCompat.getColor(this, it))
-        }
+        binding.fab.setImageResource(model.iconRes)
+        binding.fab.setBackgroundResource(R.drawable.bg_connection_action_circle)
+        binding.fab.backgroundTintList = null
+        binding.fab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.contentColorRes))
         binding.fab.contentDescription = getString(model.textResId)
     }
 
@@ -494,24 +606,21 @@ class MainActivity : HelperBaseActivity() {
         binding.cardConnection.scaleX = 1f
         binding.cardConnection.scaleY = 1f
         binding.cardConnection.alpha = 1f
+        binding.fab.scaleX = 1f
+        binding.fab.scaleY = 1f
+        binding.fab.translationX = 0f
+        binding.fab.translationY = 0f
 
-        val controlScale = if (newState == ServiceUiState.RUNNING) 1f else 0.985f
-        binding.fab.animate()
-            .scaleX(controlScale)
-            .scaleY(controlScale)
-            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .withEndAction {
-                binding.fab.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(motionInterpolator)
-                    .start()
-            }
-            .start()
-
+        updateFabProcessingState(newState)
         animateTestButtonAlpha(newState)
+    }
+
+    private fun updateFabProcessingState(state: ServiceUiState) {
+        val isProcessing = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
+        binding.indicatorConnectionProgress.isIndeterminate = isProcessing
+        binding.indicatorConnectionProgress.visibility = if (isProcessing) android.view.View.VISIBLE else android.view.View.GONE
+        binding.fab.alpha = if (isProcessing) 0f else 1f
+        binding.viewConnectionBackdrop.alpha = if (isProcessing) 1f else 0.94f
     }
 
     private fun updateTestButtonState(state: ServiceUiState) {
@@ -536,6 +645,10 @@ class MainActivity : HelperBaseActivity() {
             isCurrentPingTesting -> 0.88f
             else -> 1f
         }
+        if (kotlin.math.abs(binding.layoutTest.alpha - targetAlpha) < 0.01f) {
+            binding.layoutTest.alpha = targetAlpha
+            return
+        }
         binding.layoutTest.animate()
             .alpha(targetAlpha)
             .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
@@ -548,45 +661,57 @@ class MainActivity : HelperBaseActivity() {
     }
 
     fun refreshConnectionCard() {
-        connectionCardController.render(serviceUiState)
+        connectionCardController.render()
         updateToolbarSubtitle()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         val searchItem = menu.findItem(R.id.search_view)
+        toolbarSearchMenuItem = searchItem
         searchItem.setOnActionExpandListener(createSearchExpandListener())
         searchController.setupSearch(searchItem)
-        bindToolbarIconAction(menu.findItem(R.id.action_add_sheet), R.drawable.ic_add_24dp)
-        bindToolbarIconAction(menu.findItem(R.id.action_more_sheet), R.drawable.ic_more_vert_24dp)
+        searchItem.isVisible = false
+        toolbarActionViews.clear()
+        bindToolbarAction(menu.findItem(R.id.action_add_sheet))
+        bindToolbarAction(menu.findItem(R.id.action_more_sheet))
         return super.onCreateOptionsMenu(menu)
     }
 
     private fun createSearchExpandListener() = object : MenuItem.OnActionExpandListener {
         override fun onMenuItemActionExpand(item: MenuItem): Boolean {
+            item.isVisible = true
             searchController.onMenuItemExpanded()
             return true
         }
 
         override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
             searchController.onMenuItemCollapsed()
+            item.isVisible = false
             return true
         }
     }
 
-    private fun bindToolbarIconAction(menuItem: MenuItem?, iconRes: Int) {
+    private fun bindToolbarAction(menuItem: MenuItem?) {
         val item = menuItem ?: return
-        val actionView = layoutInflater.inflate(R.layout.item_toolbar_icon_action, binding.toolbar, false)
-        val button = actionView.findViewById<FrameLayout>(R.id.toolbar_action_button)
-        val iconView = actionView.findViewById<ImageView>(R.id.toolbar_action_icon)
-        iconView.setImageResource(iconRes)
-        iconView.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurface))
-        button.contentDescription = item.title
+        val actionView = layoutInflater.inflate(R.layout.item_toolbar_hub_action, binding.toolbar, false)
+        val button = actionView.findViewById<FrameLayout>(R.id.toolbar_action_hub_button)
+        val iconView = actionView.findViewById<ImageView>(R.id.toolbar_action_hub_icon)
+        iconView.setImageDrawable(item.icon)
+        bindToolbarActionButton(button, item.title ?: getString(R.string.action_more)) {
+            actionsController.handleOptionsItem(item.itemId)
+        }
+        toolbarActionViews += button
+        item.actionView = actionView
+    }
+
+    private fun bindToolbarActionButton(button: FrameLayout, contentDescription: CharSequence, onClick: () -> Unit) {
+        UiMotion.attachPressFeedback(button, pressedScale = 0.97f)
+        button.contentDescription = contentDescription
         button.setOnClickListener {
             button.hapticClick()
-            onOptionsItemSelected(item)
+            onClick()
         }
-        item.actionView = actionView
     }
 
     fun setupHomeSearch(
@@ -600,7 +725,88 @@ class MainActivity : HelperBaseActivity() {
             onQueryChanged = onQueryChanged,
             onClosed = onClosed,
             debounceMillis = debounceMillis
+        )?.also { searchView ->
+            searchView.maxWidth = Int.MAX_VALUE
+            searchView.setIconifiedByDefault(true)
+            searchView.setBackgroundColor(Color.TRANSPARENT)
+            searchView.setPadding(0, 0, 0, 0)
+            searchView.minimumWidth = 0
+            updateToolbarSearchActionLayout(searchView, expanded = false)
+            searchView.findViewById<SearchView.SearchAutoComplete>(androidx.appcompat.R.id.search_src_text)?.apply {
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_home_on_surface))
+                setHintTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_home_on_surface_muted))
+                textSize = 14f
+            }
+            searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_plate)?.apply {
+                background = null
+                backgroundTintList = null
+            }
+            searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_edit_frame)?.setBackgroundColor(Color.TRANSPARENT)
+            searchView.findViewById<android.view.View>(androidx.appcompat.R.id.submit_area)?.setBackgroundColor(Color.TRANSPARENT)
+            searchView.findViewById<ImageView?>(androidx.appcompat.R.id.search_button)?.let { iconButton ->
+                styleToolbarSearchIconButton(iconButton)
+            }
+            searchView.findViewById<ImageView?>(androidx.appcompat.R.id.search_close_btn)?.let { iconButton ->
+                styleToolbarSearchIconButton(iconButton)
+            }
+            listOf(
+                androidx.appcompat.R.id.search_mag_icon,
+                androidx.appcompat.R.id.search_go_btn,
+                androidx.appcompat.R.id.search_voice_btn
+            ).forEach { id ->
+                searchView.findViewById<ImageView?>(id)?.apply {
+                    imageTintList =
+                        ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.color_home_on_surface_muted))
+                }
+            }
+        }
+    }
+
+    private fun styleToolbarSearchIconButton(iconButton: ImageView) {
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
+        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp9)
+        iconButton.layoutParams = iconButton.layoutParams.apply {
+            width = buttonSize
+            height = buttonSize
+        }
+        (iconButton.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+            params.marginStart = 0
+            params.marginEnd = 0
+            iconButton.layoutParams = params
+        }
+        iconButton.background = ContextCompat.getDrawable(this, R.drawable.bg_home_icon_circle_ripple)
+        iconButton.imageTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
+        iconButton.scaleType = ImageView.ScaleType.CENTER
+        iconButton.setPadding(iconInset, iconInset, iconInset, iconInset)
+        UiMotion.attachPressFeedback(iconButton, pressedScale = 0.97f)
+    }
+
+    private fun openToolbarSearch() {
+        val item = toolbarSearchMenuItem ?: return
+        item.isVisible = true
+        item.expandActionView()
+    }
+
+    fun updateToolbarSearchActionLayout(searchView: SearchView, expanded: Boolean) {
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
+        val layoutParams = searchView.layoutParams ?: Toolbar.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            buttonSize
         )
+        searchView.layoutParams = layoutParams.apply {
+            width = if (expanded) ViewGroup.LayoutParams.WRAP_CONTENT else 0
+            height = buttonSize
+        }
+        searchView.minimumWidth = 0
+        updateToolbarActionVisibility(!expanded)
+        searchView.requestLayout()
+    }
+
+    private fun updateToolbarActionVisibility(visible: Boolean) {
+        toolbarActionViews.forEach { actionView ->
+            actionView.isVisible = visible
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {

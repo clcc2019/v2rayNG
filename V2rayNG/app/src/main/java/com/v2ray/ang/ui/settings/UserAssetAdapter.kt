@@ -13,13 +13,12 @@ import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
 import com.v2ray.ang.databinding.ItemRecyclerUserAssetBinding
 import com.v2ray.ang.dto.AssetUrlCache
-import java.util.concurrent.Executors
+import com.v2ray.ang.helper.ListDiffExecutors
 class UserAssetAdapter(
     private val adapterListener: BaseAdapterListener?
 ) : RecyclerView.Adapter<UserAssetAdapter.UserAssetViewHolder>() {
 
     companion object {
-        private val DIFF_EXECUTOR = Executors.newSingleThreadExecutor()
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AssetUrlCache>() {
             override fun areItemsTheSame(oldItem: AssetUrlCache, newItem: AssetUrlCache): Boolean {
                 return oldItem.guid == newItem.guid
@@ -34,7 +33,7 @@ class UserAssetAdapter(
     private val differ = AsyncListDiffer(
         AdapterListUpdateCallback(this),
         AsyncDifferConfig.Builder(DIFF_CALLBACK)
-            .setBackgroundThreadExecutor(DIFF_EXECUTOR)
+            .setBackgroundThreadExecutor(ListDiffExecutors.background)
             .build()
     )
     private val items: List<AssetUrlCache>
@@ -49,9 +48,15 @@ class UserAssetAdapter(
         val propertiesText: String
     )
 
-    fun submitList(newItems: List<AssetUrlCache>, fileMeta: Map<String, AssetFileMeta>) {
+    fun submitList(
+        newItems: List<AssetUrlCache>,
+        fileMeta: Map<String, AssetFileMeta>,
+        onCommitted: (() -> Unit)? = null
+    ) {
         this.fileMeta = fileMeta
-        differ.submitList(newItems.toList())
+        differ.submitList(newItems.toList()) {
+            onCommitted?.invoke()
+        }
     }
 
     override fun getItemCount() = items.size

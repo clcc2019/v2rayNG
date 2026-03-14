@@ -15,12 +15,9 @@
     tools:context=".ui.LogcatActivity">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxWidth="@dimen/list_card_max_width"
+        style="@style/Widget.V2Ray.PageIntro"
         android:text="@string/logcat_page_overview"
-        android:textAppearance="@style/TextAppearance.V2Ray.Body"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        />
 
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.V2Ray.Card.Section"
@@ -28,6 +25,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/padding_spacing_dp12"
         android:layout_weight="1"
+        android:maxWidth="@dimen/list_card_max_width"
         app:cardBackgroundColor="@color/md_theme_surface"
         app:strokeWidth="0dp">
 
@@ -41,8 +39,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingTop="@dimen/padding_spacing_dp4"
-                android:paddingBottom="@dimen/padding_spacing_dp4"
+                android:paddingTop="@dimen/padding_spacing_dp6"
+                android:paddingBottom="@dimen/padding_spacing_dp6"
                 android:scrollbars="vertical"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 

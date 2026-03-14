@@ -39,6 +39,7 @@ class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
         binding.refreshLayout.setColorSchemeResources(R.color.md_theme_primary)
         binding.refreshLayout.setProgressBackgroundColorSchemeResource(R.color.md_theme_surfaceVariant)
         binding.refreshLayout.setOnRefreshListener(this)
+        postStaggeredEnterMotion(binding.root, translationOffsetDp = 10f, startDelay = 36L)
 
         toast(getString(R.string.pull_down_to_refresh))
     }

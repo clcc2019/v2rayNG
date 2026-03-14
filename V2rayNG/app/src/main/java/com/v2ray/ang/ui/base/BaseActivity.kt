@@ -107,6 +107,7 @@ abstract class BaseActivity : AppCompatActivity() {
         progressBar = base.findViewById(R.id.progress_bar)
         super.setContentView(base)
         setupToolbar(base, showHomeAsUp, title)
+        scheduleBaseScreenEnterMotion(base)
     }
 
     protected fun setContentViewWithToolbar(childView: View, showHomeAsUp: Boolean = true, title: CharSequence? = null) {
@@ -116,6 +117,7 @@ abstract class BaseActivity : AppCompatActivity() {
         progressBar = base.findViewById(R.id.progress_bar)
         super.setContentView(base)
         setupToolbar(base, showHomeAsUp, title)
+        scheduleBaseScreenEnterMotion(base)
     }
 
     protected fun setupSearchView(
@@ -233,6 +235,62 @@ abstract class BaseActivity : AppCompatActivity() {
                 imageView.imageTintList = ColorStateList.valueOf(hintColor)
                 imageView.setPadding(iconInset, iconInset, iconInset, iconInset)
             }
+        }
+    }
+
+    protected fun applyPressMotion(vararg views: View, pressedScale: Float = 0.985f) {
+        views.forEach { UiMotion.attachPressFeedback(it, pressedScale = pressedScale) }
+    }
+
+    protected fun postEnterMotion(
+        view: View,
+        translationOffsetDp: Float = 10f,
+        startDelay: Long = 0L,
+        duration: Long = MotionTokens.MEDIUM_ANIMATION_DURATION
+    ) {
+        view.post {
+            UiMotion.animateEntrance(
+                view = view,
+                translationOffsetDp = translationOffsetDp,
+                startDelay = startDelay,
+                duration = duration
+            )
+        }
+    }
+
+    protected fun postStaggeredEnterMotion(
+        container: ViewGroup,
+        translationOffsetDp: Float = 10f,
+        startDelay: Long = 0L,
+        stepDelay: Long = MotionTokens.STAGGER_DELAY
+    ) {
+        container.post {
+            UiMotion.animateStaggeredChildren(
+                container = container,
+                translationOffsetDp = translationOffsetDp,
+                stepDelay = stepDelay,
+                startDelay = startDelay
+            )
+        }
+    }
+
+    private fun scheduleBaseScreenEnterMotion(baseRoot: View) {
+        val toolbar = baseRoot.findViewById<Toolbar>(R.id.toolbar)
+        val content = baseRoot.findViewById<View>(R.id.content_container)
+        baseRoot.post {
+            toolbar?.let {
+                UiMotion.animateEntrance(
+                    view = it,
+                    translationOffsetDp = -6f,
+                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                )
+            }
+            UiMotion.animateEntrance(
+                view = content,
+                translationOffsetDp = 10f,
+                startDelay = 24L,
+                duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+            )
         }
     }
 

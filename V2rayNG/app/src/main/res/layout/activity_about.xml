@@ -14,28 +14,26 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:orientation="vertical">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.PageIntro"
             android:text="@string/about_page_overview"
-            android:textAppearance="@style/TextAppearance.V2Ray.Body"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/about_group_project"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.V2Ray.Card.Section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
             app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 
@@ -153,6 +151,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:maxWidth="@dimen/list_card_max_width"
             android:orientation="vertical"
             android:paddingTop="@dimen/padding_spacing_dp20"
             android:paddingBottom="@dimen/padding_spacing_dp8">

@@ -72,11 +72,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val positions: Map<String, Int>
     )
 
+    private data class DisplayAddressCacheEntry(
+        val signature: String,
+        val displayAddress: String
+    )
+
     private var serverList = mutableListOf<String>() // MmkvManager.decodeServerList()
     private val serverPositions = mutableMapOf<String, Int>()
     private val serverListVersion = AtomicInteger(0)
     private val groupListVersion = AtomicInteger(0)
     private val subscriptionRemarksCache = mutableMapOf<String, String>()
+    private val displayAddressCache = mutableMapOf<String, DisplayAddressCacheEntry>()
     var subscriptionId: String = MmkvManager.decodeSettingsString(AppConfig.CACHE_SUBSCRIPTION_ID, "").orEmpty()
     var keywordFilter = ""
     val serversCache = mutableListOf<ServersCache>()
@@ -246,6 +252,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         invalidateServerListRequests()
         serverList.remove(guid)
         MmkvManager.removeServer(guid)
+        displayAddressCache.remove(guid)
         val index = getPosition(guid)
         if (index >= 0) {
             serversCache.removeAt(index)
@@ -850,8 +857,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         targetServerList.forEach { guid ->
             val profile = MmkvManager.decodeServerConfig(guid) ?: return@forEach
             val needsFilter = keyword.isNotEmpty()
-            val description = profile.description.nullIfBlank()
-            val displayAddress = description ?: AngConfigManager.generateDescription(profile)
+            val displayAddress = resolveDisplayAddress(guid, profile)
             if (needsFilter && !matchesKeyword(profile, displayAddress, keyword)) {
                 return@forEach
             }
@@ -874,6 +880,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         serverPositions.clear()
         serverPositions.putAll(snapshot.positions)
         refreshSelectedServerSnapshot()
+    }
+
+    private fun resolveDisplayAddress(guid: String, profile: ProfileItem): String {
+        profile.description.nullIfBlank()?.let {
+            displayAddressCache.remove(guid)
+            return it
+        }
+        val signature = "${profile.server.orEmpty()}|${profile.serverPort.orEmpty()}"
+        val cached = displayAddressCache[guid]
+        if (cached?.signature == signature) {
+            return cached.displayAddress
+        }
+        val generated = AngConfigManager.generateDescription(profile)
+        displayAddressCache[guid] = DisplayAddressCacheEntry(signature, generated)
+        return generated
     }
 
     private fun refreshSelectedServerSnapshot() {

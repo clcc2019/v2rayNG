@@ -11,11 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/padding_spacing_dp6"
-        android:layout_marginBottom="@dimen/padding_spacing_dp6"
+        android:layout_marginTop="@dimen/padding_spacing_dp8"
+        android:layout_marginBottom="@dimen/padding_spacing_dp8"
         android:maxWidth="@dimen/list_card_max_width"
         android:clipToOutline="true"
-        app:cardBackgroundColor="@color/md_theme_surface"
+        app:cardBackgroundColor="@color/color_home_surface_raised"
         app:strokeWidth="0dp">
 
         <LinearLayout
@@ -25,12 +25,13 @@
             android:background="@drawable/bg_home_list_item_ripple"
             android:clickable="true"
             android:focusable="true"
+            android:minHeight="@dimen/view_height_dp72"
             android:nextFocusRight="@+id/layout_more"
             android:orientation="vertical"
-            android:paddingStart="@dimen/padding_spacing_dp16"
-            android:paddingTop="@dimen/padding_spacing_dp14"
-            android:paddingEnd="@dimen/padding_spacing_dp16"
-            android:paddingBottom="@dimen/padding_spacing_dp14">
+            android:paddingStart="15dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="15dp"
+            android:paddingBottom="15dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,49 +45,61 @@
                     android:layout_width="8dp"
                     android:layout_height="8dp"
                     android:layout_marginTop="1dp"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp10"
+                    android:layout_marginEnd="@dimen/padding_spacing_dp12"
                     android:background="@drawable/bg_item_indicator_idle" />
 
                 <TextView
                     android:id="@+id/tv_name"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:minLines="1"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
                     android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/color_home_on_surface"
                     android:textSize="16sp"
                     tools:text="hk-aliyun fallback route" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
 
                 <LinearLayout
                     android:id="@+id/layout_tags"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/padding_spacing_dp4"
+                    android:layout_marginStart="0dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tv_type"
-                        style="@style/Widget.V2Ray.Chip.Protocol"
+                        style="@style/Widget.V2Ray.Chip.HomeProtocolCompact"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         tools:text="VLESS" />
+
+                    <TextView
+                        android:id="@+id/tv_test_result_inline"
+                        style="@style/Widget.V2Ray.Badge.MetricHomeCompact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/padding_spacing_dp4"
+                        android:visibility="gone"
+                        tools:text="114ms" />
 
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/layout_more"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="@dimen/padding_spacing_dp2"
+                    android:background="@drawable/bg_home_icon_circle_ripple"
                     android:clickable="true"
-                    android:contentDescription="@string/notification_action_more"
+                    android:contentDescription="@string/action_more"
                     android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:gravity="center"
                     android:nextFocusLeft="@+id/info_container"
                     android:orientation="vertical"
@@ -95,9 +108,9 @@
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:alpha="0.58"
+                        android:alpha="0.6"
                         app:srcCompat="@drawable/ic_more_vert_24dp"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/color_home_on_surface_muted" />
 
                 </LinearLayout>
 
@@ -106,7 +119,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:layout_marginTop="@dimen/padding_spacing_dp6"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -119,7 +132,7 @@
                     android:maxLines="1"
                     android:minLines="1"
                     android:textAppearance="@style/TextAppearance.V2Ray.Body"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/color_home_on_surface_muted"
                     android:textSize="12sp"
                     android:alpha="0.9"
                     tools:text="13.213.104.*** : 443" />
@@ -139,16 +152,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp6"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:visibility="gone">
 
                 <TextView
                     android:id="@+id/tv_subscription"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/color_home_on_surface_muted"
                     android:textSize="11sp"
                     tools:text="Tokyo Premium" />
 

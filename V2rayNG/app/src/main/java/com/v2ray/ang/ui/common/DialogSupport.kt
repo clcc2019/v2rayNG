@@ -22,11 +22,16 @@ fun Context.showConfirmDialog(
     @StringRes messageResId: Int = R.string.del_config_comfirm,
     onConfirmed: () -> Unit
 ) {
-    createV2RayAlertDialogBuilder()
-        .setMessage(messageResId)
-        .setPositiveButton(android.R.string.ok) { _, _ -> onConfirmed() }
-        .setNegativeButton(android.R.string.cancel, null)
-        .show()
+    showActionBottomSheet(
+        title = getString(R.string.action_confirm),
+        subtitle = getString(messageResId),
+        actions = listOf(
+            actionBottomSheetItem(getString(android.R.string.ok), R.drawable.ic_action_done) {
+                onConfirmed()
+            },
+            actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+        )
+    )
 }
 
 fun Fragment.showConfirmDialog(

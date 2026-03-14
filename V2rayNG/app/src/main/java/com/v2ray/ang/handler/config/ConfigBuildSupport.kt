@@ -11,7 +11,22 @@ internal data class RoutingDomainBuckets(
     val blocked: ArrayList<String> = arrayListOf(),
 )
 
+private val routingDomainBucketsCacheLock = Any()
+@Volatile
+private var cachedRoutingDomainBucketsSignature: Int? = null
+private var cachedRoutingDomainBuckets: RoutingDomainBuckets? = null
+
 internal fun buildRoutingDomainBuckets(rulesetItems: List<RulesetItem>?): RoutingDomainBuckets {
+    return buildRoutingDomainBuckets(rulesetItems, rulesetItems?.hashCode() ?: 0)
+}
+
+internal fun buildRoutingDomainBuckets(rulesetItems: List<RulesetItem>?, signature: Int): RoutingDomainBuckets {
+    synchronized(routingDomainBucketsCacheLock) {
+        if (cachedRoutingDomainBucketsSignature == signature) {
+            cachedRoutingDomainBuckets?.let(::copyRoutingDomainBuckets)?.let { return it }
+        }
+    }
+
     val buckets = RoutingDomainBuckets()
     rulesetItems?.forEach { key ->
         if (key.enabled && !key.domain.isNullOrEmpty()) {
@@ -26,7 +41,19 @@ internal fun buildRoutingDomainBuckets(rulesetItems: List<RulesetItem>?): Routin
             }
         }
     }
+    synchronized(routingDomainBucketsCacheLock) {
+        cachedRoutingDomainBucketsSignature = signature
+        cachedRoutingDomainBuckets = copyRoutingDomainBuckets(buckets)
+    }
     return buckets
+}
+
+private fun copyRoutingDomainBuckets(buckets: RoutingDomainBuckets): RoutingDomainBuckets {
+    return RoutingDomainBuckets(
+        proxy = ArrayList(buckets.proxy),
+        direct = ArrayList(buckets.direct),
+        blocked = ArrayList(buckets.blocked)
+    )
 }
 
 internal fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {

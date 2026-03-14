@@ -20,8 +20,10 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
+import com.v2ray.ang.ui.common.actionBottomSheetItem
 import com.v2ray.ang.ui.common.runWithRemovalConfirmation
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
+import com.v2ray.ang.ui.common.showActionBottomSheet
+import com.v2ray.ang.ui.common.startActivityWithDefaultTransition
 import com.v2ray.ang.util.QRCodeDecoder
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.SubscriptionsViewModel
@@ -33,30 +35,26 @@ import kotlinx.coroutines.withContext
 
 class SubSettingActivity : BaseActivity() {
     private val binding by lazy { ActivitySubSettingBinding.inflate(layoutInflater) }
-    private val ownerActivity: SubSettingActivity
-        get() = this
     private val viewModel: SubscriptionsViewModel by viewModels()
     private lateinit var adapter: SubSettingRecyclerAdapter
-    private var mItemTouchHelper: ItemTouchHelper? = null
+    private var itemTouchHelper: ItemTouchHelper? = null
     private var refreshJob: Job? = null
-    private val share_method: Array<out String> by lazy {
+    private val shareMethods: Array<out String> by lazy {
         resources.getStringArray(R.array.share_sub_method)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
-        setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_sub_setting))
+        setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_subscription_list))
 
         adapter = SubSettingRecyclerAdapter(viewModel, ActivityAdapterListener())
-
-        binding.recyclerView.setHasFixedSize(true)
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
-        binding.recyclerView.adapter = adapter
-
-        mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
-        mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
+        setupHeaderActions()
+        setupRecyclerView()
+        applyPressMotion(binding.actionAddSubscription, binding.actionRefreshSubscriptions)
+        (binding.root.getChildAt(0) as? android.view.ViewGroup)?.let {
+            postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
+        }
+        postEnterMotion(binding.recyclerView, translationOffsetDp = 8f, startDelay = 72L)
     }
 
     override fun onResume() {
@@ -71,22 +69,60 @@ class SubSettingActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_config -> {
-            startActivity(Intent(this, SubEditActivity::class.java))
+            openSubscriptionEditor()
             true
         }
 
         R.id.sub_update -> {
-            showLoading()
+            updateAllSubscriptions()
+            true
+        }
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                val result = AngConfigManager.updateConfigViaSubAll()
-                delay(500L)
-                launch(Dispatchers.Main) {
-                    if (result.successCount + result.failureCount + result.skipCount == 0) {
+        else -> super.onOptionsItemSelected(item)
+
+    }
+
+    private fun setupHeaderActions() {
+        binding.actionAddSubscription.setOnClickListener {
+            openSubscriptionEditor()
+        }
+        binding.actionRefreshSubscriptions.setOnClickListener {
+            updateAllSubscriptions()
+        }
+    }
+
+    private fun setupRecyclerView() {
+        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.adapter = adapter
+
+        itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
+        itemTouchHelper?.attachToRecyclerView(binding.recyclerView)
+    }
+
+    private fun openSubscriptionEditor(subId: String? = null) {
+        startActivityWithDefaultTransition(
+            Intent(this, SubEditActivity::class.java).apply {
+                subId?.let { putExtra("subId", it) }
+            }
+        )
+    }
+
+    private fun updateAllSubscriptions() {
+        showLoading()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = AngConfigManager.updateConfigViaSubAll()
+            delay(500L)
+            launch(Dispatchers.Main) {
+                when {
+                    result.successCount + result.failureCount + result.skipCount == 0 -> {
                         toast(R.string.title_update_subscription_no_subscription)
-                    } else if (result.successCount > 0 && result.failureCount + result.skipCount == 0) {
+                    }
+                    result.successCount > 0 && result.failureCount + result.skipCount == 0 -> {
                         toast(getString(R.string.title_update_config_count, result.configCount))
-                    } else {
+                    }
+                    else -> {
                         toast(
                             getString(
                                 R.string.title_update_subscription_result,
@@ -94,15 +130,10 @@ class SubSettingActivity : BaseActivity() {
                             )
                         )
                     }
-                    hideLoading()
                 }
+                hideLoading()
             }
-
-            true
         }
-
-        else -> super.onOptionsItemSelected(item)
-
     }
 
     fun refreshData() {
@@ -118,10 +149,7 @@ class SubSettingActivity : BaseActivity() {
 
     private inner class ActivityAdapterListener : BaseAdapterListener {
         override fun onEdit(guid: String, position: Int) {
-            startActivity(
-                Intent(ownerActivity, SubEditActivity::class.java)
-                    .putExtra("subId", guid)
-            )
+            openSubscriptionEditor(guid)
         }
 
         override fun onRemove(guid: String, position: Int) {
@@ -131,7 +159,7 @@ class SubSettingActivity : BaseActivity() {
                 return
             }
 
-            ownerActivity.runWithRemovalConfirmation {
+            runWithRemovalConfirmation {
                 if (!viewModel.remove(guid)) {
                     toast(R.string.toast_action_not_allowed)
                 }
@@ -140,38 +168,37 @@ class SubSettingActivity : BaseActivity() {
         }
 
         override fun onShare(url: String) {
-            ownerActivity.v2rayAlertDialogBuilder()
-                .setItems(share_method.asList().toTypedArray()) { _, i ->
-                    try {
-                        when (i) {
-                            0 -> {
-                                showLoading()
-                                lifecycleScope.launch(Dispatchers.Default) {
-                                    val result = runCatching { QRCodeDecoder.createQRCode(url) }
-                                    launch(Dispatchers.Main) {
-                                        result.onSuccess { bitmap ->
-                                            val ivBinding =
-                                                ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
-                                            ivBinding.ivQcode.setImageBitmap(bitmap)
-                                            ownerActivity.v2rayAlertDialogBuilder().setView(ivBinding.root).show()
-                                        }.onFailure {
-                                            toastError(R.string.toast_failure)
-                                        }
-                                        hideLoading()
+            showActionBottomSheet(
+                title = getString(R.string.title_subscription_list),
+                actions = listOf(
+                    actionBottomSheetItem(shareMethods[0], R.drawable.ic_qu_scan_24dp) {
+                        try {
+                            showLoading()
+                            lifecycleScope.launch(Dispatchers.Default) {
+                                val result = runCatching { QRCodeDecoder.createQRCode(url) }
+                                launch(Dispatchers.Main) {
+                                    result.onSuccess { bitmap ->
+                                        val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(this@SubSettingActivity))
+                                        ivBinding.ivQcode.setImageBitmap(bitmap)
+                                        showActionBottomSheet(
+                                            title = getString(R.string.action_qrcode),
+                                            contentView = ivBinding.root
+                                        )
+                                    }.onFailure {
+                                        toastError(R.string.toast_failure)
                                     }
+                                    hideLoading()
                                 }
                             }
-
-                            1 -> {
-                                Utils.setClipboard(ownerActivity, url)
-                            }
-
-                            else -> ownerActivity.toast("else")
+                        } catch (e: Exception) {
+                            Log.e(AppConfig.TAG, "Share subscription failed", e)
                         }
-                    } catch (e: Exception) {
-                        Log.e(AppConfig.TAG, "Share subscription failed", e)
+                    },
+                    actionBottomSheetItem(shareMethods[1], R.drawable.ic_copy) {
+                        Utils.setClipboard(this@SubSettingActivity, url)
                     }
-                }.show()
+                )
+            )
         }
 
         override fun onRefreshData() {

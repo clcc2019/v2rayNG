@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
+import android.view.View
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
@@ -40,6 +41,9 @@ class RoutingEditActivity : BaseActivity() {
         binding.layoutAdvancedToggle.setOnClickListener {
             updateAdvancedSection(!advancedExpanded)
         }
+        binding.layoutLockedRow.setOnClickListener {
+            binding.chkLocked.toggle()
+        }
     }
 
     private fun bindingServer(rulesetItem: RulesetItem): Boolean {
@@ -61,6 +65,12 @@ class RoutingEditActivity : BaseActivity() {
 
     private fun clearServer(): Boolean {
         binding.etRemarks.text = null
+        binding.chkLocked.isChecked = false
+        binding.etDomain.text = null
+        binding.etIp.text = null
+        binding.etPort.text = null
+        binding.etProtocol.text = null
+        binding.etNetwork.text = null
         binding.spOutboundTag.setSelection(0)
         updateAdvancedSection(false)
         return true
@@ -68,20 +78,25 @@ class RoutingEditActivity : BaseActivity() {
 
     private fun updateAdvancedSection(expanded: Boolean) {
         advancedExpanded = expanded
-        binding.layoutAdvancedContent.visibility = if (expanded) android.view.View.VISIBLE else android.view.View.GONE
+        binding.layoutAdvancedContent.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.viewAdvancedDivider.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.tvAdvancedSummary.text = getString(
+            if (expanded) R.string.routing_advanced_summary_expanded else R.string.routing_advanced_summary_collapsed
+        )
         binding.imgAdvancedToggle.animate().cancel()
         binding.imgAdvancedToggle.animate().rotation(if (expanded) 180f else 0f).setDuration(180L).start()
     }
 
     private fun saveServer(): Boolean {
         val rulesetItem = SettingsManager.getRoutingRuleset(position) ?: RulesetItem()
+        val remarks = binding.etRemarks.text.toString().trim()
 
         rulesetItem.apply {
-            remarks = binding.etRemarks.text.toString()
+            this.remarks = remarks
             locked = binding.chkLocked.isChecked
-            domain = binding.etDomain.text.toString().nullIfBlank()?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
-            ip = binding.etIp.text.toString().nullIfBlank()?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
-            protocol = binding.etProtocol.text.toString().nullIfBlank()?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+            domain = parseCsv(binding.etDomain.text.toString())
+            ip = parseCsv(binding.etIp.text.toString())
+            protocol = parseCsv(binding.etProtocol.text.toString())
             port = binding.etPort.text.toString().nullIfBlank()
             network = binding.etNetwork.text.toString().nullIfBlank()
             outboundTag = outbound_tag[binding.spOutboundTag.selectedItemPosition]
@@ -96,6 +111,13 @@ class RoutingEditActivity : BaseActivity() {
         toastSuccess(R.string.toast_success)
         finish()
         return true
+    }
+
+    private fun parseCsv(value: String): List<String>? {
+        return value.nullIfBlank()
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
     }
 
 

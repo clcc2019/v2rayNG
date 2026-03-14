@@ -7,7 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +21,10 @@ import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
-import com.v2ray.ang.ui.common.v2rayAlertDialogBuilder
+import com.v2ray.ang.ui.common.actionBottomSheetItem
+import com.v2ray.ang.ui.common.showActionBottomSheet
+import com.v2ray.ang.ui.common.showChoiceBottomSheet
+import com.v2ray.ang.ui.common.startActivityWithDefaultTransition
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
@@ -44,6 +47,10 @@ class RoutingSettingActivity : HelperBaseActivity() {
     private lateinit var adapter: RoutingSettingRecyclerAdapter
     private var mItemTouchHelper: ItemTouchHelper? = null
     private var refreshJob: Job? = null
+    private var lastRuleCount: Int? = null
+    private var lastEnabledCount: Int? = null
+    private var lastLockedCount: Int? = null
+    private var lastEmptyStateVisible: Boolean? = null
     private val extDir by lazy { File(Utils.userAssetPath(this)) }
     private val routing_domain_strategy: Array<out String> by lazy {
         resources.getStringArray(R.array.routing_domain_strategy)
@@ -63,8 +70,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
-        // Routing list lives in a NestedScrollView and uses wrap_content height, so it must remeasure
-        // after async list updates instead of being treated as a fixed-size RecyclerView.
+        // RecyclerView is embedded in a NestedScrollView and needs to fully measure its content.
         binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.adapter = adapter
 
@@ -77,11 +83,20 @@ class RoutingSettingActivity : HelperBaseActivity() {
         binding.layoutDomainStrategy.setOnClickListener {
             setDomainStrategy()
         }
+        binding.actionAddRule.setOnClickListener {
+            openRoutingEditor()
+        }
+        binding.actionMoreSheet.setOnClickListener {
+            showMoreActionsSheet()
+        }
+        binding.actionEmptyAddRule.setOnClickListener {
+            openRoutingEditor()
+        }
         binding.layoutPerAppProxySettings.setOnClickListener {
-            startActivity(Intent(this, PerAppProxyActivity::class.java))
+            startActivityWithDefaultTransition(Intent(this, PerAppProxyActivity::class.java))
         }
         binding.layoutRoutingAssets.setOnClickListener {
-            startActivity(Intent(this, UserAssetActivity::class.java))
+            startActivityWithDefaultTransition(Intent(this, UserAssetActivity::class.java))
         }
         binding.layoutRoutingAssetsRefresh.setOnClickListener {
             refreshRoutingAssets()
@@ -91,6 +106,18 @@ class RoutingSettingActivity : HelperBaseActivity() {
                 view.parent?.requestDisallowInterceptTouchEvent(true)
             }
             false
+        }
+        applyPressMotion(
+            binding.actionAddRule,
+            binding.actionMoreSheet,
+            binding.layoutDomainStrategy,
+            binding.layoutPerAppProxySettings,
+            binding.layoutRoutingAssets,
+            binding.layoutRoutingAssetsRefresh,
+            binding.actionEmptyAddRule
+        )
+        (binding.root.getChildAt(0) as? android.view.ViewGroup)?.let {
+            postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
         }
     }
 
@@ -106,12 +133,17 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.add_rule -> startActivity(Intent(this, RoutingEditActivity::class.java)).let { true }
-        R.id.import_predefined_rulesets -> importPredefined().let { true }
-        R.id.import_rulesets_from_clipboard -> importFromClipboard().let { true }
-        R.id.import_rulesets_from_qrcode -> importQRcode()
-        R.id.export_rulesets_to_clipboard -> export2Clipboard().let { true }
+        R.id.add_rule -> openRoutingEditor().let { true }
+        R.id.action_more_sheet -> showMoreActionsSheet().let { true }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun openRoutingEditor(position: Int? = null) {
+        startActivityWithDefaultTransition(
+            Intent(this, RoutingEditActivity::class.java).apply {
+                position?.let { putExtra("position", it) }
+            }
+        )
     }
 
     private fun getDomainStrategy(): String {
@@ -119,7 +151,11 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun setDomainStrategy() {
-        v2rayAlertDialogBuilder().setItems(routing_domain_strategy.asList().toTypedArray()) { _, i ->
+        showChoiceBottomSheet(
+            title = getString(R.string.routing_settings_domain_strategy),
+            options = routing_domain_strategy.toList(),
+            iconRes = R.drawable.ic_routing_24dp
+        ) { i ->
             try {
                 val value = routing_domain_strategy[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY, value)
@@ -127,16 +163,18 @@ class RoutingSettingActivity : HelperBaseActivity() {
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "Failed to set domain strategy", e)
             }
-        }.show()
+        }
     }
 
     private fun importPredefined() {
-        v2rayAlertDialogBuilder().setItems(preset_rulesets.asList().toTypedArray()) { _, i ->
-            v2rayAlertDialogBuilder().setMessage(R.string.routing_settings_import_rulesets_tip)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
+        showActionBottomSheet(
+            title = getString(R.string.routing_settings_import_predefined_rulesets),
+            subtitle = getString(R.string.routing_settings_import_rulesets_tip),
+            actions = preset_rulesets.mapIndexed { index, preset ->
+                actionBottomSheetItem(preset, R.drawable.ic_routing_24dp) {
                     try {
                         lifecycleScope.launch(Dispatchers.IO) {
-                            SettingsManager.resetRoutingRulesetsFromPresets(this@RoutingSettingActivity, i)
+                            SettingsManager.resetRoutingRulesetsFromPresets(this@RoutingSettingActivity, index)
                             launch(Dispatchers.Main) {
                                 refreshData()
                                 toastSuccess(R.string.toast_success)
@@ -146,39 +184,31 @@ class RoutingSettingActivity : HelperBaseActivity() {
                         Log.e(AppConfig.TAG, "Failed to import predefined ruleset", e)
                     }
                 }
-                .setNegativeButton(android.R.string.cancel) { _, _ ->
-                    //do nothing
-                }
-                .show()
-        }.show()
+            }
+        )
     }
 
     private fun importFromClipboard() {
-        v2rayAlertDialogBuilder().setMessage(R.string.routing_settings_import_rulesets_tip)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val clipboard = try {
-                    Utils.getClipboard(this)
-                } catch (e: Exception) {
-                    Log.e(AppConfig.TAG, "Failed to get clipboard content", e)
-                    toastError(R.string.toast_failure)
-                    return@setPositiveButton
-                }
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val result = SettingsManager.resetRoutingRulesets(clipboard)
-                    withContext(Dispatchers.Main) {
-                        if (result) {
-                            refreshData()
-                            toastSuccess(R.string.toast_success)
-                        } else {
-                            toastError(R.string.toast_failure)
-                        }
+        showConfirmImportSheet {
+            val clipboard = try {
+                Utils.getClipboard(this)
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Failed to get clipboard content", e)
+                toastError(R.string.toast_failure)
+                return@showConfirmImportSheet
+            }
+            lifecycleScope.launch(Dispatchers.IO) {
+                val result = SettingsManager.resetRoutingRulesets(clipboard)
+                withContext(Dispatchers.Main) {
+                    if (result) {
+                        refreshData()
+                        toastSuccess(R.string.toast_success)
+                    } else {
+                        toastError(R.string.toast_failure)
                     }
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do nothing
-            }
-            .show()
+        }
     }
 
     private fun importQRcode(): Boolean {
@@ -191,7 +221,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun export2Clipboard() {
-        val rulesetList = MmkvManager.decodeRoutingRulesets()
+        val rulesetList = SettingsManager.getRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) {
             toastError(R.string.toast_failure)
         } else {
@@ -202,25 +232,54 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
 
     private fun importRulesetsFromQRcode(qrcode: String?): Boolean {
-        v2rayAlertDialogBuilder().setMessage(R.string.routing_settings_import_rulesets_tip)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val result = SettingsManager.resetRoutingRulesets(qrcode)
-                    withContext(Dispatchers.Main) {
-                        if (result) {
-                            refreshData()
-                            toastSuccess(R.string.toast_success)
-                        } else {
-                            toastError(R.string.toast_failure)
-                        }
+        showConfirmImportSheet {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val result = SettingsManager.resetRoutingRulesets(qrcode)
+                withContext(Dispatchers.Main) {
+                    if (result) {
+                        refreshData()
+                        toastSuccess(R.string.toast_success)
+                    } else {
+                        toastError(R.string.toast_failure)
                     }
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do nothing
-            }
-            .show()
+        }
         return true
+    }
+
+    private fun showMoreActionsSheet() {
+        showActionBottomSheet(
+            title = getString(R.string.routing_settings_title),
+            subtitle = getString(R.string.action_more),
+            actions = listOf(
+                actionBottomSheetItem(R.string.routing_settings_import_predefined_rulesets, R.drawable.ic_routing_24dp) {
+                    importPredefined()
+                },
+                actionBottomSheetItem(R.string.routing_settings_import_rulesets_from_clipboard, R.drawable.ic_copy) {
+                    importFromClipboard()
+                },
+                actionBottomSheetItem(R.string.routing_settings_import_rulesets_from_qrcode, R.drawable.ic_qu_scan_24dp) {
+                    importQRcode()
+                },
+                actionBottomSheetItem(R.string.routing_settings_export_rulesets_to_clipboard, R.drawable.ic_share_24dp) {
+                    export2Clipboard()
+                }
+            )
+        )
+    }
+
+    private fun showConfirmImportSheet(onConfirmed: () -> Unit) {
+        showActionBottomSheet(
+            title = getString(R.string.action_confirm),
+            subtitle = getString(R.string.routing_settings_import_rulesets_tip),
+            actions = listOf(
+                actionBottomSheetItem(getString(android.R.string.ok), R.drawable.ic_action_done) {
+                    onConfirmed()
+                },
+                actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+            )
+        )
     }
 
     private fun getGeoFilesSources(): String {
@@ -264,6 +323,8 @@ class RoutingSettingActivity : HelperBaseActivity() {
             viewModel.reload()
             val items = viewModel.getAll()
             withContext(Dispatchers.Main) {
+                updateRuleSummary(items)
+                updateEmptyState(items.isEmpty())
                 adapter.submitList(items) {
                     binding.recyclerView.requestLayout()
                 }
@@ -271,12 +332,42 @@ class RoutingSettingActivity : HelperBaseActivity() {
         }
     }
 
+    private fun updateRuleSummary(items: List<com.v2ray.ang.dto.RulesetItem>) {
+        val total = items.size
+        val enabled = items.count { it.enabled }
+        val locked = items.count { it.locked == true }
+        updateSummaryValue(binding.tvRuleCount, total, lastRuleCount)
+        updateSummaryValue(binding.tvRuleEnabledCount, enabled, lastEnabledCount)
+        updateSummaryValue(binding.tvRuleLockedCount, locked, lastLockedCount)
+        lastRuleCount = total
+        lastEnabledCount = enabled
+        lastLockedCount = locked
+    }
+
+    private fun updateEmptyState(isEmpty: Boolean) {
+        val shouldAnimate = lastEmptyStateVisible != null &&
+            lastEmptyStateVisible != isEmpty &&
+            lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+        if (shouldAnimate) {
+            UiMotion.animateVisibility(binding.layoutEmptyState, isEmpty, translationOffsetDp = 8f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
+            UiMotion.animateVisibility(binding.recyclerView, !isEmpty, translationOffsetDp = 6f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
+        } else {
+            UiMotion.setVisibility(binding.layoutEmptyState, isEmpty)
+            UiMotion.setVisibility(binding.recyclerView, !isEmpty)
+        }
+        lastEmptyStateVisible = isEmpty
+    }
+
+    private fun updateSummaryValue(view: android.widget.TextView, value: Int, previousValue: Int?) {
+        view.text = value.toString()
+        if (previousValue != null && previousValue != value) {
+            UiMotion.animatePulse(view, pulseScale = 1.028f, duration = MotionTokens.PULSE_QUICK)
+        }
+    }
+
     private inner class ActivityAdapterListener : BaseAdapterListener {
         override fun onEdit(guid: String, position: Int) {
-            startActivity(
-                Intent(ownerActivity, RoutingEditActivity::class.java)
-                    .putExtra("position", position)
-            )
+            ownerActivity.openRoutingEditor(position)
         }
 
         override fun onRemove(guid: String, position: Int) {

@@ -53,6 +53,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
         if (!isStopping.get()) {
             V2RayServiceManager.stopCoreLoop()
         }
+        V2RayServiceManager.onServiceDestroyed(this)
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -116,6 +117,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val startAt = SystemClock.elapsedRealtime()
                 V2RayServiceManager.stopCoreLoop()
                 stopSelf()
+                V2RayServiceManager.onServiceStopCompleted(this@V2RayProxyOnlyService)
                 Log.i(AppConfig.TAG, "Proxy-only stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
                 isStarting.set(false)

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_bg"
-    style="@style/Widget.V2Ray.Card.ListItem"
+    style="@style/Widget.V2Ray.Card.Section"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginTop="@dimen/padding_spacing_dp6"
+    android:layout_marginBottom="@dimen/padding_spacing_dp6"
     android:maxWidth="@dimen/list_card_max_width"
     android:clipToOutline="true"
     app:cardBackgroundColor="@color/md_theme_surface"
@@ -20,118 +21,134 @@
         android:background="@drawable/bg_settings_item_ripple"
         android:clickable="true"
         android:focusable="true"
-        android:gravity="center_vertical"
-        android:minHeight="72dp"
-        android:nextFocusRight="@+id/layout_edit"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:paddingStart="@dimen/padding_spacing_dp16"
-        android:paddingTop="@dimen/padding_spacing_dp12"
-        android:paddingEnd="@dimen/padding_spacing_dp12"
-        android:paddingBottom="@dimen/padding_spacing_dp12">
+        android:paddingTop="@dimen/padding_spacing_dp16"
+        android:paddingEnd="@dimen/padding_spacing_dp16"
+        android:paddingBottom="@dimen/padding_spacing_dp16">
 
         <LinearLayout
-            android:id="@+id/priority_container"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingEnd="@dimen/padding_spacing_dp12">
-
-            <TextView
-                android:id="@+id/tv_priority"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_metric_badge"
-                android:gravity="center"
-                android:minWidth="28dp"
-                android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="@dimen/padding_spacing_dp3"
-                android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="@dimen/padding_spacing_dp3"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
-            <ImageView
-                android:id="@+id/img_drag_handle"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:alpha="0.5"
-                android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_drag_handle_20dp"
-                app:tint="?attr/colorOnSurfaceVariant" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:baselineAligned="false"
+            android:gravity="top"
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:paddingEnd="@dimen/padding_spacing_dp12">
 
-                <TextView
-                    android:id="@+id/remarks"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:background="@drawable/bg_group_count_badge"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/padding_spacing_dp8"
+                    android:paddingTop="@dimen/padding_spacing_dp3"
+                    android:paddingEnd="@dimen/padding_spacing_dp8"
+                    android:paddingBottom="@dimen/padding_spacing_dp3">
 
-                <ImageView
-                    android:id="@+id/img_locked"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
-                    android:alpha="0.72"
-                    android:importantForAccessibility="no"
-                    app:srcCompat="@drawable/ic_lock_24dp"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:id="@+id/tv_priority"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:minWidth="28dp"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="1" />
+                </LinearLayout>
 
+                <TextView
+                    android:id="@+id/outboundTag"
+                    style="@style/Widget.V2Ray.Badge.SubscriptionMeta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    tools:text="proxy" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/domainIp"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp4"
-                android:lines="1"
-                android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/outboundTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp4"
-                android:lines="1"
-                android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-        </LinearLayout>
+                    <TextView
+                        android:id="@+id/remarks"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="Block P2P and trackers" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/padding_spacing_dp8">
+                    <ImageView
+                        android:id="@+id/img_locked"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="@dimen/padding_spacing_dp8"
+                        android:alpha="0.72"
+                        android:importantForAccessibility="no"
+                        android:visibility="gone"
+                        app:srcCompat="@drawable/ic_lock_24dp"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp6"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/domainIp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.V2Ray.Body"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="domain: ads.example.com +3 · port: 443" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_advanced_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone"
+                    tools:text="protocol: http,tls · network: tcp"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/layout_edit"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
+                android:layout_marginStart="@dimen/padding_spacing_dp4"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:contentDescription="@string/menu_item_edit_config"
                 android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:gravity="center"
-                android:nextFocusLeft="@+id/info_container"
-                android:orientation="vertical">
+                android:gravity="center">
 
                 <ImageView
                     android:layout_width="18dp"
@@ -145,14 +162,36 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:orientation="horizontal">
+                android:layout_marginStart="@dimen/padding_spacing_dp4"
+                android:gravity="end|center_horizontal"
+                android:orientation="vertical">
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/chk_enable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:theme="@style/BrandedSwitch" />
+
+                <LinearLayout
+                    android:id="@+id/layout_drag_handle"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/routing_priority_hint"
+                    android:focusable="true"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/img_drag_handle"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:alpha="0.5"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_drag_handle_20dp"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 

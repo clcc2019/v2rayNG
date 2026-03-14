@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMoreBinding
 import com.v2ray.ang.ui.common.hapticClick
@@ -14,9 +15,21 @@ class MoreActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.more_title))
         setupActions()
+        (binding.root.getChildAt(0) as? ViewGroup)?.let {
+            postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
+        }
     }
 
     private fun setupActions() {
+        applyPressMotion(
+            binding.rowSubSetting.root,
+            binding.rowRoutingSetting.root,
+            binding.rowSettings.root,
+            binding.rowBackupRestore.root,
+            binding.rowLogcat.root,
+            binding.rowCheckUpdate.root,
+            binding.rowAbout.root
+        )
         bindLaunch(binding.rowSubSetting.root, Intent(this, SubSettingActivity::class.java))
         bindLaunch(binding.rowRoutingSetting.root, Intent(this, RoutingSettingActivity::class.java))
         bindLaunch(binding.rowSettings.root, Intent(this, SettingsActivity::class.java))

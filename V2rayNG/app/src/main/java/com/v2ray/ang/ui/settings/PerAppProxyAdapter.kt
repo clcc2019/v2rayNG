@@ -4,11 +4,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.AdapterListUpdateCallback
+import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.databinding.ItemRecyclerBypassListBinding
 import com.v2ray.ang.dto.AppInfo
+import com.v2ray.ang.helper.ListDiffExecutors
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
 
 class PerAppProxyAdapter(
@@ -33,7 +36,12 @@ class PerAppProxyAdapter(
         }
     }
 
-    private val differ = AsyncListDiffer(this, DIFF_CALLBACK)
+    private val differ = AsyncListDiffer(
+        AdapterListUpdateCallback(this),
+        AsyncDifferConfig.Builder(DIFF_CALLBACK)
+            .setBackgroundThreadExecutor(ListDiffExecutors.background)
+            .build()
+    )
 
     val apps: List<AppInfo>
         get() = differ.currentList
@@ -100,13 +108,15 @@ class PerAppProxyAdapter(
             itemBypassBinding.name.text = appInfo.appName
             itemBypassBinding.systemBadge.isVisible = appInfo.isSystemApp
             itemBypassBinding.packageName.text = appInfo.packageName
-            itemBypassBinding.checkBox.isChecked = viewModel.contains(appInfo.packageName)
+            itemBypassBinding.checkBox.isChecked = appInfo.isSelected == 1
         }
 
         override fun onClick(v: View?) {
             val packageName = appInfo.packageName
             viewModel.toggle(packageName)
-            itemBypassBinding.checkBox.isChecked = viewModel.contains(packageName)
+            val isSelected = if (appInfo.isSelected == 1) 0 else 1
+            appInfo = appInfo.copy(isSelected = isSelected)
+            itemBypassBinding.checkBox.isChecked = isSelected == 1
         }
     }
 }

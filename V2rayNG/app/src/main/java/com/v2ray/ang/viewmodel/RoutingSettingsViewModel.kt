@@ -12,7 +12,7 @@ class RoutingSettingsViewModel : ViewModel() {
 
     fun reload() {
         rulesets.clear()
-        rulesets.addAll(MmkvManager.decodeRoutingRulesets() ?: mutableListOf())
+        rulesets.addAll(SettingsManager.getRoutingRulesets())
     }
 
     fun update(position: Int, item: RulesetItem) {
@@ -28,4 +28,3 @@ class RoutingSettingsViewModel : ViewModel() {
         }
     }
 }
-

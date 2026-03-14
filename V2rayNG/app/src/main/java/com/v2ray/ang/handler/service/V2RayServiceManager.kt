@@ -33,9 +33,14 @@ import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicBoolean
 
 object V2RayServiceManager {
+    private const val RESTART_START_DELAY_MS = 120L
+    private const val RESTART_MAX_WAIT_MS = 1_500L
+    private const val RESTART_WAIT_INTERVAL_MS = 40L
 
-    private const val RESTART_CHECK_INTERVAL_MS = 50L
-    private const val RESTART_MAX_WAIT_MS = 3_000L
+    private data class PendingRestartRequest(
+        val context: Context,
+        val guid: String
+    )
 
     private val coreController: CoreController = V2RayNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
@@ -44,6 +49,7 @@ object V2RayServiceManager {
     private var measureDelayJob: Job? = null
     private var currentConfig: ProfileItem? = null
     private var pendingConfigGuid: String? = null
+    private var pendingRestartRequest: PendingRestartRequest? = null
     private val receiverRegistered = AtomicBoolean(false)
     private val stopInProgress = AtomicBoolean(false)
 
@@ -59,12 +65,12 @@ object V2RayServiceManager {
      * @return True if the service was started successfully, false otherwise.
      */
     fun startVServiceFromToggle(context: Context): Boolean {
-        if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+        val guid = MmkvManager.getSelectServer()
+        if (guid.isNullOrEmpty()) {
             context.toast(R.string.app_tile_first_use)
             return false
         }
-        restartJob?.cancel()
-        startContextService(context)
+        startVService(context, guid)
         return true
     }
 
@@ -74,14 +80,17 @@ object V2RayServiceManager {
      * @param guid The GUID of the server configuration to use (optional).
      */
     fun startVService(context: Context, guid: String? = null) {
-        restartJob?.cancel()
-        if (guid != null) {
-            MmkvManager.setSelectServer(guid)
-            pendingConfigGuid = guid
-        } else {
-            pendingConfigGuid = MmkvManager.getSelectServer()
+        val targetGuid = guid ?: MmkvManager.getSelectServer()
+        if (targetGuid.isNullOrEmpty()) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+            return
         }
-        startContextService(context)
+        clearPendingRestart()
+        if (isServiceActive()) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+            return
+        }
+        startContextService(context, targetGuid)
     }
 
     /**
@@ -89,21 +98,20 @@ object V2RayServiceManager {
      * It starts as soon as the core is fully stopped (or timeout reached).
      */
     fun restartVService(context: Context, guid: String? = null) {
-        if (guid != null) {
-            MmkvManager.setSelectServer(guid)
-            pendingConfigGuid = guid
-        } else {
-            pendingConfigGuid = MmkvManager.getSelectServer()
-        }
-
-        val appContext = context.applicationContext
-        if (!coreController.isRunning) {
-            startContextService(appContext)
+        val targetGuid = guid ?: MmkvManager.getSelectServer()
+        if (targetGuid.isNullOrEmpty()) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
-
-        stopVService(appContext)
-        scheduleStartAfterStop(appContext)
+        queuePendingRestart(context, targetGuid)
+        restartScope.launch(Dispatchers.Default) {
+            V2rayConfigManager.prewarmConfig(context.applicationContext, targetGuid)
+        }
+        if (isServiceActive()) {
+            requestServiceStop(context.applicationContext)
+            return
+        }
+        startContextService(context, targetGuid)
     }
 
     /**
@@ -111,6 +119,11 @@ object V2RayServiceManager {
      * @param context The context from which the service is stopped.
      */
     fun stopVService(context: Context) {
+        clearPendingRestart()
+        requestServiceStop(context)
+    }
+
+    private fun requestServiceStop(context: Context) {
         val control = serviceControl?.get()
         if (control != null) {
             Log.i(AppConfig.TAG, "Stop Service directly via serviceControl")
@@ -139,18 +152,15 @@ object V2RayServiceManager {
      * Chooses between VPN service or Proxy-only service based on user settings.
      * @param context The context from which the service is started.
      */
-    private fun startContextService(context: Context) {
-        if (coreController.isRunning) {
+    private fun startContextService(context: Context, guid: String) {
+        if (isServiceActive()) {
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
             return
         }
-        val guid = pendingConfigGuid ?: MmkvManager.getSelectServer()
-        if (guid.isNullOrEmpty()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
-            return
-        }
+
         val config = MmkvManager.decodeServerConfig(guid)
         if (config == null) {
+            clearPendingRestart()
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
@@ -159,29 +169,43 @@ object V2RayServiceManager {
             && !Utils.isValidUrl(config.server)
             && !Utils.isPureIpAddress(config.server.orEmpty())
         ) {
+            clearPendingRestart()
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
 //        val result = V2rayConfigUtil.getV2rayConfig(context, guid)
 //        if (!result.status) return
 
+        pendingConfigGuid = guid
+        MmkvManager.setSelectServer(guid)
         val intent = if (SettingsManager.isVpnMode()) {
             Intent(context.applicationContext, V2RayVpnService::class.java)
         } else {
             Intent(context.applicationContext, V2RayProxyOnlyService::class.java)
         }
-        ContextCompat.startForegroundService(context, intent)
+        try {
+            clearPendingRestart()
+            ContextCompat.startForegroundService(context, intent)
+        } catch (e: Exception) {
+            clearPendingRestart()
+            Log.e(AppConfig.TAG, "Failed to start foreground service", e)
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+        }
     }
 
-    private fun scheduleStartAfterStop(context: Context) {
-        restartJob?.cancel()
-        restartJob = restartScope.launch {
-            val deadline = SystemClock.elapsedRealtime() + RESTART_MAX_WAIT_MS
-            while (isActive && coreController.isRunning && SystemClock.elapsedRealtime() < deadline) {
-                delay(RESTART_CHECK_INTERVAL_MS)
-            }
-            startContextService(context)
+    fun onServiceStopCompleted(control: ServiceControl) {
+        if (serviceControl?.get() === control) {
+            serviceControl = null
         }
+        currentConfig = null
+        schedulePendingRestart()
+    }
+
+    fun onServiceDestroyed(control: ServiceControl) {
+        if (serviceControl?.get() === control) {
+            serviceControl = null
+        }
+        currentConfig = null
     }
 
     /**
@@ -455,8 +479,7 @@ object V2RayServiceManager {
 
                 AppConfig.MSG_STATE_RESTART -> {
                     Log.i(AppConfig.TAG, "Restart Service")
-                    serviceControl.stopService()
-                    scheduleStartAfterStop(serviceControl.getService().applicationContext)
+                    restartVService(serviceControl.getService())
                 }
 
                 AppConfig.MSG_MEASURE_DELAY -> {
@@ -493,5 +516,42 @@ object V2RayServiceManager {
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to unregister broadcast receiver", e)
         }
+    }
+
+    private fun queuePendingRestart(context: Context, guid: String) {
+        pendingRestartRequest = PendingRestartRequest(context.applicationContext, guid)
+        pendingConfigGuid = guid
+        MmkvManager.setSelectServer(guid)
+    }
+
+    private fun clearPendingRestart() {
+        restartJob?.cancel()
+        restartJob = null
+        pendingRestartRequest = null
+    }
+
+    private fun schedulePendingRestart() {
+        val request = pendingRestartRequest ?: return
+        restartJob?.cancel()
+        restartJob = restartScope.launch {
+            delay(RESTART_START_DELAY_MS)
+            val deadline = SystemClock.elapsedRealtime() + RESTART_MAX_WAIT_MS
+            while (isActive && isServiceActive() && SystemClock.elapsedRealtime() < deadline) {
+                delay(RESTART_WAIT_INTERVAL_MS)
+            }
+            if (!isActive || pendingRestartRequest != request) {
+                return@launch
+            }
+            if (isServiceActive()) {
+                clearPendingRestart()
+                Log.w(AppConfig.TAG, "Pending restart timed out before service became inactive")
+                return@launch
+            }
+            startContextService(request.context, request.guid)
+        }
+    }
+
+    private fun isServiceActive(): Boolean {
+        return coreController.isRunning || serviceControl?.get() != null || stopInProgress.get()
     }
 }
