@@ -76,6 +76,9 @@ class MainActivity : HelperBaseActivity() {
             onOpenSearch = { openToolbarSearch() }
         )
     }
+    private val connectionDockBackdropRenderer by lazy {
+        ConnectionDockBackdropRenderer(binding)
+    }
     private var serviceUiState = ServiceUiState.STOPPED
     private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
@@ -140,6 +143,7 @@ class MainActivity : HelperBaseActivity() {
             defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
             groupTabsController.initialize()
+            connectionDockBackdropRenderer.attach()
             setupMainContentInsets()
             setupActionControls()
             setupHomeMotion(runInitialEntrance = savedInstanceState == null)
@@ -188,14 +192,8 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupActionControls() {
-        binding.cardConnection.setOnClickListener { handleFabAction() }
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
-        UiMotion.attachPressFeedbackDock(
-            source = binding.cardConnection,
-            surfaceTarget = binding.layoutConnectionDockContainer,
-            shadowTarget = binding.viewConnectionDockUnderlay
-        )
         UiMotion.attachPressFeedback(binding.fab)
         UiMotion.attachPressFeedback(binding.layoutTest)
     }
@@ -250,6 +248,7 @@ class MainActivity : HelperBaseActivity() {
     override fun onResume() {
         super.onResume()
         updateConnectionCardVisibility()
+        connectionDockBackdropRenderer.requestRefresh()
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
@@ -284,6 +283,7 @@ class MainActivity : HelperBaseActivity() {
         val fallbackTopChromeHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp56)
         binding.cardConnection.doOnLayout {
             syncConnectionDockUnderlay((it.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin)
+            connectionDockBackdropRenderer.requestRefresh()
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainContent) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -321,23 +321,27 @@ class MainActivity : HelperBaseActivity() {
             binding.cardConnection.layoutParams = cardLayoutParams
         }
         syncConnectionDockUnderlay(targetCardBottomMargin)
+        connectionDockBackdropRenderer.requestRefresh()
     }
 
     private fun syncConnectionDockUnderlay(cardBottomMargin: Int) {
-        val dockShadowOverlap = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
         val underlayLayoutParams = binding.viewConnectionDockUnderlay.layoutParams as CoordinatorLayout.LayoutParams
-        // Keep the underlay mostly below the dock. A small overlap is enough to
-        // visually attach the shadow without showing a gray block through the glass.
-        val targetUnderlayHeight = cardBottomMargin + dockShadowOverlap
-        if (underlayLayoutParams.height != targetUnderlayHeight || underlayLayoutParams.bottomMargin != 0) {
-            underlayLayoutParams.height = targetUnderlayHeight
+        if (underlayLayoutParams.height != 0 || underlayLayoutParams.bottomMargin != 0) {
+            underlayLayoutParams.height = 0
             underlayLayoutParams.bottomMargin = 0
             binding.viewConnectionDockUnderlay.layoutParams = underlayLayoutParams
         }
+        binding.viewConnectionDockUnderlay.isVisible = false
     }
 
     private fun updateConnectionCardVisibility() {
         renderChromeState(chromeStateReducer.currentState(), event = "visibility_sync", animate = false, force = true)
+    }
+
+    fun requestConnectionDockBackdropRefreshOnNextDraw() {
+        binding.mainContent.doOnPreDraw {
+            connectionDockBackdropRenderer.requestRefresh()
+        }
     }
 
     private fun shouldShowConnectionCard(): Boolean {
@@ -400,6 +404,7 @@ class MainActivity : HelperBaseActivity() {
     fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
         groupTabsController.onServerListScrolled(dy, canScrollUp)
         renderChromeState(chromeStateReducer.onScrollPositionChanged(canScrollUp), event = "scroll_position")
+        connectionDockBackdropRenderer.requestRefresh()
     }
 
     private fun renderChromeState(state: AppChromeState, event: String, animate: Boolean = true, force: Boolean = false) {
@@ -410,6 +415,9 @@ class MainActivity : HelperBaseActivity() {
         }
         topBarRenderer.renderChromeState(state, animate = animate)
         connectionCardController.renderChromeState(state, animate = animate)
+        if (state.showBottomBar) {
+            connectionDockBackdropRenderer.requestRefresh()
+        }
         currentChromeState = state
     }
 
@@ -727,6 +735,7 @@ class MainActivity : HelperBaseActivity() {
     fun refreshConnectionCard() {
         connectionCardController.render(serviceUiState)
         updateToolbarSubtitle()
+        connectionDockBackdropRenderer.requestRefresh()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -892,6 +901,7 @@ class MainActivity : HelperBaseActivity() {
     override fun onDestroy() {
         toolbarController.clear()
         groupTabsController.onDestroy()
+        connectionDockBackdropRenderer.detach()
         super.onDestroy()
     }
 }

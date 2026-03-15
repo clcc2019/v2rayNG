@@ -32,7 +32,8 @@ import java.util.Collections
 
 class MainRecyclerAdapter(
     private val mainViewModel: MainViewModel,
-    private val adapterListener: MainAdapterListener?
+    private val adapterListener: MainAdapterListener?,
+    private val onContentCommitted: (() -> Unit)? = null
 ) : RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>(), ItemTouchHelperAdapter {
     companion object {
         private const val VIEW_TYPE_ITEM = 1
@@ -99,7 +100,9 @@ class MainRecyclerAdapter(
             hasAnimatedInitialList = false
         }
         testDelayOverrides.clear()
-        differ.submitList(updatedData)
+        differ.submitList(updatedData) {
+            onContentCommitted?.invoke()
+        }
     }
 
     fun updateTestResults(newData: MutableList<ServersCache>?, positions: List<Int>) {
@@ -190,7 +193,9 @@ class MainRecyclerAdapter(
             else -> data.indexOfFirst { it.guid == guid }
         }
         if (idx >= 0) {
-            differ.submitList(data.toMutableList().apply { removeAt(idx) })
+            differ.submitList(data.toMutableList().apply { removeAt(idx) }) {
+                onContentCommitted?.invoke()
+            }
         }
     }
 

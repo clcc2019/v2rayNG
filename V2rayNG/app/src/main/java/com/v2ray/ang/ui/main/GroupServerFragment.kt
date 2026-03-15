@@ -68,7 +68,11 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         FragmentGroupServerBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = MainRecyclerAdapter(mainViewModel, ActivityAdapterListener())
+        adapter = MainRecyclerAdapter(
+            mainViewModel = mainViewModel,
+            adapterListener = ActivityAdapterListener(),
+            onContentCommitted = ::requestConnectionDockBackdropRefresh
+        )
         setupRecyclerView()
         setupEmptyStateActions()
         pendingListFadeIn = true
@@ -158,6 +162,13 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         })
         ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false, allowLongPressDrag = false))
             .attachToRecyclerView(binding.recyclerView)
+    }
+
+    private fun requestConnectionDockBackdropRefresh() {
+        if (!isAdded || mainViewModel.subscriptionId != subId) {
+            return
+        }
+        ownerActivity.requestConnectionDockBackdropRefreshOnNextDraw()
     }
 
     private fun getSpanCount(): Int {
