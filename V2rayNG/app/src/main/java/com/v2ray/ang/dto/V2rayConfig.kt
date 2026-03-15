@@ -252,7 +252,6 @@ data class V2rayConfig(
             )
 
             data class TlsSettingsBean(
-                var allowInsecure: Boolean = false,
                 var serverName: String? = null,
                 val alpn: List<String>? = null,
                 val minVersion: String? = null,

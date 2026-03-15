@@ -2,12 +2,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Preference
-        android:key="settings_page_intro"
-        android:layout="@layout/preference_page_intro"
-        android:selectable="false"
-        android:summary="@string/settings_page_overview" />
-
     <PreferenceCategory
         android:key="category_basic_settings"
         android:title="@string/title_basic_settings">
@@ -193,12 +187,6 @@
             android:key="pref_core_loglevel"
             android:summary="%s"
             android:title="@string/title_core_loglevel" />
-
-        <CheckBoxPreference
-            android:key="pref_allow_insecure"
-            android:defaultValue="false"
-            android:summary="@string/summary_pref_allow_insecure"
-            android:title="@string/title_pref_allow_insecure" />
 
         <CheckBoxPreference
             android:key="pref_mux_enabled"

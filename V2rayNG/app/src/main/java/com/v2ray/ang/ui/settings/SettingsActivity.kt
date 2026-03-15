@@ -64,7 +64,6 @@ class SettingsActivity : BaseActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat() {
         companion object {
-            private const val SETTINGS_PAGE_INTRO_KEY = "settings_page_intro"
             private val DEFAULT_EXPANDED_CHILDREN = mapOf(
                 "category_connection_settings" to 9,
                 "category_advanced_settings" to 4,
@@ -189,9 +188,6 @@ class SettingsActivity : BaseActivity() {
                 val preference = group.getPreference(index)
                 preference.isIconSpaceReserved = false
                 when {
-                    preference.key == SETTINGS_PAGE_INTRO_KEY -> {
-                        preference.layoutResource = R.layout.preference_page_intro
-                    }
                     preference is PreferenceCategory -> {
                         preference.layoutResource = if (depth == 0) {
                             R.layout.preference_category_primary
@@ -399,8 +395,7 @@ class SettingsActivity : BaseActivity() {
 
         private fun isPreferenceRow(preference: androidx.preference.Preference?): Boolean {
             return preference != null &&
-                preference !is PreferenceCategory &&
-                preference.key != SETTINGS_PAGE_INTRO_KEY
+                preference !is PreferenceCategory
         }
 
         private inner class GroupedSettingsAdapter(

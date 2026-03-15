@@ -18,12 +18,7 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/update_page_overview" />
-
-        <TextView
             style="@style/Widget.V2Ray.SectionLabel"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/update_group_status" />
 
         <com.google.android.material.card.MaterialCardView
@@ -234,48 +229,22 @@
 
                 <LinearLayout
                     android:id="@+id/layout_pre_release"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="68dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp12"
-                    android:paddingEnd="@dimen/padding_spacing_dp12"
-                    android:paddingBottom="@dimen/padding_spacing_dp12">
+                    style="@style/Widget.V2Ray.Settings.Row.CompactEnd">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:alpha="0.88"
+                        style="@style/Widget.V2Ray.Settings.Icon"
                         android:importantForAccessibility="no"
-                        app:srcCompat="@drawable/ic_source_code_24dp"
-                        app:tint="?attr/colorOnSurface" />
+                        app:srcCompat="@drawable/ic_source_code_24dp" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp14"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                    <LinearLayout style="@style/Widget.V2Ray.Settings.Content">
 
                         <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/update_check_pre_release"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.Settings.Title"
+                            android:text="@string/update_check_pre_release" />
 
                         <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/update_pre_release_summary"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.Settings.Subtitle"
+                            android:text="@string/update_pre_release_summary" />
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat

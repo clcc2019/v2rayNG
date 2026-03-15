@@ -20,18 +20,12 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/user_asset_url_page_overview"
-            />
-
-        <TextView
             style="@style/Widget.V2Ray.SectionLabel"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/sub_setting_remarks"
             />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -40,16 +34,27 @@
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <EditText
-                    android:id="@+id/et_remarks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sub_setting_remarks"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <EditText
+                        android:id="@+id/et_remarks"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:hint="@string/sub_setting_remarks"
+                        android:imeOptions="actionNext"
+                        android:inputType="text|textNoSuggestions" />
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -62,7 +67,7 @@
             />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -71,20 +76,32 @@
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <EditText
-                    android:id="@+id/et_url"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:maxLines="10"
-                    android:minLines="2"
-                    android:scrollbars="vertical" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_url"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <EditText
+                        android:id="@+id/et_url"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:gravity="top|start"
+                        android:hint="@string/title_url"
+                        android:imeOptions="actionDone"
+                        android:inputType="textUri|textMultiLine|textNoSuggestions"
+                        android:maxLines="10"
+                        android:minHeight="112dp"
+                        android:minLines="2"
+                        android:scrollbars="vertical" />
+                </LinearLayout>
 
             </LinearLayout>
 

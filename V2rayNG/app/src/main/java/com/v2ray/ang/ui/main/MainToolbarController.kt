@@ -23,7 +23,7 @@ class MainToolbarController(
     private val binding: ActivityMainBinding,
     private val motionInterpolator: Interpolator,
     private val onOpenMorePage: () -> Unit,
-    private val statusProvider: () -> ToolbarStatusState
+    private val statusProvider: () -> ServiceUiState
 ) {
     private var statusText: TextView? = null
     private var appIcon: ImageView? = null
@@ -53,15 +53,14 @@ class MainToolbarController(
         appIcon?.setOnClickListener { icon -> openMoreAction(icon) }
     }
 
-    fun updateStatus(serviceUiState: ServiceUiState, isTesting: Boolean) {
+    fun updateStatus(serviceUiState: ServiceUiState) {
         transientMessage?.let { message ->
             applyStatus(message, animateIcon = true)
             return
         }
-        val statusResId = when {
-            isTesting -> R.string.connection_test_testing
-            serviceUiState == ServiceUiState.STARTING -> R.string.connection_starting_short
-            serviceUiState == ServiceUiState.STOPPING -> R.string.connection_stopping_short
+        val statusResId = when (serviceUiState) {
+            ServiceUiState.STARTING -> R.string.connection_starting_short
+            ServiceUiState.STOPPING -> R.string.connection_stopping_short
             else -> null
         }
         val message = statusResId?.let { activity.getString(it) }
@@ -75,8 +74,7 @@ class MainToolbarController(
         transientClearRunnable?.let { targetView?.removeCallbacks(it) }
         val runnable = Runnable {
             transientMessage = null
-            val status = statusProvider()
-            updateStatus(status.serviceUiState, status.isTesting)
+            updateStatus(statusProvider())
         }
         transientClearRunnable = runnable
         targetView?.postDelayed(runnable, duration)
@@ -177,8 +175,3 @@ class MainToolbarController(
         }
     }
 }
-
-data class ToolbarStatusState(
-    val serviceUiState: ServiceUiState,
-    val isTesting: Boolean
-)

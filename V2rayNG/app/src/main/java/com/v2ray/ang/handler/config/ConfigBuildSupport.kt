@@ -58,7 +58,6 @@ private fun copyRoutingDomainBuckets(buckets: RoutingDomainBuckets): RoutingDoma
 
 internal fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {
     return linkedMapOf(
-        AppConfig.PREF_ALLOW_INSECURE to MmkvManager.decodeSettingsBool(AppConfig.PREF_ALLOW_INSECURE, false),
         AppConfig.PREF_DELAY_TEST_URL to MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL),
         AppConfig.PREF_DNS_HOSTS to MmkvManager.decodeSettingsString(AppConfig.PREF_DNS_HOSTS),
         AppConfig.PREF_FAKE_DNS_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, false),

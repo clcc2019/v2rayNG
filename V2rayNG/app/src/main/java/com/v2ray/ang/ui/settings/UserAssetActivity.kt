@@ -46,6 +46,7 @@ class UserAssetActivity : HelperBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_user_asset_setting))
+        postScreenContentEnterMotion(binding.root)
 
         binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -54,7 +55,7 @@ class UserAssetActivity : HelperBaseActivity() {
         binding.recyclerView.adapter = adapter
 
         binding.tvGeoFilesSourcesSummary.text = getGeoFilesSources()
-        binding.layoutGeoFilesSources.setOnClickListener {
+        bindClickAction(binding.layoutGeoFilesSources, withHaptic = false) {
             setGeoFilesSources()
         }
     }
@@ -103,32 +104,43 @@ class UserAssetActivity : HelperBaseActivity() {
             if (uri == null) {
                 return@launchFileChooser
             }
+            importAssetFile(uri)
+        }
+    }
 
+    private fun importAssetFile(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
             val assetId = Utils.getUuid()
-            lifecycleScope.launch(Dispatchers.IO) {
-                val displayName = getCursorName(uri) ?: uri.toString()
-                val assetItem = AssetUrlItem(displayName, "file")
-                val assetList = MmkvManager.decodeAssetUrls()
-                if (assetList.any { it.assetUrl.remarks == assetItem.remarks && it.guid != assetId }) {
-                    withContext(Dispatchers.Main) {
-                        toast(R.string.msg_remark_is_duplicate)
-                    }
-                    return@launch
-                }
-
-                MmkvManager.encodeAsset(assetId, assetItem)
-                val copied = copyFileInternal(uri, displayName)
+            val displayName = getCursorName(uri) ?: uri.toString()
+            if (isDuplicateAsset(displayName, assetId)) {
                 withContext(Dispatchers.Main) {
-                    if (copied) {
-                        toastSuccess(R.string.toast_success)
-                        refreshData()
-                    } else {
-                        toastError(R.string.toast_asset_copy_failed)
-                        MmkvManager.removeAssetUrl(assetId)
-                    }
+                    toast(R.string.msg_remark_is_duplicate)
                 }
+                return@launch
+            }
+
+            MmkvManager.encodeAsset(assetId, AssetUrlItem(displayName, "file"))
+            val copied = copyFileInternal(uri, displayName)
+            withContext(Dispatchers.Main) {
+                handleImportedAssetFile(copied, assetId)
             }
         }
+    }
+
+    private fun isDuplicateAsset(displayName: String, assetId: String): Boolean {
+        return MmkvManager.decodeAssetUrls().any {
+            it.assetUrl.remarks == displayName && it.guid != assetId
+        }
+    }
+
+    private fun handleImportedAssetFile(copied: Boolean, assetId: String) {
+        if (copied) {
+            toastSuccess(R.string.toast_success)
+            refreshData()
+            return
+        }
+        toastError(R.string.toast_asset_copy_failed)
+        MmkvManager.removeAssetUrl(assetId)
     }
 
     private fun copyFileInternal(uri: Uri, fileName: String): Boolean {
@@ -188,22 +200,20 @@ class UserAssetActivity : HelperBaseActivity() {
 
     private fun downloadGeoFiles() {
         refreshData()
-        showLoading()
         toast(R.string.msg_downloading_content)
 
         val httpPort = SettingsManager.getHttpPort()
-        lifecycleScope.launch(Dispatchers.IO) {
-            val result = viewModel.downloadGeoFiles(extDir, httpPort)
-            withContext(Dispatchers.Main) {
+        launchLoadingTask(
+            task = { viewModel.downloadGeoFiles(extDir, httpPort) },
+            onSuccess = { result ->
                 if (result.successCount > 0) {
                     toast(getString(R.string.title_update_config_count, result.successCount))
                 } else {
                     toast(getString(R.string.toast_failure))
                 }
                 refreshData()
-                hideLoading()
             }
-        }
+        )
     }
 
     fun initAssets() {
@@ -242,10 +252,7 @@ class UserAssetActivity : HelperBaseActivity() {
 
     private inner class ActivityAdapterListener : BaseAdapterListener {
         override fun onEdit(guid: String, position: Int) {
-            startActivity(
-                Intent(ownerActivity, UserAssetUrlActivity::class.java)
-                    .putExtra("assetId", guid)
-            )
+            startActivity(Intent(ownerActivity, UserAssetUrlActivity::class.java).putExtra("assetId", guid))
         }
 
         override fun onRemove(guid: String, position: Int) {

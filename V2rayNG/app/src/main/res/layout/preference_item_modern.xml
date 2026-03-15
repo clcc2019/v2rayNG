@@ -16,7 +16,7 @@
             android:id="@+id/settings_row_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_more_action_ripple"
+            android:background="@drawable/bg_settings_row_ripple"
             android:baselineAligned="false"
             android:gravity="center_vertical"
             android:minHeight="68dp"

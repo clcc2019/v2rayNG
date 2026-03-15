@@ -8,7 +8,9 @@ import com.v2ray.ang.enums.EConfigType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.atomic.AtomicInteger
 
 class ServerListSnapshotBuilderTest {
     @Test
@@ -64,6 +66,27 @@ class ServerListSnapshotBuilderTest {
         val snapshot = builder.resolveSelectedServerSnapshot("", emptyList())
 
         assertNull(snapshot)
+    }
+
+    @Test
+    fun build_skipsDescriptionGenerationWhenKeywordMatchesDirectFields() {
+        val repository = FakeMainServerRepository(
+            serverIdsBySubscription = linkedMapOf("sub1" to mutableListOf("a")),
+            profiles = mapOf(
+                "a" to profile(remarks = "Alpha", server = "1.1.1.1", subscriptionId = "sub1")
+            )
+        )
+        val descriptionCalls = AtomicInteger(0)
+        val builder = ServerListSnapshotBuilder(repository) {
+            descriptionCalls.incrementAndGet()
+            "generated:${it.server}"
+        }
+
+        val snapshot = builder.build(targetSubscriptionId = "sub1", keyword = "alp")
+
+        assertEquals(listOf("a"), snapshot.servers.map { it.guid })
+        assertEquals(1, descriptionCalls.get())
+        assertTrue(snapshot.servers.first().displayAddress.startsWith("generated:"))
     }
 
     private fun profile(

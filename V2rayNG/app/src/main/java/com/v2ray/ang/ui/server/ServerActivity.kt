@@ -13,7 +13,6 @@ import android.widget.Spinner
 import android.widget.TextView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
-import com.v2ray.ang.AppConfig.PREF_ALLOW_INSECURE
 import com.v2ray.ang.AppConfig.REALITY
 import com.v2ray.ang.AppConfig.TLS
 import com.v2ray.ang.AppConfig.WIREGUARD_LOCAL_ADDRESS_V4
@@ -620,7 +619,7 @@ class ServerActivity : BaseActivity() {
 
         val allowInsecure =
             if (allowInsecureField == null || allowinsecures[allowInsecureField].isBlank()) {
-                MmkvManager.decodeSettingsBool(PREF_ALLOW_INSECURE)
+                null
             } else {
                 allowinsecures[allowInsecureField].toBoolean()
             }

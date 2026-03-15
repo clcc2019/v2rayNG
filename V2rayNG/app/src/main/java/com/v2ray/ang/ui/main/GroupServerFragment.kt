@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -13,11 +14,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.viewbinding.ViewBinding
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.MainAdapterListener
-import com.v2ray.ang.databinding.FragmentGroupServerBinding
-import com.v2ray.ang.databinding.ItemQrcodeBinding
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.toast
@@ -37,11 +37,60 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
+class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>() {
     private enum class EmptyStateMode {
         DEFAULT,
         SEARCH_IDLE,
         SEARCH_RESULT
+    }
+
+    private data class EmptyStateContent(
+        val iconRes: Int,
+        val titleRes: Int,
+        val subtitleRes: Int,
+        val showActions: Boolean
+    )
+
+    class GroupServerBinding private constructor(
+        private val rootView: View,
+        val recyclerView: RecyclerView,
+        val layoutEmptyState: ViewGroup,
+        val ivEmptyIcon: ImageView,
+        val tvEmptyTitle: android.widget.TextView,
+        val tvEmptySubtitle: android.widget.TextView,
+        val layoutEmptyActions: ViewGroup,
+        val actionAddConnection: View,
+        val actionScanQrcode: View,
+        val actionAddSubscription: View
+    ) : ViewBinding {
+        override fun getRoot(): View = rootView
+
+        companion object {
+            fun inflate(inflater: LayoutInflater, container: ViewGroup?): GroupServerBinding {
+                val root = inflater.inflate(R.layout.fragment_group_server, container, false)
+                return bind(root)
+            }
+
+            private fun bind(root: View): GroupServerBinding {
+                return GroupServerBinding(
+                    rootView = root,
+                    recyclerView = requireView(root, R.id.recycler_view),
+                    layoutEmptyState = requireView(root, R.id.layout_empty_state),
+                    ivEmptyIcon = requireView(root, R.id.iv_empty_icon),
+                    tvEmptyTitle = requireView(root, R.id.tv_empty_title),
+                    tvEmptySubtitle = requireView(root, R.id.tv_empty_subtitle),
+                    layoutEmptyActions = requireView(root, R.id.layout_empty_actions),
+                    actionAddConnection = requireView(root, R.id.action_add_connection),
+                    actionScanQrcode = requireView(root, R.id.action_scan_qrcode),
+                    actionAddSubscription = requireView(root, R.id.action_add_subscription)
+                )
+            }
+
+            private fun <T : View> requireView(root: View, id: Int): T {
+                return root.findViewById<T>(id)
+                    ?: throw NullPointerException("Missing required view id=$id in fragment_group_server")
+            }
+        }
     }
 
     private val ownerActivity: MainActivity
@@ -65,13 +114,12 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     }
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
-        FragmentGroupServerBinding.inflate(inflater, container, false)
+        GroupServerBinding.inflate(inflater, container)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = MainRecyclerAdapter(
             mainViewModel = mainViewModel,
-            adapterListener = ActivityAdapterListener(),
-            onContentCommitted = ::requestConnectionDockBackdropRefresh
+            adapterListener = ActivityAdapterListener()
         )
         setupRecyclerView()
         setupEmptyStateActions()
@@ -164,93 +212,132 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             .attachToRecyclerView(binding.recyclerView)
     }
 
-    private fun requestConnectionDockBackdropRefresh() {
-        if (!isAdded || mainViewModel.subscriptionId != subId) {
-            return
-        }
-        ownerActivity.requestConnectionDockBackdropRefreshOnNextDraw()
-    }
-
     private fun getSpanCount(): Int {
         return if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) 2 else 1
     }
 
     private fun updateEmptyState() {
-        if (mainViewModel.subscriptionId != subId && mainViewModel.keywordFilter.isBlank() && lastKnownItemCount == null) {
-            return
-        }
-        val itemCount = when {
-            mainViewModel.keywordFilter.isNotBlank() && mainViewModel.subscriptionId == subId -> {
-                mainViewModel.serversCache.size.also { lastKnownItemCount = it }
-            }
-            mainViewModel.keywordFilter.isBlank() && mainViewModel.subscriptionId == subId -> {
-                mainViewModel.serversCache.size.also { lastKnownItemCount = it }
-            }
-            else -> lastKnownItemCount
-        }
-        if (itemCount == null && mainViewModel.keywordFilter.isBlank()) {
-            fetchStoredItemCount()
-            return
-        }
+        val itemCount = resolveItemCountForEmptyState() ?: return
         val shouldShowEmptyState = itemCount == 0
-        if (shouldShowEmptyState) {
-            if (binding.recyclerView.isVisible) {
-                binding.recyclerView.isVisible = false
-            }
-        } else if (pendingListFadeIn) {
-            binding.recyclerView.alpha = 0f
-            binding.recyclerView.translationY = resources.displayMetrics.density * 6f
-            UiMotion.animateVisibility(binding.recyclerView, true, translationOffsetDp = 6f, duration = 140L)
-            pendingListFadeIn = false
-        } else if (!binding.recyclerView.isVisible || binding.recyclerView.alpha != 1f || binding.recyclerView.translationY != 0f) {
-            binding.recyclerView.isVisible = true
-            binding.recyclerView.alpha = 1f
-            binding.recyclerView.translationY = 0f
-        }
         val shouldAnimateEmptyState =
             lastEmptyStateVisible != null && lastEmptyStateVisible != shouldShowEmptyState && isResumed
+        updateRecyclerVisibility(shouldShowEmptyState)
+        updateEmptyStateVisibility(shouldShowEmptyState, shouldAnimateEmptyState)
+        updateOwnerListContext(shouldShowEmptyState)
+        val emptyStateMode = resolveEmptyStateMode()
+        val emptyStateModeChanged = renderEmptyStateContent(emptyStateMode)
+        animateEmptyStateIfNeeded(shouldShowEmptyState, emptyStateModeChanged, shouldAnimateEmptyState)
+    }
+
+    private fun resolveItemCountForEmptyState(): Int? {
+        if (mainViewModel.subscriptionId != subId && mainViewModel.keywordFilter.isBlank() && lastKnownItemCount == null) {
+            return null
+        }
+        val currentCount = if (mainViewModel.subscriptionId == subId) {
+            mainViewModel.serversCache.size
+        } else {
+            null
+        }
+        val itemCount = currentCount ?: lastKnownItemCount
+        if (itemCount == null && mainViewModel.keywordFilter.isBlank()) {
+            fetchStoredItemCount()
+            return null
+        }
+        if (currentCount != null) {
+            lastKnownItemCount = currentCount
+        }
+        return itemCount
+    }
+
+    private fun updateRecyclerVisibility(shouldShowEmptyState: Boolean) {
+        when {
+            shouldShowEmptyState -> {
+                if (binding.recyclerView.isVisible) {
+                    binding.recyclerView.isVisible = false
+                }
+            }
+
+            pendingListFadeIn -> {
+                binding.recyclerView.alpha = 0f
+                binding.recyclerView.translationY = resources.displayMetrics.density * 6f
+                UiMotion.animateVisibility(binding.recyclerView, true, translationOffsetDp = 6f, duration = 140L)
+                pendingListFadeIn = false
+            }
+
+            !binding.recyclerView.isVisible || binding.recyclerView.alpha != 1f || binding.recyclerView.translationY != 0f -> {
+                binding.recyclerView.isVisible = true
+                binding.recyclerView.alpha = 1f
+                binding.recyclerView.translationY = 0f
+            }
+        }
+    }
+
+    private fun updateEmptyStateVisibility(shouldShowEmptyState: Boolean, shouldAnimateEmptyState: Boolean) {
         if (shouldAnimateEmptyState) {
             UiMotion.animateVisibility(binding.layoutEmptyState, shouldShowEmptyState, translationOffsetDp = 10f, duration = 140L)
         } else {
             UiMotion.setVisibility(binding.layoutEmptyState, shouldShowEmptyState)
         }
         lastEmptyStateVisible = shouldShowEmptyState
-        if (mainViewModel.subscriptionId == subId) {
-            ownerActivity.onServerListContextChanged(
-                isEmpty = shouldShowEmptyState,
-                canScrollUp = binding.recyclerView.canScrollVertically(-1),
-                resetContext = false
-            )
+    }
+
+    private fun updateOwnerListContext(shouldShowEmptyState: Boolean) {
+        if (mainViewModel.subscriptionId != subId) {
+            return
         }
-        val emptyStateMode = when {
+        ownerActivity.onServerListContextChanged(
+            isEmpty = shouldShowEmptyState,
+            canScrollUp = binding.recyclerView.canScrollVertically(-1),
+            resetContext = false
+        )
+    }
+
+    private fun resolveEmptyStateMode(): EmptyStateMode {
+        return when {
             mainViewModel.keywordFilter.isNotBlank() -> EmptyStateMode.SEARCH_RESULT
             ownerActivity.isSearchUiActive() -> EmptyStateMode.SEARCH_IDLE
             else -> EmptyStateMode.DEFAULT
         }
-        val emptyStateModeChanged = lastEmptyStateMode != emptyStateMode
-        if (lastEmptyStateMode != emptyStateMode) {
-            when (emptyStateMode) {
-                EmptyStateMode.DEFAULT -> {
-                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_subscriptions_24dp)
-                    binding.tvEmptyTitle.setText(R.string.empty_server_title)
-                    binding.tvEmptySubtitle.setText(R.string.empty_server_subtitle)
-                    binding.layoutEmptyActions.isVisible = true
-                }
-                EmptyStateMode.SEARCH_IDLE -> {
-                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_search_24dp)
-                    binding.tvEmptyTitle.setText(R.string.empty_search_idle_title)
-                    binding.tvEmptySubtitle.setText(R.string.empty_search_idle_subtitle)
-                    binding.layoutEmptyActions.isVisible = false
-                }
-                EmptyStateMode.SEARCH_RESULT -> {
-                    binding.ivEmptyIcon.setImageResource(R.drawable.ic_search_24dp)
-                    binding.tvEmptyTitle.setText(R.string.empty_search_title)
-                    binding.tvEmptySubtitle.setText(R.string.empty_search_subtitle)
-                    binding.layoutEmptyActions.isVisible = false
-                }
-            }
-            lastEmptyStateMode = emptyStateMode
+    }
+
+    private fun renderEmptyStateContent(mode: EmptyStateMode): Boolean {
+        val changed = lastEmptyStateMode != mode
+        if (!changed) {
+            return false
         }
+        val content = when (mode) {
+            EmptyStateMode.DEFAULT -> EmptyStateContent(
+                iconRes = R.drawable.ic_subscriptions_24dp,
+                titleRes = R.string.empty_server_title,
+                subtitleRes = R.string.empty_server_subtitle,
+                showActions = true
+            )
+            EmptyStateMode.SEARCH_IDLE -> EmptyStateContent(
+                iconRes = R.drawable.ic_search_24dp,
+                titleRes = R.string.empty_search_idle_title,
+                subtitleRes = R.string.empty_search_idle_subtitle,
+                showActions = false
+            )
+            EmptyStateMode.SEARCH_RESULT -> EmptyStateContent(
+                iconRes = R.drawable.ic_search_24dp,
+                titleRes = R.string.empty_search_title,
+                subtitleRes = R.string.empty_search_subtitle,
+                showActions = false
+            )
+        }
+        binding.ivEmptyIcon.setImageResource(content.iconRes)
+        binding.tvEmptyTitle.setText(content.titleRes)
+        binding.tvEmptySubtitle.setText(content.subtitleRes)
+        binding.layoutEmptyActions.isVisible = content.showActions
+        lastEmptyStateMode = mode
+        return true
+    }
+
+    private fun animateEmptyStateIfNeeded(
+        shouldShowEmptyState: Boolean,
+        emptyStateModeChanged: Boolean,
+        shouldAnimateEmptyState: Boolean
+    ) {
         if (shouldShowEmptyState && isResumed) {
             when {
                 shouldAnimateEmptyState -> binding.layoutEmptyState.post {
@@ -334,52 +421,13 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         ownerActivity.showActionBottomSheet(
             title = getString(R.string.empty_action_add_connection),
             subtitle = getString(R.string.empty_action_add_connection_hint),
-            actions = listOf(
-                actionBottomSheetItem(R.string.menu_item_import_config_policy_group, R.drawable.ic_subscriptions_24dp) {
-                    importManually(EConfigType.POLICYGROUP)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_vmess, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.VMESS)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_vless, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.VLESS)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_ss, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.SHADOWSOCKS)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_socks, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.SOCKS)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_http, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.HTTP)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_trojan, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.TROJAN)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_wireguard, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.WIREGUARD)
-                },
-                actionBottomSheetItem(R.string.menu_item_import_config_manually_hysteria2, R.drawable.ic_add_24dp) {
-                    importManually(EConfigType.HYSTERIA2)
-                }
-            )
+            actions = HomeImportSupport.buildManualImportActionItems(::importManually)
         )
     }
 
     private fun importManually(type: EConfigType) {
         shouldRefreshOnResume = true
-        if (type == EConfigType.POLICYGROUP) {
-            ownerActivity.startActivity(
-                Intent(ownerActivity, ServerGroupActivity::class.java)
-                    .putExtra("subscriptionId", mainViewModel.subscriptionId)
-            )
-        } else {
-            ownerActivity.startActivity(
-                Intent(ownerActivity, ServerActivity::class.java)
-                    .putExtra("createConfigType", type.value)
-                    .putExtra("subscriptionId", mainViewModel.subscriptionId)
-            )
-        }
+        ownerActivity.startActivity(HomeImportSupport.createManualImportIntent(ownerActivity, mainViewModel.subscriptionId, type))
     }
 
     private fun importQRcode(): Boolean {
@@ -395,28 +443,36 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         ownerActivity.showLoadingIndicator()
         ownerActivity.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val (count, countSub) = AngConfigManager.importBatchConfig(server, mainViewModel.subscriptionId, true)
+                val result = HomeImportSupport.importBatchConfig(server, mainViewModel.subscriptionId)
                 withContext(Dispatchers.Main) {
-                    when {
-                        count > 0 -> {
-                            ownerActivity.toast(getString(R.string.title_import_config_count, count))
-                            mainViewModel.reloadServerList()
-                        }
-                        countSub > 0 -> {
-                            ownerActivity.toastSuccess(R.string.toast_success)
-                            shouldRefreshOnResume = true
-                            mainViewModel.loadSubscriptions(ownerActivity.applicationContext)
-                        }
-                        else -> ownerActivity.toastError(R.string.toast_failure)
-                    }
-                    ownerActivity.hideLoadingIndicator()
+                    handleImportBatchResult(result)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     ownerActivity.toastError(R.string.toast_failure)
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
                     ownerActivity.hideLoadingIndicator()
                 }
             }
+        }
+    }
+
+    private fun handleImportBatchResult(result: BatchImportResult) {
+        when {
+            result.configCount > 0 -> {
+                ownerActivity.toast(getString(R.string.title_import_config_count, result.configCount))
+                mainViewModel.reloadServerList()
+            }
+
+            result.subscriptionCount > 0 -> {
+                ownerActivity.toastSuccess(R.string.toast_success)
+                shouldRefreshOnResume = true
+                mainViewModel.loadSubscriptions(ownerActivity.applicationContext)
+            }
+
+            else -> ownerActivity.toastError(R.string.toast_failure)
         }
     }
 
@@ -469,7 +525,8 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
         binding.recyclerView.postDelayed({
             val holder = binding.recyclerView.findViewHolderForAdapterPosition(position)
                 as? MainRecyclerAdapter.MainViewHolder
-            holder?.itemMainBinding?.itemBg?.let { UiMotion.animatePulse(it, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM) }
+            val pulseTarget = holder?.itemView?.findViewById<View>(R.id.item_bg) ?: holder?.itemView
+            pulseTarget?.let { UiMotion.animatePulse(it, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM) }
         }, MotionTokens.RELEASE_DURATION)
     }
 
@@ -510,12 +567,13 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
      * @param guid The server unique identifier
      */
     private fun showQRCode(guid: String) {
-        val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(ownerActivity))
-        ivBinding.ivQcode.setImageBitmap(AngConfigManager.share2QRCode(guid))
-        ivBinding.ivQcode.contentDescription = getString(R.string.action_qrcode)
+        val qrCodeView = LayoutInflater.from(ownerActivity).inflate(R.layout.item_qrcode, null, false)
+        val qrImage = qrCodeView.findViewById<ImageView>(R.id.iv_qcode)
+        qrImage.setImageBitmap(AngConfigManager.share2QRCode(guid))
+        qrImage.contentDescription = getString(R.string.action_qrcode)
         ownerActivity.showActionBottomSheet(
             title = getString(R.string.action_qrcode),
-            contentView = ivBinding.root
+            contentView = qrCodeView
         )
     }
 

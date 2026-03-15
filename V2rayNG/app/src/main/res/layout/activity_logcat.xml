@@ -7,6 +7,7 @@
     android:background="@color/md_theme_background"
     android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingStart="@dimen/padding_spacing_dp16"
     android:paddingTop="@dimen/padding_spacing_dp12"
@@ -14,16 +15,10 @@
     android:paddingBottom="@dimen/padding_spacing_dp16"
     tools:context=".ui.LogcatActivity">
 
-    <TextView
-        style="@style/Widget.V2Ray.PageIntro"
-        android:text="@string/logcat_page_overview"
-        />
-
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.V2Ray.Card.Section"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/padding_spacing_dp12"
         android:layout_weight="1"
         android:maxWidth="@dimen/list_card_max_width"
         app:cardBackgroundColor="@color/color_settings_section_surface"

@@ -18,13 +18,8 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/more_page_overview" />
-
-        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:maxWidth="@dimen/list_card_max_width"
             android:text="@string/more_group_configuration"
             android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"

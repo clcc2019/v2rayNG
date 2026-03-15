@@ -5,4 +5,5 @@ data class ConfigResult(
     var guid: String? = null,
     var content: String = "",
     var errorResId: Int? = null,
+    var profile: ProfileItem? = null,
 )

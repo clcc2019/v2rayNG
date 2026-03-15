@@ -505,7 +505,7 @@ class MainViewModel(
     }
 
     fun onSelectedServerChanged(guid: String) {
-        selectedServerSnapshot = snapshotBuilder.resolveSelectedServerSnapshot(guid, serversCache)
+        selectedServerSnapshot = selectedServerForGuid(guid)
         updateConnectionCardAction.postValue(++connectionCardRefreshVersion)
     }
 
@@ -799,12 +799,20 @@ class MainViewModel(
 
     private fun refreshSelectedServerSnapshot() {
         val selectedGuid = mainServerRepository.getSelectedServerId().orEmpty()
-        val newSnapshot = serversCache.firstOrNull { it.guid == selectedGuid }
+        val newSnapshot = selectedServerForGuid(selectedGuid)
         val changed = newSnapshot != selectedServerSnapshot
         selectedServerSnapshot = newSnapshot
         if (changed) {
             updateConnectionCardAction.postValue(++connectionCardRefreshVersion)
         }
+    }
+
+    private fun selectedServerForGuid(guid: String): ServersCache? {
+        if (guid.isBlank()) {
+            return null
+        }
+        serverPositions[guid]?.let(serversCache::getOrNull)?.let { return it }
+        return snapshotBuilder.resolveSelectedServerSnapshot(guid, emptyList())
     }
 
     private fun handleServiceEvent(event: MainServiceEvent) {

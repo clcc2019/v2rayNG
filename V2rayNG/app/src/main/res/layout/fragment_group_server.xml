@@ -92,55 +92,30 @@
 
                 <LinearLayout
                     android:id="@+id/action_add_connection"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_home_empty_action"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="60dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp14"
-                    android:paddingTop="@dimen/padding_spacing_dp10"
-                    android:paddingEnd="@dimen/padding_spacing_dp14"
-                    android:paddingBottom="@dimen/padding_spacing_dp10">
+                    style="@style/Widget.V2Ray.HomeEmptyAction.Row">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:alpha="0.78"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Icon"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_add_24dp"
                         app:tint="@color/color_home_on_surface" />
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp14"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Title"
                             android:text="@string/empty_action_add_connection"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                             android:textColor="@color/color_home_on_surface" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp2"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Subtitle"
                             android:text="@string/empty_action_add_connection_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="@color/color_home_on_surface_muted" />
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:alpha="0.5"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Chevron"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_chevron_right_20dp"
                         app:tint="@color/color_home_on_surface_muted" />
@@ -149,55 +124,30 @@
 
                 <LinearLayout
                     android:id="@+id/action_scan_qrcode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_home_empty_action"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="60dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp14"
-                    android:paddingTop="@dimen/padding_spacing_dp10"
-                    android:paddingEnd="@dimen/padding_spacing_dp14"
-                    android:paddingBottom="@dimen/padding_spacing_dp10">
+                    style="@style/Widget.V2Ray.HomeEmptyAction.Row">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:alpha="0.78"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Icon"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_qu_scan_24dp"
                         app:tint="@color/color_home_on_surface" />
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp14"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Title"
                             android:text="@string/empty_action_scan_qrcode"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                             android:textColor="@color/color_home_on_surface" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp2"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Subtitle"
                             android:text="@string/empty_action_scan_qrcode_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="@color/color_home_on_surface_muted" />
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:alpha="0.5"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Chevron"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_chevron_right_20dp"
                         app:tint="@color/color_home_on_surface_muted" />
@@ -206,55 +156,30 @@
 
                 <LinearLayout
                     android:id="@+id/action_add_subscription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_home_empty_action"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="60dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp14"
-                    android:paddingTop="@dimen/padding_spacing_dp10"
-                    android:paddingEnd="@dimen/padding_spacing_dp14"
-                    android:paddingBottom="@dimen/padding_spacing_dp10">
+                    style="@style/Widget.V2Ray.HomeEmptyAction.Row">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:alpha="0.78"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Icon"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_subscriptions_24dp"
                         app:tint="@color/color_home_on_surface" />
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp14"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Title"
                             android:text="@string/empty_action_add_subscription"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                             android:textColor="@color/color_home_on_surface" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp2"
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Subtitle"
                             android:text="@string/empty_action_add_subscription_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="@color/color_home_on_surface_muted" />
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:alpha="0.5"
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Chevron"
                         android:importantForAccessibility="no"
                         app:srcCompat="@drawable/ic_chevron_right_20dp"
                         app:tint="@color/color_home_on_surface_muted" />

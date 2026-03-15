@@ -15,12 +15,7 @@
     tools:context=".ui.PerAppProxyActivity">
 
     <TextView
-        style="@style/Widget.V2Ray.PageIntro"
-        android:text="@string/per_app_proxy_page_overview" />
-
-    <TextView
         style="@style/Widget.V2Ray.SectionLabel"
-        android:layout_marginTop="@dimen/padding_spacing_dp16"
         android:text="@string/title_pref_per_app_proxy" />
 
     <com.google.android.material.card.MaterialCardView

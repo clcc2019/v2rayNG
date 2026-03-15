@@ -17,14 +17,13 @@ object AppManagerUtil {
         withContext(Dispatchers.IO) {
             val packageManager = context.packageManager
             val packages = packageManager.getInstalledApplications(0)
-            val apps = ArrayList<AppInfo>()
+            val apps = ArrayList<AppInfo>(packages.size)
 
             for (pkg in packages) {
                 val appName = pkg.loadLabel(packageManager).toString()
-                val appIcon = pkg.loadIcon(packageManager) ?: continue
                 val isSystemApp = pkg.flags and ApplicationInfo.FLAG_SYSTEM > 0
 
-                val appInfo = AppInfo(appName, pkg.packageName, appIcon, isSystemApp, 0)
+                val appInfo = AppInfo(appName, pkg.packageName, isSystemApp, 0)
                 apps.add(appInfo)
             }
 

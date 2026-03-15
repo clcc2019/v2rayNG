@@ -52,14 +52,9 @@
 
         <LinearLayout
             android:id="@+id/layout_edit"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:clickable="true"
+            style="@style/Widget.V2Ray.SectionIconButton"
             android:contentDescription="@string/menu_item_edit_config"
-            android:focusable="true"
-            android:background="@drawable/bg_settings_tool_icon_ripple"
-            android:gravity="center"
-            android:padding="0dp">
+            >
 
             <ImageView
                 android:layout_width="18dp"
@@ -72,14 +67,10 @@
 
         <LinearLayout
             android:id="@+id/layout_remove"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:clickable="true"
+            style="@style/Widget.V2Ray.SectionIconButton"
+            android:layout_marginStart="@dimen/padding_spacing_dp8"
             android:contentDescription="@string/menu_item_del_config"
-            android:focusable="true"
-            android:background="@drawable/bg_settings_tool_icon_ripple"
-            android:gravity="center"
-            android:padding="0dp">
+            >
 
             <ImageView
                 android:layout_width="18dp"

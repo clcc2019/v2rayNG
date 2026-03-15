@@ -39,14 +39,7 @@ class MainGroupTabsController(
     private var tabMediator: TabLayoutMediator? = null
     private var isGroupTabHidden = false
     private var lastRenderedGroupCount = -1
-    private var accumulatedScrollDy = 0
     private var groupTabSlotAnimator: ValueAnimator? = null
-    private val hideThresholdPx by lazy {
-        (activity.resources.displayMetrics.density * 24f).toInt()
-    }
-    private val showThresholdPx by lazy {
-        (activity.resources.displayMetrics.density * 12f).toInt()
-    }
     private val expandedSlotHeightPx by lazy {
         activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
     }
@@ -75,7 +68,6 @@ class MainGroupTabsController(
 
     fun renderGroupTabs(groups: List<GroupMapItem>) {
         if (groups.isEmpty()) {
-            accumulatedScrollDy = 0
             groupPagerAdapter.update(emptyList())
             tabMediator?.detach()
             tabMediator = null
@@ -90,7 +82,6 @@ class MainGroupTabsController(
         }
 
         val updateResult = groupPagerAdapter.update(groups)
-        accumulatedScrollDy = 0
         configureGroupTabLayout(groups.size)
         val targetOffscreenLimit = maxOf(1, minOf(2, groups.size))
         if (binding.viewPager.offscreenPageLimit != targetOffscreenLimit) {
@@ -129,7 +120,6 @@ class MainGroupTabsController(
 
     fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
         if (!binding.cardTabGroup.isVisible) return
-        accumulatedScrollDy = 0
         setGroupTabVisible(true)
     }
 

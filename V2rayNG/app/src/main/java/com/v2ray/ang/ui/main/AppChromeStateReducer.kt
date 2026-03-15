@@ -112,13 +112,7 @@ class AppChromeStateReducer(
             AppChromeMode.SEARCH_FOCUSED,
             AppChromeMode.IME_OVERRIDE -> 0.96f
         }
-        val bottomBarBackgroundAlpha = when (mode) {
-            AppChromeMode.SCROLLING_IMMERSIVE -> if (input.canScrollUp) 0.52f else 0.7f
-            AppChromeMode.STABLE -> 0.96f
-            AppChromeMode.EMPTY_STABLE -> 0.9f
-            AppChromeMode.SEARCH_FOCUSED,
-            AppChromeMode.IME_OVERRIDE -> 0.96f
-        }
+        val bottomBarBackgroundAlpha = 1f
         val showBottomBar = !input.isSearching && !input.isImeVisible
         return AppChromeState(
             pageKind = pageKind,

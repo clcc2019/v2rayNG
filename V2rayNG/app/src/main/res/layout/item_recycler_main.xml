@@ -69,17 +69,17 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:minLines="1"
-                        android:paddingEnd="@dimen/padding_spacing_dp6"
+                        android:paddingEnd="@dimen/padding_spacing_dp2"
                         android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
                         android:textColor="@color/color_home_on_surface"
-                        android:textSize="15sp"
+                        android:textSize="16sp"
                         tools:text="hk-aliyun fallback route" />
 
                     <TextView
                         android:id="@+id/tv_active_status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp6"
+                        android:layout_marginStart="@dimen/padding_spacing_dp4"
                         android:background="@drawable/bg_home_active_badge"
                         android:gravity="center"
                         android:minHeight="@dimen/view_height_dp22"
@@ -107,15 +107,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             tools:text="VLESS" />
-
-                        <TextView
-                            android:id="@+id/tv_test_result_inline"
-                            style="@style/Widget.V2Ray.Badge.MetricHomeCompact"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/padding_spacing_dp6"
-                            android:visibility="gone"
-                            tools:text="114ms" />
 
                     </LinearLayout>
 
@@ -148,7 +139,7 @@
                     android:id="@+id/layout_meta_panel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp10"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:background="@drawable/bg_home_secondary_panel"
                     android:gravity="center_vertical"
                     android:minHeight="34dp"
@@ -168,8 +159,8 @@
                         android:minLines="1"
                         android:textAppearance="@style/TextAppearance.V2Ray.Body"
                         android:textColor="@color/color_home_on_surface_muted"
-                        android:textSize="12sp"
-                        android:alpha="0.96"
+                        android:textSize="11sp"
+                        android:alpha="0.9"
                         tools:text="13.213.104.*** : 443" />
 
                     <TextView

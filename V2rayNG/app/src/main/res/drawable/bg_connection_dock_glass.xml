@@ -4,9 +4,9 @@
 
     <gradient
         android:angle="270"
-        android:startColor="@color/color_connection_dock_glass_top"
-        android:centerColor="@color/color_connection_dock_glass_mid"
-        android:endColor="@color/color_connection_dock_glass_bottom" />
+        android:startColor="@color/color_connection_dock_surface_top"
+        android:centerColor="@color/color_connection_dock_surface_mid"
+        android:endColor="@color/color_connection_dock_surface_bottom" />
 
     <corners android:radius="26dp" />
 

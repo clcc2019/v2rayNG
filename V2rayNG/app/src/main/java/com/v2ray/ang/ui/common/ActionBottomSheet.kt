@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.DrawableRes
@@ -16,8 +17,6 @@ import androidx.core.view.updateLayoutParams
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
-import com.v2ray.ang.databinding.ItemBottomSheetActionBinding
-import com.v2ray.ang.databinding.LayoutBottomSheetActionsBinding
 import com.v2ray.ang.ui.UiMotion
 
 data class ActionBottomSheetItem(
@@ -63,7 +62,10 @@ fun Context.showActionBottomSheet(
     contentView: View? = null
 ) {
     val inflater = LayoutInflater.from(this)
-    val sheetBinding = LayoutBottomSheetActionsBinding.inflate(inflater)
+    val sheetView = inflater.inflate(R.layout.layout_bottom_sheet_actions, null, false)
+    val titleView = sheetView.findViewById<TextView>(R.id.tv_title)
+    val subtitleView = sheetView.findViewById<TextView>(R.id.tv_subtitle)
+    val actionsContainer = sheetView.findViewById<LinearLayout>(R.id.layout_actions)
     val bottomSheetDialog = BottomSheetDialog(this)
 
     val titleText = title.toString()
@@ -71,14 +73,14 @@ fun Context.showActionBottomSheet(
     val hasTitle = titleText.isNotBlank()
     val hasSubtitle = subtitleText.isNotBlank()
 
-    sheetBinding.tvTitle.text = titleText
-    sheetBinding.tvTitle.isVisible = hasTitle
-    sheetBinding.tvSubtitle.text = subtitleText
-    sheetBinding.tvSubtitle.isVisible = hasSubtitle
+    titleView.text = titleText
+    titleView.isVisible = hasTitle
+    subtitleView.text = subtitleText
+    subtitleView.isVisible = hasSubtitle
 
     if (!hasTitle) {
         val topPadding = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
-        sheetBinding.tvSubtitle.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+        subtitleView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = topPadding
         }
     }
@@ -89,13 +91,13 @@ fun Context.showActionBottomSheet(
         } else {
             resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
         }
-        sheetBinding.layoutActions.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+        actionsContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = topPadding
         }
     }
 
     contentView?.let {
-        sheetBinding.layoutActions.addView(it)
+        actionsContainer.addView(it)
     }
 
     if (contentView != null && actions.isNotEmpty()) {
@@ -109,27 +111,29 @@ fun Context.showActionBottomSheet(
             }
             setBackgroundColor(ContextCompat.getColor(context, R.color.color_card_outline))
         }
-        sheetBinding.layoutActions.addView(divider)
+        actionsContainer.addView(divider)
     }
 
     actions.forEach { action ->
-        val itemBinding = ItemBottomSheetActionBinding.inflate(inflater, sheetBinding.layoutActions, false)
+        val itemView = inflater.inflate(R.layout.item_bottom_sheet_action, actionsContainer, false)
+        val iconView = itemView.findViewById<ImageView>(R.id.iv_icon)
+        val labelView = itemView.findViewById<TextView>(R.id.tv_label)
         val iconColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurfaceVariant
         val textColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
 
-        itemBinding.ivIcon.setImageResource(action.iconRes)
-        itemBinding.ivIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, iconColorRes))
+        iconView.setImageResource(action.iconRes)
+        iconView.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, iconColorRes))
         val labelText = action.label ?: action.labelResId?.let { getString(it) }.orEmpty()
-        itemBinding.tvLabel.text = labelText
-        itemBinding.tvLabel.setTextColor(ContextCompat.getColor(this, textColorRes))
-        UiMotion.attachPressFeedback(itemBinding.root)
-        itemBinding.root.setOnClickListener {
+        labelView.text = labelText
+        labelView.setTextColor(ContextCompat.getColor(this, textColorRes))
+        UiMotion.attachPressFeedback(itemView)
+        itemView.setOnClickListener {
             bottomSheetDialog.dismiss()
             runCatching(action.handler).onFailure { error ->
                 Log.e(AppConfig.TAG, "Error handling bottom sheet action", error)
             }
         }
-        sheetBinding.layoutActions.addView(itemBinding.root)
+        actionsContainer.addView(itemView)
 
         if (action != actions.last()) {
             val divider = View(this).apply {
@@ -143,13 +147,13 @@ fun Context.showActionBottomSheet(
                 }
                 setBackgroundColor(ContextCompat.getColor(context, R.color.color_card_outline))
             }
-            sheetBinding.layoutActions.addView(divider)
+            actionsContainer.addView(divider)
         }
     }
 
-    bottomSheetDialog.setContentView(sheetBinding.root)
+    bottomSheetDialog.setContentView(sheetView)
     bottomSheetDialog.setOnShowListener {
-        UiMotion.animateStaggeredChildren(sheetBinding.layoutActions)
+        UiMotion.animateStaggeredChildren(actionsContainer)
     }
     bottomSheetDialog.show()
 }

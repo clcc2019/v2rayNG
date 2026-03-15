@@ -9,7 +9,6 @@ import com.v2ray.ang.enums.NetworkType
 import com.v2ray.ang.extension.idnHost
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.extension.nullIfBlank
-import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.util.Utils
 import java.net.URI
@@ -22,7 +21,6 @@ object Hysteria2Fmt : FmtBase() {
      * @return the parsed ProfileItem object, or null if parsing fails
      */
     fun parse(str: String): ProfileItem? {
-        var allowInsecure = MmkvManager.decodeSettingsBool(AppConfig.PREF_ALLOW_INSECURE, false)
         val config = ProfileItem.create(EConfigType.HYSTERIA2)
 
         val uri = URI(Utils.fixIllegalUrl(str))
@@ -36,7 +34,7 @@ object Hysteria2Fmt : FmtBase() {
         if (!uri.rawQuery.isNullOrEmpty()) {
             val queryParam = getQueryParam(uri)
 
-            getItemFormQuery(config, queryParam, allowInsecure)
+            getItemFormQuery(config, queryParam)
 
             config.security = queryParam["security"] ?: AppConfig.TLS
             config.obfsPassword = queryParam["obfs-password"]

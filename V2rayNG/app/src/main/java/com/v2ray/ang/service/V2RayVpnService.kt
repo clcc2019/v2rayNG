@@ -135,8 +135,9 @@ class V2RayVpnService : VpnService(), ServiceControl {
                     stopSelf()
                     return@launch
                 }
+                val knownProfile = V2RayServiceManager.consumePendingStartProfile(guid)
                 val configDeferred = async {
-                    V2rayConfigManager.getV2rayConfig(this@V2RayVpnService, guid)
+                    V2rayConfigManager.getV2rayConfig(this@V2RayVpnService, guid, knownProfile)
                 }
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")

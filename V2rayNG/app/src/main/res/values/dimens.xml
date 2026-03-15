@@ -33,6 +33,7 @@
     <dimen name="view_height_dp22">22dp</dimen>
     <dimen name="view_height_dp26">26dp</dimen>
     <dimen name="view_height_dp32">32dp</dimen>
+    <dimen name="view_height_dp34">34dp</dimen>
     <dimen name="view_size_dp36">36dp</dimen>
     <dimen name="view_size_dp40">40dp</dimen>
     <dimen name="view_size_dp44">44dp</dimen>

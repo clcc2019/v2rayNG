@@ -20,12 +20,7 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/server_custom_config_page_overview" />
-
-        <TextView
             style="@style/Widget.V2Ray.SectionLabel"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/server_group_basic_info" />
 
         <com.google.android.material.card.MaterialCardView

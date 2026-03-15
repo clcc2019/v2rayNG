@@ -10,8 +10,8 @@ android {
         applicationId = "com.v2ray.ang"
         minSdk = 24
         targetSdk = 36
-        versionCode = 717
-        versionName = "2.0.19"
+        versionCode = 718
+        versionName = "3.0.0"
 
         val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
         val universalApkEnabled = providers.gradleProperty("UNIVERSAL_APK").orNull?.toBoolean() == true

@@ -20,11 +20,10 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
-import androidx.core.view.doOnLayout
-import androidx.core.view.WindowCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.v2ray.ang.R
@@ -45,6 +44,11 @@ import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 
 class MainActivity : HelperBaseActivity() {
+    companion object {
+        private val LATENCY_MS_REGEX = Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE)
+        private val LATENCY_MS_ZH_REGEX = Regex("(\\d+)\\s*毫秒")
+    }
+
     private data class ActionButtonUiModel(
         @param:StringRes val textResId: Int,
         val iconRes: Int,
@@ -76,15 +80,11 @@ class MainActivity : HelperBaseActivity() {
             onOpenSearch = { openToolbarSearch() }
         )
     }
-    private val connectionDockBackdropRenderer by lazy {
-        ConnectionDockBackdropRenderer(binding)
-    }
     private var serviceUiState = ServiceUiState.STOPPED
     private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
     private var defaultConnectionCardBottomMargin = 0
     private var isImeVisible = false
-    private var isCurrentPingTesting = false
     private var toolbarSearchMenuItem: MenuItem? = null
     private val toolbarActionViews = mutableListOf<FrameLayout>()
     private var currentChromeState: AppChromeState? = null
@@ -94,7 +94,7 @@ class MainActivity : HelperBaseActivity() {
             binding = binding,
             motionInterpolator = motionInterpolator,
             onOpenMorePage = { openMorePage() },
-            statusProvider = { ToolbarStatusState(serviceUiState, isCurrentPingTesting) }
+            statusProvider = { serviceUiState }
         )
     }
     private val chromeStateReducer by lazy {
@@ -143,7 +143,6 @@ class MainActivity : HelperBaseActivity() {
             defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
             groupTabsController.initialize()
-            connectionDockBackdropRenderer.attach()
             setupMainContentInsets()
             setupActionControls()
             setupHomeMotion(runInitialEntrance = savedInstanceState == null)
@@ -177,7 +176,7 @@ class MainActivity : HelperBaseActivity() {
         binding.toolbar.navigationIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
         binding.toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
         toolbarController.attach()
-        toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
+        toolbarController.updateStatus(serviceUiState)
     }
 
     private fun configureHomeChrome() {
@@ -193,9 +192,7 @@ class MainActivity : HelperBaseActivity() {
 
     private fun setupActionControls() {
         binding.fab.setOnClickListener { handleFabAction() }
-        binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
         UiMotion.attachPressFeedback(binding.fab)
-        UiMotion.attachPressFeedback(binding.layoutTest)
     }
 
     private fun schedulePostLaunchWork() {
@@ -248,7 +245,6 @@ class MainActivity : HelperBaseActivity() {
     override fun onResume() {
         super.onResume()
         updateConnectionCardVisibility()
-        connectionDockBackdropRenderer.requestRefresh()
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
@@ -281,10 +277,6 @@ class MainActivity : HelperBaseActivity() {
     private fun setupMainContentInsets() {
         val imeSpacing = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
         val fallbackTopChromeHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp56)
-        binding.cardConnection.doOnLayout {
-            syncConnectionDockUnderlay((it.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin)
-            connectionDockBackdropRenderer.requestRefresh()
-        }
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainContent) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
@@ -295,7 +287,7 @@ class MainActivity : HelperBaseActivity() {
             binding.appBarHome.updatePadding(top = systemBars.top)
             val chromeContentHeight = binding.appBarHome.height.takeIf { it > 0 } ?: fallbackTopChromeHeight
             val targetListTopPadding = maxOf(defaultViewPagerTopPadding, chromeContentHeight)
-            updateConnectionDockLayout(floatingBottomInset)
+            updateConnectionDockLayout()
 
             val targetListBottomPadding = if (imeVisible) {
                 imeInsets.bottom + imeSpacing
@@ -312,7 +304,7 @@ class MainActivity : HelperBaseActivity() {
         ViewCompat.requestApplyInsets(binding.mainContent)
     }
 
-    private fun updateConnectionDockLayout(floatingBottomInset: Int) {
+    private fun updateConnectionDockLayout() {
         val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
         val targetCardBottomMargin = defaultConnectionCardBottomMargin
         if (cardLayoutParams.bottomMargin != targetCardBottomMargin || cardLayoutParams.width != ViewGroup.LayoutParams.MATCH_PARENT) {
@@ -320,28 +312,10 @@ class MainActivity : HelperBaseActivity() {
             cardLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
             binding.cardConnection.layoutParams = cardLayoutParams
         }
-        syncConnectionDockUnderlay(targetCardBottomMargin)
-        connectionDockBackdropRenderer.requestRefresh()
-    }
-
-    private fun syncConnectionDockUnderlay(cardBottomMargin: Int) {
-        val underlayLayoutParams = binding.viewConnectionDockUnderlay.layoutParams as CoordinatorLayout.LayoutParams
-        if (underlayLayoutParams.height != 0 || underlayLayoutParams.bottomMargin != 0) {
-            underlayLayoutParams.height = 0
-            underlayLayoutParams.bottomMargin = 0
-            binding.viewConnectionDockUnderlay.layoutParams = underlayLayoutParams
-        }
-        binding.viewConnectionDockUnderlay.isVisible = false
     }
 
     private fun updateConnectionCardVisibility() {
         renderChromeState(chromeStateReducer.currentState(), event = "visibility_sync", animate = false, force = true)
-    }
-
-    fun requestConnectionDockBackdropRefreshOnNextDraw() {
-        binding.mainContent.doOnPreDraw {
-            connectionDockBackdropRenderer.requestRefresh()
-        }
     }
 
     private fun shouldShowConnectionCard(): Boolean {
@@ -358,9 +332,6 @@ class MainActivity : HelperBaseActivity() {
             val message = compactTestResult(result)
             if (message.isNotBlank()) {
                 toast(message)
-            }
-            if (isCurrentPingTesting) {
-                setCurrentPingTesting(false)
             }
         }
         mainViewModel.updateConnectionCardAction.observe(this) {
@@ -404,7 +375,6 @@ class MainActivity : HelperBaseActivity() {
     fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
         groupTabsController.onServerListScrolled(dy, canScrollUp)
         renderChromeState(chromeStateReducer.onScrollPositionChanged(canScrollUp), event = "scroll_position")
-        connectionDockBackdropRenderer.requestRefresh()
     }
 
     private fun renderChromeState(state: AppChromeState, event: String, animate: Boolean = true, force: Boolean = false) {
@@ -415,9 +385,6 @@ class MainActivity : HelperBaseActivity() {
         }
         topBarRenderer.renderChromeState(state, animate = animate)
         connectionCardController.renderChromeState(state, animate = animate)
-        if (state.showBottomBar) {
-            connectionDockBackdropRenderer.requestRefresh()
-        }
         currentChromeState = state
     }
 
@@ -475,22 +442,6 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    private fun handleLayoutTestClick() {
-        if (mainViewModel.isRunning.value == true) {
-            if (isCurrentPingTesting) {
-                return
-            }
-            setCurrentPingTesting(true)
-            binding.layoutTest.hapticVirtualKey()
-            UiMotion.animatePulse(binding.layoutTest, pulseScale = 1.02f, duration = MotionTokens.PULSE_MEDIUM)
-            toast(R.string.connection_test_testing)
-            mainViewModel.testCurrentServerRealPing()
-        } else {
-            binding.layoutTest.hapticClick()
-            toast(R.string.connection_test_unavailable)
-        }
-    }
-
     fun restartV2Ray(guid: String? = null) {
         val targetGuid = guid ?: MmkvManager.getSelectServer()
         if (targetGuid.isNullOrEmpty()) {
@@ -508,10 +459,10 @@ class MainActivity : HelperBaseActivity() {
         val raw = content.orEmpty().trim()
         if (raw.isEmpty()) return raw
 
-        Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE).find(raw)?.groupValues?.getOrNull(1)?.let {
+        LATENCY_MS_REGEX.find(raw)?.groupValues?.getOrNull(1)?.let {
             return "${it}ms"
         }
-        Regex("(\\d+)\\s*毫秒").find(raw)?.groupValues?.getOrNull(1)?.let {
+        LATENCY_MS_ZH_REGEX.find(raw)?.groupValues?.getOrNull(1)?.let {
             return "${it}ms"
         }
         if (raw.contains("success", ignoreCase = true) || raw.contains("连接成功")) {
@@ -531,9 +482,6 @@ class MainActivity : HelperBaseActivity() {
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
         binding.fab.alpha = if (isTransitioning) 0.92f else 1f
-        if (state != ServiceUiState.RUNNING && isCurrentPingTesting) {
-            isCurrentPingTesting = false
-        }
         syncStatusControls(state)
         connectionCardController.render(state)
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
@@ -543,18 +491,8 @@ class MainActivity : HelperBaseActivity() {
         applyActionButtonUiModel(buildActionButtonUiModel(state))
     }
 
-    private fun setCurrentPingTesting(enabled: Boolean) {
-        if (isCurrentPingTesting == enabled) {
-            return
-        }
-        isCurrentPingTesting = enabled
-        syncStatusControls(serviceUiState)
-    }
-
     private fun syncStatusControls(state: ServiceUiState) {
-        updateTestButtonState(state)
-        animateTestButtonAlpha(state)
-        toolbarController.updateStatus(serviceUiState, isCurrentPingTesting)
+        toolbarController.updateStatus(state)
     }
 
     private fun performServiceStateHaptic(previousState: ServiceUiState, newState: ServiceUiState) {
@@ -606,7 +544,7 @@ class MainActivity : HelperBaseActivity() {
     ) = ActionButtonUiModel(
         textResId = textResId,
         iconRes = iconRes,
-        contentColorRes = R.color.color_home_on_primary
+        contentColorRes = R.color.md_theme_onPrimary
     )
 
     private fun applyActionButtonUiModel(model: ActionButtonUiModel) {
@@ -622,7 +560,6 @@ class MainActivity : HelperBaseActivity() {
 
         binding.cardConnection.animate().cancel()
         binding.fab.animate().cancel()
-        binding.layoutTest.animate().cancel()
 
         binding.cardConnection.scaleX = 1f
         binding.cardConnection.scaleY = 1f
@@ -642,7 +579,7 @@ class MainActivity : HelperBaseActivity() {
                     contractScale = 0.995f,
                     duration = MotionTokens.MEDIUM_ANIMATION_DURATION
                 )
-                UiMotion.animatePulse(binding.viewConnectionBackdrop, pulseScale = 1.05f, duration = MotionTokens.PULSE_QUICK)
+                UiMotion.animatePulse(binding.layoutConnectionSurface, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
             }
 
             ServiceUiState.RUNNING -> {
@@ -664,7 +601,6 @@ class MainActivity : HelperBaseActivity() {
                 )
             }
         }
-        animateTestButtonAlpha(newState)
     }
 
     private fun updateFabProcessingState(state: ServiceUiState, animate: Boolean = false) {
@@ -683,49 +619,10 @@ class MainActivity : HelperBaseActivity() {
                 translationOffsetDp = 4f,
                 duration = MotionTokens.SHORT_ANIMATION_DURATION
             )
-            binding.viewConnectionBackdrop.animate()
-                .alpha(if (isProcessing) 1f else 0.94f)
-                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
         } else {
             UiMotion.setVisibility(binding.indicatorConnectionProgress, isProcessing)
             UiMotion.setVisibility(binding.fab, !isProcessing)
-            binding.viewConnectionBackdrop.alpha = if (isProcessing) 1f else 0.94f
         }
-    }
-
-    private fun updateTestButtonState(state: ServiceUiState) {
-        val isRunning = state == ServiceUiState.RUNNING
-        val canTest = isRunning && !isCurrentPingTesting
-        binding.layoutTest.isEnabled = canTest
-        binding.layoutTest.isClickable = canTest
-        binding.layoutTest.isFocusable = canTest
-        binding.layoutTest.text = null
-        binding.layoutTest.contentDescription = getString(
-            when {
-                isCurrentPingTesting -> R.string.connection_test_testing
-                isRunning -> R.string.connection_test_pending
-                else -> R.string.connection_test_unavailable
-            }
-        )
-    }
-
-    private fun animateTestButtonAlpha(state: ServiceUiState) {
-        val targetAlpha = when {
-            state != ServiceUiState.RUNNING -> 0.72f
-            isCurrentPingTesting -> 0.88f
-            else -> 1f
-        }
-        if (kotlin.math.abs(binding.layoutTest.alpha - targetAlpha) < 0.01f) {
-            binding.layoutTest.alpha = targetAlpha
-            return
-        }
-        binding.layoutTest.animate()
-            .alpha(targetAlpha)
-            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-            .setInterpolator(motionInterpolator)
-            .start()
     }
 
     private fun updateToolbarSubtitle() {
@@ -735,7 +632,6 @@ class MainActivity : HelperBaseActivity() {
     fun refreshConnectionCard() {
         connectionCardController.render(serviceUiState)
         updateToolbarSubtitle()
-        connectionDockBackdropRenderer.requestRefresh()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -847,7 +743,7 @@ class MainActivity : HelperBaseActivity() {
             params.marginEnd = 0
             iconButton.layoutParams = params
         }
-        iconButton.background = ContextCompat.getDrawable(this, R.drawable.bg_home_icon_circle_clear_ripple)
+        iconButton.background = null
         iconButton.imageTintList =
             ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
         iconButton.scaleType = ImageView.ScaleType.CENTER
@@ -901,7 +797,6 @@ class MainActivity : HelperBaseActivity() {
     override fun onDestroy() {
         toolbarController.clear()
         groupTabsController.onDestroy()
-        connectionDockBackdropRenderer.detach()
         super.onDestroy()
     }
 }

@@ -129,17 +129,6 @@
 
                 </com.google.android.material.appbar.AppBarLayout>
 
-                <View
-                    android:id="@+id/view_connection_dock_underlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_gravity="bottom"
-                    android:layout_marginStart="@dimen/padding_spacing_dp16"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    android:background="@drawable/bg_home_bottom_underlay_gradient"
-                    android:importantForAccessibility="no"
-                    android:visibility="gone" />
-
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_connection"
                     style="@style/Widget.V2Ray.Card.HomeDock"
@@ -152,43 +141,21 @@
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginEnd="@dimen/padding_spacing_dp16"
                     android:layout_marginBottom="@dimen/padding_spacing_dp16"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
-                    app:strokeColor="@android:color/transparent"
-                    app:strokeWidth="0dp">
+                    app:cardBackgroundColor="@color/color_home_card_bg_dock"
+                    app:strokeColor="@color/color_home_card_stroke"
+                    app:strokeWidth="1dp">
 
-                    <FrameLayout
-                        android:id="@+id/layout_connection_dock_container"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_connection_dock_glass"
-                        android:clipChildren="true"
-                        android:clipToOutline="true"
-                        android:clipToPadding="true"
-                        android:foreground="@drawable/bg_connection_dock_foreground">
-
-                        <View
-                            android:id="@+id/view_connection_dock_orb"
-                            android:layout_width="128dp"
-                            android:layout_height="108dp"
-                            android:layout_gravity="top|end"
-                            android:alpha="0.14"
-                            android:background="@drawable/bg_home_glass_orb"
-                            android:importantForAccessibility="no"
-                            android:translationX="30dp"
-                            android:translationY="-22dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:baselineAligned="false"
-                            android:gravity="center_vertical"
-                            android:minHeight="62dp"
-                            android:orientation="horizontal"
-                            android:paddingStart="16dp"
-                            android:paddingTop="7dp"
-                            android:paddingEnd="14dp"
-                            android:paddingBottom="7dp">
+                        android:baselineAligned="false"
+                        android:gravity="center_vertical"
+                        android:minHeight="76dp"
+                        android:orientation="horizontal"
+                        android:paddingStart="18dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="12dp">
 
                             <LinearLayout
                                 android:layout_width="0dp"
@@ -196,125 +163,65 @@
                                 android:layout_weight="1"
                                 android:orientation="vertical">
 
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:baselineAligned="false"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <TextView
-                                        android:id="@+id/tv_connection_title"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/home_connection_title"
-                                        android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                        android:shadowColor="@color/color_connection_dock_text_shadow"
-                                        android:shadowDx="0"
-                                        android:shadowDy="1"
-                                        android:shadowRadius="6"
-                                        android:textColor="@color/color_connection_dock_text_secondary"
-                                        android:textStyle="bold" />
-
-                                    <TextView
-                                        android:id="@+id/tv_connection_status"
-                                        style="@style/Widget.V2Ray.Badge.ConnectionCompact"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                                        android:text="@string/connection_not_connected_short" />
-
-                                </LinearLayout>
+                                <TextView
+                                    android:id="@+id/tv_connection_status"
+                                    style="@style/Widget.V2Ray.Badge.ConnectionDockStatus"
+                                    android:text="@string/connection_not_connected_short" />
 
                                 <TextView
                                     android:id="@+id/tv_connection_profile"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp3"
+                                    style="@style/Widget.V2Ray.HomeDock.Profile"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp6"
+                                    android:paddingStart="@dimen/padding_spacing_dp8"
                                     android:ellipsize="end"
                                     android:maxLines="1"
-                                    android:shadowColor="@color/color_connection_dock_text_shadow"
-                                    android:shadowDx="0"
-                                    android:shadowDy="1"
-                                    android:shadowRadius="7"
-                                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                                    android:textColor="@color/color_connection_dock_text_primary"
-                                    android:textSize="15sp" />
+                                    android:minLines="1" />
+
+                                <View
+                                    android:id="@+id/view_connection_divider"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="1dp"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                                    android:layout_marginBottom="@dimen/padding_spacing_dp6"
+                                    android:alpha="0.7"
+                                    android:background="@color/color_connection_dock_divider"
+                                    android:importantForAccessibility="no" />
 
                                 <TextView
                                     android:id="@+id/tv_connection_summary"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                                    style="@style/Widget.V2Ray.HomeDock.Summary"
+                                    android:paddingStart="@dimen/padding_spacing_dp8"
                                     android:ellipsize="end"
                                     android:maxLines="2"
-                                    android:shadowColor="@color/color_connection_dock_text_shadow"
-                                    android:shadowDx="0"
-                                    android:shadowDy="1"
-                                    android:shadowRadius="5"
-                                    android:text="@string/home_connection_summary_short"
-                                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                    android:textColor="@color/color_connection_dock_text_secondary"
-                                    android:textSize="11sp"
-                                    android:textStyle="normal" />
+                                    android:text="@string/home_connection_summary_short" />
 
                             </LinearLayout>
 
-                            <View
-                                android:layout_width="1dp"
-                                android:layout_height="30dp"
-                                android:layout_marginStart="10dp"
-                                android:layout_marginEnd="8dp"
-                                android:alpha="0.72"
-                                android:background="@color/color_connection_dock_divider" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/layout_test"
-                                style="@style/Widget.V2Ray.Button.HomeDockSecondary"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginStart="6dp"
-                                android:clickable="true"
-                                android:contentDescription="@string/connection_test_pending"
-                                android:focusable="true"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:text="@null"
-                                app:icon="@drawable/ic_ecg_24dp"
-                                app:iconTint="@color/color_connection_dock_text_primary" />
-
-                            <FrameLayout
-                                android:id="@+id/layout_connection_surface"
-                                android:layout_width="44dp"
-                                android:layout_height="44dp"
-                                android:layout_marginStart="6dp"
-                                android:clipChildren="false"
-                                android:clipToPadding="false">
-
-                                <View
-                                    android:id="@+id/view_connection_backdrop"
-                                    android:layout_width="44dp"
-                                    android:layout_height="44dp"
-                                    android:layout_gravity="center"
-                                    android:background="@drawable/bg_connection_soft_circle" />
+                        <FrameLayout
+                            android:id="@+id/layout_connection_surface"
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:layout_marginStart="12dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false">
 
                                 <com.google.android.material.progressindicator.CircularProgressIndicator
                                     android:id="@+id/indicator_connection_progress"
-                                    android:layout_width="44dp"
-                                    android:layout_height="44dp"
+                                    android:layout_width="46dp"
+                                    android:layout_height="46dp"
                                     android:layout_gravity="center"
                                     android:indeterminate="true"
                                     android:visibility="gone"
                                     app:indicatorColor="@color/color_connection_dock_text_primary"
                                     app:indicatorInset="0dp"
-                                    app:indicatorSize="44dp"
+                                    app:indicatorSize="46dp"
                                     app:trackColor="@android:color/transparent"
                                     app:trackThickness="3dp" />
 
                                 <androidx.appcompat.widget.AppCompatImageButton
                                     android:id="@+id/fab"
-                                    android:layout_width="44dp"
-                                    android:layout_height="44dp"
+                                    android:layout_width="46dp"
+                                    android:layout_height="46dp"
                                     android:layout_gravity="center"
                                     android:background="@drawable/bg_connection_action_circle"
                                     android:clickable="true"
@@ -323,13 +230,11 @@
                                     android:padding="0dp"
                                     android:scaleType="center"
                                     android:src="@drawable/ic_play_24dp"
-                                    android:tint="@color/color_home_on_primary" />
+                                    android:tint="@color/md_theme_onPrimary" />
 
-                            </FrameLayout>
+                        </FrameLayout>
 
-                        </LinearLayout>
-
-                    </FrameLayout>
+                    </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 

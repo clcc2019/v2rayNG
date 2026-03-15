@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -27,6 +28,8 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.CustomDividerItemDecoration
+import com.v2ray.ang.ui.common.hapticClick
+import com.v2ray.ang.ui.common.startActivityWithDefaultTransition
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
@@ -76,14 +79,18 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     protected fun optimizeRecyclerViewForHighRefresh(recyclerView: RecyclerView) {
-        val animator = (recyclerView.itemAnimator as? DefaultItemAnimator) ?: DefaultItemAnimator()
-        animator.supportsChangeAnimations = false
-        animator.addDuration = 90L
-        animator.moveDuration = 100L
-        animator.removeDuration = 90L
-        animator.changeDuration = 0L
-        recyclerView.itemAnimator = animator
-        (recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        when (val animator = recyclerView.itemAnimator) {
+            is DefaultItemAnimator -> {
+                animator.supportsChangeAnimations = false
+                animator.addDuration = 90L
+                animator.moveDuration = 100L
+                animator.removeDuration = 90L
+                animator.changeDuration = 0L
+            }
+
+            is SimpleItemAnimator -> animator.supportsChangeAnimations = false
+            null -> Unit
+        }
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(16)
         recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
@@ -255,6 +262,41 @@ abstract class BaseActivity : AppCompatActivity() {
                 startDelay = startDelay,
                 duration = duration
             )
+        }
+    }
+
+    protected fun postScreenContentEnterMotion(
+        root: View,
+        translationOffsetDp: Float = 10f,
+        startDelay: Long = 36L
+    ) {
+        (root as? ViewGroup)?.getChildAt(0)?.let { child ->
+            (child as? ViewGroup)?.let {
+                postStaggeredEnterMotion(it, translationOffsetDp = translationOffsetDp, startDelay = startDelay)
+            }
+        }
+    }
+
+    protected fun bindClickAction(
+        view: View,
+        withHaptic: Boolean = true,
+        action: () -> Unit
+    ) {
+        view.setOnClickListener {
+            if (withHaptic) {
+                it.hapticClick()
+            }
+            action()
+        }
+    }
+
+    protected fun bindLaunchAction(
+        view: View,
+        withHaptic: Boolean = true,
+        intentProvider: () -> Intent
+    ) {
+        bindClickAction(view, withHaptic) {
+            startActivityWithDefaultTransition(intentProvider())
         }
     }
 

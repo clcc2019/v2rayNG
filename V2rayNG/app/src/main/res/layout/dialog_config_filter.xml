@@ -4,71 +4,94 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/md_theme_background"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp16">
+        android:paddingStart="@dimen/padding_spacing_dp16"
+        android:paddingTop="@dimen/padding_spacing_dp10"
+        android:paddingEnd="@dimen/padding_spacing_dp16"
+        android:paddingBottom="@dimen/padding_spacing_dp8">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:text="@string/title_server"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surface"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/color_settings_section_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <Spinner
-                    android:id="@+id/sp_subscriptionId"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_server"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <Spinner
+                        android:id="@+id/sp_subscriptionId"
+                        style="@style/Widget.V2Ray.Spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8" />
+                </LinearLayout>
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/server_lab_remarks"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surface"
+            android:maxWidth="@dimen/list_card_max_width"
+            app:cardBackgroundColor="@color/color_settings_section_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <EditText
-                    android:id="@+id/et_keyword"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_remarks"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <EditText
+                        android:id="@+id/et_keyword"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:hint="@string/server_lab_remarks"
+                        android:imeOptions="actionDone"
+                        android:inputType="text|textNoSuggestions" />
+                </LinearLayout>
 
             </LinearLayout>
 

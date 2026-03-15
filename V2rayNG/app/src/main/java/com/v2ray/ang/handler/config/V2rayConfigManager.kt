@@ -60,9 +60,9 @@ object V2rayConfigManager {
      * @param guid The unique identifier for the V2ray configuration.
      * @return A ConfigResult object containing the configuration details or indicating failure.
      */
-    fun getV2rayConfig(context: Context, guid: String): ConfigResult {
+    fun getV2rayConfig(context: Context, guid: String, knownProfile: ProfileItem? = null): ConfigResult {
         try {
-            val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
+            val config = knownProfile ?: MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
             val cacheKey = buildConfigCacheKey(guid, config)
             val buildLock = getConfigBuildLock(cacheKey)
             return synchronized(buildLock) {
@@ -80,6 +80,7 @@ object V2rayConfigManager {
                 }
 
                 if (result.status) {
+                    result.profile = result.profile ?: config.copy()
                     putCachedConfigResult(generatedConfigCacheLock, generatedConfigCache, cacheKey, result)
                 }
                 result
@@ -90,9 +91,7 @@ object V2rayConfigManager {
         }
     }
 
-    fun prewarmConfig(context: Context, guid: String): Boolean {
-        return getV2rayConfig(context, guid).status
-    }
+    fun prewarmConfig(context: Context, guid: String): Boolean = getV2rayConfig(context, guid).status
 
     /**
      * Retrieves the speedtest V2ray configuration for the given GUID.
@@ -104,7 +103,7 @@ object V2rayConfigManager {
     fun getV2rayConfig4Speedtest(context: Context, guid: String): ConfigResult {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
-            return if (config.configType == EConfigType.CUSTOM) {
+            val result = if (config.configType == EConfigType.CUSTOM) {
                 getV2rayCustomConfig(context, guid, config)
             } else if (config.configType == EConfigType.POLICYGROUP) {
                 // The number of policy groups will not be very large, so no special handling is needed.
@@ -112,6 +111,10 @@ object V2rayConfigManager {
             } else {
                 getV2rayNormalConfig4Speedtest(context, guid, config)
             }
+            if (result.status) {
+                result.profile = result.profile ?: config.copy()
+            }
+            return result
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to get V2ray config for speedtest", e)
             return ConfigResult(false)
@@ -127,7 +130,7 @@ object V2rayConfigManager {
      */
     private fun getV2rayCustomConfig(context: Context, guid: String, config: ProfileItem): ConfigResult {
         val raw = MmkvManager.decodeServerRaw(guid) ?: return ConfigResult(false)
-        val result = ConfigResult(true, guid, raw)
+        val result = ConfigResult(true, guid, raw, profile = config.copy())
         if (!needTun()) {
             return result
         }
@@ -1427,7 +1430,6 @@ object V2rayConfigManager {
      */
     fun populateTlsSettings(streamSettings: StreamSettingsBean, profileItem: ProfileItem, sniExt: String?) {
         val streamSecurity = profileItem.security.orEmpty()
-        val allowInsecure = profileItem.insecure == true
         val sni = if (profileItem.sni.isNullOrEmpty()) {
             when {
                 sniExt.isNotNullEmpty() && Utils.isDomainName(sniExt) -> sniExt
@@ -1441,7 +1443,6 @@ object V2rayConfigManager {
         streamSettings.security = streamSecurity.nullIfBlank()
         if (streamSettings.security == null) return
         val tlsSetting = StreamSettingsBean.TlsSettingsBean(
-            allowInsecure = allowInsecure,
             serverName = sni.nullIfBlank(),
             fingerprint = profileItem.fingerPrint.nullIfBlank(),
             alpn =  profileItem.alpn?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }.takeIf { !it.isNullOrEmpty() },

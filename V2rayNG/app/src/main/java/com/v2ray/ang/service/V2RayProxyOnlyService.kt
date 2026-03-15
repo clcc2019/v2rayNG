@@ -85,7 +85,8 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                     stopSelf()
                     return@launch
                 }
-                val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid)
+                val knownProfile = V2RayServiceManager.consumePendingStartProfile(guid)
+                val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid, knownProfile)
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build proxy-only V2Ray config")
                     stopSelf()

@@ -19,12 +19,7 @@
         android:paddingEnd="@dimen/padding_spacing_dp16">
 
         <TextView
-            style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/sub_list_page_overview" />
-
-        <TextView
             style="@style/Widget.V2Ray.SectionLabel"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
             android:text="@string/sub_group_quick_actions" />
 
         <com.google.android.material.card.MaterialCardView

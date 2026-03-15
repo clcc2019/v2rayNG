@@ -40,9 +40,18 @@ class ServerListSnapshotBuilder(
         val includeSubscriptionRemarks = targetSubscriptionId.isEmpty()
         targetServerList.forEach { guid ->
             val profile = repository.getServer(guid) ?: return@forEach
-            val displayAddress = resolveDisplayAddress(guid, profile)
-            if (keyword.isNotEmpty() && !matchesKeyword(profile, displayAddress, keyword)) {
-                return@forEach
+            val displayAddress = if (keyword.isEmpty()) {
+                resolveDisplayAddress(guid, profile)
+            } else {
+                if (matchesKeywordWithoutDescription(profile, keyword)) {
+                    resolveDisplayAddress(guid, profile)
+                } else {
+                    val resolved = resolveDisplayAddress(guid, profile)
+                    if (!resolved.contains(keyword, ignoreCase = true)) {
+                        return@forEach
+                    }
+                    resolved
+                }
             }
             val testDelayMillis = repository.getServerDelayMillis(guid) ?: 0L
             positions[guid] = servers.size
@@ -72,10 +81,10 @@ class ServerListSnapshotBuilder(
         }
     }
 
-    private fun matchesKeyword(profile: ProfileItem, displayAddress: String, keyword: String): Boolean {
+    private fun matchesKeywordWithoutDescription(profile: ProfileItem, keyword: String): Boolean {
         if (profile.remarks.contains(keyword, ignoreCase = true)) return true
         if (profile.server.orEmpty().contains(keyword, ignoreCase = true)) return true
-        return displayAddress.contains(keyword, ignoreCase = true)
+        return false
     }
 
     private fun resolveDisplayAddress(guid: String, profile: ProfileItem): String {

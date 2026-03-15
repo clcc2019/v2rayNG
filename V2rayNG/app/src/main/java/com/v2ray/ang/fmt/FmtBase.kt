@@ -51,9 +51,8 @@ open class FmtBase {
      *
      * @param config the ProfileItem object to populate
      * @param queryParam the query parameters to use for populating the ProfileItem
-     * @param allowInsecure whether to allow insecure connections
      */
-    fun getItemFormQuery(config: ProfileItem, queryParam: Map<String, String>, allowInsecure: Boolean) {
+    fun getItemFormQuery(config: ProfileItem, queryParam: Map<String, String>) {
         config.network = queryParam["type"] ?: NetworkType.TCP.type
         config.headerType = queryParam["headerType"]
         config.host = queryParam["host"]
@@ -72,12 +71,11 @@ open class FmtBase {
         if (config.security != AppConfig.TLS && config.security != AppConfig.REALITY) {
             config.security = null
         }
-        // Support multiple possible query keys for allowInsecure like the C# implementation
         val allowInsecureKeys = arrayOf("insecure", "allowInsecure", "allow_insecure")
         config.insecure = when {
             allowInsecureKeys.any { queryParam[it] == "1" } -> true
             allowInsecureKeys.any { queryParam[it] == "0" } -> false
-            else -> allowInsecure
+            else -> null
         }
         config.sni = queryParam["sni"]
         config.fingerPrint = queryParam["fp"]
@@ -110,13 +108,6 @@ open class FmtBase {
         config.spiderX?.nullIfBlank()?.let { dicQuery["spx"] = it }
         config.mldsa65Verify?.nullIfBlank()?.let { dicQuery["pqv"] = it }
         config.flow?.nullIfBlank()?.let { dicQuery["flow"] = it }
-        // Add two keys for compatibility: "insecure" and "allowInsecure"
-        if (config.security == AppConfig.TLS) {
-            val insecureFlag = if (config.insecure == true) "1" else "0"
-            dicQuery["insecure"] = insecureFlag
-            dicQuery["allowInsecure"] = insecureFlag
-        }
-
         val networkType = NetworkType.fromString(config.network)
         dicQuery["type"] = networkType.type
 

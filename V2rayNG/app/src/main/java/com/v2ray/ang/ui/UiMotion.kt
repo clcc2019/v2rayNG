@@ -13,12 +13,18 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.v2ray.ang.R
+import kotlin.math.abs
 
 object UiMotion {
+    private const val FLOAT_EPSILON = 0.001f
     private val motionInterpolator = FastOutSlowInInterpolator()
 
     private fun isMotionEnabled(view: View): Boolean {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    }
+
+    private fun canRunTransition(view: View): Boolean {
+        return isMotionEnabled(view) && view.isAttachedToWindow
     }
 
     fun attachPressFeedback(
@@ -233,9 +239,11 @@ object UiMotion {
         duration: Long = MotionTokens.REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
-        if (!isMotionEnabled(view)) {
+        if (!canRunTransition(view)) {
             view.alpha = 1f
             view.translationY = 0f
+            view.scaleX = 1f
+            view.scaleY = 1f
             if (!view.isVisible) {
                 view.isVisible = true
             }
@@ -244,9 +252,13 @@ object UiMotion {
         view.animate().cancel()
         view.alpha = 0f
         view.translationY = offsetPx
+        view.scaleX = 0.985f
+        view.scaleY = 0.985f
         view.animate()
             .alpha(1f)
             .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
             .setStartDelay(startDelay)
             .setDuration(duration)
             .setInterpolator(motionInterpolator)
@@ -260,11 +272,13 @@ object UiMotion {
         startDelay: Long = 0L
     ) {
         val offsetPx = container.resources.displayMetrics.density * translationOffsetDp
-        if (!isMotionEnabled(container)) {
+        if (!canRunTransition(container)) {
             for (index in 0 until container.childCount) {
                 container.getChildAt(index).apply {
                     alpha = 1f
                     translationY = 0f
+                    scaleX = 1f
+                    scaleY = 1f
                 }
             }
             return
@@ -274,9 +288,13 @@ object UiMotion {
             child.animate().cancel()
             child.alpha = 0f
             child.translationY = offsetPx
+            child.scaleX = 0.985f
+            child.scaleY = 0.985f
             child.animate()
                 .alpha(1f)
                 .translationY(0f)
+                .scaleX(1f)
+                .scaleY(1f)
                 .setStartDelay(startDelay + (index * stepDelay))
                 .setDuration(MotionTokens.REVEAL_DURATION)
                 .setInterpolator(motionInterpolator)
@@ -285,7 +303,7 @@ object UiMotion {
     }
 
     fun animatePulse(view: View, pulseScale: Float = 1.04f, duration: Long = MotionTokens.PULSE_DEFAULT) {
-        if (!isMotionEnabled(view)) {
+        if (!canRunTransition(view)) {
             view.scaleX = 1f
             view.scaleY = 1f
             return
@@ -297,6 +315,11 @@ object UiMotion {
             .setDuration(duration)
             .setInterpolator(motionInterpolator)
             .withEndAction {
+                if (!view.isAttachedToWindow) {
+                    view.scaleX = 1f
+                    view.scaleY = 1f
+                    return@withEndAction
+                }
                 view.animate()
                     .scaleX(1f)
                     .scaleY(1f)
@@ -320,7 +343,7 @@ object UiMotion {
             return
         }
         view.setTag(R.id.tag_motion_animated_once, key)
-        if (!isMotionEnabled(view)) {
+        if (!canRunTransition(view)) {
             view.alpha = 1f
             view.translationY = 0f
             view.scaleX = 1f
@@ -350,7 +373,7 @@ object UiMotion {
         contractScale: Float = 0.992f,
         duration: Long = MotionTokens.STATUS_TRANSITION_DURATION
     ) {
-        if (!isMotionEnabled(view)) {
+        if (!canRunTransition(view)) {
             view.scaleX = 1f
             view.scaleY = 1f
             view.alpha = 1f
@@ -391,7 +414,7 @@ object UiMotion {
         duration: Long = MotionTokens.EMPHASIS_DURATION
     ) {
         val offsetPx = primary.resources.displayMetrics.density * translationOffsetDp
-        if (!isMotionEnabled(primary)) {
+        if (!canRunTransition(primary)) {
             primary.translationY = 0f
             primary.alpha = 1f
             secondary?.translationY = 0f
@@ -436,13 +459,13 @@ object UiMotion {
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
         view.setTag(R.id.tag_visibility_target, visible)
-        if (!isMotionEnabled(view)) {
+        if (!canRunTransition(view)) {
             setVisibility(view, visible)
             return
         }
 
         if (visible) {
-            if (view.isVisible && view.alpha == 1f && view.translationY == 0f) {
+            if (view.isVisible && abs(view.alpha - 1f) < FLOAT_EPSILON && abs(view.translationY) < FLOAT_EPSILON) {
                 return
             }
             view.animate().cancel()

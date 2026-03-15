@@ -42,6 +42,11 @@ object V2RayServiceManager {
         val guid: String
     )
 
+    private data class PendingStartProfile(
+        val guid: String,
+        val profile: ProfileItem
+    )
+
     private val coreController: CoreController = V2RayNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -50,6 +55,8 @@ object V2RayServiceManager {
     private var currentConfig: ProfileItem? = null
     private var pendingConfigGuid: String? = null
     private var pendingRestartRequest: PendingRestartRequest? = null
+    private val pendingStartProfileLock = Any()
+    private var pendingStartProfile: PendingStartProfile? = null
     private val receiverRegistered = AtomicBoolean(false)
     private val stopInProgress = AtomicBoolean(false)
 
@@ -120,6 +127,7 @@ object V2RayServiceManager {
      */
     fun stopVService(context: Context) {
         clearPendingRestart()
+        clearPendingStartProfile()
         requestServiceStop(context)
     }
 
@@ -161,6 +169,7 @@ object V2RayServiceManager {
         val config = MmkvManager.decodeServerConfig(guid)
         if (config == null) {
             clearPendingRestart()
+            clearPendingStartProfile()
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
@@ -170,6 +179,7 @@ object V2RayServiceManager {
             && !Utils.isPureIpAddress(config.server.orEmpty())
         ) {
             clearPendingRestart()
+            clearPendingStartProfile()
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
@@ -177,6 +187,9 @@ object V2RayServiceManager {
 //        if (!result.status) return
 
         pendingConfigGuid = guid
+        synchronized(pendingStartProfileLock) {
+            pendingStartProfile = PendingStartProfile(guid, config.copy())
+        }
         MmkvManager.setSelectServer(guid)
         val intent = if (SettingsManager.isVpnMode()) {
             Intent(context.applicationContext, V2RayVpnService::class.java)
@@ -188,8 +201,21 @@ object V2RayServiceManager {
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
             clearPendingRestart()
+            clearPendingStartProfile()
             Log.e(AppConfig.TAG, "Failed to start foreground service", e)
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+        }
+    }
+
+    fun consumePendingStartProfile(guid: String): ProfileItem? {
+        synchronized(pendingStartProfileLock) {
+            val pending = pendingStartProfile ?: return null
+            if (pending.guid != guid) {
+                pendingStartProfile = null
+                return null
+            }
+            pendingStartProfile = null
+            return pending.profile.copy()
         }
     }
 
@@ -198,7 +224,6 @@ object V2RayServiceManager {
             serviceControl = null
         }
         currentConfig = null
-        schedulePendingRestart()
     }
 
     fun onServiceDestroyed(control: ServiceControl) {
@@ -206,6 +231,10 @@ object V2RayServiceManager {
             serviceControl = null
         }
         currentConfig = null
+        // Restart only after the Android Service instance has fully torn down.
+        // Starting too early can reuse the same instance and let the old destroy path
+        // cancel the new start, which looks like "switch config -> service stops".
+        schedulePendingRestart()
     }
 
     /**
@@ -226,7 +255,7 @@ object V2RayServiceManager {
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
             return false
         }
-        val config = MmkvManager.decodeServerConfig(guid)
+        val config = prebuiltConfig?.profile?.takeIf { prebuiltConfig.guid == guid } ?: MmkvManager.decodeServerConfig(guid)
         if (config == null) {
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
             return false
@@ -267,7 +296,7 @@ object V2RayServiceManager {
             return false
         }
 
-        currentConfig = config
+        currentConfig = result.profile ?: config
         pendingConfigGuid = null
         val tunFd = 0
 
@@ -528,6 +557,12 @@ object V2RayServiceManager {
         restartJob?.cancel()
         restartJob = null
         pendingRestartRequest = null
+    }
+
+    private fun clearPendingStartProfile() {
+        synchronized(pendingStartProfileLock) {
+            pendingStartProfile = null
+        }
     }
 
     private fun schedulePendingRestart() {

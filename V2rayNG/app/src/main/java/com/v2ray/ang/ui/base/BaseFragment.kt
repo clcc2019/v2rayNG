@@ -54,14 +54,18 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
     }
 
     fun optimizeRecyclerViewForHighRefresh(recyclerView: RecyclerView) {
-        val animator = recyclerView.itemAnimator as? DefaultItemAnimator ?: DefaultItemAnimator()
-        animator.supportsChangeAnimations = false
-        animator.addDuration = 90L
-        animator.moveDuration = 100L
-        animator.removeDuration = 90L
-        animator.changeDuration = 0L
-        recyclerView.itemAnimator = animator
-        (recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        when (val animator = recyclerView.itemAnimator) {
+            is DefaultItemAnimator -> {
+                animator.supportsChangeAnimations = false
+                animator.addDuration = 90L
+                animator.moveDuration = 100L
+                animator.removeDuration = 90L
+                animator.changeDuration = 0L
+            }
+
+            is SimpleItemAnimator -> animator.supportsChangeAnimations = false
+            null -> Unit
+        }
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(16)
     }

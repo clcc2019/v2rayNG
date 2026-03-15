@@ -3,7 +3,6 @@ package com.v2ray.ang.ui
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
-import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.v2ray.ang.AppConfig
@@ -37,19 +36,17 @@ class CheckUpdateActivity : BaseActivity() {
         applyPressMotion(binding.actionCheckUpdate)
         applyPressMotion(binding.actionViewUpdate)
         applyPressMotion(binding.layoutPreRelease)
-        (binding.root.getChildAt(0) as? ViewGroup)?.let {
-            postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
-        }
+        postScreenContentEnterMotion(binding.root)
 
-        binding.actionCheckUpdate.setOnClickListener {
+        bindClickAction(binding.actionCheckUpdate, withHaptic = false) {
             checkForUpdates(binding.checkPreRelease.isChecked, showDialogOnUpdate = true)
         }
 
-        binding.actionViewUpdate.setOnClickListener {
+        bindClickAction(binding.actionViewUpdate, withHaptic = false) {
             lastResult?.let(::showUpdateDialog)
         }
 
-        binding.layoutPreRelease.setOnClickListener {
+        bindClickAction(binding.layoutPreRelease, withHaptic = false) {
             binding.checkPreRelease.toggle()
         }
 
