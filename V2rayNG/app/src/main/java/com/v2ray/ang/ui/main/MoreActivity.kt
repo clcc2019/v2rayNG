@@ -22,6 +22,7 @@ class MoreActivity : BaseActivity() {
             binding.rowSettings.root,
             binding.rowBackupRestore.root,
             binding.rowLogcat.root,
+            binding.rowObservability.root,
             binding.rowCheckUpdate.root,
             binding.rowAbout.root
         )
@@ -30,6 +31,7 @@ class MoreActivity : BaseActivity() {
         bindLaunchAction(binding.rowSettings.root) { Intent(this, SettingsActivity::class.java) }
         bindLaunchAction(binding.rowBackupRestore.root) { Intent(this, BackupActivity::class.java) }
         bindLaunchAction(binding.rowLogcat.root) { Intent(this, LogcatActivity::class.java) }
+        bindLaunchAction(binding.rowObservability.root) { Intent(this, ObservabilityActivity::class.java) }
         bindLaunchAction(binding.rowCheckUpdate.root) { Intent(this, CheckUpdateActivity::class.java) }
         bindLaunchAction(binding.rowAbout.root) { Intent(this, AboutActivity::class.java) }
     }

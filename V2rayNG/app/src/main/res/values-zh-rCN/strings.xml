@@ -233,8 +233,6 @@
 
     <string name="title_pref_speed_enabled">启用速度显示</string>
     <string name="summary_pref_speed_enabled">在通知中显示当前速度\n小图标显示流量的路由情况</string>
-    <string name="title_pref_metrics_enabled">启用 Metrics 接口</string>
-    <string name="summary_pref_metrics_enabled">在 127.0.0.1:11111 暴露本地 Metrics，用于流量统计。</string>
 
     <string name="title_pref_sniffing_enabled">启用流量探测</string>
     <string name="summary_pref_sniffing_enabled">从流量中探测域名 (默认启用)</string>
@@ -522,6 +520,22 @@
     <string name="about_group_project">项目资料</string>
     <string name="about_group_community">社区与支持</string>
     <string name="logcat_page_overview">查看运行日志，便于排查和诊断问题。</string>
+    <string name="observability_page_overview">暴露本地指标，便于观察流量与运行状态。</string>
+    <string name="observability_group_metrics">Metrics 接口</string>
+    <string name="title_observability">可观测</string>
+    <string name="title_observability_metrics">启用 Metrics 接口</string>
+    <string name="summary_observability_metrics">在 127.0.0.1:11111 暴露本地 Metrics，用于流量统计。</string>
+    <string name="observability_group_traffic">流量</string>
+    <string name="observability_traffic_title">流量概览</string>
+    <string name="observability_traffic_subtitle">最近的上行与下行活动。</string>
+    <string name="observability_uplink_label">上行</string>
+    <string name="observability_downlink_label">下行</string>
+    <string name="observability_uplink_placeholder">--</string>
+    <string name="observability_downlink_placeholder">--</string>
+    <string name="observability_range_1h">1小时</string>
+    <string name="observability_range_6h">6小时</string>
+    <string name="observability_range_24h">24小时</string>
+    <string name="observability_range_7d">7天</string>
     <string name="title_webdav_url">WebDAV 服务器地址</string>WebDAV server address
     <string name="title_webdav_user">用户名</string>
     <string name="title_webdav_pass">密码</string>
@@ -602,6 +616,7 @@
     <string name="more_summary_routing">调整路由规则、绕过列表和策略行为。</string>
     <string name="more_summary_settings">配置连接、DNS 和其他高级偏好。</string>
     <string name="more_summary_backup">导出、导入或同步当前应用配置。</string>
+    <string name="more_summary_observability">Metrics 接口与流量观测。</string>
     <string name="more_summary_logcat">查看运行日志，便于排查问题。</string>
     <string name="more_summary_update">检查当前应用和内核的版本更新。</string>
     <string name="more_summary_about">查看项目介绍、链接和相关说明。</string>

@@ -135,6 +135,16 @@
                     android:background="@color/color_card_outline" />
 
                 <include
+                    android:id="@+id/row_observability"
+                    layout="@layout/item_more_action_observability" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="54dp"
+                    android:background="@color/color_card_outline" />
+
+                <include
                     android:id="@+id/row_logcat"
                     layout="@layout/item_more_action_logcat" />
 

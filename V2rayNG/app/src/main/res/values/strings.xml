@@ -237,8 +237,6 @@
     <string name="title_pref_speed_enabled">Enable speed display</string>
     <string name="summary_pref_speed_enabled">Display current speed in the notification.\nNotification icon would change based on
         usage.</string>
-    <string name="title_pref_metrics_enabled">Enable metrics endpoint</string>
-    <string name="summary_pref_metrics_enabled">Expose local metrics on 127.0.0.1:11111 for traffic statistics.</string>
 
     <string name="title_pref_sniffing_enabled">Enable Sniffing</string>
     <string name="summary_pref_sniffing_enabled">Try sniff domain from the packet (default on)</string>
@@ -537,6 +535,22 @@
     <string name="about_group_project">Project</string>
     <string name="about_group_community">Community</string>
     <string name="logcat_page_overview">Inspect runtime logs for troubleshooting and diagnostics.</string>
+    <string name="observability_page_overview">Expose local metrics to inspect traffic and runtime signals.</string>
+    <string name="observability_group_metrics">Metrics endpoint</string>
+    <string name="title_observability">Observability</string>
+    <string name="title_observability_metrics">Enable metrics endpoint</string>
+    <string name="summary_observability_metrics">Expose local metrics on 127.0.0.1:11111 for traffic statistics.</string>
+    <string name="observability_group_traffic">Traffic</string>
+    <string name="observability_traffic_title">Traffic overview</string>
+    <string name="observability_traffic_subtitle">Recent uplink and downlink activity.</string>
+    <string name="observability_uplink_label">Uplink</string>
+    <string name="observability_downlink_label">Downlink</string>
+    <string name="observability_uplink_placeholder">--</string>
+    <string name="observability_downlink_placeholder">--</string>
+    <string name="observability_range_1h">1h</string>
+    <string name="observability_range_6h">6h</string>
+    <string name="observability_range_24h">24h</string>
+    <string name="observability_range_7d">7d</string>
     <string name="title_webdav_url">WebDAV server URL</string>
     <string name="title_webdav_user">Username</string>
     <string name="title_webdav_pass">Password</string>
@@ -618,6 +632,7 @@
     <string name="more_summary_routing">Adjust routing rules, bypass lists and policies.</string>
     <string name="more_summary_settings">Tune connection, DNS and advanced preferences.</string>
     <string name="more_summary_backup">Export, import and sync your app configuration.</string>
+    <string name="more_summary_observability">Metrics endpoint and traffic insights.</string>
     <string name="more_summary_logcat">Inspect runtime logs for troubleshooting.</string>
     <string name="more_summary_update">Check the latest app and core version info.</string>
     <string name="more_summary_about">View project details, links and acknowledgements.</string>

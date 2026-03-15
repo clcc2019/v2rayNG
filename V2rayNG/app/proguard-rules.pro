@@ -24,3 +24,9 @@
 -keepattributes Signature
 -keepattributes *Annotation*
 -keep class com.v2ray.ang.dto.** { *; }
+
+# Keep JNI entry points and class names used by RegisterNatives.
+-keepnames class com.v2ray.ang.service.TProxyService
+-keepclassmembers class com.v2ray.ang.service.TProxyService {
+    native <methods>;
+}

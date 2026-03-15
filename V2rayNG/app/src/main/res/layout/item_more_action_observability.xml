@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.V2Ray.MoreAction.Row">
+
+    <ImageView
+        style="@style/Widget.V2Ray.MoreAction.Icon"
+        android:src="@drawable/ic_ecg_24dp" />
+
+    <LinearLayout
+        style="@style/Widget.V2Ray.MoreAction.Content">
+
+        <TextView
+            style="@style/Widget.V2Ray.MoreAction.Title"
+            android:text="@string/title_observability" />
+
+        <TextView
+            style="@style/Widget.V2Ray.MoreAction.Subtitle"
+            android:text="@string/more_summary_observability" />
+
+    </LinearLayout>
+
+    <ImageView
+        style="@style/Widget.V2Ray.MoreAction.Chevron"
+        android:src="@drawable/ic_chevron_right_20dp" />
+
+</LinearLayout>

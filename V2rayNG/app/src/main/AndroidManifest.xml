@@ -99,6 +99,9 @@
             android:name=".ui.LogcatActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.ObservabilityActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.RoutingSettingActivity"
             android:exported="false" />
         <activity
