@@ -3,17 +3,16 @@
     android:color="?attr/colorControlHighlight">
 
     <item>
-        <shape android:shape="oval">
-            <solid android:color="@color/md_theme_surface" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/color_card_outline" />
+        <shape android:shape="rectangle">
+            <solid android:color="@color/color_home_surface_soft" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
 
     <item android:id="@android:id/mask">
-        <shape android:shape="oval">
-            <solid android:color="@color/md_theme_surface" />
+        <shape android:shape="rectangle">
+            <solid android:color="@color/color_home_surface_soft" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
 

@@ -28,10 +28,8 @@ class MainConnectionCardController(
         }
         lastVisible = visible
         if (immediate) {
-            UiMotion.setVisibility(binding.viewConnectionDockUnderlay, visible)
             UiMotion.setVisibility(binding.cardConnection, visible)
         } else {
-            UiMotion.animateVisibility(binding.viewConnectionDockUnderlay, visible, translationOffsetDp = 14f)
             UiMotion.animateVisibility(binding.cardConnection, visible, translationOffsetDp = 18f)
         }
     }
@@ -130,7 +128,6 @@ class MainConnectionCardController(
 
     private fun applyDockBackgroundAlpha(alpha: Float) {
         val alphaInt = (alpha * 255).toInt()
-        binding.viewConnectionDockUnderlay.background?.mutate()?.alpha = alphaInt
         binding.layoutConnectionDockContainer.background?.mutate()?.alpha = alphaInt
         binding.layoutConnectionDockContainer.foreground?.mutate()?.alpha = (alpha * 232).toInt()
         binding.viewConnectionDockOrb.background?.mutate()?.alpha = (alpha * 88).toInt()
