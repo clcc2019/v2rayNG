@@ -182,6 +182,7 @@
     <string name="title_advanced_settings">高级</string>
     <string name="title_transport_optimization">传输优化</string>
     <string name="settings_page_overview">在这里集中调整界面偏好、连接模式、DNS 行为和进阶隧道选项。</string>
+    <string name="more_page_overview">在这里集中进入订阅、路由、应用偏好、维护工具和支持信息页面。</string>
     <string name="summary_common_settings">常用功能与日常操作相关设置</string>
     <string name="summary_advanced_settings">不常用或需要经验的高级选项</string>
     <string name="summary_basic_settings">界面展示与常用偏好</string>
@@ -209,6 +210,7 @@
     <string name="system_app_label">系统</string>
     <string name="title_pref_per_app_proxy">分应用</string>
     <string name="summary_pref_per_app_proxy">常规: 勾选的 App 被代理, 未勾选的直连;\n绕行模式: 勾选的 App 直连, 未勾选的被代理.\n不明白者在菜单中选择自动选中需代理应用</string>
+    <string name="per_app_proxy_page_overview">选择哪些应用走代理，并在包含模式与绕行模式之间切换。</string>
     <string name="title_pref_is_booted">开机时自动连接</string>
     <string name="summary_pref_is_booted">开机时自动连接选择的服务器，可能会不成功</string>
 

@@ -8,7 +8,7 @@
     android:layout_marginTop="@dimen/padding_spacing_dp6"
     android:layout_marginEnd="@dimen/padding_spacing_dp8"
     android:layout_marginBottom="@dimen/padding_spacing_dp6"
-    app:cardBackgroundColor="@color/md_theme_surface"
+    app:cardBackgroundColor="@color/color_settings_section_surface"
     app:strokeWidth="0dp">
 
     <LinearLayout

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">XrayNew</string>
+    <string name="app_name" translatable="false">XrayNG</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">First use of this feature, please use the app to add server</string>
@@ -185,6 +185,7 @@
     <string name="title_advanced_settings">Advanced</string>
     <string name="title_transport_optimization">Transport Optimization</string>
     <string name="settings_page_overview">Adjust appearance, connection mode, DNS behavior, and expert tunnel options in one place.</string>
+    <string name="more_page_overview">Access subscriptions, routing, app preferences, maintenance tools and support pages from one place.</string>
     <string name="summary_common_settings">Frequently used settings</string>
     <string name="summary_advanced_settings">Less common or expert options</string>
     <string name="summary_basic_settings">Appearance and daily-use preferences</string>
@@ -212,6 +213,7 @@
     <string name="system_app_label">System</string>
     <string name="title_pref_per_app_proxy">Per-app proxy</string>
     <string name="summary_pref_per_app_proxy">General: Checked apps use proxy, unchecked apps connect directly; \nBypass mode: checked apps connect directly, unchecked apps use proxy. \nThe option to automatically select proxy applications is in the menu</string>
+    <string name="per_app_proxy_page_overview">Choose which apps follow the proxy and switch between include mode and bypass mode.</string>
     <string name="title_pref_is_booted">Auto connect at startup</string>
     <string name="summary_pref_is_booted">Automatically connects to the selected server at startup, which may be unsuccessful</string>
 
@@ -449,6 +451,8 @@
     <string name="home_connection_title">Connection controls</string>
     <string name="home_connection_subtitle">Start the selected profile, or stop the proxy when active.</string>
     <string name="home_connection_summary_short">Start or stop the current profile.</string>
+    <string name="home_server_active_label">ACTIVE</string>
+    <string name="home_server_source_label">Source</string>
     <string name="home_connection_profile_empty">No profile selected</string>
     <string name="current_config">Current configuration</string>
     <string name="connection_connected">Connected</string>

@@ -5,7 +5,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.R
 import com.v2ray.ang.viewmodel.MainViewModel
@@ -22,9 +21,6 @@ class MainConnectionCardController(
     private var lastVisible: Boolean? = null
     private var lastDockBackgroundAlpha: Float? = null
     private var dockBackgroundAnimator: ValueAnimator? = null
-    private val baseDockBackgroundColor by lazy {
-        ContextCompat.getColor(context, R.color.color_home_surface_raised)
-    }
 
     fun updateVisibility(visible: Boolean, immediate: Boolean = false) {
         if (lastVisible == visible && !immediate) {
@@ -133,10 +129,11 @@ class MainConnectionCardController(
     }
 
     private fun applyDockBackgroundAlpha(alpha: Float) {
-        binding.viewConnectionDockUnderlay.background?.mutate()?.alpha = 255
-        binding.cardConnection.setCardBackgroundColor(
-            ColorUtils.setAlphaComponent(baseDockBackgroundColor, (alpha * 255).toInt())
-        )
+        val alphaInt = (alpha * 255).toInt()
+        binding.viewConnectionDockUnderlay.background?.mutate()?.alpha = alphaInt
+        binding.layoutConnectionDockContainer.background?.mutate()?.alpha = alphaInt
+        binding.layoutConnectionDockContainer.foreground?.mutate()?.alpha = (alpha * 232).toInt()
+        binding.viewConnectionDockOrb.background?.mutate()?.alpha = (alpha * 88).toInt()
         lastDockBackgroundAlpha = alpha
     }
 

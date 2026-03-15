@@ -1,4 +1,4 @@
-# v2rayNG App Architecture
+# XrayNG App Architecture
 
 ## Current shape
 

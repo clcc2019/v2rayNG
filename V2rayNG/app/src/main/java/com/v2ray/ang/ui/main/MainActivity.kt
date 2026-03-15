@@ -247,12 +247,12 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
-        val pageOffsetPx = resources.displayMetrics.density * 12f
+        val pageOffsetPx = resources.displayMetrics.density * 8f
         binding.viewPager.setPageTransformer { page, position ->
             val absPos = kotlin.math.abs(position).coerceAtMost(1f)
-            val scale = 1f - (0.02f * absPos)
-            page.alpha = 1f - (0.12f * absPos)
-            page.translationX = -page.width * 0.04f * position
+            val scale = 1f - (0.015f * absPos)
+            page.alpha = 1f - (0.08f * absPos)
+            page.translationX = -page.width * 0.03f * position
             page.translationY = pageOffsetPx * absPos
             page.scaleX = scale
             page.scaleY = scale
@@ -283,7 +283,7 @@ class MainActivity : HelperBaseActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
-            val floatingBottomInset = (systemBars.bottom * 0.18f).toInt()
+            val floatingBottomInset = (systemBars.bottom * 0.08f).toInt()
             isImeVisible = imeVisible
             searchController.onInsetsChanged(insets)
             binding.appBarHome.updatePadding(top = systemBars.top)
@@ -319,9 +319,13 @@ class MainActivity : HelperBaseActivity() {
 
     private fun syncConnectionDockUnderlay(cardBottomMargin: Int) {
         val fallbackDockHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp72)
+        val minimumShadowHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
         val cardHeight = binding.cardConnection.height.takeIf { it > 0 } ?: fallbackDockHeight
         val underlayLayoutParams = binding.viewConnectionDockUnderlay.layoutParams as CoordinatorLayout.LayoutParams
-        val targetUnderlayHeight = cardHeight + cardBottomMargin
+        // Keep the shadow anchored to the dock's lower edge so it reads as depth,
+        // not as a second gray panel visible through the glass container.
+        val dockShadowHeight = maxOf(minimumShadowHeight, (cardHeight * 0.56f).toInt())
+        val targetUnderlayHeight = dockShadowHeight + cardBottomMargin
         if (underlayLayoutParams.height != targetUnderlayHeight || underlayLayoutParams.bottomMargin != 0) {
             underlayLayoutParams.height = targetUnderlayHeight
             underlayLayoutParams.bottomMargin = 0
@@ -831,7 +835,7 @@ class MainActivity : HelperBaseActivity() {
             params.marginEnd = 0
             iconButton.layoutParams = params
         }
-        iconButton.background = ContextCompat.getDrawable(this, R.drawable.bg_home_icon_circle_ripple)
+        iconButton.background = ContextCompat.getDrawable(this, R.drawable.bg_home_icon_circle_clear_ripple)
         iconButton.imageTintList =
             ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
         iconButton.scaleType = ImageView.ScaleType.CENTER

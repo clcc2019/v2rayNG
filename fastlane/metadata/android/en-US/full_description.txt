@@ -23,5 +23,5 @@
 The aar can be compiled from the Golang project <a href="https://github.com/2dust/AndroidLibV2rayLite">AndroidLibV2rayLite</a> or <a href="https://github.com/2dust/AndroidLibXrayLite">AndroidLibXrayLite</a>.
 For a quick start, read guide for <a href="https://github.com/golang/go/wiki/Mobile">Go Mobile</a> and <a href="https://tutorialedge.net/golang/makefiles-for-go-developers/">Makefiles for Go Developers</a></p>
 
-<p>v2rayNG can run on Android Emulators. For WSA, VPN permission need to be granted via
+<p>XrayNG can run on Android Emulators. For WSA, VPN permission need to be granted via
 <code>appops set [package name] ACTIVATE_VPN allow</code></p>

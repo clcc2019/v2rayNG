@@ -20,34 +20,34 @@
                 android:clipToPadding="false">
 
                 <View
-                    android:layout_width="248dp"
-                    android:layout_height="248dp"
-                    android:layout_gravity="top|end"
-                    android:alpha="0.92"
-                    android:background="@drawable/bg_home_glow_blue"
-                    android:importantForAccessibility="no"
-                    android:translationX="48dp"
-                    android:translationY="-36dp" />
-
-                <View
                     android:layout_width="220dp"
                     android:layout_height="220dp"
-                    android:layout_gravity="top|start"
-                    android:alpha="0.72"
-                    android:background="@drawable/bg_home_glow_white"
+                    android:layout_gravity="top|end"
+                    android:alpha="0.58"
+                    android:background="@drawable/bg_home_glow_blue"
                     android:importantForAccessibility="no"
-                    android:translationX="-72dp"
-                    android:translationY="86dp" />
+                    android:translationX="56dp"
+                    android:translationY="-28dp" />
 
                 <View
-                    android:layout_width="260dp"
-                    android:layout_height="260dp"
+                    android:layout_width="188dp"
+                    android:layout_height="188dp"
+                    android:layout_gravity="top|start"
+                    android:alpha="0.48"
+                    android:background="@drawable/bg_home_glow_white"
+                    android:importantForAccessibility="no"
+                    android:translationX="-60dp"
+                    android:translationY="74dp" />
+
+                <View
+                    android:layout_width="236dp"
+                    android:layout_height="236dp"
                     android:layout_gravity="bottom|start"
-                    android:alpha="0.78"
+                    android:alpha="0.42"
                     android:background="@drawable/bg_home_glow_amber"
                     android:importantForAccessibility="no"
-                    android:translationX="-96dp"
-                    android:translationY="74dp" />
+                    android:translationX="-84dp"
+                    android:translationY="64dp" />
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/view_pager"
@@ -55,9 +55,9 @@
                     android:layout_height="match_parent"
                     android:clipToPadding="false"
                     android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="20dp"
+                    android:paddingTop="16dp"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:paddingBottom="96dp"
+                    android:paddingBottom="100dp"
                     android:scrollbars="vertical" />
 
                 <com.google.android.material.appbar.AppBarLayout
@@ -73,9 +73,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="?attr/actionBarSize"
                         android:minHeight="?attr/actionBarSize"
-                        android:paddingStart="@dimen/padding_spacing_dp8"
+                        android:paddingStart="@dimen/padding_spacing_dp4"
                         android:paddingTop="0dp"
-                        android:paddingEnd="@dimen/padding_spacing_dp8"
+                        android:paddingEnd="@dimen/padding_spacing_dp4"
                         android:paddingBottom="0dp"
                         android:background="@android:color/transparent"
                         app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
@@ -147,138 +147,173 @@
                     android:layout_gravity="bottom|center_horizontal"
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="4dp"
                     android:clipChildren="false"
                     android:clipToPadding="false"
-                    app:strokeColor="@color/color_home_outline"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="@android:color/transparent"
+                    app:strokeWidth="0dp">
 
-                    <LinearLayout
+                    <FrameLayout
+                        android:id="@+id/layout_connection_dock_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:baselineAligned="false"
-                        android:gravity="center_vertical"
-                        android:minHeight="60dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="16dp"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="14dp"
-                        android:paddingBottom="4dp">
+                        android:background="@drawable/bg_connection_dock_glass"
+                        android:clipChildren="true"
+                        android:clipToOutline="true"
+                        android:clipToPadding="true"
+                        android:foreground="@drawable/bg_connection_dock_foreground">
+
+                        <View
+                            android:id="@+id/view_connection_dock_orb"
+                            android:layout_width="128dp"
+                            android:layout_height="108dp"
+                            android:layout_gravity="top|end"
+                            android:alpha="0.08"
+                            android:background="@drawable/bg_home_glass_orb"
+                            android:importantForAccessibility="no"
+                            android:translationX="30dp"
+                            android:translationY="-22dp" />
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
+                            android:minHeight="62dp"
+                            android:orientation="horizontal"
+                            android:paddingStart="16dp"
+                            android:paddingTop="7dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="7dp">
 
                             <LinearLayout
-                                android:layout_width="wrap_content"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
-                                <TextView
-                                    android:id="@+id/tv_connection_title"
+                                <LinearLayout
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="@string/home_connection_title"
+                                    android:baselineAligned="false"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:id="@+id/tv_connection_title"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/home_connection_title"
+                                        android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                                        android:textColor="@color/color_home_on_surface_muted"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tv_connection_status"
+                                        style="@style/Widget.V2Ray.Badge.ConnectionCompact"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="@dimen/padding_spacing_dp8"
+                                        android:text="@string/connection_not_connected_short" />
+
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/tv_connection_profile"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp3"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                                    android:textColor="@color/color_home_on_surface"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:id="@+id/tv_connection_summary"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                                    android:ellipsize="end"
+                                    android:maxLines="2"
+                                    android:text="@string/home_connection_summary_short"
                                     android:textAppearance="@style/TextAppearance.V2Ray.Support"
                                     android:textColor="@color/color_home_on_surface_muted"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tv_connection_status"
-                                    style="@style/Widget.V2Ray.Badge.ConnectionCompact"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/padding_spacing_dp8"
-                                    android:text="@string/connection_not_connected_short" />
+                                    android:textSize="11sp"
+                                    android:textStyle="normal" />
 
                             </LinearLayout>
 
-                            <TextView
-                                android:id="@+id/tv_connection_profile"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/padding_spacing_dp6"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                                android:textColor="@color/color_home_on_surface"
-                                android:textSize="14sp" />
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginEnd="8dp"
+                                android:alpha="0.72"
+                                android:background="@color/color_home_card_stroke" />
 
-                            <TextView
-                                android:id="@+id/tv_connection_summary"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/padding_spacing_dp2"
-                                android:text="@string/home_connection_summary_short"
-                                android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                android:textColor="@color/color_home_on_surface_muted"
-                                android:textStyle="normal" />
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/layout_test"
+                                style="@style/Widget.V2Ray.Button.HomeDockSecondary"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginStart="6dp"
+                                android:clickable="true"
+                                android:contentDescription="@string/connection_test_pending"
+                                android:focusable="true"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="@null"
+                                app:icon="@drawable/ic_ecg_24dp"
+                                app:iconTint="@color/color_home_on_surface" />
+
+                            <FrameLayout
+                                android:id="@+id/layout_connection_surface"
+                                android:layout_width="44dp"
+                                android:layout_height="44dp"
+                                android:layout_marginStart="6dp"
+                                android:clipChildren="false"
+                                android:clipToPadding="false">
+
+                                <View
+                                    android:id="@+id/view_connection_backdrop"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
+                                    android:layout_gravity="center"
+                                    android:background="@drawable/bg_connection_soft_circle" />
+
+                                <com.google.android.material.progressindicator.CircularProgressIndicator
+                                    android:id="@+id/indicator_connection_progress"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
+                                    android:layout_gravity="center"
+                                    android:indeterminate="true"
+                                    android:visibility="gone"
+                                    app:indicatorColor="@color/color_home_primary"
+                                    app:indicatorInset="0dp"
+                                    app:indicatorSize="44dp"
+                                    app:trackColor="@android:color/transparent"
+                                    app:trackThickness="3dp" />
+
+                                <androidx.appcompat.widget.AppCompatImageButton
+                                    android:id="@+id/fab"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
+                                    android:layout_gravity="center"
+                                    android:background="@drawable/bg_connection_action_circle"
+                                    android:clickable="true"
+                                    android:contentDescription="@string/tasker_start_service"
+                                    android:focusable="true"
+                                    android:padding="0dp"
+                                    android:scaleType="center"
+                                    android:src="@drawable/ic_play_24dp"
+                                    android:tint="@color/color_home_on_primary" />
+
+                            </FrameLayout>
 
                         </LinearLayout>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/layout_test"
-                            style="@style/Widget.V2Ray.Button.HomeDockSecondary"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="10dp"
-                            android:clickable="true"
-                            android:contentDescription="@string/connection_test_pending"
-                            android:focusable="true"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="@null"
-                            app:icon="@drawable/ic_ecg_24dp"
-                            app:iconTint="@color/color_home_on_surface" />
-
-                        <FrameLayout
-                            android:id="@+id/layout_connection_surface"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
-                            android:clipChildren="false"
-                            android:clipToPadding="false">
-
-                            <View
-                                android:id="@+id/view_connection_backdrop"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:layout_gravity="center"
-                                android:background="@drawable/bg_connection_soft_circle" />
-
-                            <com.google.android.material.progressindicator.CircularProgressIndicator
-                                android:id="@+id/indicator_connection_progress"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:layout_gravity="center"
-                                android:indeterminate="true"
-                                android:visibility="gone"
-                                app:indicatorColor="@color/color_home_primary"
-                                app:indicatorInset="0dp"
-                                app:indicatorSize="48dp"
-                                app:trackColor="@android:color/transparent"
-                                app:trackThickness="3dp" />
-
-                            <androidx.appcompat.widget.AppCompatImageButton
-                                android:id="@+id/fab"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:layout_gravity="center"
-                                android:background="@drawable/bg_connection_action_circle"
-                                android:clickable="true"
-                                android:contentDescription="@string/tasker_start_service"
-                                android:focusable="true"
-                                android:padding="0dp"
-                                android:scaleType="center"
-                                android:src="@drawable/ic_play_24dp"
-                                android:tint="@color/color_home_on_primary" />
-
-                        </FrameLayout>
-
-                    </LinearLayout>
+                    </FrameLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 

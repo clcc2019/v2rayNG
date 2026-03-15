@@ -2,7 +2,7 @@
 <resources>
     <string name="app_widget_name">Kết nối ngay</string>
     <string name="app_tile_name">Kết nối ngay</string>
-    <string name="app_tile_first_use">Vui lòng thêm một cấu hình vào XrayNew để sử dụng!</string>
+    <string name="app_tile_first_use">Vui lòng thêm một cấu hình vào XrayNG để sử dụng!</string>
     <string name="navigation_drawer_open">Mở Menu ứng dụng</string>
     <string name="navigation_drawer_close">Đóng Menu ứng dụng</string>
     <string name="migration_success">Đã chuyển dữ liệu!</string>
@@ -11,17 +11,17 @@
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
-    <string name="notification_action_stop_v2ray">Ngắt kết nối XrayNew</string>
-    <string name="toast_permission_denied">Vui lòng cấp quyền cần thiết cho XrayNew! Bạn đã từ chối các quyền cần thiết như Camera hay Bộ nhớ?</string>
+    <string name="notification_action_stop_v2ray">Ngắt kết nối XrayNG</string>
+    <string name="toast_permission_denied">Vui lòng cấp quyền cần thiết cho XrayNG! Bạn đã từ chối các quyền cần thiết như Camera hay Bộ nhớ?</string>
     <string name="toast_permission_denied_notification">Unable to obtain the notification permission</string>
     <string name="notification_action_more">Nhấn để biết thêm...</string>
-    <string name="toast_services_start">Đang khởi động XrayNew...</string>
-    <string name="toast_services_stop">Đã dừng XrayNew!</string>
-    <string name="toast_services_success">Đã khởi động XrayNew!</string>
-    <string name="toast_services_failure">Không thể khởi động XrayNew, kiểm tra lại cấu hình!</string>
+    <string name="toast_services_start">Đang khởi động XrayNG...</string>
+    <string name="toast_services_stop">Đã dừng XrayNG!</string>
+    <string name="toast_services_success">Đã khởi động XrayNG!</string>
+    <string name="toast_services_failure">Không thể khởi động XrayNG, kiểm tra lại cấu hình!</string>
 
     <!--ServerActivity-->
-    <string name="title_server">XrayNew</string>
+    <string name="title_server">XrayNG</string>
     <string name="menu_item_add_config">Thêm cấu hình</string>
     <string name="menu_item_save_config">Lưu cấu hình</string>
     <string name="menu_item_edit_config">Edit configuration</string>
@@ -296,7 +296,7 @@
     <string name="title_update_config_count">Update %d configurations</string>
     <string name="title_update_subscription_result">Updated %1$d configs (%2$d success, %3$d failed, %4$d skipped)</string>
     <string name="title_update_subscription_no_subscription">No subscriptions</string>
-    <string name="tasker_start_service">Khởi động XrayNew</string>
+    <string name="tasker_start_service">Khởi động XrayNG</string>
     <string name="tasker_setting_confirm">Xác nhận</string>
 
     <!-- RoutingSettingActivity -->

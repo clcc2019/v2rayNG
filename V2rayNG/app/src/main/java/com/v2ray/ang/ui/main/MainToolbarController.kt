@@ -44,7 +44,7 @@ class MainToolbarController(
         binding.toolbar.addView(actionView, 0, layoutParams)
         statusText = actionView.findViewById(R.id.toolbar_status_text)
         appIcon = actionView.findViewById(R.id.toolbar_app_icon)
-        UiMotion.attachPressFeedback(actionView, pressedScale = 0.985f)
+        appIcon?.let { UiMotion.attachPressFeedback(it, pressedScale = 0.95f) }
         val openMoreAction: (View) -> Unit = { view ->
             view.hapticClick()
             onOpenMorePage()

@@ -5,9 +5,9 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="90"
-                android:startColor="#52FFFFFF"
-                android:centerColor="#14FFFFFF"
-                android:endColor="#00FFFFFF" />
+                android:startColor="@color/color_home_glass_highlight_strong"
+                android:centerColor="@color/color_home_glass_highlight_soft"
+                android:endColor="@android:color/transparent" />
             <corners android:radius="18dp" />
         </shape>
     </item>
@@ -18,9 +18,9 @@
         android:width="120dp">
         <shape android:shape="oval">
             <gradient
-                android:centerColor="#1AFFFFFF"
-                android:endColor="#00FFFFFF"
-                android:gradientRadius="72dp"
+                android:centerColor="@color/color_home_glass_orb_highlight"
+                android:endColor="@android:color/transparent"
+                android:gradientRadius="64dp"
                 android:type="radial" />
         </shape>
     </item>

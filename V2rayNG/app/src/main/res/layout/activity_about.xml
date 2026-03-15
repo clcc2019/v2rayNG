@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
             android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/md_theme_surface"
+            app:cardBackgroundColor="@color/color_settings_section_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout

@@ -3,7 +3,6 @@
     android:id="@+id/toolbar_app_action_root"
     android:layout_width="wrap_content"
     android:layout_height="@dimen/view_size_dp40"
-    android:background="@drawable/bg_home_toolbar_pill_ripple"
     android:baselineAligned="false"
     android:clickable="true"
     android:focusable="true"
@@ -15,10 +14,12 @@
 
     <ImageView
         android:id="@+id/toolbar_app_icon"
-        android:layout_width="@dimen/image_size_dp24"
-        android:layout_height="@dimen/image_size_dp24"
+        android:layout_width="@dimen/view_height_dp36"
+        android:layout_height="@dimen/view_height_dp36"
+        android:background="@drawable/bg_home_icon_circle_clear_ripple"
         android:contentDescription="@string/bottom_nav_more"
-        android:scaleType="centerInside"
+        android:padding="@dimen/padding_spacing_dp7"
+        android:scaleType="center"
         android:src="@drawable/ic_menu_24dp"
         android:tint="@color/color_home_on_surface" />
 

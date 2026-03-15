@@ -2,14 +2,10 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#F2FFFFFF"
-                android:centerColor="@color/color_home_surface_raised"
-                android:endColor="@color/color_home_surface_soft" />
+            <solid android:color="@color/color_home_surface_selected" />
             <stroke
                 android:width="1dp"
-                android:color="#73FFFFFF" />
+                android:color="@color/color_home_card_stroke_selected" />
             <corners android:radius="16dp" />
         </shape>
     </item>

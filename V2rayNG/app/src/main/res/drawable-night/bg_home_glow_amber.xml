@@ -3,9 +3,9 @@
     android:shape="oval">
 
     <gradient
-        android:centerColor="#334B3722"
+        android:centerColor="#204B3722"
         android:endColor="#004B3722"
-        android:gradientRadius="176dp"
+        android:gradientRadius="156dp"
         android:type="radial" />
 
 </shape>

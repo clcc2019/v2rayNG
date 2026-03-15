@@ -106,18 +106,18 @@ class AppChromeStateReducer(
             else -> AppChromeTransparencyTier.SOLID
         }
         val topBarBackgroundAlpha = when (mode) {
-            AppChromeMode.SCROLLING_IMMERSIVE -> if (input.canScrollUp) 0.02f else 0.12f
-            AppChromeMode.STABLE -> 0.98f
-            AppChromeMode.EMPTY_STABLE -> 0.94f
+            AppChromeMode.SCROLLING_IMMERSIVE -> if (input.canScrollUp) 0.12f else 0.22f
+            AppChromeMode.STABLE -> 0.96f
+            AppChromeMode.EMPTY_STABLE -> 0.9f
             AppChromeMode.SEARCH_FOCUSED,
-            AppChromeMode.IME_OVERRIDE -> 0.98f
+            AppChromeMode.IME_OVERRIDE -> 0.96f
         }
         val bottomBarBackgroundAlpha = when (mode) {
-            AppChromeMode.SCROLLING_IMMERSIVE -> if (input.canScrollUp) 0.42f else 0.62f
-            AppChromeMode.STABLE -> 0.98f
-            AppChromeMode.EMPTY_STABLE -> 0.94f
+            AppChromeMode.SCROLLING_IMMERSIVE -> if (input.canScrollUp) 0.52f else 0.7f
+            AppChromeMode.STABLE -> 0.96f
+            AppChromeMode.EMPTY_STABLE -> 0.9f
             AppChromeMode.SEARCH_FOCUSED,
-            AppChromeMode.IME_OVERRIDE -> 0.98f
+            AppChromeMode.IME_OVERRIDE -> 0.96f
         }
         val showBottomBar = !input.isSearching && !input.isImeVisible
         return AppChromeState(

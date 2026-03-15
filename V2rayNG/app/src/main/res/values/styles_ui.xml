@@ -72,21 +72,21 @@
         <item name="cardCornerRadius">18dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeColor">@color/color_card_outline</item>
-        <item name="strokeWidth">0dp</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.Primary" parent="Widget.V2Ray.Card">
-        <item name="cardBackgroundColor">@color/md_theme_surface</item>
+        <item name="cardBackgroundColor">@color/color_settings_section_surface</item>
     </style>
 
     <style name="Widget.V2Ray.Card.Section" parent="Widget.V2Ray.Card.Primary">
         <item name="cardCornerRadius">18dp</item>
-        <item name="cardBackgroundColor">@color/md_theme_surface</item>
+        <item name="cardBackgroundColor">@color/color_settings_section_surface</item>
     </style>
 
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">
         <item name="cardCornerRadius">18dp</item>
-        <item name="cardBackgroundColor">@color/md_theme_surfaceVariant</item>
+        <item name="cardBackgroundColor">@color/color_settings_row_surface</item>
     </style>
 
     <style name="Widget.V2Ray.Card.SettingsItem" parent="Widget.V2Ray.Card.Subtle">
@@ -102,17 +102,18 @@
     </style>
 
     <style name="Widget.V2Ray.Card.TopTabs" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">0dp</item>
+        <item name="cardCornerRadius">20dp</item>
         <item name="cardElevation">0dp</item>
-        <item name="strokeWidth">0dp</item>
-        <item name="cardBackgroundColor">@android:color/transparent</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/color_card_outline</item>
+        <item name="cardBackgroundColor">@color/md_theme_surface</item>
     </style>
 
     <style name="Widget.V2Ray.Card.ListItem" parent="Widget.V2Ray.Card.TabGroup">
         <item name="cardBackgroundColor">@color/md_theme_surface</item>
         <item name="cardCornerRadius">18dp</item>
         <item name="strokeColor">@color/color_card_outline</item>
-        <item name="strokeWidth">0dp</item>
+        <item name="strokeWidth">1dp</item>
         <item name="cardElevation">0dp</item>
     </style>
 
@@ -124,7 +125,7 @@
 
     <style name="Widget.V2Ray.Card.HomeList" parent="Widget.V2Ray.Card.ListItem">
         <item name="cardCornerRadius">18dp</item>
-        <item name="strokeWidth">0dp</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.HomeConnection" parent="Widget.V2Ray.Card.Primary">
@@ -135,8 +136,8 @@
     </style>
 
     <style name="Widget.V2Ray.Card.HomeDock" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">18dp</item>
-        <item name="cardBackgroundColor">@color/color_home_surface_raised</item>
+        <item name="cardCornerRadius">26dp</item>
+        <item name="cardBackgroundColor">@android:color/transparent</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="strokeWidth">0dp</item>
         <item name="cardElevation">0dp</item>
@@ -420,10 +421,12 @@
     </style>
 
     <style name="Widget.V2Ray.Button.HomeDockSecondary" parent="Widget.V2Ray.Button.IconCircle">
-        <item name="cornerRadius">24dp</item>
-        <item name="android:minWidth">48dp</item>
-        <item name="android:minHeight">48dp</item>
-        <item name="backgroundTint">@color/color_home_surface_soft</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="android:minWidth">36dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="backgroundTint">@color/color_connection_dock_button_surface</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/color_connection_dock_button_stroke</item>
         <item name="iconTint">@color/color_home_on_surface</item>
     </style>
 

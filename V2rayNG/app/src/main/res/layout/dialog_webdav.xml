@@ -16,7 +16,7 @@
             style="@style/Widget.V2Ray.Card.Section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="@color/md_theme_surface"
+            app:cardBackgroundColor="@color/color_settings_section_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout

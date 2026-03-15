@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="56" y1="44" x2="450" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FBFAF6"/>
+      <stop offset="1" stop-color="#EAE4DB"/>
+    </linearGradient>
+    <radialGradient id="glowBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(154 136) rotate(46.9) scale(198 198)">
+      <stop stop-color="#2785FF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2785FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBase" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(384 396) rotate(90) scale(180 180)">
+      <stop stop-color="#5B554E" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#5B554E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="plate" x1="112" y1="96" x2="416" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDF9"/>
+      <stop offset="1" stop-color="#EAE5DC"/>
+    </linearGradient>
+    <linearGradient id="plateHighlight" x1="256" y1="96" x2="256" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0.48"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="116" fill="url(#glowBlue)"/>
+  <rect width="512" height="512" rx="116" fill="url(#glowBase)"/>
+
+  <rect x="104" y="114" width="304" height="304" rx="88" fill="#12000000"/>
+  <rect x="96" y="96" width="320" height="320" rx="92" fill="url(#plate)"/>
+  <rect x="96.5" y="96.5" width="319" height="319" rx="91.5" stroke="#DDD8D0"/>
+  <path d="M96 96H416V208C416 258.8 374.8 300 324 300H188C137.2 300 96 258.8 96 208V96Z" fill="url(#plateHighlight)"/>
+  <rect x="97.5" y="97.5" width="317" height="317" rx="90.5" stroke="#2785FF" stroke-opacity="0.1"/>
+
+  <g transform="translate(128 128) scale(5.333333)">
+    <path d="M13.8 15.1L17.9 11.8L25.1 20.5V27.7L17.9 36.2L13.8 32.9L21.5 24Z" fill="black" fill-opacity="0.07"/>
+    <path d="M34.2 15.1L30.1 11.8L22.9 20.5V27.7L30.1 36.2L34.2 32.9L26.5 24Z" fill="#2785FF" fill-opacity="0.08"/>
+    <path d="M12.9 14.2L17 10.9L24.3 19.8V28.2L17 37.1L12.9 33.8L20.7 24Z" fill="#161A20"/>
+    <path d="M35.1 14.2L31 10.9L23.7 19.8V28.2L31 37.1L35.1 33.8L27.3 24Z" fill="#2785FF"/>
+    <path d="M28.9 14.4L30.7 13L33.7 15.4L27 23.5L25.4 21.5Z" fill="white" fill-opacity="0.32"/>
+    <path d="M17.4 34.9L24 26.8L30.6 34.9L29.1 36.7L24 30.5L18.9 36.7Z" fill="white" fill-opacity="0.07"/>
+  </g>
+</svg>
