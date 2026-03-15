@@ -5,8 +5,6 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.blacksquircle.ui.editorkit.utils.EditorTheme
-import com.blacksquircle.ui.language.json.JsonLanguage
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityServerCustomConfigBinding
@@ -18,7 +16,6 @@ import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.ui.common.runWithRemovalConfirmation
-import com.v2ray.ang.util.Utils
 
 class ServerCustomConfigActivity : BaseActivity() {
     private val binding by lazy { ActivityServerCustomConfigBinding.inflate(layoutInflater) }
@@ -32,13 +29,7 @@ class ServerCustomConfigActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = EConfigType.CUSTOM.toString())
-
-        if (!Utils.getDarkModeStatus(this)) {
-            binding.editor.colorScheme = EditorTheme.INTELLIJ_LIGHT
-        }
-        binding.editor.language = JsonLanguage()
         val config = MmkvManager.decodeServerConfig(editGuid)
         if (config != null) {
             bindingServer(config)
@@ -51,11 +42,11 @@ class ServerCustomConfigActivity : BaseActivity() {
      * Binding selected server config
      */
     private fun bindingServer(config: ProfileItem): Boolean {
-        binding.etRemarks.text = Utils.getEditable(config.remarks)
+        binding.etRemarks.setText(config.remarks.orEmpty())
         val raw = MmkvManager.decodeServerRaw(editGuid)
         val configContent = raw.orEmpty()
 
-        binding.editor.setTextContent(Utils.getEditable(configContent))
+        binding.editor.setText(configContent)
         return true
     }
 

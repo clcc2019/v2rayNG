@@ -3,27 +3,15 @@
     style="@style/Widget.V2Ray.Card.Section"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp16">
+    android:layout_marginTop="@dimen/padding_spacing_dp8"
+    android:maxWidth="@dimen/list_card_max_width">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp18">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_stream_security"
-            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
+        style="@style/Widget.V2Ray.FormSection.Content">
 
         <LinearLayout
             android:id="@+id/lay_stream_security"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -33,10 +21,10 @@
 
             <Spinner
                 android:id="@+id/sp_stream_security"
+                style="@style/Widget.V2Ray.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginBottom="@dimen/padding_spacing_dp8"
                 android:entries="@array/streamsecurityxs"
                 android:nextFocusDown="@+id/et_sni" />
 
@@ -44,19 +32,17 @@
 
         <LinearLayout
             android:id="@+id/lay_sni"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_sni"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_sni"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_sni"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -67,89 +53,79 @@
 
         <LinearLayout
             android:id="@+id/lay_stream_fingerprint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_stream_fingerprint"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_stream_fingerprint"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <Spinner
-            android:id="@+id/sp_stream_fingerprint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/streamsecurity_utls"
-            android:nextFocusDown="@+id/sp_stream_alpn" />
+            <Spinner
+                android:id="@+id/sp_stream_fingerprint"
+                style="@style/Widget.V2Ray.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:entries="@array/streamsecurity_utls"
+                android:nextFocusDown="@+id/sp_stream_alpn" />
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/lay_stream_alpn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_stream_alpn"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_stream_alpn"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <Spinner
-            android:id="@+id/sp_stream_alpn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/streamsecurity_alpn"
-            android:nextFocusDown="@+id/sp_allow_insecure" />
+            <Spinner
+                android:id="@+id/sp_stream_alpn"
+                style="@style/Widget.V2Ray.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:entries="@array/streamsecurity_alpn"
+                android:nextFocusDown="@+id/sp_allow_insecure" />
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/lay_allow_insecure"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_allow_insecure"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_allow_insecure"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <Spinner
-            android:id="@+id/sp_allow_insecure"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/allowinsecures"
-            android:nextFocusDown="@+id/et_ech_config_list"/>
+            <Spinner
+                android:id="@+id/sp_allow_insecure"
+                style="@style/Widget.V2Ray.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:entries="@array/allowinsecures"
+                android:nextFocusDown="@+id/et_ech_config_list" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/lay_ech_config_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_ech_config_list"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_ech_config_list"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_ech_config_list"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -160,40 +136,36 @@
 
         <LinearLayout
             android:id="@+id/lay_ech_force_query"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_ech_force_query"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_ech_force_query"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-        <Spinner
-            android:id="@+id/sp_ech_force_query"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:layout_marginBottom="@dimen/padding_spacing_dp8"
-            android:entries="@array/ech_force_query_value" />
+            <Spinner
+                android:id="@+id/sp_ech_force_query"
+                style="@style/Widget.V2Ray.Spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:entries="@array/ech_force_query_value" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/lay_pinned_ca256"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_pinned_ca256"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_pinned_ca256"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_pinned_ca256"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -204,19 +176,17 @@
 
         <LinearLayout
             android:id="@+id/lay_public_key"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_public_key"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_public_key"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_public_key"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -227,19 +197,17 @@
 
         <LinearLayout
             android:id="@+id/lay_short_id"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_short_id"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_short_id"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_short_id"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -250,19 +218,17 @@
 
         <LinearLayout
             android:id="@+id/lay_spider_x"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_spider_x"
-            android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_spider_x"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_spider_x"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -273,24 +239,24 @@
 
         <LinearLayout
             android:id="@+id/lay_mldsa65_verify"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_mldsa65_verify" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/server_lab_mldsa65_verify"
+                android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
             <EditText
                 android:id="@+id/et_mldsa65_verify"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
                 android:inputType="text" />
 
         </LinearLayout>
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

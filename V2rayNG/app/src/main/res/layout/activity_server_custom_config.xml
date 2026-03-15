@@ -21,14 +21,12 @@
 
         <TextView
             style="@style/Widget.V2Ray.PageIntro"
-            android:text="@string/server_lab_need_inbound"
-            />
+            android:text="@string/server_custom_config_page_overview" />
 
         <TextView
             style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:text="@string/title_server"
-            />
+            android:text="@string/server_group_basic_info" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.V2Ray.Card.FormSection"
@@ -40,10 +38,7 @@
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -51,8 +46,13 @@
                     android:text="@string/server_lab_remarks"
                     android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
+                <TextView
+                    style="@style/Widget.V2Ray.FormFieldHint"
+                    android:text="@string/server_lab_need_inbound" />
+
                 <EditText
                     android:id="@+id/et_remarks"
+                    style="@style/Widget.V2Ray.EditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -65,8 +65,7 @@
         <TextView
             style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp20"
-            android:text="@string/server_lab_content"
-            />
+            android:text="@string/server_lab_content" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.V2Ray.Card.FormSection"
@@ -78,18 +77,19 @@
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <com.blacksquircle.ui.editorkit.widget.TextProcessor
+                <TextView
+                    style="@style/Widget.V2Ray.FormFieldHint"
+                    android:text="@string/server_lab_need_inbound" />
+
+                <EditText
                     android:id="@+id/editor"
-                    android:layout_width="match_parent"
-                    android:layout_height="360dp"
-                    android:background="@drawable/bg_form_field"
+                    style="@style/Widget.V2Ray.CodeEditor"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:gravity="top|start"
-                    android:padding="@dimen/padding_spacing_dp14" />
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:scrollbars="vertical" />
 
             </LinearLayout>
 

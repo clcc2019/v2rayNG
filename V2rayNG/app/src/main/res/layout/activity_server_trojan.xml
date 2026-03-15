@@ -10,56 +10,78 @@
     android:paddingStart="@dimen/padding_spacing_dp16"
     android:paddingTop="@dimen/padding_spacing_dp12"
     android:paddingEnd="@dimen/padding_spacing_dp16"
-    android:paddingBottom="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp24"
     android:scrollbars="none"
     tools:context=".ui.ServerActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:orientation="vertical">
 
+        <TextView
+            style="@style/Widget.V2Ray.PageIntro"
+            android:text="@string/server_page_overview" />
+
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:text="@string/server_group_connection" />
+
         <include layout="@layout/layout_address_port" />
+
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/server_group_identity" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
             app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/group_basic_info"
-                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:text="@string/server_lab_id3"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_id3"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-                <EditText
-                    android:id="@+id/et_id"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                    <EditText
+                        android:id="@+id/et_id"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/server_group_transport" />
+
         <include layout="@layout/layout_transport" />
+
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/server_group_security" />
 
         <include layout="@layout/layout_tls" />
 

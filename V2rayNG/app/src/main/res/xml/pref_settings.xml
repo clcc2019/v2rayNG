@@ -3,39 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
-        android:key="settings_overview"
+        android:key="settings_page_intro"
+        android:layout="@layout/preference_page_intro"
         android:selectable="false"
-        android:summary="@string/settings_page_overview"
-        android:persistent="false" />
+        android:summary="@string/settings_page_overview" />
 
     <PreferenceCategory
-        android:title="@string/title_basic_settings"
-        android:summary="@string/summary_basic_settings">
-
-        <CheckBoxPreference
-            android:key="pref_speed_enabled"
-            android:summary="@string/summary_pref_speed_enabled"
-            android:title="@string/title_pref_speed_enabled" />
-
-        <CheckBoxPreference
-            android:key="pref_confirm_remove"
-            android:summary="@string/summary_pref_confirm_remove"
-            android:title="@string/title_pref_confirm_remove" />
-
-        <CheckBoxPreference
-            android:key="pref_start_scan_immediate"
-            android:summary="@string/summary_pref_start_scan_immediate"
-            android:title="@string/title_pref_start_scan_immediate" />
-
-        <CheckBoxPreference
-            android:key="pref_double_column_display"
-            android:summary="@string/summary_pref_double_column_display"
-            android:title="@string/title_pref_double_column_display" />
-
-        <CheckBoxPreference
-            android:key="pref_group_all_display"
-            android:summary="@string/summary_pref_group_all_display"
-            android:title="@string/title_pref_group_all_display" />
+        android:key="category_basic_settings"
+        android:title="@string/title_basic_settings">
 
         <ListPreference
             android:defaultValue="auto"
@@ -52,11 +27,37 @@
             android:key="pref_ui_mode_night"
             android:summary="%s"
             android:title="@string/title_pref_ui_mode_night" />
+
+        <CheckBoxPreference
+            android:key="pref_speed_enabled"
+            android:summary="@string/summary_pref_speed_enabled"
+            android:title="@string/title_pref_speed_enabled" />
+
+        <CheckBoxPreference
+            android:key="pref_double_column_display"
+            android:summary="@string/summary_pref_double_column_display"
+            android:title="@string/title_pref_double_column_display" />
+
+        <CheckBoxPreference
+            android:key="pref_group_all_display"
+            android:summary="@string/summary_pref_group_all_display"
+            android:title="@string/title_pref_group_all_display" />
+
+        <CheckBoxPreference
+            android:key="pref_confirm_remove"
+            android:summary="@string/summary_pref_confirm_remove"
+            android:title="@string/title_pref_confirm_remove" />
+
+        <CheckBoxPreference
+            android:key="pref_start_scan_immediate"
+            android:summary="@string/summary_pref_start_scan_immediate"
+            android:title="@string/title_pref_start_scan_immediate" />
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="category_connection_settings"
         android:title="@string/title_connection_settings"
-        android:summary="@string/summary_connection_settings">
+        app:initialExpandedChildrenCount="9">
 
         <ListPreference
             android:defaultValue="VPN"
@@ -78,49 +79,6 @@
             android:key="pref_vpn_bypass_lan"
             android:summary="%s"
             android:title="@string/title_pref_vpn_bypass_lan" />
-
-        <ListPreference
-            android:defaultValue="0"
-            android:entries="@array/vpn_interface_address"
-            android:entryValues="@array/vpn_interface_address_value"
-            android:key="pref_vpn_interface_address_config_index"
-            android:summary="%s"
-            android:title="@string/title_pref_vpn_interface_address" />
-
-        <EditTextPreference
-            android:inputType="number"
-            android:key="pref_vpn_mtu"
-            android:summary="1500"
-            android:title="@string/title_pref_vpn_mtu" />
-
-        <CheckBoxPreference
-            android:key="pref_proxy_sharing_enabled"
-            android:defaultValue="false"
-            android:summary="@string/summary_pref_proxy_sharing_enabled"
-            android:title="@string/title_pref_proxy_sharing_enabled" />
-
-        <CheckBoxPreference
-            android:key="pref_append_http_proxy"
-            android:summary="@string/summary_pref_append_http_proxy"
-            android:title="@string/title_pref_append_http_proxy" />
-
-        <ListPreference
-            android:defaultValue="warn"
-            android:entries="@array/hev_tunnel_loglevel"
-            android:entryValues="@array/hev_tunnel_loglevel"
-            android:key="pref_hev_tunnel_loglevel"
-            android:summary="%s"
-            android:title="@string/title_pref_hev_tunnel_loglevel" />
-
-        <EditTextPreference
-            android:key="pref_hev_tunnel_rw_timeout_v2"
-            android:summary="300,60"
-            android:title="@string/title_pref_hev_tunnel_rw_timeout" />
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/title_dns_settings"
-        android:summary="@string/summary_dns_settings">
 
         <CheckBoxPreference
             android:defaultValue="true"
@@ -151,6 +109,43 @@
             android:summary="@string/summary_pref_domestic_dns"
             android:title="@string/title_pref_domestic_dns" />
 
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_sniffing_enabled"
+            android:summary="@string/summary_pref_sniffing_enabled"
+            android:title="@string/title_pref_sniffing_enabled" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_route_only_enabled"
+            android:summary="@string/summary_pref_route_only_enabled"
+            android:title="@string/title_pref_route_only_enabled" />
+
+        <CheckBoxPreference
+            android:key="pref_proxy_sharing_enabled"
+            android:defaultValue="false"
+            android:summary="@string/summary_pref_proxy_sharing_enabled"
+            android:title="@string/title_pref_proxy_sharing_enabled" />
+
+        <CheckBoxPreference
+            android:key="pref_append_http_proxy"
+            android:summary="@string/summary_pref_append_http_proxy"
+            android:title="@string/title_pref_append_http_proxy" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/vpn_interface_address"
+            android:entryValues="@array/vpn_interface_address_value"
+            android:key="pref_vpn_interface_address_config_index"
+            android:summary="%s"
+            android:title="@string/title_pref_vpn_interface_address" />
+
+        <EditTextPreference
+            android:inputType="number"
+            android:key="pref_vpn_mtu"
+            android:summary="1500"
+            android:title="@string/title_pref_vpn_mtu" />
+
         <EditTextPreference
             android:key="pref_dns_hosts"
             android:summary="@string/summary_pref_dns_hosts"
@@ -163,23 +158,11 @@
             android:key="pref_outbound_domain_resolve_method"
             android:summary="%s"
             android:title="@string/title_outbound_domain_resolve_method" />
-
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="pref_sniffing_enabled"
-            android:summary="@string/summary_pref_sniffing_enabled"
-            android:title="@string/title_pref_sniffing_enabled" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="pref_route_only_enabled"
-            android:summary="@string/summary_pref_route_only_enabled"
-            android:title="@string/title_pref_route_only_enabled" />
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/title_updates_settings"
-        android:summary="@string/summary_updates_settings">
+        android:key="category_updates_settings"
+        android:title="@string/title_updates_settings">
 
         <CheckBoxPreference
             android:key="pref_auto_update_subscription"
@@ -199,13 +182,32 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/title_transport_optimization"
-        android:summary="@string/summary_transport_optimization">
+        android:key="category_advanced_settings"
+        android:title="@string/title_advanced"
+        app:initialExpandedChildrenCount="4">
+
+        <ListPreference
+            android:defaultValue="warning"
+            android:entries="@array/core_loglevel"
+            android:entryValues="@array/core_loglevel"
+            android:key="pref_core_loglevel"
+            android:summary="%s"
+            android:title="@string/title_core_loglevel" />
+
+        <CheckBoxPreference
+            android:key="pref_allow_insecure"
+            android:defaultValue="false"
+            android:summary="@string/summary_pref_allow_insecure"
+            android:title="@string/title_pref_allow_insecure" />
 
         <CheckBoxPreference
             android:key="pref_mux_enabled"
             android:summary="@string/summary_pref_mux_enabled"
             android:title="@string/title_pref_mux_enabled" />
+
+        <CheckBoxPreference
+            android:key="pref_fragment_enabled"
+            android:title="@string/title_pref_fragment_enabled" />
 
         <EditTextPreference
             android:inputType="number"
@@ -227,10 +229,6 @@
             android:summary="%s"
             android:title="@string/title_pref_mux_xudp_quic" />
 
-        <CheckBoxPreference
-            android:key="pref_fragment_enabled"
-            android:title="@string/title_pref_fragment_enabled" />
-
         <EditTextPreference
             android:key="pref_fragment_length"
             android:summary="50-100"
@@ -248,31 +246,25 @@
             android:key="pref_fragment_packets"
             android:summary="%s"
             android:title="@string/title_pref_fragment_packets" />
-    </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/title_advanced"
-        android:summary="@string/summary_advanced_settings">
+        <ListPreference
+            android:defaultValue="warn"
+            android:entries="@array/hev_tunnel_loglevel"
+            android:entryValues="@array/hev_tunnel_loglevel"
+            android:key="pref_hev_tunnel_loglevel"
+            android:summary="%s"
+            android:title="@string/title_pref_hev_tunnel_loglevel" />
 
-        <CheckBoxPreference
-            android:key="pref_allow_insecure"
-            android:defaultValue="false"
-            android:summary="@string/summary_pref_allow_insecure"
-            android:title="@string/title_pref_allow_insecure" />
+        <EditTextPreference
+            android:key="pref_hev_tunnel_rw_timeout_v2"
+            android:summary="300,60"
+            android:title="@string/title_pref_hev_tunnel_rw_timeout" />
 
         <EditTextPreference
             android:inputType="number"
             android:key="pref_socks_port"
             android:summary="10808"
             android:title="@string/title_pref_socks_port" />
-
-        <ListPreference
-            android:defaultValue="warning"
-            android:entries="@array/core_loglevel"
-            android:entryValues="@array/core_loglevel"
-            android:key="pref_core_loglevel"
-            android:summary="%s"
-            android:title="@string/title_core_loglevel" />
 
         <CheckBoxPreference
             android:key="pref_auto_remove_invalid_after_test"

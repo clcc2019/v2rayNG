@@ -5,7 +5,6 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
@@ -15,9 +14,9 @@ import com.v2ray.ang.databinding.ActivityBypassListBinding
 import com.v2ray.ang.dto.AppInfo
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastLong
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.extension.v2RayApplication
-import com.v2ray.ang.extension.ensureToastyConfigured
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
@@ -25,7 +24,6 @@ import com.v2ray.ang.util.AppManagerUtil
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
-import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -70,8 +68,7 @@ class PerAppProxyActivity : BaseActivity() {
         }
 
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
-            ensureToastyConfigured()
-            Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
+            toastLong(R.string.summary_pref_per_app_proxy)
         }
     }
 
@@ -88,22 +85,14 @@ class PerAppProxyActivity : BaseActivity() {
                     appsList.forEach { app ->
                         app.isSelected = if (blacklistSet.contains(app.packageName)) 1 else 0
                     }
-                    appsList.sortedWith { p1, p2 ->
-                        when {
-                            p1.isSelected > p2.isSelected -> -1
-                            p1.isSelected < p2.isSelected -> 1
-                            p1.isSystemApp > p2.isSystemApp -> 1
-                            p1.isSystemApp < p2.isSystemApp -> -1
-                            p1.appName.lowercase() > p2.appName.lowercase() -> 1
-                            p1.appName.lowercase() < p2.appName.lowercase() -> -1
-                            p1.packageName > p2.packageName -> 1
-                            p1.packageName < p2.packageName -> -1
-                            else -> 0
-                        }
-                    }
+                    appsList.sortedWith(
+                        compareByDescending<AppInfo> { it.isSelected }
+                            .thenBy { it.isSystemApp }
+                            .thenBy(String.CASE_INSENSITIVE_ORDER) { it.appName }
+                            .thenBy { it.packageName }
+                    )
                 } else {
-                    val collator = Collator.getInstance()
-                    appsList.sortedWith(compareBy(collator) { it.appName })
+                    appsList.sortedWith(compareBy(Collator.getInstance()) { it.appName })
                 }
             },
             onSuccess = { apps ->
@@ -215,12 +204,11 @@ class PerAppProxyActivity : BaseActivity() {
     }
 
     private fun exportProxyApp() {
-        var lst = binding.switchBypassApps.isChecked.toString()
-
-        viewModel.getAll().forEach { pkg ->
-            lst = lst + System.lineSeparator() + pkg
-        }
-        Utils.setClipboard(applicationContext, lst)
+        val clipboardContent = buildList {
+            add(binding.switchBypassApps.isChecked.toString())
+            addAll(viewModel.getAll())
+        }.joinToString(System.lineSeparator())
+        Utils.setClipboard(applicationContext, clipboardContent)
         toastSuccess(R.string.toast_success)
     }
 

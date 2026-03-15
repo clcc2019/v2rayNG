@@ -2,25 +2,14 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Widget.V2Ray.Card.Section"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:maxWidth="@dimen/list_card_max_width">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp18">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_server"
-            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
+        style="@style/Widget.V2Ray.FormSection.Content">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -30,6 +19,7 @@
 
             <EditText
                 android:id="@+id/et_remarks"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -38,10 +28,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:layout_width="match_parent"
@@ -51,6 +38,7 @@
 
             <EditText
                 android:id="@+id/et_address"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -59,10 +47,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -72,6 +57,7 @@
 
             <EditText
                 android:id="@+id/et_port"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"

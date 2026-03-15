@@ -17,8 +17,18 @@
         android:minHeight="@dimen/view_height_dp40"
         android:minWidth="60dp"
         android:orientation="vertical"
+        android:paddingTop="@dimen/padding_spacing_dp6"
         android:paddingStart="@dimen/padding_spacing_dp12"
-        android:paddingEnd="@dimen/padding_spacing_dp12">
+        android:paddingEnd="@dimen/padding_spacing_dp12"
+        android:paddingBottom="@dimen/padding_spacing_dp6">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:layout_gravity="top"
+            android:alpha="0.34"
+            android:background="@drawable/bg_home_glass_sheen"
+            android:importantForAccessibility="no" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -48,10 +58,10 @@
 
                 <View
                     android:id="@+id/view_tab_indicator"
-                    android:layout_width="16dp"
-                    android:layout_height="2dp"
+                    android:layout_width="12dp"
+                    android:layout_height="3dp"
                     android:layout_marginTop="@dimen/padding_spacing_dp4"
-                    android:background="@color/color_home_on_surface"
+                    android:background="@drawable/bg_home_selected_indicator"
                     android:visibility="invisible" />
 
             </LinearLayout>

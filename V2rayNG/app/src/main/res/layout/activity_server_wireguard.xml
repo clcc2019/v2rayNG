@@ -10,120 +10,151 @@
     android:paddingStart="@dimen/padding_spacing_dp16"
     android:paddingTop="@dimen/padding_spacing_dp12"
     android:paddingEnd="@dimen/padding_spacing_dp16"
-    android:paddingBottom="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp24"
     android:scrollbars="none"
     tools:context=".ui.ServerActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:orientation="vertical">
 
+        <TextView
+            style="@style/Widget.V2Ray.PageIntro"
+            android:text="@string/server_page_overview" />
+
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:text="@string/server_group_connection" />
+
         <include layout="@layout/layout_address_port" />
+
+        <TextView
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:text="@string/server_group_tunnel" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.V2Ray.Card.FormSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:maxWidth="@dimen/list_card_max_width"
             app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
+                style="@style/Widget.V2Ray.FormSection.Content">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/group_basic_info"
-                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:text="@string/server_lab_secret_key"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_secret_key"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-                <EditText
-                    android:id="@+id/et_id"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                    <EditText
+                        android:id="@+id/et_id"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:text="@string/server_lab_public_key"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup.Compact">
 
-                <EditText
-                    android:id="@+id/et_public_key"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_public_key"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:text="@string/server_lab_preshared_key"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                    <EditText
+                        android:id="@+id/et_public_key"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+                </LinearLayout>
 
-                <EditText
-                    android:id="@+id/et_preshared_key"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup.Compact">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:text="@string/server_lab_reserved"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_preshared_key"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-                <EditText
-                    android:id="@+id/et_reserved1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                    <EditText
+                        android:id="@+id/et_preshared_key"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:text="@string/server_lab_local_address"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup.Compact">
 
-                <EditText
-                    android:id="@+id/et_local_address"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_reserved"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:text="@string/server_lab_local_mtu"
-                    android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+                    <EditText
+                        android:id="@+id/et_reserved1"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+                </LinearLayout>
 
-                <EditText
-                    android:id="@+id/et_local_mtu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                    android:inputType="number" />
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup.Compact">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_local_address"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <EditText
+                        android:id="@+id/et_local_address"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="text" />
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormGroup.Compact">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_lab_local_mtu"
+                        android:textAppearance="@style/TextAppearance.V2Ray.FormLabel" />
+
+                    <EditText
+                        android:id="@+id/et_local_mtu"
+                        style="@style/Widget.V2Ray.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:inputType="number" />
+                </LinearLayout>
 
             </LinearLayout>
 

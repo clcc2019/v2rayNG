@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import com.v2ray.ang.databinding.ActivityMainBinding
@@ -39,14 +40,31 @@ class MainConnectionCardController(
         }
     }
 
-    fun render() {
+    fun render(state: ServiceUiState) {
         val selectedProfileName = mainViewModel.getSelectedServerSnapshot()
             ?.profile
             ?.remarks
             ?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.home_connection_profile_empty)
+        binding.tvConnectionTitle.setText(R.string.home_connection_title)
+        binding.tvConnectionStatus.text = context.getString(
+            when (state) {
+                ServiceUiState.RUNNING -> R.string.connection_connected_short
+                ServiceUiState.STARTING -> R.string.connection_starting_short
+                ServiceUiState.STOPPING -> R.string.connection_stopping_short
+                ServiceUiState.STOPPED -> R.string.connection_not_connected_short
+            }
+        )
         binding.tvConnectionProfile.text = selectedProfileName
-        binding.tvConnectionSummary.setText(R.string.home_connection_summary_short)
+        binding.tvConnectionSummary.text = context.getString(
+            when (state) {
+                ServiceUiState.RUNNING -> R.string.home_connection_subtitle
+                ServiceUiState.STARTING -> R.string.connection_starting
+                ServiceUiState.STOPPING -> R.string.connection_stopping
+                ServiceUiState.STOPPED -> R.string.home_connection_summary_short
+            }
+        )
+        applyStatusBadgeStyle(state)
         updateSecondaryActionsVisibility()
     }
 
@@ -120,6 +138,24 @@ class MainConnectionCardController(
             ColorUtils.setAlphaComponent(baseDockBackgroundColor, (alpha * 255).toInt())
         )
         lastDockBackgroundAlpha = alpha
+    }
+
+    private fun applyStatusBadgeStyle(state: ServiceUiState) {
+        val backgroundRes = when (state) {
+            ServiceUiState.RUNNING -> R.color.color_home_metric_good
+            ServiceUiState.STARTING,
+            ServiceUiState.STOPPING -> R.color.color_home_metric_warn
+            ServiceUiState.STOPPED -> R.color.color_home_metric_idle
+        }
+        val textRes = when (state) {
+            ServiceUiState.RUNNING -> R.color.color_home_metric_good_text
+            ServiceUiState.STARTING,
+            ServiceUiState.STOPPING -> R.color.color_home_metric_warn_text
+            ServiceUiState.STOPPED -> R.color.color_home_metric_idle_text
+        }
+        binding.tvConnectionStatus.backgroundTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(context, backgroundRes))
+        binding.tvConnectionStatus.setTextColor(ContextCompat.getColor(context, textRes))
     }
 
     private fun updateSecondaryActionsVisibility() {

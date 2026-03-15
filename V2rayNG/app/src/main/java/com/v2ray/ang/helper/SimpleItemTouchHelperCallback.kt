@@ -49,15 +49,12 @@ class SimpleItemTouchHelperCallback(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        val dragFlags: Int
-        val swipeFlags: Int
-        if (recyclerView.layoutManager is GridLayoutManager) {
-            dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-            swipeFlags = if (allowSwipe) ItemTouchHelper.START or ItemTouchHelper.END else 0
+        val dragFlags = if (recyclerView.layoutManager is GridLayoutManager) {
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
         } else {
-            dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
-            swipeFlags = if (allowSwipe) ItemTouchHelper.START or ItemTouchHelper.END else 0
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN
         }
+        val swipeFlags = if (allowSwipe) ItemTouchHelper.START or ItemTouchHelper.END else 0
         return makeMovementFlags(dragFlags, swipeFlags)
     }
 
@@ -66,12 +63,11 @@ class SimpleItemTouchHelperCallback(
         source: RecyclerView.ViewHolder,
         target: RecyclerView.ViewHolder
     ): Boolean {
-        return if (source.itemViewType != target.itemViewType) {
-            false
-        } else {
-            mAdapter.onItemMove(source.bindingAdapterPosition, target.bindingAdapterPosition)
-            true
+        if (source.itemViewType != target.itemViewType) {
+            return false
         }
+        mAdapter.onItemMove(source.bindingAdapterPosition, target.bindingAdapterPosition)
+        return true
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -88,9 +84,8 @@ class SimpleItemTouchHelperCallback(
             viewHolder.itemView.translationX = 0f
             viewHolder.itemView.alpha = ALPHA_FULL
             return
-        } else {
-            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         }
+        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 
     private fun returnViewToOriginalPosition(viewHolder: RecyclerView.ViewHolder) {

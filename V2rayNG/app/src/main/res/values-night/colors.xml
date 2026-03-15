@@ -22,12 +22,12 @@
     <color name="color_form_field_surface">#12161B</color>
     <color name="color_home_background">#000000</color>
     <color name="color_home_surface">#0E1115</color>
-    <color name="color_home_surface_raised">#12161A</color>
-    <color name="color_home_surface_selected">#1A2430</color>
-    <color name="color_home_surface_soft">#171B20</color>
+    <color name="color_home_surface_raised">#C214191F</color>
+    <color name="color_home_surface_selected">#D91B2530</color>
+    <color name="color_home_surface_soft">#99212933</color>
     <color name="color_home_on_surface">#F4F7FA</color>
     <color name="color_home_on_surface_muted">#A4AFBC</color>
-    <color name="color_home_outline">#292E35</color>
+    <color name="color_home_outline">#663F4A56</color>
     <color name="color_home_indicator_idle">#404751</color>
     <color name="color_home_primary">#F4F7FA</color>
     <color name="color_home_on_primary">#000000</color>

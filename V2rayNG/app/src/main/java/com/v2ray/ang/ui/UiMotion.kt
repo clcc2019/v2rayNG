@@ -60,6 +60,61 @@ object UiMotion {
         }
     }
 
+    fun attachPressFeedbackComposite(
+        source: View,
+        scaleTarget: View = source,
+        alphaTarget: View = source,
+        pressedScale: Float = 0.982f,
+        pressedAlpha: Float = 0.96f
+    ) {
+        source.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!isMotionEnabled(scaleTarget)) {
+                        return@setOnTouchListener false
+                    }
+                    scaleTarget.animate().cancel()
+                    alphaTarget.animate().cancel()
+                    scaleTarget.animate()
+                        .scaleX(pressedScale)
+                        .scaleY(pressedScale)
+                        .setDuration(MotionTokens.PRESS_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                    alphaTarget.animate()
+                        .alpha(pressedAlpha)
+                        .setDuration(MotionTokens.PRESS_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    if (!isMotionEnabled(scaleTarget)) {
+                        scaleTarget.scaleX = 1f
+                        scaleTarget.scaleY = 1f
+                        alphaTarget.alpha = 1f
+                        return@setOnTouchListener false
+                    }
+                    scaleTarget.animate().cancel()
+                    alphaTarget.animate().cancel()
+                    scaleTarget.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                    alphaTarget.animate()
+                        .alpha(1f)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+            }
+            false
+        }
+    }
+
     fun attachPressFeedbackAlpha(
         source: View,
         target: View = source,

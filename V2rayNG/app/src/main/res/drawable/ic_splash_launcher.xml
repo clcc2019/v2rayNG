@@ -4,4 +4,4 @@
     android:insetTop="20dp"
     android:insetRight="20dp"
     android:insetBottom="20dp"
-    android:drawable="@mipmap/ic_launcher_foreground" />
+    android:drawable="@drawable/ic_launcher_mark" />

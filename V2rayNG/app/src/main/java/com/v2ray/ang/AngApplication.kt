@@ -5,7 +5,6 @@ import android.app.Application
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.tencent.mmkv.MMKV
-import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.StartupTracer
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +27,6 @@ class AngApplication : Application() {
     }
 
     private val workManagerConfiguration: Configuration = Configuration.Builder()
-        .setDefaultProcessName("${ANG_PACKAGE}:bg")
         .build()
     @Volatile
     private var workManagerInitialized = false

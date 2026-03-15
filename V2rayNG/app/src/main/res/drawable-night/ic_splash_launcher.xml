@@ -5,7 +5,7 @@
     android:insetRight="20dp"
     android:insetBottom="20dp">
     <bitmap
-        android:src="@mipmap/ic_launcher_foreground"
+        android:src="@drawable/ic_launcher_mark_monochrome"
         android:gravity="fill"
         android:tint="@android:color/white" />
 </inset>

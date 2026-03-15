@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -38,18 +40,28 @@ class MainRecyclerAdapter(
         private const val PAYLOAD_TEST_RESULT = "payload_test_result"
         private const val PAYLOAD_SELECTION = "payload_selection"
         private const val PAYLOAD_CONTENT = "payload_content"
+
         private fun resolveCardBackgroundColor(colors: ItemColors, isSelected: Boolean): Int {
             return if (isSelected) colors.selectedSurface else colors.surface
         }
 
-        private fun resetCardState(target: MaterialCardView, backgroundColor: Int) {
+        private fun resolveCardStrokeColor(colors: ItemColors, isSelected: Boolean): Int {
+            return if (isSelected) colors.selectedOutline else colors.outline
+        }
+
+        private fun resetCardState(
+            target: MaterialCardView,
+            backgroundColor: Int,
+            strokeColor: Int,
+            strokeWidth: Int
+        ) {
             target.animate().cancel()
             target.alpha = 1f
             target.translationY = 0f
             target.scaleX = 1f
             target.scaleY = 1f
-            target.strokeWidth = 0
-            target.setStrokeColor(Color.TRANSPARENT)
+            target.strokeWidth = strokeWidth
+            target.setStrokeColor(strokeColor)
             target.setCardBackgroundColor(backgroundColor)
         }
     }
@@ -228,7 +240,12 @@ class MainRecyclerAdapter(
 
     private fun bindEntranceMotion(holder: MainViewHolder, position: Int, item: ServersCache) {
         if (hasAnimatedInitialList) {
-            resetCardState(holder.itemMainBinding.itemBg, resolveCardBackgroundColor(holder.colors, holder.lastSelectionState == true))
+            resetCardState(
+                holder.itemMainBinding.itemBg,
+                resolveCardBackgroundColor(holder.colors, holder.lastSelectionState == true),
+                resolveCardStrokeColor(holder.colors, holder.lastSelectionState == true),
+                holder.cardStrokeWidthPx
+            )
             return
         }
         val startDelay = if (!hasAnimatedInitialList) {
@@ -260,9 +277,7 @@ class MainRecyclerAdapter(
     private fun bindSubscription(holder: MainViewHolder, item: ServersCache) {
         val subRemarks = item.subscriptionRemarks
         holder.itemMainBinding.tvSubscription.text = subRemarks
-        holder.itemMainBinding.tvSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
-        holder.itemMainBinding.layoutSubscription.visibility =
-            if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
+        holder.itemMainBinding.layoutSubscription.isVisible = subRemarks.isNotEmpty()
     }
 
     private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean) {
@@ -275,17 +290,50 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.92f
         holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.96f else 0.84f
         holder.itemMainBinding.tvType.alpha = if (isSelected) 0.96f else 0.88f
-        holder.itemMainBinding.tvTestResultInline.alpha = if (isSelected) 1f else 0.9f
+        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.94f
+        holder.itemMainBinding.tvTestResult.alpha = if (isSelected) 1f else 0.92f
         holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 1f else 0.9f
-        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.94f else 0.78f
+        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.94f else 0.82f
+        holder.itemMainBinding.viewCardGlassOverlay.animate().cancel()
+        holder.itemMainBinding.viewSelectedEdgeGlow.animate().cancel()
+
+        holder.itemMainBinding.viewCardGlassOverlay.alpha = if (isSelected) 0.24f else 0.16f
+        holder.itemMainBinding.viewSelectedEdgeGlow.alpha = if (isSelected) 0.32f else 0f
         holder.itemMainBinding.layoutIndicator.setBackgroundResource(
             if (isSelected) R.drawable.bg_home_selected_indicator else R.drawable.bg_item_indicator_idle
         )
-        resetCardState(holder.itemMainBinding.itemBg, resolveCardBackgroundColor(holder.colors, isSelected))
+        resetCardState(
+            holder.itemMainBinding.itemBg,
+            resolveCardBackgroundColor(holder.colors, isSelected),
+            resolveCardStrokeColor(holder.colors, isSelected),
+            holder.cardStrokeWidthPx
+        )
         if (previousSelection != null) {
             if (isSelected) {
+                holder.itemMainBinding.viewCardGlassOverlay.alpha = 0.18f
+                holder.itemMainBinding.viewSelectedEdgeGlow.alpha = 0.08f
+                holder.itemMainBinding.viewCardGlassOverlay.animate()
+                    .alpha(0.24f)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                    .setInterpolator(FastOutSlowInInterpolator())
+                    .start()
+                holder.itemMainBinding.viewSelectedEdgeGlow.animate()
+                    .alpha(0.32f)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                    .setInterpolator(FastOutSlowInInterpolator())
+                    .start()
                 UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.layoutIndicator)
             } else {
+                holder.itemMainBinding.viewCardGlassOverlay.animate()
+                    .alpha(0.16f)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                    .setInterpolator(FastOutSlowInInterpolator())
+                    .start()
+                holder.itemMainBinding.viewSelectedEdgeGlow.animate()
+                    .alpha(0f)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                    .setInterpolator(FastOutSlowInInterpolator())
+                    .start()
                 UiMotion.animatePulse(holder.itemMainBinding.layoutIndicator, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
             }
         }
@@ -305,11 +353,12 @@ class MainRecyclerAdapter(
             else -> "--"
         }
         holder.itemMainBinding.tvTestResultInline.text = testResult
-        holder.itemMainBinding.tvTestResult.visibility = View.GONE
-        holder.itemMainBinding.tvTestResultInline.visibility = View.VISIBLE
-        applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResultInline, delayMillis)
+        holder.itemMainBinding.tvTestResult.text = testResult
+        holder.itemMainBinding.tvTestResult.visibility = View.VISIBLE
+        holder.itemMainBinding.tvTestResultInline.visibility = View.GONE
+        applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResult, delayMillis)
         if (shouldAnimateResult && delayMillis != 0L) {
-            val targetView = holder.itemMainBinding.tvTestResultInline
+            val targetView = holder.itemMainBinding.tvTestResult
             UiMotion.animatePulse(targetView, pulseScale = 1.03f)
         }
         holder.boundGuid = item.guid
@@ -358,6 +407,7 @@ class MainRecyclerAdapter(
     ) :
         BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder {
         val colors = ItemColors.from(itemMainBinding.root)
+        val cardStrokeWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp1)
         var lastSelectionState: Boolean? = null
         var boundGuid: String? = null
         var lastTestDelay: Long? = null
@@ -366,6 +416,13 @@ class MainRecyclerAdapter(
         init {
             itemMainBinding.layoutMore.visibility = View.VISIBLE
             UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
+            UiMotion.attachPressFeedbackComposite(
+                source = itemMainBinding.infoContainer,
+                scaleTarget = itemMainBinding.itemBg,
+                alphaTarget = itemMainBinding.itemBg,
+                pressedScale = 0.992f,
+                pressedAlpha = 0.94f
+            )
 
             itemMainBinding.layoutMore.setOnClickListener {
                 val item = boundItem ?: return@setOnClickListener
@@ -408,11 +465,21 @@ class MainRecyclerAdapter(
         }
 
         override fun onItemSelected() {
-            resetCardState(itemMainBinding.itemBg, resolveCardBackgroundColor(colors, lastSelectionState == true))
+            resetCardState(
+                itemMainBinding.itemBg,
+                resolveCardBackgroundColor(colors, lastSelectionState == true),
+                resolveCardStrokeColor(colors, lastSelectionState == true),
+                cardStrokeWidthPx
+            )
         }
 
         override fun onItemClear() {
-            resetCardState(itemMainBinding.itemBg, resolveCardBackgroundColor(colors, lastSelectionState == true))
+            resetCardState(
+                itemMainBinding.itemBg,
+                resolveCardBackgroundColor(colors, lastSelectionState == true),
+                resolveCardStrokeColor(colors, lastSelectionState == true),
+                cardStrokeWidthPx
+            )
         }
     }
 
@@ -438,14 +505,18 @@ class MainRecyclerAdapter(
 
     data class ItemColors(
         val surface: Int,
-        val selectedSurface: Int
+        val selectedSurface: Int,
+        val outline: Int,
+        val selectedOutline: Int
     ) {
         companion object {
             fun from(view: View): ItemColors {
                 val context = view.context
                 return ItemColors(
                     surface = ContextCompat.getColor(context, R.color.color_home_surface_raised),
-                    selectedSurface = ContextCompat.getColor(context, R.color.color_home_surface_selected)
+                    selectedSurface = ContextCompat.getColor(context, R.color.color_home_surface_selected),
+                    outline = ContextCompat.getColor(context, R.color.color_home_outline),
+                    selectedOutline = ContextCompat.getColor(context, R.color.colorSelectionIndicator)
                 )
             }
         }

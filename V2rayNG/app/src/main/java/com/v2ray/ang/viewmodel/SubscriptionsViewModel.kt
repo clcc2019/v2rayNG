@@ -1,48 +1,63 @@
 package com.v2ray.ang.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.v2ray.ang.data.repository.DefaultSubscriptionsRepository
+import com.v2ray.ang.data.repository.SubscriptionsRepository
 import com.v2ray.ang.dto.SubscriptionCache
 import com.v2ray.ang.dto.SubscriptionItem
-import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.handler.SettingsChangeManager
-import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.domain.settings.DefaultSettingsChangeNotifier
+import com.v2ray.ang.domain.settings.SettingsChangeNotifier
+import java.util.Collections
 
-class SubscriptionsViewModel : ViewModel() {
+class SubscriptionsViewModel(
+    private val subscriptionsRepository: SubscriptionsRepository,
+    private val settingsChangeNotifier: SettingsChangeNotifier
+) : ViewModel() {
+    constructor() : this(
+        subscriptionsRepository = DefaultSubscriptionsRepository,
+        settingsChangeNotifier = DefaultSettingsChangeNotifier
+    )
+
     private val subscriptions: MutableList<SubscriptionCache> =
-        MmkvManager.decodeSubscriptions().toMutableList()
+        subscriptionsRepository.getAll().toMutableList()
 
     fun getAll(): List<SubscriptionCache> = subscriptions.toList()
 
     fun reload() {
         subscriptions.clear()
-        subscriptions.addAll(MmkvManager.decodeSubscriptions())
+        subscriptions.addAll(subscriptionsRepository.getAll())
     }
 
-    fun canRemove(subId: String): Boolean = MmkvManager.canRemoveSubscription(subId)
+    fun canRemove(subId: String): Boolean = subscriptionsRepository.canRemove(subId)
 
     fun remove(subId: String): Boolean {
-        val changed = MmkvManager.removeSubscription(subId)
-        if (changed) {
-            subscriptions.removeAll { it.guid == subId }
-            SettingsChangeManager.makeSetupGroupTab()
+        if (!subscriptionsRepository.remove(subId)) {
+            return false
         }
-        return changed
+        subscriptions.removeAll { it.guid == subId }
+        notifySubscriptionsChanged()
+        return true
     }
 
     fun update(subId: String, item: SubscriptionItem) {
-        val idx = subscriptions.indexOfFirst { it.guid == subId }
-        if (idx >= 0) {
-            subscriptions[idx] = SubscriptionCache(subId, item)
-            MmkvManager.encodeSubscription(subId, item)
-        }
+        subscriptions.indexOfFirst { it.guid == subId }
+            .takeIf { it >= 0 }
+            ?.let { index ->
+                subscriptions[index] = SubscriptionCache(subId, item)
+                subscriptionsRepository.update(subId, item)
+            }
     }
 
     fun swap(fromPosition: Int, toPosition: Int) {
-        if (fromPosition in subscriptions.indices && toPosition in subscriptions.indices) {
-            val item = subscriptions.removeAt(fromPosition)
-            subscriptions.add(toPosition, item)
-            SettingsManager.swapSubscriptions(fromPosition, toPosition)
-            SettingsChangeManager.makeSetupGroupTab()
+        if (fromPosition !in subscriptions.indices || toPosition !in subscriptions.indices) {
+            return
         }
+        Collections.swap(subscriptions, fromPosition, toPosition)
+        subscriptionsRepository.swap(fromPosition, toPosition)
+        notifySubscriptionsChanged()
+    }
+
+    private fun notifySubscriptionsChanged() {
+        settingsChangeNotifier.requestGroupTabRefresh()
     }
 }

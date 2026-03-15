@@ -138,6 +138,15 @@
     <string name="server_lab_ech_config_list">EchConfigList</string>
     <string name="server_lab_ech_force_query">EchForceQuery</string>
     <string name="server_lab_pinned_ca256">Certificate fingerprint (SHA-256)</string>
+    <string name="server_page_overview">Review the endpoint, authentication, transport, and TLS options before saving this connection.</string>
+    <string name="server_group_page_overview">Create a policy group, choose where its members come from, and refine which profiles it can include.</string>
+    <string name="server_custom_config_page_overview">Edit the full custom configuration and keep its display name easy to recognize before saving.</string>
+    <string name="server_group_connection">Connection</string>
+    <string name="server_group_identity">Authentication</string>
+    <string name="server_group_transport">Transport</string>
+    <string name="server_group_security">Security</string>
+    <string name="server_group_tunnel">Tunnel</string>
+    <string name="server_group_profile">Profile</string>
 
     <!-- UserAssetActivity -->
     <string name="toast_asset_copy_failed">File copy failed, please use File Manager</string>
@@ -470,12 +479,39 @@
     <string name="update_check_pre_release">Check Pre-release</string>
     <string name="update_checking_for_update">Checking for update…</string>
     <string name="update_page_overview">Review release availability and choose whether to include pre-release builds.</string>
+    <string name="update_group_status">Current status</string>
     <string name="update_group_preferences">Release channel</string>
     <string name="update_action_check_now">Check now</string>
+    <string name="update_action_checking">Checking…</string>
+    <string name="update_action_view_details">View details</string>
+    <string name="update_status_ready_title">Ready to check</string>
+    <string name="update_status_ready_summary">Compare the installed build with the latest release feed.</string>
+    <string name="update_status_checking_title">Checking releases</string>
+    <string name="update_status_checking_summary">Fetching release information and matching it to this device build.</string>
+    <string name="update_status_latest_title">You are up to date</string>
+    <string name="update_status_latest_summary">The installed build already matches the newest release available for this channel.</string>
+    <string name="update_status_available_title">Update available</string>
+    <string name="update_status_available_summary">A newer build is ready to download for this device.</string>
+    <string name="update_status_error_title">Unable to check updates</string>
+    <string name="update_status_badge_ready">Ready</string>
+    <string name="update_status_badge_checking">Checking</string>
+    <string name="update_status_badge_latest">Latest</string>
+    <string name="update_status_badge_available">New</string>
+    <string name="update_status_badge_error">Retry</string>
+    <string name="update_summary_installed">Installed</string>
+    <string name="update_summary_latest">Latest</string>
+    <string name="update_summary_waiting">Waiting</string>
+    <string name="update_release_notes">Release notes</string>
+    <string name="update_pre_release_summary">Include preview builds when checking GitHub releases.</string>
+    <string name="update_last_checked">Last checked %s</string>
+    <string name="update_version_footer">App v%1$s • Core %2$s</string>
+    <string name="update_version_value">v%s</string>
 
     <string name="title_policy_group_type">Policy group type</string>
     <string name="title_policy_group_subscription_id">From subscription group</string>
     <string name="title_policy_group_subscription_filter">Remarks regular filter</string>
+    <string name="server_group_basic_info">Basic info</string>
+    <string name="server_group_source">Source and filter</string>
 
     <!-- BackupActivity -->
     <string name="title_configuration_backup_restore">Backup &amp; Restore</string>

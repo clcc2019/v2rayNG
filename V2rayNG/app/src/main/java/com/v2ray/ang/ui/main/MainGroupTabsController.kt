@@ -54,7 +54,7 @@ class MainGroupTabsController(
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
             if (binding.viewPager.currentItem != tab.position) {
-                binding.viewPager.setCurrentItem(tab.position, false)
+                binding.viewPager.setCurrentItem(tab.position, true)
             }
             syncGroupTabSelection()
         }
@@ -290,6 +290,16 @@ class MainGroupTabsController(
         tabState.lastSelected = selected
         tabState.surfaceView.animate().cancel()
         if (selected) {
+            tabState.surfaceView.alpha = 0.94f
+            tabState.surfaceView.scaleX = 0.988f
+            tabState.surfaceView.scaleY = 0.988f
+            tabState.surfaceView.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
             UiMotion.animateFocusShift(tabState.labelView, tabState.countView, translationOffsetDp = 4f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
             tabState.indicatorView.alpha = 0.72f
             tabState.indicatorView.animate()
@@ -301,6 +311,7 @@ class MainGroupTabsController(
             tabState.indicatorView.animate().cancel()
             tabState.indicatorView.alpha = 0f
             tabState.surfaceView.animate()
+                .alpha(1f)
                 .scaleX(1f)
                 .scaleY(1f)
                 .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)

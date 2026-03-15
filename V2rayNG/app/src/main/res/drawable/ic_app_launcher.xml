@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/bg_launch_icon_circle" />
+    <item
+        android:left="3dp"
+        android:top="3dp"
+        android:right="3dp"
+        android:bottom="3dp"
+        android:drawable="@drawable/ic_launcher_plate" />
 
     <item
-        android:drawable="@mipmap/ic_launcher_foreground"
-        android:insetLeft="22dp"
-        android:insetTop="22dp"
-        android:insetRight="22dp"
-        android:insetBottom="22dp" />
+        android:left="10dp"
+        android:top="10dp"
+        android:right="10dp"
+        android:bottom="10dp"
+        android:drawable="@drawable/ic_launcher_mark" />
 </layer-list>

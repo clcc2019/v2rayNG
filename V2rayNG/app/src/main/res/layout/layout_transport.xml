@@ -3,25 +3,14 @@
     style="@style/Widget.V2Ray.Card.Section"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp16">
+    android:layout_marginTop="@dimen/padding_spacing_dp8"
+    android:maxWidth="@dimen/list_card_max_width">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/padding_spacing_dp18">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_lab_more_function"
-            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle" />
+        style="@style/Widget.V2Ray.FormSection.Content">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -31,18 +20,15 @@
 
             <Spinner
                 android:id="@+id/sp_network"
+                style="@style/Widget.V2Ray.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginBottom="@dimen/padding_spacing_dp8"
                 android:entries="@array/networks" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:id="@+id/sp_header_type_title"
@@ -53,17 +39,14 @@
 
             <Spinner
                 android:id="@+id/sp_header_type"
+                style="@style/Widget.V2Ray.Spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:layout_marginBottom="@dimen/padding_spacing_dp8" />
+                android:layout_marginTop="@dimen/padding_spacing_dp8" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:id="@+id/tv_request_host"
@@ -74,18 +57,15 @@
 
             <EditText
                 android:id="@+id/et_request_host"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
                 android:inputType="text" />
         </LinearLayout>
 
-
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:id="@+id/tv_path"
@@ -96,6 +76,7 @@
 
             <EditText
                 android:id="@+id/et_path"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -104,10 +85,7 @@
 
         <LinearLayout
             android:id="@+id/layout_extra"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp16"
-            android:orientation="vertical">
+            style="@style/Widget.V2Ray.FormGroup.Spaced">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -117,12 +95,13 @@
 
             <EditText
                 android:id="@+id/et_extra"
+                style="@style/Widget.V2Ray.EditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:gravity="top"
+                android:gravity="top|start"
                 android:inputType="textMultiLine"
-                android:maxLines="20"
+                android:maxLines="10"
                 android:minLines="4" />
         </LinearLayout>
 

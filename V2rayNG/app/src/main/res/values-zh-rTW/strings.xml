@@ -109,6 +109,8 @@
     <string name="toast_invalid_url">URL 無效</string>
     <string name="toast_insecure_url_protocol">請不要使用不安全的 HTTP 協定訂閱位址</string>
     <string name="server_lab_need_inbound">​​確保 inbounds port 和設定中的一致</string>
+    <string name="server_group_page_overview">建立策略群組、選擇成員來源，並進一步篩選可包含的節點。</string>
+    <string name="server_custom_config_page_overview">編輯完整自訂設定，並在儲存前設定容易識別的顯示名稱。</string>
     <string name="toast_malformed_josn">設定格式不正確</string>
     <string name="server_lab_request_host6">Host (SNI) (可選)</string>
     <string name="toast_action_not_allowed">禁止此項操作</string>
@@ -382,10 +384,40 @@
     <string name="update_now">立即更新</string>
     <string name="update_check_pre_release">檢查 Pre-release</string>
     <string name="update_checking_for_update">正在檢查更新中…</string>
+    <string name="update_page_overview">查看目前版本狀態，並選擇是否包含預發布版本。</string>
+    <string name="update_group_status">目前狀態</string>
+    <string name="update_group_preferences">更新通道</string>
+    <string name="update_action_check_now">立即檢查</string>
+    <string name="update_action_checking">檢查中…</string>
+    <string name="update_action_view_details">查看詳情</string>
+    <string name="update_status_ready_title">準備就緒</string>
+    <string name="update_status_ready_summary">對比目前安裝版本與最新發布通道資訊。</string>
+    <string name="update_status_checking_title">正在檢查發布資訊</string>
+    <string name="update_status_checking_summary">正在取得版本資訊，並比對目前裝置可用的構建。</string>
+    <string name="update_status_latest_title">目前已是最新</string>
+    <string name="update_status_latest_summary">目前安裝版本已與所選通道中的最新可用版本一致。</string>
+    <string name="update_status_available_title">發現新版本</string>
+    <string name="update_status_available_summary">目前裝置已有可下載的更新版本。</string>
+    <string name="update_status_error_title">檢查更新失敗</string>
+    <string name="update_status_badge_ready">就緒</string>
+    <string name="update_status_badge_checking">檢查中</string>
+    <string name="update_status_badge_latest">最新</string>
+    <string name="update_status_badge_available">可更新</string>
+    <string name="update_status_badge_error">重試</string>
+    <string name="update_summary_installed">已安裝</string>
+    <string name="update_summary_latest">最新版本</string>
+    <string name="update_summary_waiting">等待檢查</string>
+    <string name="update_release_notes">更新說明</string>
+    <string name="update_pre_release_summary">檢查 GitHub 發布時一併包含預覽版構建。</string>
+    <string name="update_last_checked">上次檢查 %s</string>
+    <string name="update_version_footer">應用程式 v%1$s • Core %2$s</string>
+    <string name="update_version_value">v%s</string>
 
     <string name="title_policy_group_type">策略群組類型</string>
     <string name="title_policy_group_subscription_id">來自訂閱分組</string>
     <string name="title_policy_group_subscription_filter">別名正規過濾</string>
+    <string name="server_group_basic_info">基礎資訊</string>
+    <string name="server_group_source">來源與過濾</string>
 
     <!-- BackupActivity -->
     <string name="title_configuration_backup_restore">Backup &amp; Restore</string>

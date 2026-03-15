@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Gson reflects over app DTOs stored in MMKV and downloaded JSON payloads.
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.v2ray.ang.dto.** { *; }

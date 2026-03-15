@@ -1,79 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginTop="@dimen/padding_spacing_dp4"
-    android:layout_marginBottom="@dimen/padding_spacing_dp4"
-    android:maxWidth="@dimen/list_card_max_width"
-    style="@style/Widget.V2Ray.Card.SettingsItem"
-    app:cardBackgroundColor="@color/md_theme_surface"
-    app:strokeWidth="0dp">
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/settings_item_surface"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_settings_item_ripple"
-        android:baselineAligned="false"
-        android:gravity="center_vertical"
-        android:minHeight="68dp"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_spacing_dp16"
-        android:paddingTop="@dimen/padding_spacing_dp12"
-        android:paddingEnd="@dimen/padding_spacing_dp16"
-        android:paddingBottom="@dimen/padding_spacing_dp12">
+        android:maxWidth="@dimen/settings_page_max_width"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@android:id/icon_frame"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginEnd="@dimen/padding_spacing_dp14"
-            android:gravity="center"
-            android:visibility="gone">
-
-            <ImageView
-                android:id="@android:id/icon"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:alpha="0.88"
-                android:tint="?attr/colorOnSurface"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/settings_row_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@android:id/title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                android:textColor="?attr/colorOnSurface" />
-
-            <TextView
-                android:id="@android:id/summary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp4"
-                android:maxLines="4"
-                android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@android:id/widget_frame"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/padding_spacing_dp12"
+            android:background="@drawable/bg_more_action_ripple"
+            android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:minHeight="@dimen/view_height_dp36"
-            android:orientation="horizontal" />
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/padding_spacing_dp16"
+            android:paddingTop="@dimen/padding_spacing_dp12"
+            android:paddingEnd="@dimen/padding_spacing_dp16"
+            android:paddingBottom="@dimen/padding_spacing_dp12">
+
+            <LinearLayout
+                android:id="@android:id/icon_frame"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="@dimen/padding_spacing_dp14"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@android:id/icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:alpha="0.88"
+                    android:tint="?attr/colorOnSurface"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@android:id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@android:id/summary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                    android:maxLines="4"
+                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@android:id/widget_frame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/padding_spacing_dp12"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/view_height_dp36"
+                android:orientation="horizontal" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/settings_row_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="54dp"
+            android:background="@color/color_card_outline"
+            android:visibility="gone" />
 
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

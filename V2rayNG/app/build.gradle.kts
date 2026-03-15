@@ -14,6 +14,7 @@ android {
         versionName = "2.0.19"
 
         val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
+        val universalApkEnabled = providers.gradleProperty("UNIVERSAL_APK").orNull?.toBoolean() == true
         splits {
             abi {
                 isEnable = true
@@ -28,7 +29,7 @@ android {
                         "x86"
                     )
                 }
-                isUniversalApk = abiFilterList.isNullOrEmpty()
+                isUniversalApk = universalApkEnabled
             }
         }
 
@@ -37,7 +38,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -132,9 +134,6 @@ dependencies {
 
     // UI Libraries
     implementation(libs.material)
-    implementation(libs.toasty)
-    implementation(libs.editorkit)
-    implementation(libs.flexbox)
 
     // Data and Storage Libraries
     implementation(libs.mmkv.static)
@@ -145,12 +144,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
 
-    // Language and Processing Libraries
-    implementation(libs.language.base)
-    implementation(libs.language.json)
-
     // Intent and Utility Libraries
-    implementation(libs.quickie.foss)
+    implementation(libs.zxing.android.embedded)
     implementation(libs.core)
 
     // AndroidX Lifecycle and Architecture Components
@@ -160,7 +155,6 @@ dependencies {
 
     // Background Task Libraries
     implementation(libs.work.runtime.ktx)
-    implementation(libs.work.multiprocess)
 
     // Baseline Profile
     implementation(libs.androidx.profileinstaller)

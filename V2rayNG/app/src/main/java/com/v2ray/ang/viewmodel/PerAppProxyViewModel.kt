@@ -1,90 +1,98 @@
 package com.v2ray.ang.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.v2ray.ang.AppConfig
-import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.handler.SettingsChangeManager
+import com.v2ray.ang.data.repository.DefaultPerAppProxyRepository
+import com.v2ray.ang.data.repository.PerAppProxyRepository
+import com.v2ray.ang.domain.settings.DefaultSettingsChangeNotifier
+import com.v2ray.ang.domain.settings.SettingsChangeNotifier
 
-class PerAppProxyViewModel : ViewModel() {
-    private val blacklist: MutableSet<String> = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)?.let {
-        HashSet(it)
-    } ?: HashSet()
+class PerAppProxyViewModel(
+    private val perAppProxyRepository: PerAppProxyRepository,
+    private val settingsChangeNotifier: SettingsChangeNotifier
+) : ViewModel() {
+    constructor() : this(
+        perAppProxyRepository = DefaultPerAppProxyRepository,
+        settingsChangeNotifier = DefaultSettingsChangeNotifier
+    )
+
+    private val blacklist: MutableSet<String> =
+        perAppProxyRepository.getAll().toMutableSet()
 
     fun contains(packageName: String): Boolean = blacklist.contains(packageName)
 
     fun getAll(): Set<String> = blacklist.toSet()
 
-    fun add(packageName: String): Boolean {
-        val changed = blacklist.add(packageName)
-        if (changed) {
-            save()
-        }
-        return changed
-    }
+    fun add(packageName: String): Boolean = updateBlacklist { add(packageName) }
 
-    fun remove(packageName: String): Boolean {
-        val changed = blacklist.remove(packageName)
-        if (changed) {
-            save()
-        }
-        return changed
-    }
+    fun remove(packageName: String): Boolean = updateBlacklist { remove(packageName) }
 
     fun toggle(packageName: String) {
-        if (blacklist.contains(packageName)) {
-            remove(packageName)
-        } else {
-            add(packageName)
+        updateBlacklist {
+            if (remove(packageName)) {
+                true
+            } else {
+                add(packageName)
+            }
         }
     }
 
     fun containsAll(packages: Collection<String>): Boolean = packages.all(blacklist::contains)
 
     fun addAll(packages: Collection<String>) {
-        if (blacklist.addAll(packages)) {
-            save()
-        }
+        updateBlacklist { addAll(packages) }
     }
 
     fun removeAll(packages: Collection<String>) {
-        if (blacklist.removeAll(packages.toSet())) {
-            save()
-        }
+        updateBlacklist { removeAll(packages) }
     }
 
     fun clear() {
-        if (blacklist.isNotEmpty()) {
-            blacklist.clear()
-            save()
+        updateBlacklist {
+            if (isEmpty()) {
+                false
+            } else {
+                clear()
+                true
+            }
         }
     }
 
     fun toggleAll(packages: Collection<String>) {
-        var changed = false
-        packages.forEach { packageName ->
-            changed = if (blacklist.contains(packageName)) {
-                blacklist.remove(packageName) || changed
-            } else {
-                blacklist.add(packageName) || changed
+        updateBlacklist {
+            var changed = false
+            packages.forEach { packageName ->
+                changed = if (remove(packageName)) {
+                    true
+                } else {
+                    add(packageName) || changed
+                }
             }
-        }
-        if (changed) {
-            save()
+            changed
         }
     }
 
     fun replaceAll(packages: Collection<String>) {
         val updated = packages.toHashSet()
-        if (blacklist == updated) {
-            return
+        updateBlacklist {
+            if (this == updated) {
+                return@updateBlacklist false
+            }
+            clear()
+            addAll(updated)
+            true
         }
-        blacklist.clear()
-        blacklist.addAll(updated)
-        save()
+    }
+
+    private inline fun updateBlacklist(action: MutableSet<String>.() -> Boolean): Boolean {
+        val changed = blacklist.action()
+        if (changed) {
+            save()
+        }
+        return changed
     }
 
     private fun save() {
-        MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY_SET, blacklist)
-        SettingsChangeManager.makeRestartService()
+        perAppProxyRepository.saveAll(blacklist)
+        settingsChangeNotifier.requestRestartService()
     }
 }

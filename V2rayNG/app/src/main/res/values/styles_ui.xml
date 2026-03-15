@@ -123,7 +123,7 @@
     </style>
 
     <style name="Widget.V2Ray.Card.HomeList" parent="Widget.V2Ray.Card.ListItem">
-        <item name="cardCornerRadius">22dp</item>
+        <item name="cardCornerRadius">18dp</item>
         <item name="strokeWidth">0dp</item>
     </style>
 
@@ -135,7 +135,7 @@
     </style>
 
     <style name="Widget.V2Ray.Card.HomeDock" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">24dp</item>
+        <item name="cardCornerRadius">18dp</item>
         <item name="cardBackgroundColor">@color/color_home_surface_raised</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="strokeWidth">0dp</item>
@@ -176,6 +176,27 @@
         <item name="android:maxWidth">@dimen/list_card_max_width</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Body</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.FormSection.Content" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">@dimen/padding_spacing_dp16</item>
+    </style>
+
+    <style name="Widget.V2Ray.FormGroup" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.V2Ray.FormGroup.Spaced" parent="Widget.V2Ray.FormGroup">
+        <item name="android:layout_marginTop">@dimen/padding_spacing_dp16</item>
+    </style>
+
+    <style name="Widget.V2Ray.FormGroup.Compact" parent="Widget.V2Ray.FormGroup">
+        <item name="android:layout_marginTop">@dimen/padding_spacing_dp12</item>
     </style>
 
     <style name="Widget.V2Ray.SectionLabel" parent="">
@@ -472,6 +493,16 @@
         <item name="android:layout_marginTop">@dimen/padding_spacing_dp4</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Support</item>
         <item name="android:textColor">@color/md_theme_onSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.CodeEditor" parent="Widget.V2Ray.EditText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">360dp</item>
+        <item name="android:gravity">top|start</item>
+        <item name="android:padding">@dimen/padding_spacing_dp14</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:overScrollMode">always</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="Widget.V2Ray.Spinner" parent="Widget.AppCompat.Spinner">

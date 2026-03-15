@@ -247,9 +247,15 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
+        val pageOffsetPx = resources.displayMetrics.density * 12f
         binding.viewPager.setPageTransformer { page, position ->
             val absPos = kotlin.math.abs(position).coerceAtMost(1f)
-            page.alpha = 1f - (0.08f * absPos)
+            val scale = 1f - (0.02f * absPos)
+            page.alpha = 1f - (0.12f * absPos)
+            page.translationX = -page.width * 0.04f * position
+            page.translationY = pageOffsetPx * absPos
+            page.scaleX = scale
+            page.scaleY = scale
         }
 
         if (!runInitialEntrance) {
@@ -514,7 +520,7 @@ class MainActivity : HelperBaseActivity() {
             isCurrentPingTesting = false
         }
         syncStatusControls(state)
-        connectionCardController.render()
+        connectionCardController.render(state)
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
         updateToolbarSubtitle()
         animateServiceStateChange(previousState, state)
@@ -611,16 +617,67 @@ class MainActivity : HelperBaseActivity() {
         binding.fab.translationX = 0f
         binding.fab.translationY = 0f
 
-        updateFabProcessingState(newState)
+        updateFabProcessingState(newState, animate = true)
+        when (newState) {
+            ServiceUiState.STARTING,
+            ServiceUiState.STOPPING -> {
+                UiMotion.animateStatePulse(
+                    view = binding.cardConnection,
+                    expandScale = 1.01f,
+                    contractScale = 0.995f,
+                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                )
+                UiMotion.animatePulse(binding.viewConnectionBackdrop, pulseScale = 1.05f, duration = MotionTokens.PULSE_QUICK)
+            }
+
+            ServiceUiState.RUNNING -> {
+                UiMotion.animateStatePulse(
+                    view = binding.cardConnection,
+                    expandScale = 1.014f,
+                    contractScale = 0.996f,
+                    duration = MotionTokens.EMPHASIS_DURATION
+                )
+                UiMotion.animatePulse(binding.layoutConnectionSurface, pulseScale = 1.04f, duration = MotionTokens.PULSE_MEDIUM)
+            }
+
+            ServiceUiState.STOPPED -> {
+                UiMotion.animateStatePulse(
+                    view = binding.cardConnection,
+                    expandScale = 1.008f,
+                    contractScale = 0.996f,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
+            }
+        }
         animateTestButtonAlpha(newState)
     }
 
-    private fun updateFabProcessingState(state: ServiceUiState) {
+    private fun updateFabProcessingState(state: ServiceUiState, animate: Boolean = false) {
         val isProcessing = state == ServiceUiState.STARTING || state == ServiceUiState.STOPPING
         binding.indicatorConnectionProgress.isIndeterminate = isProcessing
-        binding.indicatorConnectionProgress.visibility = if (isProcessing) android.view.View.VISIBLE else android.view.View.GONE
-        binding.fab.alpha = if (isProcessing) 0f else 1f
-        binding.viewConnectionBackdrop.alpha = if (isProcessing) 1f else 0.94f
+        if (animate) {
+            UiMotion.animateVisibility(
+                view = binding.indicatorConnectionProgress,
+                visible = isProcessing,
+                translationOffsetDp = 4f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+            UiMotion.animateVisibility(
+                view = binding.fab,
+                visible = !isProcessing,
+                translationOffsetDp = 4f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+            binding.viewConnectionBackdrop.animate()
+                .alpha(if (isProcessing) 1f else 0.94f)
+                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                .setInterpolator(motionInterpolator)
+                .start()
+        } else {
+            UiMotion.setVisibility(binding.indicatorConnectionProgress, isProcessing)
+            UiMotion.setVisibility(binding.fab, !isProcessing)
+            binding.viewConnectionBackdrop.alpha = if (isProcessing) 1f else 0.94f
+        }
     }
 
     private fun updateTestButtonState(state: ServiceUiState) {
@@ -661,7 +718,7 @@ class MainActivity : HelperBaseActivity() {
     }
 
     fun refreshConnectionCard() {
-        connectionCardController.render()
+        connectionCardController.render(serviceUiState)
         updateToolbarSubtitle()
     }
 

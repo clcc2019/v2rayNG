@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.Gravity
 import android.widget.Toast
 import com.v2ray.ang.AngApplication
-import es.dmoral.toasty.Toasty
 import java.io.Serializable
 import java.net.URI
 import java.util.Locale
@@ -17,17 +16,10 @@ import java.util.Locale
 val Context.v2RayApplication: AngApplication?
     get() = applicationContext as? AngApplication
 
-@Volatile
-private var isToastyConfigured = false
-
-fun Context.ensureToastyConfigured() {
-    if (isToastyConfigured) return
-    synchronized(Toasty::class.java) {
-        if (isToastyConfigured) return
-        Toasty.Config.getInstance()
-            .setGravity(Gravity.BOTTOM, 0, 300)
-            .apply()
-        isToastyConfigured = true
+private fun Context.showToastMessage(message: CharSequence, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, message, duration).apply {
+        setGravity(Gravity.BOTTOM, 0, 300)
+        show()
     }
 }
 
@@ -37,8 +29,7 @@ fun Context.ensureToastyConfigured() {
  * @param message The resource ID of the message to show.
  */
 fun Context.toast(message: Int) {
-    ensureToastyConfigured()
-    Toasty.normal(this, message).show()
+    showToastMessage(getString(message))
 }
 
 /**
@@ -47,8 +38,11 @@ fun Context.toast(message: Int) {
  * @param message The text of the message to show.
  */
 fun Context.toast(message: CharSequence) {
-    ensureToastyConfigured()
-    Toasty.normal(this, message).show()
+    showToastMessage(message)
+}
+
+fun Context.toastLong(message: Int) {
+    showToastMessage(getString(message), Toast.LENGTH_LONG)
 }
 
 /**
@@ -57,8 +51,7 @@ fun Context.toast(message: CharSequence) {
  * @param message The resource ID of the message to show.
  */
 fun Context.toastSuccess(message: Int) {
-    ensureToastyConfigured()
-    Toasty.success(this, message, Toast.LENGTH_SHORT, true).show()
+    showToastMessage(getString(message))
 }
 
 /**
@@ -67,8 +60,7 @@ fun Context.toastSuccess(message: Int) {
  * @param message The text of the message to show.
  */
 fun Context.toastSuccess(message: CharSequence) {
-    ensureToastyConfigured()
-    Toasty.success(this, message, Toast.LENGTH_SHORT, true).show()
+    showToastMessage(message)
 }
 
 /**
@@ -77,8 +69,7 @@ fun Context.toastSuccess(message: CharSequence) {
  * @param message The resource ID of the message to show.
  */
 fun Context.toastError(message: Int) {
-    ensureToastyConfigured()
-    Toasty.error(this, message, Toast.LENGTH_SHORT, true).show()
+    showToastMessage(getString(message))
 }
 
 /**
@@ -87,8 +78,7 @@ fun Context.toastError(message: Int) {
  * @param message The text of the message to show.
  */
 fun Context.toastError(message: CharSequence) {
-    ensureToastyConfigured()
-    Toasty.error(this, message, Toast.LENGTH_SHORT, true).show()
+    showToastMessage(message)
 }
 
 const val THRESHOLD = 1000L

@@ -216,6 +216,7 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             ownerActivity.isSearchUiActive() -> EmptyStateMode.SEARCH_IDLE
             else -> EmptyStateMode.DEFAULT
         }
+        val emptyStateModeChanged = lastEmptyStateMode != emptyStateMode
         if (lastEmptyStateMode != emptyStateMode) {
             when (emptyStateMode) {
                 EmptyStateMode.DEFAULT -> {
@@ -239,6 +240,32 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             }
             lastEmptyStateMode = emptyStateMode
         }
+        if (shouldShowEmptyState && isResumed) {
+            when {
+                shouldAnimateEmptyState -> binding.layoutEmptyState.post {
+                    animateEmptyStateContent()
+                }
+
+                emptyStateModeChanged -> {
+                    UiMotion.animatePulse(binding.ivEmptyIcon, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
+                    UiMotion.animateFocusShift(
+                        primary = binding.tvEmptyTitle,
+                        secondary = binding.tvEmptySubtitle,
+                        translationOffsetDp = 6f,
+                        duration = MotionTokens.SHORT_ANIMATION_DURATION
+                    )
+                    if (binding.layoutEmptyActions.isVisible) {
+                        binding.layoutEmptyActions.post {
+                            UiMotion.animateStaggeredChildren(
+                                container = binding.layoutEmptyActions,
+                                translationOffsetDp = 8f,
+                                stepDelay = 22L
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun onSearchUiChanged() {
@@ -247,6 +274,9 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
     }
 
     private fun setupEmptyStateActions() {
+        attachEmptyActionMotion(binding.actionAddConnection)
+        attachEmptyActionMotion(binding.actionScanQrcode)
+        attachEmptyActionMotion(binding.actionAddSubscription)
         binding.actionAddConnection.setOnClickListener {
             it.hapticClick()
             showManualAddSheet()
@@ -259,6 +289,33 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>() {
             it.hapticClick()
             shouldRefreshOnResume = true
             ownerActivity.startActivity(Intent(ownerActivity, SubEditActivity::class.java))
+        }
+    }
+
+    private fun attachEmptyActionMotion(actionView: View) {
+        UiMotion.attachPressFeedbackComposite(
+            source = actionView,
+            pressedScale = 0.988f,
+            pressedAlpha = 0.94f
+        )
+    }
+
+    private fun animateEmptyStateContent() {
+        val content = binding.layoutEmptyState.getChildAt(0) as? ViewGroup ?: return
+        UiMotion.animateStaggeredChildren(
+            container = content,
+            translationOffsetDp = 12f,
+            stepDelay = 36L
+        )
+        if (binding.layoutEmptyActions.isVisible) {
+            binding.layoutEmptyActions.post {
+                UiMotion.animateStaggeredChildren(
+                    container = binding.layoutEmptyActions,
+                    translationOffsetDp = 10f,
+                    stepDelay = 24L,
+                    startDelay = MotionTokens.STAGGER_START_DELAY
+                )
+            }
         }
     }
 

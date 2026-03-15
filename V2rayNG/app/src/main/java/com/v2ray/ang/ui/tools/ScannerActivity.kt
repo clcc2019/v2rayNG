@@ -14,10 +14,9 @@ import com.v2ray.ang.databinding.ActivityNoneBinding
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.util.QRCodeDecoder
-import io.github.g00fy2.quickie.QRResult
-import io.github.g00fy2.quickie.ScanCustomCode
-import io.github.g00fy2.quickie.config.BarcodeFormat
-import io.github.g00fy2.quickie.config.ScannerConfig
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanIntentResult
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,7 +25,7 @@ class ScannerActivity : HelperBaseActivity() {
     private val binding by lazy {  ActivityNoneBinding.inflate(layoutInflater) }
     private val maxDecodeSizePx = 1024
 
-    private val scanQrCode = registerForActivityResult(ScanCustomCode(), ::handleResult)
+    private val scanQrCode = registerForActivityResult(ScanContract(), ::handleResult)
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,18 +39,18 @@ class ScannerActivity : HelperBaseActivity() {
 
     private fun launchScan() {
         scanQrCode.launch(
-            ScannerConfig.build {
-                setHapticSuccessFeedback(true) // enable (default) or disable haptic feedback when a barcode was detected
-                setShowTorchToggle(true) // show or hide (default) torch/flashlight toggle button
-                setShowCloseButton(true) // show or hide (default) close button
-                setBarcodeFormats(listOf(BarcodeFormat.QR_CODE))
-            }
+            ScanOptions()
+                .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                .setTorchEnabled(false)
+                .setBeepEnabled(false)
+                .setOrientationLocked(false)
         )
     }
 
-    private fun handleResult(result: QRResult) {
-        if (result is QRResult.QRSuccess) {
-            finished(result.content.rawValue.orEmpty())
+    private fun handleResult(result: ScanIntentResult) {
+        val contents = result.contents
+        if (!contents.isNullOrEmpty()) {
+            finished(contents)
         } else {
             finish()
         }
