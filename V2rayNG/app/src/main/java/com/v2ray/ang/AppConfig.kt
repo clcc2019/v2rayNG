@@ -48,6 +48,7 @@ object AppConfig {
     const val SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL = "1440" // Default is 24 hours
     const val SUBSCRIPTION_UPDATE_TASK_NAME = "subscription_updater"
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
+    const val PREF_METRICS_ENABLED = "pref_metrics_enabled"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
@@ -103,6 +104,7 @@ object AppConfig {
     /** Network-related constants. */
     const val UPLINK = "uplink"
     const val DOWNLINK = "downlink"
+    const val METRICS_LISTEN_DEFAULT = "127.0.0.1:11111"
 
     /** URLs for various resources. */
     const val GITHUB_URL = "https://github.com"

@@ -77,6 +77,7 @@ internal fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {
         AppConfig.PREF_ROUTE_ONLY_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_ROUTE_ONLY_ENABLED, false),
         AppConfig.PREF_ROUTING_DOMAIN_STRATEGY to MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY),
         AppConfig.PREF_SNIFFING_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_SNIFFING_ENABLED, true),
+        AppConfig.PREF_METRICS_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_METRICS_ENABLED, false),
         AppConfig.PREF_SPEED_ENABLED to MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED, false),
         AppConfig.PREF_VPN_BYPASS_LAN to MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_BYPASS_LAN)
     )

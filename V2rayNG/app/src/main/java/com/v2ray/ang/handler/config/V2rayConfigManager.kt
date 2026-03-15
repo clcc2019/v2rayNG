@@ -253,9 +253,16 @@ object V2rayConfigManager {
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED) == true) {
             getCustomLocalDns(v2rayConfig, routingDomains)
         }
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) != true) {
+        val speedEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true
+        val metricsEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_METRICS_ENABLED, false) == true
+        if (!speedEnabled && !metricsEnabled) {
             v2rayConfig.stats = null
             v2rayConfig.policy = null
+            v2rayConfig.metrics = null
+        } else if (metricsEnabled) {
+            applyMetricsConfig(v2rayConfig)
+        } else {
+            v2rayConfig.metrics = null
         }
 
         //Resolve and add to DNS Hosts
@@ -319,9 +326,16 @@ object V2rayConfigManager {
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED)) {
             getCustomLocalDns(v2rayConfig, routingDomains)
         }
-        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED)) {
+        val speedEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true
+        val metricsEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_METRICS_ENABLED, false) == true
+        if (!speedEnabled && !metricsEnabled) {
             v2rayConfig.stats = null
             v2rayConfig.policy = null
+            v2rayConfig.metrics = null
+        } else if (metricsEnabled) {
+            applyMetricsConfig(v2rayConfig)
+        } else {
+            v2rayConfig.metrics = null
         }
 
         //Resolve and add to DNS Hosts
@@ -366,6 +380,7 @@ object V2rayConfigManager {
         v2rayConfig.fakedns = null
         v2rayConfig.stats = null
         v2rayConfig.policy = null
+        v2rayConfig.metrics = null
 
         v2rayConfig.outbounds.forEach { key ->
             key.mux = null
@@ -404,6 +419,41 @@ object V2rayConfigManager {
         }
         val config = JsonUtil.fromJson(assets, V2rayConfig::class.java)
         return config
+    }
+
+    private fun applyMetricsConfig(v2rayConfig: V2rayConfig) {
+        v2rayConfig.metrics = V2rayConfig.MetricsObject(
+            tag = "Metrics",
+            listen = AppConfig.METRICS_LISTEN_DEFAULT
+        )
+        if (v2rayConfig.stats == null) {
+            v2rayConfig.stats = HashMap<String, Any>()
+        }
+        val policy = v2rayConfig.policy ?: V2rayConfig.PolicyBean(levels = LinkedHashMap())
+        val updatedLevels = policy.levels.toMutableMap()
+        if (updatedLevels.isEmpty()) {
+            updatedLevels["0"] = V2rayConfig.PolicyBean.LevelBean()
+        }
+        updatedLevels.keys.forEach { key ->
+            val level = updatedLevels[key] ?: V2rayConfig.PolicyBean.LevelBean()
+            updatedLevels[key] = level.copy(
+                statsUserUplink = true,
+                statsUserDownlink = true
+            )
+        }
+        policy.levels = updatedLevels
+        val systemMap = mutableMapOf<String, Any>()
+        (policy.system as? Map<*, *>)?.forEach { (key, value) ->
+            if (key is String && value != null) {
+                systemMap[key] = value
+            }
+        }
+        systemMap["statsInboundUplink"] = true
+        systemMap["statsInboundDownlink"] = true
+        systemMap["statsOutboundUplink"] = true
+        systemMap["statsOutboundDownlink"] = true
+        policy.system = systemMap
+        v2rayConfig.policy = policy
     }
 
     private fun buildConfigCacheKey(guid: String, config: ProfileItem): String {

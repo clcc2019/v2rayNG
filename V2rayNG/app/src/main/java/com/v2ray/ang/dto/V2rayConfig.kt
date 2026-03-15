@@ -19,6 +19,7 @@ data class V2rayConfig(
     var fakedns: Any? = null,
     val browserForwarder: Any? = null,
     var observatory: Any? = null,
+    var metrics: MetricsObject? = null,
     var burstObservatory: Any? = null
 ) {
 
@@ -484,6 +485,11 @@ data class V2rayConfig(
             val timeout: String? = null
         )
     }
+
+    data class MetricsObject(
+        val tag: String? = null,
+        val listen: String? = null
+    )
 
     data class FakednsBean(
         var ipPool: String = "198.18.0.0/15",

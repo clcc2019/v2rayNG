@@ -28,6 +28,11 @@
             android:title="@string/title_pref_speed_enabled" />
 
         <CheckBoxPreference
+            android:key="pref_metrics_enabled"
+            android:summary="@string/summary_pref_metrics_enabled"
+            android:title="@string/title_pref_metrics_enabled" />
+
+        <CheckBoxPreference
             android:key="pref_double_column_display"
             android:summary="@string/summary_pref_double_column_display"
             android:title="@string/title_pref_double_column_display" />
