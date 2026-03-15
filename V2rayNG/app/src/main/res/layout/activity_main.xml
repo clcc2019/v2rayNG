@@ -137,7 +137,8 @@
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginEnd="@dimen/padding_spacing_dp16"
                     android:background="@drawable/bg_home_bottom_underlay_gradient"
-                    android:importantForAccessibility="no" />
+                    android:importantForAccessibility="no"
+                    android:visibility="gone" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_connection"
@@ -158,11 +159,24 @@
                         android:id="@+id/layout_connection_dock_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_connection_dock_glass"
                         android:clipChildren="true"
                         android:clipToOutline="true"
                         android:clipToPadding="true"
                         android:foreground="@drawable/bg_connection_dock_foreground">
+
+                        <ImageView
+                            android:id="@+id/view_connection_dock_blur"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:importantForAccessibility="no"
+                            android:scaleType="fitXY" />
+
+                        <View
+                            android:id="@+id/view_connection_dock_glass_fill"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_connection_dock_glass"
+                            android:importantForAccessibility="no" />
 
                         <View
                             android:id="@+id/view_connection_dock_orb"
@@ -206,7 +220,11 @@
                                         android:layout_height="wrap_content"
                                         android:text="@string/home_connection_title"
                                         android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                        android:textColor="@color/color_home_on_surface_muted"
+                                        android:shadowColor="@color/color_connection_dock_text_shadow"
+                                        android:shadowDx="0"
+                                        android:shadowDy="1"
+                                        android:shadowRadius="6"
+                                        android:textColor="@color/color_connection_dock_text_secondary"
                                         android:textStyle="bold" />
 
                                     <TextView
@@ -226,8 +244,12 @@
                                     android:layout_marginTop="@dimen/padding_spacing_dp3"
                                     android:ellipsize="end"
                                     android:maxLines="1"
+                                    android:shadowColor="@color/color_connection_dock_text_shadow"
+                                    android:shadowDx="0"
+                                    android:shadowDy="1"
+                                    android:shadowRadius="7"
                                     android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                                    android:textColor="@color/color_home_on_surface"
+                                    android:textColor="@color/color_connection_dock_text_primary"
                                     android:textSize="15sp" />
 
                                 <TextView
@@ -237,9 +259,13 @@
                                     android:layout_marginTop="@dimen/padding_spacing_dp4"
                                     android:ellipsize="end"
                                     android:maxLines="2"
+                                    android:shadowColor="@color/color_connection_dock_text_shadow"
+                                    android:shadowDx="0"
+                                    android:shadowDy="1"
+                                    android:shadowRadius="5"
                                     android:text="@string/home_connection_summary_short"
                                     android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                                    android:textColor="@color/color_home_on_surface_muted"
+                                    android:textColor="@color/color_connection_dock_text_secondary"
                                     android:textSize="11sp"
                                     android:textStyle="normal" />
 
@@ -251,7 +277,7 @@
                                 android:layout_marginStart="10dp"
                                 android:layout_marginEnd="8dp"
                                 android:alpha="0.72"
-                                android:background="@color/color_home_card_stroke" />
+                                android:background="@color/color_connection_dock_divider" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/layout_test"
@@ -266,7 +292,7 @@
                                 android:insetBottom="0dp"
                                 android:text="@null"
                                 app:icon="@drawable/ic_ecg_24dp"
-                                app:iconTint="@color/color_home_on_surface" />
+                                app:iconTint="@color/color_connection_dock_text_primary" />
 
                             <FrameLayout
                                 android:id="@+id/layout_connection_surface"
@@ -290,7 +316,7 @@
                                     android:layout_gravity="center"
                                     android:indeterminate="true"
                                     android:visibility="gone"
-                                    app:indicatorColor="@color/color_home_primary"
+                                    app:indicatorColor="@color/color_connection_dock_text_primary"
                                     app:indicatorInset="0dp"
                                     app:indicatorSize="44dp"
                                     app:trackColor="@android:color/transparent"
