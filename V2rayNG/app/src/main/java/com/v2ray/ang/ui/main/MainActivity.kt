@@ -188,8 +188,14 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupActionControls() {
+        binding.cardConnection.setOnClickListener { handleFabAction() }
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
+        UiMotion.attachPressFeedbackDock(
+            source = binding.cardConnection,
+            surfaceTarget = binding.layoutConnectionDockContainer,
+            shadowTarget = binding.viewConnectionDockUnderlay
+        )
         UiMotion.attachPressFeedback(binding.fab)
         UiMotion.attachPressFeedback(binding.layoutTest)
     }
@@ -308,7 +314,7 @@ class MainActivity : HelperBaseActivity() {
 
     private fun updateConnectionDockLayout(floatingBottomInset: Int) {
         val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
-        val targetCardBottomMargin = defaultConnectionCardBottomMargin + floatingBottomInset
+        val targetCardBottomMargin = defaultConnectionCardBottomMargin
         if (cardLayoutParams.bottomMargin != targetCardBottomMargin || cardLayoutParams.width != ViewGroup.LayoutParams.MATCH_PARENT) {
             cardLayoutParams.bottomMargin = targetCardBottomMargin
             cardLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -318,14 +324,11 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun syncConnectionDockUnderlay(cardBottomMargin: Int) {
-        val fallbackDockHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp72)
-        val minimumShadowHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
-        val cardHeight = binding.cardConnection.height.takeIf { it > 0 } ?: fallbackDockHeight
+        val dockShadowOverlap = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
         val underlayLayoutParams = binding.viewConnectionDockUnderlay.layoutParams as CoordinatorLayout.LayoutParams
-        // Keep the shadow anchored to the dock's lower edge so it reads as depth,
-        // not as a second gray panel visible through the glass container.
-        val dockShadowHeight = maxOf(minimumShadowHeight, (cardHeight * 0.56f).toInt())
-        val targetUnderlayHeight = dockShadowHeight + cardBottomMargin
+        // Keep the underlay mostly below the dock. A small overlap is enough to
+        // visually attach the shadow without showing a gray block through the glass.
+        val targetUnderlayHeight = cardBottomMargin + dockShadowOverlap
         if (underlayLayoutParams.height != targetUnderlayHeight || underlayLayoutParams.bottomMargin != 0) {
             underlayLayoutParams.height = targetUnderlayHeight
             underlayLayoutParams.bottomMargin = 0

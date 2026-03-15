@@ -115,6 +115,75 @@ object UiMotion {
         }
     }
 
+    fun attachPressFeedbackDock(
+        source: View,
+        surfaceTarget: View = source,
+        shadowTarget: View,
+        pressedScale: Float = 0.992f,
+        pressedTranslationDp: Float = 1.5f,
+        shadowScale: Float = 1.04f,
+        shadowAlphaBoost: Float = 0.14f
+    ) {
+        val pressedTranslationPx = source.resources.displayMetrics.density * pressedTranslationDp
+        var initialShadowAlpha = shadowTarget.alpha
+        source.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!isMotionEnabled(surfaceTarget)) {
+                        return@setOnTouchListener false
+                    }
+                    initialShadowAlpha = shadowTarget.alpha
+                    surfaceTarget.animate().cancel()
+                    shadowTarget.animate().cancel()
+                    surfaceTarget.animate()
+                        .scaleX(pressedScale)
+                        .scaleY(pressedScale)
+                        .translationY(pressedTranslationPx)
+                        .setDuration(MotionTokens.PRESS_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                    shadowTarget.animate()
+                        .scaleX(shadowScale)
+                        .scaleY(shadowScale)
+                        .alpha((initialShadowAlpha + shadowAlphaBoost).coerceAtMost(1f))
+                        .setDuration(MotionTokens.PRESS_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    if (!isMotionEnabled(surfaceTarget)) {
+                        surfaceTarget.scaleX = 1f
+                        surfaceTarget.scaleY = 1f
+                        surfaceTarget.translationY = 0f
+                        shadowTarget.scaleX = 1f
+                        shadowTarget.scaleY = 1f
+                        shadowTarget.alpha = initialShadowAlpha
+                        return@setOnTouchListener false
+                    }
+                    surfaceTarget.animate().cancel()
+                    shadowTarget.animate().cancel()
+                    surfaceTarget.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .translationY(0f)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                    shadowTarget.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .alpha(initialShadowAlpha)
+                        .setDuration(MotionTokens.RELEASE_DURATION)
+                        .setInterpolator(motionInterpolator)
+                        .start()
+                }
+            }
+            false
+        }
+    }
+
     fun attachPressFeedbackAlpha(
         source: View,
         target: View = source,
