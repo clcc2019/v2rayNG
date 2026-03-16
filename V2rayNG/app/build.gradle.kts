@@ -8,10 +8,10 @@ android {
 
     defaultConfig {
         applicationId = "com.xray.ang"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
-        versionCode = 730
-        versionName = "3.0.0"
+        versionCode = 731
+        versionName = "3.0.1"
 
         val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
         val universalApkEnabled = providers.gradleProperty("UNIVERSAL_APK").orNull?.toBoolean() == true
@@ -67,7 +67,6 @@ android {
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -83,9 +82,23 @@ android {
         buildConfig = true
     }
 
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true
+        }
+        resources {
+            excludes += setOf(
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
+                "META-INF/DEPENDENCIES"
+            )
         }
     }
 
@@ -165,5 +178,4 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.org.mockito.mockito.inline)
     testImplementation(libs.mockito.kotlin)
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

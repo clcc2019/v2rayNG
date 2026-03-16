@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -43,16 +42,14 @@ object SubscriptionUpdater {
                 return Result.success()
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                notification.setChannelId(AppConfig.SUBSCRIPTION_UPDATE_CHANNEL)
-                val channel =
-                    NotificationChannel(
-                        AppConfig.SUBSCRIPTION_UPDATE_CHANNEL,
-                        AppConfig.SUBSCRIPTION_UPDATE_CHANNEL_NAME,
-                        NotificationManager.IMPORTANCE_MIN
-                    )
-                notificationManager.createNotificationChannel(channel)
-            }
+            notification.setChannelId(AppConfig.SUBSCRIPTION_UPDATE_CHANNEL)
+            val channel =
+                NotificationChannel(
+                    AppConfig.SUBSCRIPTION_UPDATE_CHANNEL,
+                    AppConfig.SUBSCRIPTION_UPDATE_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_MIN
+                )
+            notificationManager.createNotificationChannel(channel)
 
             for (sub in subs) {
                 currentCoroutineContext().ensureActive()

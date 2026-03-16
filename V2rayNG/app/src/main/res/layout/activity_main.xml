@@ -140,7 +140,7 @@
                     android:foreground="@drawable/bg_connection_dock_touch_ripple"
                     android:layout_marginStart="@dimen/padding_spacing_dp16"
                     android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    android:layout_marginBottom="@dimen/padding_spacing_dp16"
+                    android:layout_marginBottom="@dimen/padding_spacing_dp24"
                     app:cardBackgroundColor="@color/color_home_card_bg_dock"
                     app:strokeColor="@color/color_home_card_stroke"
                     app:strokeWidth="1dp">

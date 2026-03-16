@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -384,20 +383,14 @@ abstract class BaseActivity : AppCompatActivity() {
         val layoutParams = window.attributes ?: return
         val display = windowManager.defaultDisplay ?: return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val currentMode = display.mode
-            val preferredMode = display.supportedModes
-                .filter { it.physicalWidth == currentMode.physicalWidth && it.physicalHeight == currentMode.physicalHeight }
-                .maxByOrNull { it.refreshRate }
+        val currentMode = display.mode
+        val preferredMode = display.supportedModes
+            .filter { it.physicalWidth == currentMode.physicalWidth && it.physicalHeight == currentMode.physicalHeight }
+            .maxByOrNull { it.refreshRate }
 
-            preferredMode?.let {
-                layoutParams.preferredDisplayModeId = it.modeId
-                layoutParams.preferredRefreshRate = it.refreshRate
-            }
-        } else {
-            display.supportedRefreshRates.maxOrNull()?.let { refreshRate ->
-                layoutParams.preferredRefreshRate = refreshRate
-            }
+        preferredMode?.let {
+            layoutParams.preferredDisplayModeId = it.modeId
+            layoutParams.preferredRefreshRate = it.refreshRate
         }
 
         window.attributes = layoutParams

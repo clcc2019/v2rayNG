@@ -6,7 +6,6 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
-import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +19,7 @@ object UiMotion {
     private val motionInterpolator = FastOutSlowInInterpolator()
 
     private fun isMotionEnabled(view: View): Boolean {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+        return ValueAnimator.areAnimatorsEnabled()
     }
 
     private fun canRunTransition(view: View): Boolean {
