@@ -1,4 +1,4 @@
-# V2rayNG APP UI 参考规范
+# xrayng APP UI 参考规范
 
 这个文件用于指导 agent 设计标准化、产品化的 App UI，直接给出可落地的页面规范、配色关系和修改边界。
 
