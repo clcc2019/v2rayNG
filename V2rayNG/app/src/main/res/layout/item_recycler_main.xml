@@ -15,9 +15,9 @@
         android:layout_marginBottom="@dimen/padding_spacing_dp5"
         android:maxWidth="@dimen/list_card_max_width"
         android:clipToOutline="true"
-        app:cardBackgroundColor="@color/color_home_card_bg"
-        app:strokeColor="@color/color_home_card_stroke"
-        app:strokeWidth="1dp">
+        app:cardBackgroundColor="@color/color_settings_section_surface"
+        app:strokeColor="@android:color/transparent"
+        app:strokeWidth="0dp">
 
         <FrameLayout
             android:layout_width="match_parent"

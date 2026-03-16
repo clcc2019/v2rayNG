@@ -9,6 +9,7 @@ import com.xray.ang.handler.SettingsManager
 import com.xray.ang.util.StartupTracer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class AngApplication : Application() {
@@ -28,6 +29,7 @@ class AngApplication : Application() {
 
     private val workManagerConfiguration: Configuration = Configuration.Builder()
         .build()
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @Volatile
     private var workManagerInitialized = false
     private val workManagerLock = Any()
@@ -46,7 +48,7 @@ class AngApplication : Application() {
             SettingsManager.initAppFast(this)
             SettingsManager.setNightMode()
 
-            CoroutineScope(Dispatchers.Default).launch {
+            appScope.launch {
                 SettingsManager.initAppDeferred(this@AngApplication)
             }
         } finally {

@@ -45,6 +45,7 @@ class PerAppProxyActivity : BaseActivity() {
 
         binding.recyclerView.setHasFixedSize(true)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.itemAnimator = null
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         adapter = PerAppProxyAdapter(emptyList(), viewModel)
         binding.recyclerView.adapter = adapter

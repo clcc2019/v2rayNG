@@ -35,6 +35,7 @@ class PerAppProxyAdapter(
         private const val VIEW_TYPE_HEADER = 0
         private const val VIEW_TYPE_ITEM = 1
         private const val ICON_CACHE_SIZE = 48
+        private const val PAYLOAD_SELECTION = "payload_selection"
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppInfo>() {
             override fun areItemsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
                 return oldItem.packageName == newItem.packageName
@@ -45,6 +46,18 @@ class PerAppProxyAdapter(
                     && oldItem.appName == newItem.appName
                     && oldItem.isSystemApp == newItem.isSystemApp
                     && oldItem.isSelected == newItem.isSelected
+            }
+
+            override fun getChangePayload(oldItem: AppInfo, newItem: AppInfo): Any? {
+                return if (oldItem.packageName == newItem.packageName
+                    && oldItem.appName == newItem.appName
+                    && oldItem.isSystemApp == newItem.isSystemApp
+                    && oldItem.isSelected != newItem.isSelected
+                ) {
+                    PAYLOAD_SELECTION
+                } else {
+                    null
+                }
             }
         }
     }
@@ -75,6 +88,15 @@ class PerAppProxyAdapter(
             val appInfo = apps[position - 1]
             holder.bind(appInfo)
         }
+    }
+
+    override fun onBindViewHolder(holder: BaseViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.contains(PAYLOAD_SELECTION) && holder is AppViewHolder) {
+            val appInfo = apps[position - 1]
+            holder.bindSelection(appInfo)
+            return
+        }
+        super.onBindViewHolder(holder, position, payloads)
     }
 
     override fun getItemCount() = apps.size + 1
@@ -147,6 +169,11 @@ class PerAppProxyAdapter(
             itemBypassBinding.checkBox.isChecked = appInfo.isSelected == 1
         }
 
+        fun bindSelection(appInfo: AppInfo) {
+            this.appInfo = appInfo
+            itemBypassBinding.checkBox.isChecked = appInfo.isSelected == 1
+        }
+
         fun recycle() {
             iconJob?.cancel()
             iconJob = null
@@ -181,6 +208,7 @@ class PerAppProxyAdapter(
         private val packageManager: PackageManager
     ) {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+        private val ioDispatcher = Dispatchers.IO.limitedParallelism(2)
         private val cache = LruCache<String, Drawable>(ICON_CACHE_SIZE)
         private val fallbackIcon: Drawable by lazy(LazyThreadSafetyMode.NONE) {
             packageManager.defaultActivityIcon
@@ -194,7 +222,7 @@ class PerAppProxyAdapter(
                 }
             }
             return scope.launch {
-                val icon = withContext(Dispatchers.IO) {
+                val icon = withContext(ioDispatcher) {
                     runCatching { packageManager.getApplicationIcon(packageName) }.getOrNull()
                 } ?: fallbackIcon
                 cache.put(packageName, icon)

@@ -602,10 +602,10 @@ class MainRecyclerAdapter(
             fun from(view: View): ItemColors {
                 val context = view.context
                 return ItemColors(
-                    surface = ContextCompat.getColor(context, R.color.color_home_card_bg),
-                    selectedSurface = ContextCompat.getColor(context, R.color.color_home_card_bg_selected),
-                    outline = ContextCompat.getColor(context, R.color.color_home_card_stroke),
-                    selectedOutline = ContextCompat.getColor(context, R.color.color_home_card_stroke_selected)
+                    surface = ContextCompat.getColor(context, R.color.color_settings_section_surface),
+                    selectedSurface = ContextCompat.getColor(context, R.color.color_settings_nested_surface),
+                    outline = Color.TRANSPARENT,
+                    selectedOutline = Color.TRANSPARENT
                 )
             }
         }

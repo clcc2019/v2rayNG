@@ -88,8 +88,13 @@ class V2RayVpnService : VpnService(), ServiceControl {
 
     override fun onCreate() {
         super.onCreate()
-        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-        StrictMode.setThreadPolicy(policy)
+        if (BuildConfig.DEBUG) {
+            val policy = StrictMode.ThreadPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build()
+            StrictMode.setThreadPolicy(policy)
+        }
         V2RayServiceManager.serviceControl = SoftReference(this)
     }
 
