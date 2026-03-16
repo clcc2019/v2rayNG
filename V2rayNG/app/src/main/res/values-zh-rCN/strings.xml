@@ -8,6 +8,7 @@
     <string name="migration_success">数据迁移成功!</string>
     <string name="action_stop_service">停止</string>
     <string name="migration_fail">数据迁移失败啦!</string>
+    <string name="migration_confirm_v2rayng">这将使用 v2rayNG 的备份覆盖当前 XrayNG 数据，是否继续？</string>
     <string name="pull_down_to_refresh">请下拉刷新!</string>
 
     <!-- Notifications -->
@@ -24,6 +25,7 @@
     <string name="empty_action_add_connection_hint">创建一个节点，并选择要使用的连接协议类型。</string>
     <string name="empty_action_scan_qrcode">扫码导入</string>
     <string name="empty_action_scan_qrcode_hint">通过二维码快速导入节点或订阅链接。</string>
+    <string name="empty_action_import_local_hint">从本地文件导入配置或订阅内容。</string>
     <string name="empty_action_add_subscription">添加订阅</string>
     <string name="empty_action_add_subscription_hint">保存订阅地址，后续可从同一来源批量更新节点。</string>
     <string name="empty_search_idle_title">搜索配置</string>
@@ -506,6 +508,7 @@
     <string name="title_configuration_backup_restore">备份 &amp; 还原</string>
     <string name="title_configuration_backup">备份配置</string>
     <string name="title_configuration_restore">还原配置</string>
+    <string name="title_configuration_migrate_v2rayng">从 v2rayNG 导入</string>
     <string name="title_configuration_share">分享配置</string>
     <string name="title_webdav_config_setting">WebDAV 设置</string>
     <string name="title_webdav_config_setting_unknown">请先设置 WebDAV</string>
@@ -515,6 +518,7 @@
     <string name="backup_summary_backup">将当前设置导出为本地备份文件。</string>
     <string name="backup_summary_share">以文件或文本形式分享当前配置。</string>
     <string name="backup_summary_restore">将历史备份恢复到当前应用。</string>
+    <string name="backup_summary_migrate_v2rayng">导入 v2rayNG 导出的备份 ZIP 文件。</string>
     <string name="backup_summary_webdav">配置远程同步和备份存储位置。</string>
     <string name="about_page_overview">查看版本信息、项目源码、许可证与隐私说明。</string>
     <string name="about_group_project">项目资料</string>

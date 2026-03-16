@@ -155,6 +155,38 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/action_import_local"
+                    style="@style/Widget.V2Ray.HomeEmptyAction.Row">
+
+                    <ImageView
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Icon"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_file_24dp"
+                        app:tint="@color/color_home_on_surface" />
+
+                    <LinearLayout
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Content">
+
+                        <TextView
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Title"
+                            android:text="@string/menu_item_import_config_local"
+                            android:textColor="@color/color_home_on_surface" />
+
+                        <TextView
+                            style="@style/Widget.V2Ray.HomeEmptyAction.Subtitle"
+                            android:text="@string/empty_action_import_local_hint"
+                            android:textColor="@color/color_home_on_surface_muted" />
+                    </LinearLayout>
+
+                    <ImageView
+                        style="@style/Widget.V2Ray.HomeEmptyAction.Chevron"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_chevron_right_20dp"
+                        app:tint="@color/color_home_on_surface_muted" />
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/action_add_subscription"
                     style="@style/Widget.V2Ray.HomeEmptyAction.Row">
 

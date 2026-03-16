@@ -103,6 +103,29 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <View style="@style/Widget.V2Ray.Settings.Divider" />
+
+                <LinearLayout
+                    android:id="@+id/layout_migrate_v2rayng"
+                    style="@style/Widget.V2Ray.Settings.Row">
+
+                    <ImageView
+                        style="@style/Widget.V2Ray.Settings.Icon"
+                        android:importantForAccessibility="no"
+                        app:srcCompat="@drawable/ic_cloud_download_24dp" />
+
+                    <LinearLayout style="@style/Widget.V2Ray.Settings.Content">
+
+                        <TextView
+                            style="@style/Widget.V2Ray.Settings.Title"
+                            android:text="@string/title_configuration_migrate_v2rayng" />
+
+                        <TextView
+                            style="@style/Widget.V2Ray.Settings.Subtitle"
+                            android:text="@string/backup_summary_migrate_v2rayng" />
+                    </LinearLayout>
+                </LinearLayout>
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>

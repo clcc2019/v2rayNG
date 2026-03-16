@@ -23,10 +23,10 @@
 # Gson reflects over app DTOs stored in MMKV and downloaded JSON payloads.
 -keepattributes Signature
 -keepattributes *Annotation*
--keep class com.v2ray.ang.dto.** { *; }
+-keep class com.xray.ang.dto.** { *; }
 
 # Keep JNI entry points and class names used by RegisterNatives.
--keepnames class com.v2ray.ang.service.TProxyService
--keepclassmembers class com.v2ray.ang.service.TProxyService {
+-keepnames class com.xray.ang.service.TProxyService
+-keepclassmembers class com.xray.ang.service.TProxyService {
     native <methods>;
 }

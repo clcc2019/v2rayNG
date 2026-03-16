@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.v2ray.ang"
+    namespace = "com.xray.ang"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.v2ray.ang"
+        applicationId = "com.xray.ang"
         minSdk = 24
         targetSdk = 36
         versionCode = 730

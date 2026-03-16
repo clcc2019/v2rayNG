@@ -70,7 +70,7 @@
 ## Core And Data Files
 
 - 支持 `Xray core` 与 `v2fly core`
-- `geoip.dat` 和 `geosite.dat` 通常位于 `Android/data/com.v2ray.ang/files/assets`
+- `geoip.dat` 和 `geosite.dat` 通常位于 `Android/data/com.xray.ang/files/assets`
 - 内置下载可拉取 [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat) 的增强规则
 - 官方域名/IP 数据也可手动导入：
   - [v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)
@@ -97,7 +97,7 @@ cd V2rayNG
 当前应用信息：
 
 - App name: `XrayNG`
-- Application ID: `com.v2ray.ang`
+- Application ID: `com.xray.ang`
 - F-Droid Application ID suffix: `.fdroid`
 
 ### Notes
@@ -134,6 +134,14 @@ appops set [package name] ACTIVATE_VPN allow
 - Upstream wiki: [v2rayNG Wiki](https://github.com/2dust/v2rayNG/wiki)
 
 如果你的需求更偏向协议能力、规则生态或上游兼容性，优先参考上游文档和实现。
+
+## Migration From v2rayNG
+
+`XrayNG` 采用新的包名（`com.xray.ang`），因此无法直接读取 `v2rayNG` 的私有数据。请按以下方式迁移：
+
+1. 在 `v2rayNG` 中进入 `备份 & 还原`，执行本地备份并导出 ZIP 文件。
+2. 在 `XrayNG` 中进入 `备份 & 还原`，点击「从 v2rayNG 导入」，选择刚才的 ZIP 备份文件。
+3. 导入会覆盖当前 `XrayNG` 配置，请在导入前确认是否需要保留现有数据。
 
 ## Community
 

@@ -19,7 +19,7 @@
         android:layout_height="@dimen/view_height_dp34"
         android:contentDescription="@string/bottom_nav_more"
         android:scaleType="fitCenter"
-        android:src="@mipmap/ic_launcher_round" />
+        android:src="@drawable/ic_app_launcher" />
 
     <TextView
         android:id="@+id/toolbar_status_text"

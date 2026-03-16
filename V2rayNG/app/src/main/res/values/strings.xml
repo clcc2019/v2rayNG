@@ -9,6 +9,7 @@
     <string name="migration_success">Data migration success!</string>
     <string name="action_stop_service">Stop</string>
     <string name="migration_fail">Data migration failed!</string>
+    <string name="migration_confirm_v2rayng">This will overwrite current XrayNG data with a v2rayNG backup. Continue?</string>
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
@@ -25,6 +26,7 @@
     <string name="empty_action_add_connection_hint">Create a profile and choose the protocol type you want to use.</string>
     <string name="empty_action_scan_qrcode">Scan QR code</string>
     <string name="empty_action_scan_qrcode_hint">Import a connection or subscription link from a QR code.</string>
+    <string name="empty_action_import_local_hint">Import configurations or subscriptions from a local file.</string>
     <string name="empty_action_add_subscription">Add subscription</string>
     <string name="empty_action_add_subscription_hint">Save a subscription URL and keep nodes updated from one source.</string>
     <string name="empty_search_idle_title">Search configurations</string>
@@ -521,6 +523,7 @@
     <string name="title_configuration_backup_restore">Backup &amp; Restore</string>
     <string name="title_configuration_backup">Backup config</string>
     <string name="title_configuration_restore">Restore config</string>
+    <string name="title_configuration_migrate_v2rayng">Import from v2rayNG</string>
     <string name="title_configuration_share">Share config</string>
     <string name="title_webdav_config_setting">WebDAV Settings</string>
     <string name="title_webdav_config_setting_unknown">Please configure WebDAV first.</string>
@@ -530,6 +533,7 @@
     <string name="backup_summary_backup">Create a local backup file from current settings.</string>
     <string name="backup_summary_share">Share configuration as a file or text export.</string>
     <string name="backup_summary_restore">Restore a previous backup into this app.</string>
+    <string name="backup_summary_migrate_v2rayng">Import a backup ZIP exported by v2rayNG.</string>
     <string name="backup_summary_webdav">Configure remote sync and backup destination.</string>
     <string name="about_page_overview">View version details, source code, licenses and privacy information.</string>
     <string name="about_group_project">Project</string>
