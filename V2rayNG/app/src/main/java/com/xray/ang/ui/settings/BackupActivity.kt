@@ -34,6 +34,7 @@ import java.util.Locale
 class BackupActivity : HelperBaseActivity() {
     companion object {
         private const val BACKUP_FILE_TIMESTAMP_PATTERN = "yyyy-MM-dd-HH-mm-ss"
+        const val EXTRA_AUTO_MIGRATE_V2RAYNG = "extra_auto_migrate_v2rayng"
     }
 
     private val binding by lazy { ActivityBackupBinding.inflate(layoutInflater) }
@@ -84,6 +85,12 @@ class BackupActivity : HelperBaseActivity() {
 
         bindClickAction(binding.layoutWebdavConfigSetting, withHaptic = false) {
             showWebDavSettingsDialog()
+        }
+
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_AUTO_MIGRATE_V2RAYNG, false)) {
+            showConfirmDialog(R.string.migration_confirm_v2rayng) {
+                restoreViaLocal()
+            }
         }
     }
 
@@ -345,7 +352,7 @@ class BackupActivity : HelperBaseActivity() {
                     MmkvManager.encodeWebDavConfig(cfg)
                     toastSuccess(R.string.toast_success)
                 },
-                actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+                actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_close_20dp, secondary = true) {}
             )
         )
     }

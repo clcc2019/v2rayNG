@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.V2Ray.HomeEmptyAction.Row">
+
+    <ImageView
+        android:id="@+id/empty_action_icon"
+        style="@style/Widget.V2Ray.HomeEmptyAction.Icon"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_add_24dp"
+        tools:ignore="ContentDescription" />
+
+    <LinearLayout
+        style="@style/Widget.V2Ray.HomeEmptyAction.Content">
+
+        <TextView
+            android:id="@+id/empty_action_title"
+            style="@style/Widget.V2Ray.HomeEmptyAction.Title"
+            tools:text="Add connection" />
+
+        <TextView
+            android:id="@+id/empty_action_subtitle"
+            style="@style/Widget.V2Ray.HomeEmptyAction.Subtitle"
+            tools:text="Create a profile and choose the protocol type you want to use." />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/empty_action_chevron"
+        style="@style/Widget.V2Ray.HomeEmptyAction.Chevron"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_chevron_right_20dp"
+        tools:ignore="ContentDescription" />
+
+</LinearLayout>

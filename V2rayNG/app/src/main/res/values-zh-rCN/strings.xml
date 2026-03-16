@@ -3,29 +3,21 @@
     <string name="app_widget_name">开关</string>
     <string name="app_tile_name">开关</string>
     <string name="app_tile_first_use">初次使用此功能请先用 APP 添加配置</string>
-    <string name="navigation_drawer_open">打开导航栏</string>
-    <string name="navigation_drawer_close">关闭导航栏</string>
-    <string name="migration_success">数据迁移成功!</string>
-    <string name="action_stop_service">停止</string>
-    <string name="migration_fail">数据迁移失败啦!</string>
-    <string name="migration_confirm_v2rayng">这将使用 v2rayNG 的备份覆盖当前 XrayNG 数据，是否继续？</string>
+<string name="action_stop_service">停止</string>
+<string name="migration_confirm_v2rayng">这将使用 v2rayNG 的备份覆盖当前 XrayNG 数据，是否继续？</string>
     <string name="pull_down_to_refresh">请下拉刷新!</string>
 
     <!-- Notifications -->
     <string name="notification_action_stop_v2ray">停止</string>
     <string name="toast_permission_denied">无法取得权限</string>
-    <string name="toast_permission_denied_notification">无法取得通知权限</string>
-    <string name="notification_action_more">点击了解更多</string>
-    <string name="action_more">更多操作</string>
-    <string name="action_share">分享</string>
-    <string name="action_confirm">确认操作</string>
+<string name="action_more">更多操作</string>
+<string name="action_confirm">确认操作</string>
     <string name="empty_server_title">暂无配置</string>
     <string name="empty_server_subtitle">导入或添加一个节点后，即可开始连接</string>
     <string name="empty_action_add_connection">添加连接</string>
     <string name="empty_action_add_connection_hint">创建一个节点，并选择要使用的连接协议类型。</string>
     <string name="empty_action_scan_qrcode">扫码导入</string>
     <string name="empty_action_scan_qrcode_hint">通过二维码快速导入节点或订阅链接。</string>
-    <string name="empty_action_import_local_hint">从本地文件导入配置或订阅内容。</string>
     <string name="empty_action_add_subscription">添加订阅</string>
     <string name="empty_action_add_subscription_hint">保存订阅地址，后续可从同一来源批量更新节点。</string>
     <string name="empty_search_idle_title">搜索配置</string>
@@ -35,12 +27,7 @@
     <string name="action_qrcode">显示二维码</string>
     <string name="action_export_clipboard">复制到剪贴板</string>
     <string name="action_export_full_clipboard">复制完整配置</string>
-    <string name="toast_services_start">启动服务中</string>
-    <string name="toast_services_stop">关闭中</string>
-    <string name="toast_services_success">启动服务成功</string>
-    <string name="toast_services_failure">启动服务失败</string>
-
-    <!--ServerActivity-->
+<!--ServerActivity-->
     <string name="title_server">配置项</string>
     <string name="menu_item_add_config">添加配置</string>
     <string name="menu_item_save_config">保存配置</string>
@@ -64,11 +51,9 @@
     <string name="server_lab_address">地址 (address)</string>
     <string name="server_lab_port">端口 (port)</string>
     <string name="server_lab_id">用户 ID (id)</string>
-    <string name="server_lab_alterid">额外 ID (alterId)</string>
-    <string name="server_lab_security">加密方式 (security)</string>
+<string name="server_lab_security">加密方式 (security)</string>
     <string name="server_lab_network">传输协议 (network)</string>
-    <string name="server_lab_more_function">底层传输方式 (transport)</string>
-    <string name="server_lab_head_type">伪装类型 (type)</string>
+<string name="server_lab_head_type">伪装类型 (type)</string>
     <string name="server_lab_mode_type">gRPC 传输模式 (mode)</string>
     <string name="server_lab_request_host">伪装域名 (host)</string>
     <string name="server_lab_request_host_http">http host</string>
@@ -110,8 +95,7 @@
     <string name="server_lab_local_mtu">Mtu (可选, 默认 1420)</string>
     <string name="toast_success">成功</string>
     <string name="toast_failure">失败</string>
-    <string name="toast_none_data">没有数据</string>
-    <string name="toast_incorrect_protocol">不正确的协议</string>
+<string name="toast_incorrect_protocol">不正确的协议</string>
     <string name="toast_invalid_port">端口无效</string>
     <string name="toast_invalid_port_hop">跳跃端口无效</string>
     <string name="toast_invalid_port_hop_interval">端口跳跃间隔无效（至少 5 秒）</string>
@@ -119,18 +103,12 @@
     <string name="toast_decoding_failed">解码失败</string>
     <string name="title_file_chooser">选择一个配置</string>
     <string name="toast_require_file_manager">请安装一个文件管理器</string>
-    <string name="server_customize_config">自定义配置</string>
-    <string name="toast_config_file_invalid">无效的配置</string>
-    <string name="server_lab_content">内容</string>
-    <string name="toast_none_data_clipboard">剪贴板中没有数据</string>
-    <string name="toast_invalid_url">无效的网址</string>
+<string name="server_lab_content">内容</string>
+<string name="toast_invalid_url">无效的网址</string>
     <string name="toast_insecure_url_protocol">请不要使用不安全的 HTTP 协议订阅地址</string>
     <string name="server_lab_need_inbound">确保 inbounds port 和设置中的一致</string>
-    <string name="server_group_page_overview">创建策略组，选择成员来源，并进一步筛选可包含的节点。</string>
-    <string name="server_custom_config_page_overview">编辑完整自定义配置，并在保存前设置一个容易识别的显示名称。</string>
-    <string name="toast_malformed_josn">配置格式错误</string>
-    <string name="server_lab_request_host6">Host (SNI) (可选)</string>
-    <string name="toast_action_not_allowed">禁止此项操作</string>
+<string name="toast_malformed_josn">配置格式错误</string>
+<string name="toast_action_not_allowed">禁止此项操作</string>
     <string name="server_obfs_password">混淆密码</string>
     <string name="server_lab_port_hop">跳跃端口 (会覆盖服务器端口)</string>
     <string name="server_lab_port_hop_interval">端口跳跃间隔 (秒)</string>
@@ -141,8 +119,7 @@
     <string name="server_lab_ech_config_list">EchConfigList</string>
     <string name="server_lab_ech_force_query">EchForceQuery</string>
     <string name="server_lab_pinned_ca256">证书指纹 (SHA-256)</string>
-    <string name="server_page_overview">在保存前检查当前连接的地址、认证、传输和 TLS 选项。</string>
-    <string name="server_group_connection">连接信息</string>
+<string name="server_group_connection">连接信息</string>
     <string name="server_group_identity">认证信息</string>
     <string name="server_group_transport">传输设置</string>
     <string name="server_group_security">安全设置</string>
@@ -161,12 +138,10 @@
     <string name="asset_geo_files_sources">Geo 文件来源 (可选)</string>
 
     <!-- PerAppProxyActivity -->
-    <string name="msg_dialog_progress">正在加载</string>
-    <string name="menu_item_search">搜索</string>
+<string name="menu_item_search">搜索</string>
     <string name="menu_item_select_all">全选</string>
     <string name="menu_item_invert_selection">反选</string>
-    <string name="msg_enter_keywords">输入关键字</string>
-    <string name="switch_bypass_apps_mode">绕行模式</string>
+<string name="switch_bypass_apps_mode">绕行模式</string>
     <string name="menu_item_select_proxy_app">自动选中需代理应用</string>
     <string name="msg_downloading_content">正在下载内容</string>
     <string name="menu_item_export_proxy_app">导出至剪贴板</string>
@@ -178,51 +153,29 @@
     <string name="title_settings">设置</string>
     <string name="title_basic_settings">基础与界面</string>
     <string name="title_connection_settings">连接与 VPN</string>
-    <string name="title_dns_settings">DNS 与路由</string>
-    <string name="title_updates_settings">更新与启动</string>
-    <string name="title_common_settings">常用</string>
-    <string name="title_advanced_settings">高级</string>
-    <string name="title_transport_optimization">传输优化</string>
-    <string name="settings_page_overview">在这里集中调整界面偏好、连接模式、DNS 行为和进阶隧道选项。</string>
-    <string name="more_page_overview">在这里集中进入订阅、路由、应用偏好、维护工具和支持信息页面。</string>
-    <string name="summary_common_settings">常用功能与日常操作相关设置</string>
-    <string name="summary_advanced_settings">不常用或需要经验的高级选项</string>
-    <string name="summary_basic_settings">界面展示与常用偏好</string>
-    <string name="summary_connection_settings">模式、VPN 与隧道相关配置</string>
-    <string name="summary_dns_settings">DNS、Hosts 与域名解析策略</string>
-    <string name="summary_updates_settings">后台更新与启动时自动执行相关设置</string>
-    <string name="summary_core_settings">核心行为、端口与日志</string>
-    <string name="summary_transport_optimization">Mux 与分片相关调优</string>
-    <string name="summary_sub_setting">订阅更新与频率设置</string>
-    <string name="title_subscription_list">订阅列表</string>
+<string name="title_updates_settings">更新与启动</string>
+<string name="title_subscription_list">订阅列表</string>
     <string name="title_subscription_details">订阅详情</string>
     <string name="sub_list_page_overview">集中管理远程订阅源，快速触发更新，并清楚查看前置与落地代理的关联关系。</string>
     <string name="sub_group_quick_actions">快捷操作</string>
     <string name="sub_group_sources">订阅源</string>
-    <string name="sub_edit_page_overview">编辑当前订阅的来源地址、更新行为和关联配置。</string>
-    <string name="group_basic_info">基本信息</string>
+<string name="group_basic_info">基本信息</string>
     <string name="sub_group_behavior">行为选项</string>
     <string name="sub_group_linked_profiles">关联配置</string>
-    <string name="summary_advanced_category">诊断与高级选项</string>
-    <string name="action_search">搜索</string>
+<string name="action_search">搜索</string>
     <string name="hint_search_settings">搜索设置项</string>
     <string name="title_advanced">进阶设置</string>
-    <string name="title_core_settings">核心设置</string>
-    <string name="title_vpn_settings">VPN 设置</string>
-    <string name="system_app_label">系统</string>
+<string name="system_app_label">系统</string>
     <string name="title_pref_per_app_proxy">分应用</string>
     <string name="summary_pref_per_app_proxy">常规: 勾选的 App 被代理, 未勾选的直连;\n绕行模式: 勾选的 App 直连, 未勾选的被代理.\n不明白者在菜单中选择自动选中需代理应用</string>
-    <string name="per_app_proxy_page_overview">选择哪些应用走代理，并在包含模式与绕行模式之间切换。</string>
-    <string name="title_pref_is_booted">开机时自动连接</string>
+<string name="title_pref_is_booted">开机时自动连接</string>
     <string name="summary_pref_is_booted">开机时自动连接选择的服务器，可能会不成功</string>
 
     <string name="title_pref_auto_remove_invalid_after_test">测试后自动删除无效配置</string>
     <string name="summary_pref_auto_remove_invalid_after_test">测试结果可能不准确；已删除的配置无法恢复。</string>
     <string name="title_pref_auto_sort_after_test">测试后自动排序</string>
     <string name="summary_pref_auto_sort_after_test">测试结果可能不准确；</string>
-
-    <string name="title_mux_settings">Mux 多路复用 设置</string>
-    <string name="title_pref_mux_enabled">启用 Mux 多路复用</string>
+<string name="title_pref_mux_enabled">启用 Mux 多路复用</string>
     <string name="summary_pref_mux_enabled">减低延时，但可能会断流，建议不要启用。\nTCP，UDP 及 QUIC 流量处理方式下方可选。</string>
     <string name="title_pref_mux_concurency">TCP 复用子链接数（可填 -1 至 1024）</string>
     <string name="title_pref_mux_xudp_concurency">XUDP 复用子链接数（可填 -1 至 1024）</string>
@@ -273,18 +226,8 @@
 
     <string name="title_pref_proxy_sharing_enabled">允许来自局域网的连接</string>
     <string name="summary_pref_proxy_sharing_enabled">其他设备可以使用 socks/http 协议通过您的 IP 地址连接到代理, 仅在受信任的网络中启用以避免未经授权的连接</string>
-    <string name="toast_warning_pref_proxysharing_short">允许来自局域网的连接，请确保处于受信网络</string>
-
-    <string name="title_pref_allow_insecure">跳过证书验证 (allowInsecure)</string>
-    <string name="summary_pref_allow_insecure">传输层安全选 tls 时，默认跳过证书验证 (allowInsecure)</string>
-
-    <string name="title_pref_socks_port">本地代理端口</string>
-    <string name="summary_pref_socks_port">本地代理端口</string>
-
-    <string name="title_pref_local_dns_port">本地 DNS 端口</string>
-    <string name="summary_pref_local_dns_port">本地 DNS 端口</string>
-
-    <string name="title_pref_confirm_remove">删除配置确认</string>
+<string name="title_pref_socks_port">本地代理端口</string>
+<string name="title_pref_confirm_remove">删除配置确认</string>
     <string name="summary_pref_confirm_remove">删除配置是否需要用户二次确认</string>
 
     <string name="title_pref_start_scan_immediate">立即启动扫码</string>
@@ -300,17 +243,11 @@
     <string name="summary_pref_group_all_display">添加一个额外的“所有选项卡”页面</string>
 
     <!-- AboutActivity -->
-    <string name="title_pref_feedback">反馈</string>
-    <string name="summary_pref_feedback">反馈改进或漏洞至 GitHub</string>
-    <string name="summary_pref_tg_group">加入 Telegram Group</string>
-    <string name="toast_tg_app_not_found">未找到 Telegram app</string>
-    <string name="title_privacy_policy">隐私权政策</string>
+<string name="title_privacy_policy">隐私权政策</string>
     <string name="title_about">关于</string>
     <string name="title_source_code">源代码</string>
     <string name="title_oss_license">Open Source licenses</string>
-    <string name="title_tg_channel">Telegram 频道</string>
-
-    <string name="title_pref_auto_update_subscription">自动更新订阅</string>
+<string name="title_pref_auto_update_subscription">自动更新订阅</string>
     <string name="summary_pref_auto_update_subscription">在后台按一定时间间隔自动更新您的订阅。受设备影响，此功能不一定总是有效</string>
     <string name="title_pref_auto_update_interval">自动更新间隔（分钟，最小值 15）</string>
 
@@ -319,8 +256,7 @@
     <string name="title_mode">模式</string>
     <string name="title_mode_help">点此查看更多帮助</string>
     <string name="title_language">语言</string>
-    <string name="title_ui_settings">用户界面设置</string>
-    <string name="title_pref_ui_mode_night">界面颜色设置</string>
+<string name="title_pref_ui_mode_night">界面颜色设置</string>
     <string name="title_pref_hev_tunnel_loglevel">HevTun 日志级别</string>
     <string name="title_pref_hev_tunnel_rw_timeout">HevTun 读写超时(秒) (tcp,udp 默认 300,60)</string>
 
@@ -361,8 +297,7 @@
     <string name="title_real_ping_all_server">测试配置真连接</string>
     <string name="title_user_asset_setting">路由文件</string>
     <string name="title_sort_by_test_results">按测试结果排序</string>
-    <string name="title_filter_config">过滤配置</string>
-    <string name="filter_config_all">所有</string>
+<string name="filter_config_all">所有</string>
     <string name="title_del_duplicate_config_count">删除 %d 个重复配置</string>
 
     <string name="title_del_config_count">删除 %d 个配置</string>
@@ -372,21 +307,14 @@
     <string name="title_update_subscription_result">更新了 %1$d 个配置（%2$d 个成功，%3$d 个失败，%4$d 个跳过）</string>
     <string name="title_update_subscription_no_subscription">无订阅</string>
     <string name="tasker_start_service">启动服务</string>
-    <string name="tasker_setting_confirm">确定</string>
-
-    <!-- RoutingSettingActivity -->
+<!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">域名策略</string>
     <string name="routing_settings_title">路由</string>
     <string name="routing_settings_tips">用逗号(,)隔开, domain 和 ip 二选一填写</string>
-    <string name="routing_settings_save">保存</string>
-    <string name="routing_settings_delete">清空</string>
-    <string name="routing_settings_rule_title">路由规则设置</string>
-    <string name="routing_priority_high">高优先级</string>
-    <string name="routing_priority_low">低优先级</string>
-    <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
+<string name="routing_settings_rule_title">路由规则设置</string>
+<string name="routing_priority_hint">从上到下匹配，命中即停止</string>
     <string name="routing_priority_summary">高→低优先级，命中即停止</string>
-    <string name="routing_page_overview">在这里集中管理路由策略、分应用规则和自定义资源。</string>
-    <string name="routing_group_preferences">路由偏好</string>
+<string name="routing_group_preferences">路由偏好</string>
     <string name="routing_group_rules">规则优先级</string>
     <string name="routing_summary_total">规则数</string>
     <string name="routing_summary_enabled">已启用</string>
@@ -401,8 +329,7 @@
     <string name="routing_group_rule_details">规则信息</string>
     <string name="routing_settings_match_conditions">匹配条件</string>
     <string name="routing_settings_advanced">高级条件</string>
-    <string name="routing_edit_page_overview">创建路由规则，定义匹配条件，并指定命中后走哪个 outboundTag。</string>
-    <string name="routing_rule_remarks_hint">填写一个简短名称，方便在优先级列表里快速识别这条规则。</string>
+<string name="routing_rule_remarks_hint">填写一个简短名称，方便在优先级列表里快速识别这条规则。</string>
     <string name="routing_settings_outbound_tag_hint">选择命中后流量的去向，例如 proxy、direct 或 block。</string>
     <string name="routing_lock_rule_hint">锁定后的规则在重新导入预定义规则集时会被保留。</string>
     <string name="routing_settings_domain_hint">用于匹配域名或域名后缀，多个值用逗号分隔。</string>
@@ -419,25 +346,16 @@
     <string name="summary_routing_assets">管理路由文件</string>
     <string name="routing_action_show_advanced">展开高级条件</string>
     <string name="user_asset_group_file_list">文件列表</string>
-    <string name="user_asset_url_page_overview">添加远程路由文件地址，并为它设置易识别的名称。</string>
-    <string name="routing_assets_refresh">更新路由文件</string>
+<string name="routing_assets_refresh">更新路由文件</string>
     <string name="routing_assets_updated_at">%1$s</string>
     <string name="routing_assets_updated_unknown">--</string>
-
-    <string name="connection_test_pending">"测试代理连接"</string>
-    <string name="connection_test_short">测试</string>
-    <string name="connection_test_testing">"测试中…"</string>
+<string name="connection_test_testing">"测试中…"</string>
     <string name="connection_test_testing_count">测试 %d 个配置中…</string>
-    <string name="connection_test_label">连接检测</string>
-    <string name="connection_test_unavailable">连接后可测试</string>
-    <string name="connection_test_available">"连接成功：延时 %d 毫秒"</string>
+<string name="connection_test_available">"连接成功：延时 %d 毫秒"</string>
     <string name="connection_test_error">"失败：%s"</string>
     <string name="connection_test_fail">"失败"</string>
     <string name="connection_test_error_status_code">"状态码无效（#%d）"</string>
-    <string name="connection_summary_hint">"在这里控制服务，并在下方查看当前使用的配置。"</string>
-    <string name="home_connection_title">连接控制</string>
-    <string name="home_connection_subtitle">启动当前节点，或在已连接时立即停止代理</string>
-    <string name="home_connection_summary_short">启动或停止当前节点</string>
+<string name="home_connection_summary_short">启动或停止当前节点</string>
     <string name="home_connection_profile_empty">未选择配置</string>
     <string name="current_config">"当前配置"</string>
     <string name="connection_connected">"已连接"</string>
@@ -457,8 +375,7 @@
     <string name="import_subscription_failure">导入订阅失败</string>
     <string name="menu_item_add_asset">添加</string>
     <string name="menu_item_add_url">添加链接</string>
-    <string name="title_fragment_settings">分片（Fragment）设置</string>
-    <string name="title_pref_fragment_packets">分片方式</string>
+<string name="title_pref_fragment_packets">分片方式</string>
     <string name="title_pref_fragment_length">分片包长（最小 - 最大）</string>
     <string name="title_pref_fragment_interval">分片间隔（最小 - 最大）</string>
     <string name="title_pref_fragment_enabled">启用分片（Fragment）</string>
@@ -469,8 +386,7 @@
     <string name="update_now">立即更新</string>
     <string name="update_check_pre_release">检查 Pre-release</string>
     <string name="update_checking_for_update">正在检查更新中…</string>
-    <string name="update_page_overview">查看当前版本状态，并选择是否包含预发布版本。</string>
-    <string name="update_group_status">当前状态</string>
+<string name="update_group_status">当前状态</string>
     <string name="update_group_preferences">更新通道</string>
     <string name="update_action_check_now">立即检查</string>
     <string name="update_action_checking">检查中…</string>
@@ -512,19 +428,15 @@
     <string name="title_configuration_share">分享配置</string>
     <string name="title_webdav_config_setting">WebDAV 设置</string>
     <string name="title_webdav_config_setting_unknown">请先设置 WebDAV</string>
-    <string name="backup_page_overview">安全地导出、导入并同步当前配置。</string>
-    <string name="backup_group_local">本地操作</string>
+<string name="backup_group_local">本地操作</string>
     <string name="backup_group_sync">云端同步</string>
     <string name="backup_summary_backup">将当前设置导出为本地备份文件。</string>
     <string name="backup_summary_share">以文件或文本形式分享当前配置。</string>
     <string name="backup_summary_restore">将历史备份恢复到当前应用。</string>
     <string name="backup_summary_migrate_v2rayng">导入 v2rayNG 导出的备份 ZIP 文件。</string>
     <string name="backup_summary_webdav">配置远程同步和备份存储位置。</string>
-    <string name="about_page_overview">查看版本信息、项目源码、许可证与隐私说明。</string>
-    <string name="about_group_project">项目资料</string>
-    <string name="about_group_community">社区与支持</string>
-    <string name="logcat_page_overview">查看运行日志，便于排查和诊断问题。</string>
-    <string name="observability_page_overview">暴露本地指标，便于观察流量与运行状态。</string>
+<string name="about_group_project">项目资料</string>
+<string name="observability_page_overview">暴露本地指标，便于观察流量与运行状态。</string>
     <string name="observability_group_metrics">Metrics 接口</string>
     <string name="title_observability">可观测</string>
     <string name="title_observability_metrics">启用 Metrics 接口</string>
@@ -544,22 +456,7 @@
     <string name="title_webdav_user">用户名</string>
     <string name="title_webdav_pass">密码</string>
     <string name="title_webdav_remote_path">远程文件夹名（可选）</string>
-
-    <string-array name="share_method">
-        <item>二维码</item>
-        <item>导出至剪贴板</item>
-        <item>导出完整配置至剪贴板</item>
-    </string-array>
-
-    <string-array name="share_method_more">
-        <item>二维码</item>
-        <item>导出至剪贴板</item>
-        <item>导出完整配置至剪贴板</item>
-        <item>编辑</item>
-        <item>删除</item>
-    </string-array>
-
-    <string-array name="share_sub_method">
+<string-array name="share_sub_method">
         <item>二维码</item>
         <item>导出至剪贴板</item>
     </string-array>
@@ -605,18 +502,13 @@
         <item>本地</item>
         <item>WebDAV</item>
     </string-array>
-    <string name="drawer_group_manage">管理</string>
-    <string name="drawer_group_tools">工具</string>
-    <string name="more_group_configuration">配置管理</string>
+<string name="more_group_configuration">配置管理</string>
     <string name="more_group_preferences">应用偏好</string>
     <string name="more_group_tools">维护与诊断</string>
     <string name="more_group_information">信息与支持</string>
-    <string name="more_sign_out_placeholder">退出登录</string>
-    <string name="bottom_nav_more">更多</string>
+<string name="bottom_nav_more">更多</string>
     <string name="more_title">更多</string>
-    <string name="more_subtitle">集中管理配置、工具和应用信息。</string>
-    <string name="more_version_format">v%s</string>
-    <string name="more_summary_subscriptions">管理订阅源、更新频率和启用状态。</string>
+<string name="more_summary_subscriptions">管理订阅源、更新频率和启用状态。</string>
     <string name="more_summary_routing">调整路由规则、绕过列表和策略行为。</string>
     <string name="more_summary_settings">配置连接、DNS 和其他高级偏好。</string>
     <string name="more_summary_backup">导出、导入或同步当前应用配置。</string>

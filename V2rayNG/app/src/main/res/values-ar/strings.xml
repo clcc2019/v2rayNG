@@ -3,24 +3,13 @@
     <string name="app_widget_name">التبديل</string>
     <string name="app_tile_name">التبديل</string>
     <string name="app_tile_first_use">أول استخدام لهذه الميزة، يرجى استخدام التطبيق لإضافة خادم</string>
-    <string name="navigation_drawer_open">فتح درج التنقل</string>
-    <string name="navigation_drawer_close">إغلاق درج التنقل</string>
-    <string name="migration_success">نجحت عملية ترحيل البيانات!</string>
-    <string name="action_stop_service">Stop service</string>
-    <string name="migration_fail">فشلت عملية ترحيل البيانات!</string>
-    <string name="pull_down_to_refresh">Please pull down to refresh!</string>
+<string name="action_stop_service">Stop service</string>
+<string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
     <string name="notification_action_stop_v2ray">إيقاف</string>
     <string name="toast_permission_denied">تعذر الحصول على الإذن</string>
-    <string name="toast_permission_denied_notification">Unable to obtain the notification permission</string>
-    <string name="notification_action_more">انقر للمزيد</string>
-    <string name="toast_services_start">بدء الخدمات</string>
-    <string name="toast_services_stop">إيقاف الخدمات</string>
-    <string name="toast_services_success">نجاح بدء الخدمات</string>
-    <string name="toast_services_failure">فشل بدء الخدمات</string>
-
-    <!--ServerActivity-->
+<!--ServerActivity-->
     <string name="title_server">ملف التكوين</string>
     <string name="menu_item_add_config">إضافة تكوين</string>
     <string name="menu_item_save_config">حفظ التكوين</string>
@@ -44,12 +33,9 @@
     <string name="server_lab_address">العنوان</string>
     <string name="server_lab_port">المنفذ</string>
     <string name="server_lab_id">المعرف</string>
-    <string name="server_lab_alterid">AlterId</string>
-
-    <string name="server_lab_security">الأمان</string>
+<string name="server_lab_security">الأمان</string>
     <string name="server_lab_network">الشبكة</string>
-    <string name="server_lab_more_function">النقل</string>
-    <string name="server_lab_head_type">نوع الرأس</string>
+<string name="server_lab_head_type">نوع الرأس</string>
     <string name="server_lab_mode_type">وضع gRPC</string>
     <string name="server_lab_request_host">host</string>
     <string name="server_lab_request_host_http">http host</string>
@@ -91,21 +77,16 @@
     <string name="server_lab_local_mtu">Mtu (اختياري، الافتراضي 1420)</string>
     <string name="toast_success">نجاح</string>
     <string name="toast_failure">فشل</string>
-    <string name="toast_none_data">لا يوجد شيء</string>
-    <string name="toast_incorrect_protocol">بروتوكول غير صحيح</string>
+<string name="toast_incorrect_protocol">بروتوكول غير صحيح</string>
     <string name="toast_decoding_failed">فشل فك التشفير</string>
     <string name="title_file_chooser">حدد ملف التكوين</string>
     <string name="toast_require_file_manager">يرجى تثبيت مدير الملفات.</string>
-    <string name="server_customize_config">تخصيص التكوين</string>
-    <string name="toast_config_file_invalid">تكوين غير صالح</string>
-    <string name="server_lab_content">المحتوى</string>
-    <string name="toast_none_data_clipboard">لا توجد بيانات في الحافظة</string>
-    <string name="toast_invalid_url">رابط URL غير صالح</string>
+<string name="server_lab_content">المحتوى</string>
+<string name="toast_invalid_url">رابط URL غير صالح</string>
     <string name="toast_insecure_url_protocol">Please do not use the insecure HTTP protocol subscription address</string>
     <string name="server_lab_need_inbound">تأكد من أن منفذ الاتصالات الواردة يتوافق مع الإعدادات</string>
     <string name="toast_malformed_josn">تكوين مشوه</string>
-    <string name="server_lab_request_host6">مضيف (SNI) (اختياري)</string>
-    <string name="toast_action_not_allowed">الإجراء غير مسموح به</string>
+<string name="toast_action_not_allowed">الإجراء غير مسموح به</string>
     <string name="server_obfs_password">Obfs password</string>
     <string name="server_lab_port_hop">Port Hopping</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
@@ -131,12 +112,10 @@
     <string name="asset_geo_files_sources">Geo files source (optional)</string>
 
     <!-- PerAppProxyActivity -->
-    <string name="msg_dialog_progress">جار التحميل</string>
-    <string name="menu_item_search">بحث</string>
+<string name="menu_item_search">بحث</string>
     <string name="menu_item_select_all">تحديد الكل</string>
     <string name="menu_item_invert_selection">عكس الاختيار</string>
-    <string name="msg_enter_keywords">أدخل الكلمات الرئيسية</string>
-    <string name="switch_bypass_apps_mode">وضع التجاوز</string>
+<string name="switch_bypass_apps_mode">وضع التجاوز</string>
     <string name="menu_item_select_proxy_app">تحديد تطبيق الوكيل تلقائيًا</string>
     <string name="msg_downloading_content">جارٍ تنزيل المحتوى</string>
     <string name="menu_item_export_proxy_app">تصدير إلى الحافظة</string>
@@ -144,13 +123,10 @@
     <string name="per_app_proxy_settings">Per-app settings</string>
     <string name="per_app_proxy_settings_enable">Enable per-app</string>
 
-
     <!-- Preferences -->
     <string name="title_settings">الإعدادات</string>
     <string name="title_advanced">إعدادات متقدمة</string>
-    <string name="title_core_settings">إعدادات النواة</string>
-    <string name="title_vpn_settings">إعدادات VPN</string>
-    <string name="title_pref_per_app_proxy">الوكيل لكل تطبيق</string>
+<string name="title_pref_per_app_proxy">الوكيل لكل تطبيق</string>
     <string name="summary_pref_per_app_proxy">عام: التطبيق المحدد هو وكيل، غير المحدد اتصال مباشر؛ \nوضع التجاوز: التطبيق المحدد متصل مباشرة، غير المحدد وكيل. \nخيار تحديد تطبيق الوكيل تلقائيًا في القائمة</string>
     <string name="title_pref_is_booted">Auto connect at startup</string>
     <string name="summary_pref_is_booted">Automatically connects to the selected server at startup, which may be unsuccessful</string>
@@ -159,9 +135,7 @@
     <string name="summary_pref_auto_remove_invalid_after_test">Test results may not be accurate; deleted config cannot be recovered.</string>
     <string name="title_pref_auto_sort_after_test">Auto sort after testing</string>
     <string name="summary_pref_auto_sort_after_test">Test results may not be accurate;</string>
-
-    <string name="title_mux_settings">إعدادات Mux</string>
-    <string name="title_pref_mux_enabled">تمكين Mux</string>
+<string name="title_pref_mux_enabled">تمكين Mux</string>
     <string name="summary_pref_mux_enabled">أسرع، لكن قد يتسبب في اتصال غير مستقر\nتخصيص كيفية التعامل مع TCP و UDP و QUIC أدناه</string>
     <string name="title_pref_mux_concurency">اتصالات TCP（النطاق من -1 إلى 1024）</string>
     <string name="title_pref_mux_xudp_concurency">اتصالات XUDP（النطاق من -1 إلى 1024）</string>
@@ -211,18 +185,8 @@
 
     <string name="title_pref_proxy_sharing_enabled">السماح بالاتصالات من الشبكة المحلية</string>
     <string name="summary_pref_proxy_sharing_enabled">يمكن للأجهزة الأخرى الاتصال بالبروكسي بواسطة عنوان IP الخاص بك من خلال socks/http، يتم التمكين فقط في الشبكة الموثوقة لتجنب الاتصال غير المصرح به</string>
-    <string name="toast_warning_pref_proxysharing_short">السماح بالاتصالات من الشبكة المحلية، تأكد من أنك في شبكة موثوقة</string>
-
-    <string name="title_pref_allow_insecure">السماح غير الآمن</string>
-    <string name="summary_pref_allow_insecure">عند TLS، الافتراضي هو السماح غير الآمن</string>
-
-    <string name="title_pref_socks_port">منفذ بروكسي Local</string>
-    <string name="summary_pref_socks_port">منفذ بروكسي Local</string>
-
-    <string name="title_pref_local_dns_port">منفذ DNS المحلي</string>
-    <string name="summary_pref_local_dns_port">منفذ DNS المحلي</string>
-
-    <string name="title_pref_confirm_remove">تأكيد حذف ملف التكوين</string>
+<string name="title_pref_socks_port">منفذ بروكسي Local</string>
+<string name="title_pref_confirm_remove">تأكيد حذف ملف التكوين</string>
     <string name="summary_pref_confirm_remove">ما إذا كان حذف ملف التكوين يتطلب تأكيدًا ثانيًا من قبل المستخدم</string>
 
     <string name="title_pref_start_scan_immediate">بدء المسح الضوئي على الفور</string>
@@ -237,17 +201,11 @@
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
     <!-- AboutActivity -->
-    <string name="title_pref_feedback">ملاحظات</string>
-    <string name="summary_pref_feedback">ملاحظات التحسينات أو الأخطاء إلى GitHub</string>
-    <string name="summary_pref_tg_group">الانضمام إلى مجموعة Telegram</string>
-    <string name="toast_tg_app_not_found">لم يتم العثور على تطبيق Telegram</string>
-    <string name="title_privacy_policy">سياسة الخصوصية</string>
+<string name="title_privacy_policy">سياسة الخصوصية</string>
     <string name="title_about">حول\nترجمة م. ابراهيم قاسم</string>
     <string name="title_source_code">الكود المصدري</string>
     <string name="title_oss_license">Open Source licenses</string>
-    <string name="title_tg_channel">قناة Telegram</string>
-
-    <string name="title_pref_auto_update_subscription">اشتراكات التحديث التلقائي</string>
+<string name="title_pref_auto_update_subscription">اشتراكات التحديث التلقائي</string>
     <string name="summary_pref_auto_update_subscription">قم بتحديث اشتراكاتك تلقائيًا بفترة زمنية في الخلفية. اعتمادًا على الجهاز، قد لا تعمل هذه الميزة دائمًا</string>
     <string name="title_pref_auto_update_interval">فاصل التحديث التلقائي (بالدقائق، الحد الأدنى للقيمة 15)</string>
 
@@ -256,8 +214,7 @@
     <string name="title_mode">الوضع</string>
     <string name="title_mode_help">انقر هنا للحصول على مزيد من المساعدة</string>
     <string name="title_language">اللغة</string>
-    <string name="title_ui_settings">إعدادات واجهة المستخدم</string>
-    <string name="title_pref_ui_mode_night">إعدادات وضع واجهة المستخدم ليلاً</string>
+<string name="title_pref_ui_mode_night">إعدادات وضع واجهة المستخدم ليلاً</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
     <string name="title_pref_hev_tunnel_rw_timeout">Hev Tun read/write timeout (seconds) (tcp,udp default 300,60)</string>
 
@@ -285,8 +242,7 @@
     <string name="title_real_ping_all_server"> اختبر جميع الإعدادات (3)</string>
     <string name="title_user_asset_setting">ملفات التوجيه</string>
     <string name="title_sort_by_test_results">الفرز حسب نتائج الاختبار (5)</string>
-    <string name="title_filter_config">تصفية ملف التكوين</string>
-    <string name="filter_config_all">All</string>
+<string name="filter_config_all">All</string>
     <string name="title_del_duplicate_config_count">حذف %d من الإعدادات المكررة</string>
 
     <string name="title_del_config_count">Delete %d configurations</string>
@@ -296,15 +252,11 @@
     <string name="title_update_subscription_result">Updated %1$d configs (%2$d success, %3$d failed, %4$d skipped)</string>
     <string name="title_update_subscription_no_subscription">No subscriptions</string>
     <string name="tasker_start_service">بدء الخدمة</string>
-    <string name="tasker_setting_confirm">تأكيد</string>
-
-    <!-- RoutingSettingActivity -->
+<!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">استراتيجية النطاق</string>
     <string name="routing_settings_title">توجيه</string>
     <string name="routing_settings_tips">مفصولة بفواصل (،)، تذكر الحفظ</string>
-    <string name="routing_settings_save">حفظ</string>
-    <string name="routing_settings_delete">مسح</string>
-    <string name="routing_settings_rule_title">Routing Rule Settings</string>
+<string name="routing_settings_rule_title">Routing Rule Settings</string>
     <string name="routing_settings_add_rule">Add rule</string>
     <string name="routing_settings_import_predefined_rulesets">استيراد مجموعات قواعد محددة مسبقاً</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
@@ -312,9 +264,7 @@
     <string name="routing_settings_import_rulesets_from_qrcode">استيراد مجموعة قواعد من رمز الاستجابة السريعة</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
-
-    <string name="connection_test_pending">التحقق من الاتصال</string>
-    <string name="connection_test_testing">يجري الاختبار…</string>
+<string name="connection_test_testing">يجري الاختبار…</string>
     <string name="connection_test_testing_count">Testing %d configurations…</string>
     <string name="connection_test_available">نجاح: استغرق اتصال HTTP %dms</string>
     <string name="connection_test_error">فشل اكتشاف اتصال الإنترنت: %s</string>
@@ -326,8 +276,7 @@
 
     <string name="import_subscription_success">تم استيراد الاشتراك بنجاح</string>
     <string name="import_subscription_failure">فشل استيراد الاشتراك</string>
-    <string name="title_fragment_settings">إعدادات الجزء</string>
-    <string name="title_pref_fragment_packets">حزم الجزء</string>
+<string name="title_pref_fragment_packets">حزم الجزء</string>
     <string name="title_pref_fragment_length">طول الجزء (الحد الأدنى - الحد الأقصى)</string>
     <string name="title_pref_fragment_interval">فاصل الجزء (الحد الأدنى - الحد الأقصى)</string>
     <string name="title_pref_fragment_enabled">تفعيل الجزء</string>
@@ -354,22 +303,7 @@
     <string name="title_webdav_user">Username</string>
     <string name="title_webdav_pass">Password</string>
     <string name="title_webdav_remote_path">Remote directory (optional)</string>
-
-    <string-array name="share_method">
-        <item>رمز استجابة سريعة (QRcode)</item>
-        <item>تصدير إلى الحافظة</item>
-        <item>تصدير التكوين الكامل إلى الحافظة</item>
-    </string-array>
-
-    <string-array name="share_method_more">
-        <item>QRcode</item>
-        <item>Export to clipboard</item>
-        <item>Export full configuration to clipboard</item>
-        <item>Edit</item>
-        <item>Delete</item>
-    </string-array>
-
-    <string-array name="share_sub_method">
+<string-array name="share_sub_method">
         <item>رمز استجابة سريعة (QRcode)</item>
         <item>تصدير إلى الحافظة</item>
     </string-array>

@@ -29,7 +29,7 @@ fun Context.showConfirmDialog(
             actionBottomSheetItem(getString(android.R.string.ok), R.drawable.ic_action_done) {
                 onConfirmed()
             },
-            actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_chevron_down_20dp) {}
+            actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_close_20dp, secondary = true) {}
         )
     )
 }

@@ -23,6 +23,7 @@ data class ActionBottomSheetItem(
     @StringRes val labelResId: Int? = null,
     @DrawableRes val iconRes: Int,
     val destructive: Boolean = false,
+    val secondary: Boolean = false,
     val label: CharSequence? = null,
     val handler: () -> Unit
 )
@@ -31,12 +32,14 @@ fun actionBottomSheetItem(
     @StringRes labelResId: Int,
     @DrawableRes iconRes: Int,
     destructive: Boolean = false,
+    secondary: Boolean = false,
     handler: () -> Unit
 ): ActionBottomSheetItem {
     return ActionBottomSheetItem(
         labelResId = labelResId,
         iconRes = iconRes,
         destructive = destructive,
+        secondary = secondary,
         handler = handler
     )
 }
@@ -45,12 +48,14 @@ fun actionBottomSheetItem(
     label: CharSequence,
     @DrawableRes iconRes: Int,
     destructive: Boolean = false,
+    secondary: Boolean = false,
     handler: () -> Unit
 ): ActionBottomSheetItem {
     return ActionBottomSheetItem(
         label = label,
         iconRes = iconRes,
         destructive = destructive,
+        secondary = secondary,
         handler = handler
     )
 }
@@ -118,8 +123,16 @@ fun Context.showActionBottomSheet(
         val itemView = inflater.inflate(R.layout.item_bottom_sheet_action, actionsContainer, false)
         val iconView = itemView.findViewById<ImageView>(R.id.iv_icon)
         val labelView = itemView.findViewById<TextView>(R.id.tv_label)
-        val iconColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurfaceVariant
-        val textColorRes = if (action.destructive) R.color.md_theme_error else R.color.md_theme_onSurface
+        val iconColorRes = when {
+            action.destructive -> R.color.md_theme_error
+            action.secondary -> R.color.md_theme_onSurfaceVariant
+            else -> R.color.md_theme_onSurfaceVariant
+        }
+        val textColorRes = when {
+            action.destructive -> R.color.md_theme_error
+            action.secondary -> R.color.md_theme_onSurfaceVariant
+            else -> R.color.md_theme_onSurface
+        }
 
         iconView.setImageResource(action.iconRes)
         iconView.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, iconColorRes))

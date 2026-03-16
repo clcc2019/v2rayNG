@@ -253,7 +253,7 @@ class MainActivity : HelperBaseActivity() {
             val absPos = kotlin.math.abs(position).coerceAtMost(1f)
             val scale = 1f - (0.015f * absPos)
             page.alpha = 1f - (0.08f * absPos)
-            page.translationX = -page.width * 0.03f * position
+            page.translationX = 0f
             page.translationY = pageOffsetPx * absPos
             page.scaleX = scale
             page.scaleY = scale

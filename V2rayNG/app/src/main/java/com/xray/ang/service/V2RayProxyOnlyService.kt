@@ -12,6 +12,7 @@ import com.xray.ang.handler.MmkvManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.handler.V2rayConfigManager
 import com.xray.ang.handler.V2RayServiceManager
+import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.MyContextWrapper
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicBoolean
@@ -82,6 +83,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val guid = MmkvManager.getSelectServer()
                 if (guid.isNullOrEmpty()) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only: no selected server")
+                    MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopSelf()
                     return@launch
                 }
@@ -89,11 +91,17 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid, knownProfile)
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build proxy-only V2Ray config")
+                    MessageUtil.sendMsg2UI(
+                        this@V2RayProxyOnlyService,
+                        AppConfig.MSG_STATE_START_FAILURE,
+                        configResult.errorResId ?: ""
+                    )
                     stopSelf()
                     return@launch
                 }
                 if (!V2RayServiceManager.startCoreLoop(null, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only core loop")
+                    MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopSelf()
                     return@launch
                 }

@@ -1,21 +1,23 @@
 package com.xray.ang.ui
 
+import android.animation.ValueAnimator
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewbinding.ViewBinding
 import com.xray.ang.AppConfig
 import com.xray.ang.R
@@ -53,6 +55,13 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         val showActions: Boolean
     )
 
+    private data class EmptyActionSpec(
+        @DrawableRes val iconRes: Int,
+        @StringRes val titleRes: Int,
+        @StringRes val subtitleRes: Int,
+        val onClick: () -> Unit
+    )
+
     class GroupServerBinding private constructor(
         private val rootView: View,
         val recyclerView: RecyclerView,
@@ -60,11 +69,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         val ivEmptyIcon: ImageView,
         val tvEmptyTitle: android.widget.TextView,
         val tvEmptySubtitle: android.widget.TextView,
-        val layoutEmptyActions: ViewGroup,
-        val actionAddConnection: View,
-        val actionScanQrcode: View,
-        val actionImportLocal: View,
-        val actionAddSubscription: View
+        val layoutEmptyActions: ViewGroup
     ) : ViewBinding {
         override fun getRoot(): View = rootView
 
@@ -82,11 +87,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
                     ivEmptyIcon = requireView(root, R.id.iv_empty_icon),
                     tvEmptyTitle = requireView(root, R.id.tv_empty_title),
                     tvEmptySubtitle = requireView(root, R.id.tv_empty_subtitle),
-                    layoutEmptyActions = requireView(root, R.id.layout_empty_actions),
-                    actionAddConnection = requireView(root, R.id.action_add_connection),
-                    actionScanQrcode = requireView(root, R.id.action_scan_qrcode),
-                    actionImportLocal = requireView(root, R.id.action_import_local),
-                    actionAddSubscription = requireView(root, R.id.action_add_subscription)
+                    layoutEmptyActions = requireView(root, R.id.layout_empty_actions)
                 )
             }
 
@@ -109,6 +110,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     private var lastEmptyStateVisible: Boolean? = null
     private var storedCountRequestVersion = 0
     private var lastEmptyStateMode: EmptyStateMode? = null
+    private val switchInterpolator = FastOutSlowInInterpolator()
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -159,9 +161,6 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
 
     override fun onResume() {
         super.onResume()
-        if (mainViewModel.subscriptionId == subId) {
-            pendingListFadeIn = true
-        }
         if (mainViewModel.keywordFilter.isBlank()) {
             fetchStoredItemCount()
         }
@@ -225,6 +224,9 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         val shouldShowEmptyState = itemCount == 0
         val shouldAnimateEmptyState =
             lastEmptyStateVisible != null && lastEmptyStateVisible != shouldShowEmptyState && isResumed
+        if (!shouldShowEmptyState && lastEmptyStateVisible == true) {
+            pendingListFadeIn = true
+        }
         updateRecyclerVisibility(shouldShowEmptyState)
         updateEmptyStateVisibility(shouldShowEmptyState, shouldAnimateEmptyState)
         updateOwnerListContext(shouldShowEmptyState)
@@ -375,27 +377,61 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         updateEmptyState()
     }
 
+    fun animateGroupSwitch() {
+        if (!isAdded || !isResumed) return
+        val target = when {
+            binding.layoutEmptyState.isVisible -> binding.layoutEmptyState
+            binding.recyclerView.isVisible -> binding.recyclerView
+            else -> binding.recyclerView
+        }
+        if (!ValueAnimator.areAnimatorsEnabled() || !target.isAttachedToWindow) {
+            target.alpha = 1f
+            target.translationY = 0f
+            return
+        }
+        val offsetPx = resources.displayMetrics.density * 6f
+        target.animate().cancel()
+        target.alpha = 0.96f
+        target.translationY = offsetPx
+        target.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+            .setInterpolator(switchInterpolator)
+            .start()
+    }
+
     private fun setupEmptyStateActions() {
-        attachEmptyActionMotion(binding.actionAddConnection)
-        attachEmptyActionMotion(binding.actionScanQrcode)
-        attachEmptyActionMotion(binding.actionImportLocal)
-        attachEmptyActionMotion(binding.actionAddSubscription)
-        binding.actionAddConnection.setOnClickListener {
-            it.hapticClick()
-            showManualAddSheet()
-        }
-        binding.actionScanQrcode.setOnClickListener {
-            it.hapticClick()
-            importQRcode()
-        }
-        binding.actionImportLocal.setOnClickListener {
-            it.hapticClick()
-            importLocalConfig()
-        }
-        binding.actionAddSubscription.setOnClickListener {
-            it.hapticClick()
-            shouldRefreshOnResume = true
-            ownerActivity.startActivity(Intent(ownerActivity, SubEditActivity::class.java))
+        val actions = listOf(
+            EmptyActionSpec(
+                iconRes = R.drawable.ic_add_24dp,
+                titleRes = R.string.empty_action_add_connection,
+                subtitleRes = R.string.empty_action_add_connection_hint
+            ) { showManualAddSheet() },
+            EmptyActionSpec(
+                iconRes = R.drawable.ic_qu_scan_24dp,
+                titleRes = R.string.empty_action_scan_qrcode,
+                subtitleRes = R.string.empty_action_scan_qrcode_hint
+            ) { importQRcode() },
+            EmptyActionSpec(
+                iconRes = R.drawable.ic_cloud_download_24dp,
+                titleRes = R.string.title_configuration_migrate_v2rayng,
+                subtitleRes = R.string.backup_summary_migrate_v2rayng
+            ) { importFromV2rayNg() },
+            EmptyActionSpec(
+                iconRes = R.drawable.ic_subscriptions_24dp,
+                titleRes = R.string.empty_action_add_subscription,
+                subtitleRes = R.string.empty_action_add_subscription_hint
+            ) {
+                shouldRefreshOnResume = true
+                ownerActivity.startActivity(Intent(ownerActivity, SubEditActivity::class.java))
+            }
+        )
+        val container = binding.layoutEmptyActions
+        val count = minOf(container.childCount, actions.size)
+        for (i in 0 until count) {
+            val actionView = container.getChildAt(i)
+            bindEmptyAction(actionView, actions[i])
         }
     }
 
@@ -405,6 +441,21 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             pressedScale = 0.988f,
             pressedAlpha = 0.94f
         )
+    }
+
+    private fun bindEmptyAction(actionView: View, spec: EmptyActionSpec) {
+        val iconView = actionView.findViewById<ImageView>(R.id.empty_action_icon)
+        val titleView = actionView.findViewById<TextView>(R.id.empty_action_title)
+        val subtitleView = actionView.findViewById<TextView>(R.id.empty_action_subtitle)
+        iconView.setImageResource(spec.iconRes)
+        titleView.setText(spec.titleRes)
+        subtitleView.setText(spec.subtitleRes)
+        actionView.contentDescription = getString(spec.titleRes)
+        attachEmptyActionMotion(actionView)
+        actionView.setOnClickListener {
+            it.hapticClick()
+            spec.onClick()
+        }
     }
 
     private fun animateEmptyStateContent() {
@@ -468,32 +519,11 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         }
     }
 
-    private fun importLocalConfig(): Boolean {
-        ownerActivity.launchFileChooser { uri ->
-            if (uri == null) {
-                return@launchFileChooser
-            }
-            readContentFromUri(uri)
-        }
-        return true
-    }
-
-    private fun readContentFromUri(uri: Uri) {
-        ownerActivity.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val content = ownerActivity.contentResolver.openInputStream(uri).use { input ->
-                    input?.bufferedReader()?.readText()
-                }
-                withContext(Dispatchers.Main) {
-                    importBatchConfig(content)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e(AppConfig.TAG, "Failed to read content from URI", e)
-                    ownerActivity.toastError(R.string.toast_failure)
-                }
-            }
-        }
+    private fun importFromV2rayNg() {
+        ownerActivity.startActivity(
+            Intent(ownerActivity, BackupActivity::class.java)
+                .putExtra(BackupActivity.EXTRA_AUTO_MIGRATE_V2RAYNG, true)
+        )
     }
 
     private fun handleImportBatchResult(result: BatchImportResult) {

@@ -4,29 +4,21 @@
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">First use of this feature, please use the app to add server</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="migration_success">Data migration success!</string>
-    <string name="action_stop_service">Stop</string>
-    <string name="migration_fail">Data migration failed!</string>
-    <string name="migration_confirm_v2rayng">This will overwrite current XrayNG data with a v2rayNG backup. Continue?</string>
+<string name="action_stop_service">Stop</string>
+<string name="migration_confirm_v2rayng">This will overwrite current XrayNG data with a v2rayNG backup. Continue?</string>
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
     <string name="notification_action_stop_v2ray">Stop</string>
     <string name="toast_permission_denied">Unable to obtain the permission</string>
-    <string name="toast_permission_denied_notification">Unable to obtain the notification permission</string>
-    <string name="notification_action_more">Click for more</string>
-    <string name="action_more">More actions</string>
-    <string name="action_share">Share</string>
-    <string name="action_confirm">Confirm</string>
+<string name="action_more">More actions</string>
+<string name="action_confirm">Confirm</string>
     <string name="empty_server_title">No configurations yet</string>
     <string name="empty_server_subtitle">Import or add a server to get started</string>
     <string name="empty_action_add_connection">Add connection</string>
     <string name="empty_action_add_connection_hint">Create a profile and choose the protocol type you want to use.</string>
     <string name="empty_action_scan_qrcode">Scan QR code</string>
     <string name="empty_action_scan_qrcode_hint">Import a connection or subscription link from a QR code.</string>
-    <string name="empty_action_import_local_hint">Import configurations or subscriptions from a local file.</string>
     <string name="empty_action_add_subscription">Add subscription</string>
     <string name="empty_action_add_subscription_hint">Save a subscription URL and keep nodes updated from one source.</string>
     <string name="empty_search_idle_title">Search configurations</string>
@@ -36,12 +28,7 @@
     <string name="action_qrcode">Show QR</string>
     <string name="action_export_clipboard">Copy to clipboard</string>
     <string name="action_export_full_clipboard">Copy full config</string>
-    <string name="toast_services_start">Start Services</string>
-    <string name="toast_services_stop">Stop Services</string>
-    <string name="toast_services_success">Start Services Success</string>
-    <string name="toast_services_failure">Start Services Failure</string>
-
-    <!--ServerActivity-->
+<!--ServerActivity-->
     <string name="title_server">Config</string>
     <string name="menu_item_add_config">Add config</string>
     <string name="menu_item_save_config">Save config</string>
@@ -65,11 +52,9 @@
     <string name="server_lab_address">address</string>
     <string name="server_lab_port">port</string>
     <string name="server_lab_id">id</string>
-    <string name="server_lab_alterid">alterId</string>
-    <string name="server_lab_security">security</string>
+<string name="server_lab_security">security</string>
     <string name="server_lab_network">Network</string>
-    <string name="server_lab_more_function">Transport</string>
-    <string name="server_lab_head_type">head type</string>
+<string name="server_lab_head_type">head type</string>
     <string name="server_lab_mode_type">gRPC mode</string>
     <string name="server_lab_request_host">host</string>
     <string name="server_lab_request_host_http">http host</string>
@@ -111,8 +96,7 @@
     <string name="server_lab_local_mtu">Mtu(optional, default 1420)</string>
     <string name="toast_success">Success</string>
     <string name="toast_failure">Failure</string>
-    <string name="toast_none_data">There is nothing</string>
-    <string name="toast_incorrect_protocol">Incorrect protocol</string>
+<string name="toast_incorrect_protocol">Incorrect protocol</string>
     <string name="toast_invalid_port">Invalid port</string>
     <string name="toast_invalid_port_hop">Invalid port hopping</string>
     <string name="toast_invalid_port_hop_interval">Invalid port hopping interval (min 5s)</string>
@@ -120,16 +104,12 @@
     <string name="toast_decoding_failed">Decoding failed</string>
     <string name="title_file_chooser">Select a config</string>
     <string name="toast_require_file_manager">Please install a File Manager.</string>
-    <string name="server_customize_config">Customize config</string>
-    <string name="toast_config_file_invalid">Invalid config</string>
-    <string name="server_lab_content">Content</string>
-    <string name="toast_none_data_clipboard">There is no data in the clipboard</string>
-    <string name="toast_invalid_url">Invalid URL</string>
+<string name="server_lab_content">Content</string>
+<string name="toast_invalid_url">Invalid URL</string>
     <string name="toast_insecure_url_protocol">Please do not use the insecure HTTP protocol subscription address</string>
     <string name="server_lab_need_inbound">Ensure inbounds port is consistent with the settings</string>
     <string name="toast_malformed_josn">Config malformed</string>
-    <string name="server_lab_request_host6">Host(SNI)(Optional)</string>
-    <string name="toast_action_not_allowed">Action not allowed</string>
+<string name="toast_action_not_allowed">Action not allowed</string>
     <string name="server_obfs_password">Obfs password</string>
     <string name="server_lab_port_hop">Port Hopping(will override the port)</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
@@ -140,10 +120,7 @@
     <string name="server_lab_ech_config_list">EchConfigList</string>
     <string name="server_lab_ech_force_query">EchForceQuery</string>
     <string name="server_lab_pinned_ca256">Certificate fingerprint (SHA-256)</string>
-    <string name="server_page_overview">Review the endpoint, authentication, transport, and TLS options before saving this connection.</string>
-    <string name="server_group_page_overview">Create a policy group, choose where its members come from, and refine which profiles it can include.</string>
-    <string name="server_custom_config_page_overview">Edit the full custom configuration and keep its display name easy to recognize before saving.</string>
-    <string name="server_group_connection">Connection</string>
+<string name="server_group_connection">Connection</string>
     <string name="server_group_identity">Authentication</string>
     <string name="server_group_transport">Transport</string>
     <string name="server_group_security">Security</string>
@@ -164,12 +141,10 @@
     <string name="asset_geo_files_sources">Geo files source (optional)</string>
 
     <!-- PerAppProxyActivity -->
-    <string name="msg_dialog_progress">Loading</string>
-    <string name="menu_item_search">Search</string>
+<string name="menu_item_search">Search</string>
     <string name="menu_item_select_all">Select all</string>
     <string name="menu_item_invert_selection">Invert selection</string>
-    <string name="msg_enter_keywords">Enter keywords</string>
-    <string name="switch_bypass_apps_mode">Bypass Mode</string>
+<string name="switch_bypass_apps_mode">Bypass Mode</string>
     <string name="menu_item_select_proxy_app">Auto select proxy app</string>
     <string name="msg_downloading_content">Downloading content</string>
     <string name="menu_item_export_proxy_app">Export to Clipboard</string>
@@ -181,51 +156,29 @@
     <string name="title_settings">Settings</string>
     <string name="title_basic_settings">Basics &amp; UI</string>
     <string name="title_connection_settings">Connection &amp; VPN</string>
-    <string name="title_dns_settings">DNS &amp; Routing</string>
-    <string name="title_updates_settings">Updates &amp; startup</string>
-    <string name="title_common_settings">Common</string>
-    <string name="title_advanced_settings">Advanced</string>
-    <string name="title_transport_optimization">Transport Optimization</string>
-    <string name="settings_page_overview">Adjust appearance, connection mode, DNS behavior, and expert tunnel options in one place.</string>
-    <string name="more_page_overview">Access subscriptions, routing, app preferences, maintenance tools and support pages from one place.</string>
-    <string name="summary_common_settings">Frequently used settings</string>
-    <string name="summary_advanced_settings">Less common or expert options</string>
-    <string name="summary_basic_settings">Appearance and daily-use preferences</string>
-    <string name="summary_connection_settings">Mode, VPN, and tunnel controls</string>
-    <string name="summary_dns_settings">DNS, hosts, and domain resolve strategy</string>
-    <string name="summary_updates_settings">Background refresh and launch-time automation</string>
-    <string name="summary_core_settings">Core behavior, ports, and logging</string>
-    <string name="summary_transport_optimization">Mux and fragmentation tuning</string>
-    <string name="summary_sub_setting">Subscription update controls</string>
-    <string name="title_subscription_list">Subscriptions</string>
+<string name="title_updates_settings">Updates &amp; startup</string>
+<string name="title_subscription_list">Subscriptions</string>
     <string name="title_subscription_details">Subscription details</string>
     <string name="sub_list_page_overview">Organize remote sources, trigger updates quickly, and keep chained profiles easy to review.</string>
     <string name="sub_group_quick_actions">Quick actions</string>
     <string name="sub_group_sources">Sources</string>
-    <string name="sub_edit_page_overview">Edit the source, update behavior and linked profiles for this subscription.</string>
-    <string name="group_basic_info">Basic info</string>
+<string name="group_basic_info">Basic info</string>
     <string name="sub_group_behavior">Behavior</string>
     <string name="sub_group_linked_profiles">Linked profiles</string>
-    <string name="summary_advanced_category">Diagnostics and advanced options</string>
-    <string name="action_search">Search</string>
+<string name="action_search">Search</string>
     <string name="hint_search_settings">Search settings</string>
     <string name="title_advanced">Advanced Settings</string>
-    <string name="title_core_settings">Core Settings</string>
-    <string name="title_vpn_settings">VPN Settings</string>
-    <string name="system_app_label">System</string>
+<string name="system_app_label">System</string>
     <string name="title_pref_per_app_proxy">Per-app proxy</string>
     <string name="summary_pref_per_app_proxy">General: Checked apps use proxy, unchecked apps connect directly; \nBypass mode: checked apps connect directly, unchecked apps use proxy. \nThe option to automatically select proxy applications is in the menu</string>
-    <string name="per_app_proxy_page_overview">Choose which apps follow the proxy and switch between include mode and bypass mode.</string>
-    <string name="title_pref_is_booted">Auto connect at startup</string>
+<string name="title_pref_is_booted">Auto connect at startup</string>
     <string name="summary_pref_is_booted">Automatically connects to the selected server at startup, which may be unsuccessful</string>
 
     <string name="title_pref_auto_remove_invalid_after_test">Auto delete invalid config after testing</string>
     <string name="summary_pref_auto_remove_invalid_after_test">Test results may not be accurate; deleted config cannot be recovered.</string>
     <string name="title_pref_auto_sort_after_test">Auto sort after testing</string>
     <string name="summary_pref_auto_sort_after_test">Test results may not be accurate;</string>
-
-    <string name="title_mux_settings">Mux Settings</string>
-    <string name="title_pref_mux_enabled">Enable Mux</string>
+<string name="title_pref_mux_enabled">Enable Mux</string>
     <string name="summary_pref_mux_enabled">Faster, but it may cause unstable connectivity\nCustomize how to handle TCP, UDP and QUIC below</string>
     <string name="title_pref_mux_concurency">TCP connections（range -1 to 1024）</string>
     <string name="title_pref_mux_xudp_concurency">XUDP connections（range -1 to 1024）</string>
@@ -264,7 +217,6 @@
 
     <string name="title_pref_vpn_mtu">VPN MTU (default 1500)</string>
 
-
     <string name="title_pref_domestic_dns">Domestic DNS (Optional)</string>
     <string name="summary_pref_domestic_dns">DNS</string>
 
@@ -279,18 +231,8 @@
 
     <string name="title_pref_proxy_sharing_enabled">Allow connections from the LAN</string>
     <string name="summary_pref_proxy_sharing_enabled">Other devices can connect to proxy by your IP address through local proxy. Only enable in trusted networks to avoid unauthorized connections</string>
-    <string name="toast_warning_pref_proxysharing_short">Allow connections from the LAN. Make sure you are in a trusted network</string>
-
-    <string name="title_pref_allow_insecure">allowInsecure</string>
-    <string name="summary_pref_allow_insecure">When TLS is selected, allow insecure connections by default</string>
-
-    <string name="title_pref_socks_port">Local proxy port</string>
-    <string name="summary_pref_socks_port">Local proxy port</string>
-
-    <string name="title_pref_local_dns_port">Local DNS port</string>
-    <string name="summary_pref_local_dns_port">Local DNS port</string>
-
-    <string name="title_pref_confirm_remove">Delete config confirmation</string>
+<string name="title_pref_socks_port">Local proxy port</string>
+<string name="title_pref_confirm_remove">Delete config confirmation</string>
     <string name="summary_pref_confirm_remove">Whether deleting a config requires a second confirmation by the user</string>
 
     <string name="title_pref_start_scan_immediate">Start scanning immediately</string>
@@ -306,18 +248,12 @@
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
 
     <!-- AboutActivity -->
-    <string name="title_pref_feedback">Feedback</string>
-    <string name="summary_pref_feedback">Feedback enhancements or bugs to GitHub</string>
-    <string name="summary_pref_tg_group">Join Telegram Group</string>
-    <string name="toast_tg_app_not_found">Telegram app not found</string>
-    <string name="title_privacy_policy">Privacy policy</string>
+<string name="title_privacy_policy">Privacy policy</string>
     <string name="title_qr_code">QR code</string>
     <string name="title_about">About</string>
     <string name="title_source_code">Source code</string>
     <string name="title_oss_license">Open Source licenses</string>
-    <string name="title_tg_channel">Telegram channel</string>
-
-    <string name="title_pref_auto_update_subscription">Automatic update subscriptions</string>
+<string name="title_pref_auto_update_subscription">Automatic update subscriptions</string>
     <string name="summary_pref_auto_update_subscription">Update your subscriptions automatically at set intervals in the background. Depending on the device, this feature may not always work</string>
     <string name="title_pref_auto_update_interval">Auto Update Interval (Minutes, Min value 15)</string>
 
@@ -326,8 +262,7 @@
     <string name="title_mode">Mode</string>
     <string name="title_mode_help">Click me for more help</string>
     <string name="title_language">Language</string>
-    <string name="title_ui_settings">UI settings</string>
-    <string name="title_pref_ui_mode_night">UI mode settings</string>
+<string name="title_pref_ui_mode_night">UI mode settings</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
     <string name="title_pref_hev_tunnel_rw_timeout">Hev Tun read/write timeout (seconds) (tcp,udp default 300,60)</string>
 
@@ -368,8 +303,7 @@
     <string name="title_real_ping_all_server">Real delay config</string>
     <string name="title_user_asset_setting">Routing files</string>
     <string name="title_sort_by_test_results">Sorting by test results</string>
-    <string name="title_filter_config">Filter config</string>
-    <string name="filter_config_all">All</string>
+<string name="filter_config_all">All</string>
     <string name="title_del_duplicate_config_count">Delete %d duplicate configs</string>
     <string name="title_del_config_count">Delete %d configs</string>
     <string name="title_import_config_count">Import %d configs</string>
@@ -379,21 +313,14 @@
     <string name="title_update_subscription_no_subscription">No subscriptions</string>
 
     <string name="tasker_start_service">Start Service</string>
-    <string name="tasker_setting_confirm">Confirm</string>
-
-    <!-- RoutingSettingActivity -->
+<!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Domain strategy</string>
     <string name="routing_settings_title">Routing</string>
     <string name="routing_settings_tips">Separated by commas(,), choose domain or ip</string>
-    <string name="routing_settings_save">Save</string>
-    <string name="routing_settings_delete">Clear</string>
-    <string name="routing_settings_rule_title">Routing Rule Settings</string>
-    <string name="routing_priority_high">Higher priority</string>
-    <string name="routing_priority_low">Lower priority</string>
-    <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
+<string name="routing_settings_rule_title">Routing Rule Settings</string>
+<string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
     <string name="routing_priority_summary">Higher → lower priority, stop at first match</string>
-    <string name="routing_page_overview">Manage routing strategy, app-based rules and custom assets in one place.</string>
-    <string name="routing_group_preferences">Routing preferences</string>
+<string name="routing_group_preferences">Routing preferences</string>
     <string name="routing_group_rules">Rule priority</string>
     <string name="routing_summary_total">Rules</string>
     <string name="routing_summary_enabled">Enabled</string>
@@ -406,8 +333,7 @@
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
     <string name="routing_group_rule_details">Rule details</string>
-    <string name="routing_edit_page_overview">Create a routing rule, define its match conditions, and choose which outbound tag handles the matched traffic.</string>
-    <string name="routing_rule_remarks_hint">Use a short name so this rule is easy to find in the priority list.</string>
+<string name="routing_rule_remarks_hint">Use a short name so this rule is easy to find in the priority list.</string>
     <string name="routing_settings_outbound_tag_hint">Choose where matching traffic is sent, for example proxy, direct, or block.</string>
     <string name="routing_lock_rule_hint">Locked rules stay in place when predefined rulesets are imported again.</string>
     <string name="routing_settings_domain_hint">Match domains or suffixes. Separate multiple entries with commas.</string>
@@ -424,8 +350,7 @@
     <string name="summary_routing_assets">Manage routing files</string>
     <string name="routing_action_show_advanced">Show advanced fields</string>
     <string name="user_asset_group_file_list">File list</string>
-    <string name="user_asset_url_page_overview">Add a remote routing file source and keep its name easy to identify.</string>
-    <string name="routing_assets_refresh">Update routing files</string>
+<string name="routing_assets_refresh">Update routing files</string>
     <string name="routing_assets_updated_at">%1$s</string>
     <string name="routing_assets_updated_unknown">--</string>
     <string name="routing_settings_domain" translatable="false">domain</string>
@@ -438,21 +363,13 @@
     <string name="routing_settings_network" translatable="false">network</string>
     <string name="routing_settings_network_tip" translatable="false">[udp|tcp]</string>
     <string name="routing_settings_outbound_tag" translatable="false">outboundTag</string>
-
-    <string name="connection_test_pending">Check Connectivity</string>
-    <string name="connection_test_short">Test</string>
-    <string name="connection_test_testing">Testing…</string>
+<string name="connection_test_testing">Testing…</string>
     <string name="connection_test_testing_count">Testing %d configs…</string>
-    <string name="connection_test_label">Connectivity</string>
-    <string name="connection_test_unavailable">Connect first to test</string>
-    <string name="connection_test_available">Success: Connection took %dms</string>
+<string name="connection_test_available">Success: Connection took %dms</string>
     <string name="connection_test_error">Fail to detect internet connection: %s</string>
     <string name="connection_test_fail">Failed</string>
     <string name="connection_test_error_status_code">Error code: #%d</string>
-    <string name="connection_summary_hint">Control the service here, then review the active configuration below.</string>
-    <string name="home_connection_title">Connection controls</string>
-    <string name="home_connection_subtitle">Start the selected profile, or stop the proxy when active.</string>
-    <string name="home_connection_summary_short">Start or stop the current profile.</string>
+<string name="home_connection_summary_short">Start or stop the current profile.</string>
     <string name="home_server_active_label">ACTIVE</string>
     <string name="home_server_source_label">Source</string>
     <string name="home_connection_profile_empty">No profile selected</string>
@@ -472,8 +389,7 @@
 
     <string name="import_subscription_success">Subscription imported Successfully</string>
     <string name="import_subscription_failure">Import subscription failed</string>
-    <string name="title_fragment_settings">Fragment Settings</string>
-    <string name="title_pref_fragment_packets">Fragment Packets</string>
+<string name="title_pref_fragment_packets">Fragment Packets</string>
     <string name="title_pref_fragment_length">Fragment Length (min-max)</string>
     <string name="title_pref_fragment_interval">Fragment Interval (min-max)</string>
     <string name="title_pref_fragment_enabled">Enable Fragment</string>
@@ -484,8 +400,7 @@
     <string name="update_now">Update now</string>
     <string name="update_check_pre_release">Check Pre-release</string>
     <string name="update_checking_for_update">Checking for update…</string>
-    <string name="update_page_overview">Review release availability and choose whether to include pre-release builds.</string>
-    <string name="update_group_status">Current status</string>
+<string name="update_group_status">Current status</string>
     <string name="update_group_preferences">Release channel</string>
     <string name="update_action_check_now">Check now</string>
     <string name="update_action_checking">Checking…</string>
@@ -527,19 +442,15 @@
     <string name="title_configuration_share">Share config</string>
     <string name="title_webdav_config_setting">WebDAV Settings</string>
     <string name="title_webdav_config_setting_unknown">Please configure WebDAV first.</string>
-    <string name="backup_page_overview">Export, import and sync your current configuration safely.</string>
-    <string name="backup_group_local">Local operations</string>
+<string name="backup_group_local">Local operations</string>
     <string name="backup_group_sync">Cloud sync</string>
     <string name="backup_summary_backup">Create a local backup file from current settings.</string>
     <string name="backup_summary_share">Share configuration as a file or text export.</string>
     <string name="backup_summary_restore">Restore a previous backup into this app.</string>
     <string name="backup_summary_migrate_v2rayng">Import a backup ZIP exported by v2rayNG.</string>
     <string name="backup_summary_webdav">Configure remote sync and backup destination.</string>
-    <string name="about_page_overview">View version details, source code, licenses and privacy information.</string>
-    <string name="about_group_project">Project</string>
-    <string name="about_group_community">Community</string>
-    <string name="logcat_page_overview">Inspect runtime logs for troubleshooting and diagnostics.</string>
-    <string name="observability_page_overview">Expose local metrics to inspect traffic and runtime signals.</string>
+<string name="about_group_project">Project</string>
+<string name="observability_page_overview">Expose local metrics to inspect traffic and runtime signals.</string>
     <string name="observability_group_metrics">Metrics endpoint</string>
     <string name="title_observability">Observability</string>
     <string name="title_observability_metrics">Enable metrics endpoint</string>
@@ -559,22 +470,7 @@
     <string name="title_webdav_user">Username</string>
     <string name="title_webdav_pass">Password</string>
     <string name="title_webdav_remote_path">Remote directory (optional)</string>
-
-    <string-array name="share_method">
-        <item>QRcode</item>
-        <item>Export to clipboard</item>
-        <item>Export full config to clipboard</item>
-    </string-array>
-
-    <string-array name="share_method_more">
-        <item>QRcode</item>
-        <item>Export to clipboard</item>
-        <item>Export full config to clipboard</item>
-        <item>Edit</item>
-        <item>Delete</item>
-    </string-array>
-
-    <string-array name="share_sub_method">
+<string-array name="share_sub_method">
         <item>QRcode</item>
         <item>Export to clipboard</item>
     </string-array>
@@ -621,18 +517,13 @@
         <item>Local</item>
         <item>WebDAV</item>
     </string-array>
-    <string name="drawer_group_manage">Manage</string>
-    <string name="drawer_group_tools">Tools</string>
-    <string name="more_group_configuration">Configuration</string>
+<string name="more_group_configuration">Configuration</string>
     <string name="more_group_preferences">Preferences</string>
     <string name="more_group_tools">Maintenance</string>
     <string name="more_group_information">Information &amp; support</string>
-    <string name="more_sign_out_placeholder">Sign out</string>
-    <string name="bottom_nav_more">More</string>
+<string name="bottom_nav_more">More</string>
     <string name="more_title">More</string>
-    <string name="more_subtitle">Manage configuration, tools and app info.</string>
-    <string name="more_version_format">v%s</string>
-    <string name="more_summary_subscriptions">Manage subscription sources and update switches.</string>
+<string name="more_summary_subscriptions">Manage subscription sources and update switches.</string>
     <string name="more_summary_routing">Adjust routing rules, bypass lists and policies.</string>
     <string name="more_summary_settings">Tune connection, DNS and advanced preferences.</string>
     <string name="more_summary_backup">Export, import and sync your app configuration.</string>

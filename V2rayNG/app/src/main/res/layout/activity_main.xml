@@ -53,7 +53,7 @@
                     android:id="@+id/view_pager"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:clipToPadding="false"
+                    android:clipToPadding="true"
                     android:paddingStart="@dimen/padding_spacing_dp16"
                     android:paddingTop="16dp"
                     android:paddingEnd="@dimen/padding_spacing_dp16"
@@ -84,7 +84,7 @@
                         <FrameLayout
                             android:id="@+id/layout_group_tab_slot"
                             android:layout_width="wrap_content"
-                            android:layout_height="@dimen/view_height_dp40"
+                            android:layout_height="@dimen/view_height_dp34"
                             android:layout_gravity="center"
                             android:clipChildren="false"
                             android:clipToPadding="false"
@@ -94,7 +94,7 @@
                                 android:id="@+id/card_tab_group"
                                 style="@style/Widget.V2Ray.Card.TopTabs"
                                 android:layout_width="wrap_content"
-                                android:layout_height="@dimen/view_height_dp40"
+                                android:layout_height="@dimen/view_height_dp34"
                                 android:layout_gravity="center"
                                 android:alpha="1">
 
@@ -104,7 +104,7 @@
                                     android:layout_height="match_parent"
                                     android:clipChildren="false"
                                     android:clipToPadding="false"
-                                    android:minHeight="@dimen/view_height_dp40"
+                                    android:minHeight="@dimen/view_height_dp34"
                                     android:background="@android:color/transparent"
                                     app:tabIndicatorAnimationMode="linear"
                                     app:tabIndicatorColor="@android:color/transparent"

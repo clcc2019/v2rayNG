@@ -30,3 +30,9 @@
 -keepclassmembers class com.xray.ang.service.TProxyService {
     native <methods>;
 }
+
+# Legacy JNI binding expected by hev-socks5-tunnel.
+-keepnames class com.v2ray.ang.service.TProxyService
+-keepclassmembers class com.v2ray.ang.service.TProxyService {
+    native <methods>;
+}

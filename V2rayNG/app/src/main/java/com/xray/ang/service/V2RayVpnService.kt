@@ -137,6 +137,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 val guid = MmkvManager.getSelectServer()
                 if (guid.isNullOrEmpty()) {
                     Log.e(AppConfig.TAG, "Failed to start VPN: no selected server")
+                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopSelf()
                     return@launch
                 }

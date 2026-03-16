@@ -510,6 +510,7 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp7</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
         <item name="android:textSize">9sp</item>
+        <item name="android:elevation">0.5dp</item>
     </style>
 
     <style name="Widget.V2Ray.Badge.SubscriptionContainer" parent="">
@@ -660,6 +661,10 @@
         <item name="android:textColorHint">@color/md_theme_onSurfaceVariant</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:maxWidth">@dimen/list_card_max_width</item>
+    </style>
+
+    <style name="Widget.V2Ray.EditText.BottomSheet" parent="Widget.V2Ray.EditText">
+        <item name="android:background">@drawable/bg_form_field_bottom_sheet</item>
     </style>
 
     <style name="Widget.V2Ray.FormFieldHint" parent="">

@@ -15,7 +15,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxWidth="@dimen/list_card_max_width"
-        app:cardBackgroundColor="@color/color_settings_section_surface"
         app:strokeWidth="0dp">
 
         <LinearLayout
@@ -36,7 +35,7 @@
 
                 <EditText
                     android:id="@+id/et_webdav_url"
-                    style="@style/Widget.V2Ray.EditText"
+                    style="@style/Widget.V2Ray.EditText.BottomSheet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -58,7 +57,7 @@
 
                 <EditText
                     android:id="@+id/et_webdav_user"
-                    style="@style/Widget.V2Ray.EditText"
+                    style="@style/Widget.V2Ray.EditText.BottomSheet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -80,7 +79,7 @@
 
                 <EditText
                     android:id="@+id/et_webdav_pass"
-                    style="@style/Widget.V2Ray.EditText"
+                    style="@style/Widget.V2Ray.EditText.BottomSheet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
@@ -102,7 +101,7 @@
 
                 <EditText
                     android:id="@+id/et_webdav_remote_path"
-                    style="@style/Widget.V2Ray.EditText"
+                    style="@style/Widget.V2Ray.EditText.BottomSheet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp8"

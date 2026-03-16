@@ -41,13 +41,16 @@ class MainGroupTabsController(
     private var lastRenderedGroupCount = -1
     private var groupTabSlotAnimator: ValueAnimator? = null
     private val expandedSlotHeightPx by lazy {
-        activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        activity.resources.getDimensionPixelSize(R.dimen.view_height_dp34)
     }
 
     private val groupTabSelectedListener = object : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
             if (binding.viewPager.currentItem != tab.position) {
-                binding.viewPager.setCurrentItem(tab.position, true)
+                binding.viewPager.setCurrentItem(tab.position, false)
+                binding.viewPager.post {
+                    findCurrentFragment()?.animateGroupSwitch()
+                }
             }
             syncGroupTabSelection()
         }
@@ -154,7 +157,7 @@ class MainGroupTabsController(
             binding.tabGroup.tabGravity = targetTabGravity
         }
 
-        val cardHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val cardHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp34)
         val cardLayoutParams = binding.cardTabGroup.layoutParams as ViewGroup.MarginLayoutParams
         val targetWidth = if (useAdaptiveWidth) ViewGroup.LayoutParams.WRAP_CONTENT else ViewGroup.LayoutParams.MATCH_PARENT
         if (cardLayoutParams.width != targetWidth
@@ -215,7 +218,7 @@ class MainGroupTabsController(
     }
 
     private fun applyCompactGroupTabHeight() {
-        val compactHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val compactHeight = activity.resources.getDimensionPixelSize(R.dimen.view_height_dp34)
         binding.tabGroup.minimumHeight = compactHeight
 
         val slidingTabIndicator = binding.tabGroup.getChildAt(0) as? ViewGroup ?: return

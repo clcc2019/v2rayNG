@@ -2,11 +2,13 @@ package com.xray.ang.ui
 
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.AdapterListUpdateCallback
@@ -494,7 +496,7 @@ class MainRecyclerAdapter(
             itemMainBinding.layoutMore.visibility = View.VISIBLE
             UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
             UiMotion.attachPressFeedbackComposite(
-                source = itemMainBinding.infoContainer,
+                source = itemMainBinding.itemBg,
                 scaleTarget = itemMainBinding.itemBg,
                 alphaTarget = itemMainBinding.itemBg,
                 pressedScale = 0.992f,
@@ -512,18 +514,18 @@ class MainRecyclerAdapter(
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
             }
 
-            itemMainBinding.infoContainer.setOnClickListener {
+            itemMainBinding.itemBg.setOnClickListener {
                 val item = boundItem ?: return@setOnClickListener
-                itemMainBinding.infoContainer.hapticClick()
+                itemMainBinding.itemBg.hapticClick()
                 adapterListener?.onSelectServer(item.guid)
             }
-            itemMainBinding.infoContainer.setOnLongClickListener {
+            itemMainBinding.itemBg.setOnLongClickListener {
                 val item = boundItem ?: return@setOnLongClickListener false
                 val currentPosition = bindingAdapterPosition
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnLongClickListener false
                 }
-                itemMainBinding.infoContainer.hapticLongPress()
+                itemMainBinding.itemBg.hapticLongPress()
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
                 true
             }
@@ -666,7 +668,23 @@ class MainRecyclerAdapter(
             delayMillis < 300L -> colors.warnBackground to colors.warnText
             else -> colors.badBackground to colors.badText
         }
-        target.backgroundTintList = background
+        val backgroundColor = background.defaultColor
+        val outlineBlendTarget = if (ColorUtils.calculateLuminance(backgroundColor) > 0.55) {
+            Color.BLACK
+        } else {
+            Color.WHITE
+        }
+        val outlineColor = ColorUtils.blendARGB(backgroundColor, outlineBlendTarget, 0.06f)
+        val strokeWidth = target.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp1)
+        val gradientDrawable = (target.background as? GradientDrawable)?.mutate() as? GradientDrawable
+        gradientDrawable?.let { drawable ->
+            drawable.setColor(backgroundColor)
+            drawable.setStroke(strokeWidth, outlineColor)
+            target.background = drawable
+            target.backgroundTintList = null
+        } ?: run {
+            target.backgroundTintList = background
+        }
         target.setTextColor(textColor)
         target.alpha = if (delayMillis == 0L) 0.84f else 1f
     }

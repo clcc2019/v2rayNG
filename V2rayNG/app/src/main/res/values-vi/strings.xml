@@ -3,24 +3,13 @@
     <string name="app_widget_name">Kết nối ngay</string>
     <string name="app_tile_name">Kết nối ngay</string>
     <string name="app_tile_first_use">Vui lòng thêm một cấu hình vào XrayNG để sử dụng!</string>
-    <string name="navigation_drawer_open">Mở Menu ứng dụng</string>
-    <string name="navigation_drawer_close">Đóng Menu ứng dụng</string>
-    <string name="migration_success">Đã chuyển dữ liệu!</string>
-    <string name="action_stop_service">Stop service</string>
-    <string name="migration_fail">Không thể chuyển dữ liệu!</string>
-    <string name="pull_down_to_refresh">Please pull down to refresh!</string>
+<string name="action_stop_service">Stop service</string>
+<string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
     <!-- Notifications -->
     <string name="notification_action_stop_v2ray">Ngắt kết nối XrayNG</string>
     <string name="toast_permission_denied">Vui lòng cấp quyền cần thiết cho XrayNG! Bạn đã từ chối các quyền cần thiết như Camera hay Bộ nhớ?</string>
-    <string name="toast_permission_denied_notification">Unable to obtain the notification permission</string>
-    <string name="notification_action_more">Nhấn để biết thêm...</string>
-    <string name="toast_services_start">Đang khởi động XrayNG...</string>
-    <string name="toast_services_stop">Đã dừng XrayNG!</string>
-    <string name="toast_services_success">Đã khởi động XrayNG!</string>
-    <string name="toast_services_failure">Không thể khởi động XrayNG, kiểm tra lại cấu hình!</string>
-
-    <!--ServerActivity-->
+<!--ServerActivity-->
     <string name="title_server">XrayNG</string>
     <string name="menu_item_add_config">Thêm cấu hình</string>
     <string name="menu_item_save_config">Lưu cấu hình</string>
@@ -44,11 +33,9 @@
     <string name="server_lab_address">Địa chỉ</string>
     <string name="server_lab_port">Cổng</string>
     <string name="server_lab_id">ID</string>
-    <string name="server_lab_alterid">ID bổ sung (AlterID)</string>
-    <string name="server_lab_security">Thuật toán mã hóa</string>
+<string name="server_lab_security">Thuật toán mã hóa</string>
     <string name="server_lab_network">Giao thức truyền tải (Network)</string>
-    <string name="server_lab_more_function">Nâng cao</string>
-    <string name="server_lab_head_type">Kiểu ngụy trang (Type)</string>
+<string name="server_lab_head_type">Kiểu ngụy trang (Type)</string>
     <string name="server_lab_mode_type">Chế độ gRPC</string>
     <string name="server_lab_request_host">host</string>
     <string name="server_lab_request_host_http">http host</string>
@@ -90,21 +77,16 @@
     <string name="server_lab_local_mtu">MTU (Không bắt buộc, mặc định là 1420)</string>
     <string name="toast_success">Thành công!</string>
     <string name="toast_failure">Đã xảy ra lỗi, vui lòng thử lại!</string>
-    <string name="toast_none_data">Không có gì ở đây!</string>
-    <string name="toast_incorrect_protocol">Protocol không đúng!</string>
+<string name="toast_incorrect_protocol">Protocol không đúng!</string>
     <string name="toast_decoding_failed">Không thể giải mã!</string>
     <string name="title_file_chooser">Vui lòng chọn tệp cấu hình!</string>
     <string name="toast_require_file_manager">Vui lòng cài đặt trình quản lý tệp để tiếp tục!</string>
-    <string name="server_customize_config">Cấu hình tùy chỉnh</string>
-    <string name="toast_config_file_invalid">Cấu hình không hợp lệ!</string>
-    <string name="server_lab_content">Nội dung</string>
-    <string name="toast_none_data_clipboard">Không có dữ liệu nào trong Clipboard!</string>
-    <string name="toast_invalid_url">URL không hợp lệ hoặc trống!</string>
+<string name="server_lab_content">Nội dung</string>
+<string name="toast_invalid_url">URL không hợp lệ hoặc trống!</string>
     <string name="toast_insecure_url_protocol">Please do not use the insecure HTTP protocol subscription address</string>
     <string name="server_lab_need_inbound">Vui lòng đảm bảo cấu hình tùy chỉnh này không bị lỗi trước khi sử dụng!</string>
     <string name="toast_malformed_josn">Cấu hình không hợp lệ!</string>
-    <string name="server_lab_request_host6">Host (SNI) (Không bắt buộc)</string>
-    <string name="toast_action_not_allowed">Hành động này bị cấm!</string>
+<string name="toast_action_not_allowed">Hành động này bị cấm!</string>
     <string name="server_obfs_password">Obfs password</string>
     <string name="server_lab_port_hop">Port Hopping</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
@@ -128,12 +110,10 @@
     <string name="asset_geo_files_sources">Geo files source (optional)</string>
 
     <!-- PerAppProxyActivity -->
-    <string name="msg_dialog_progress">Đang tải...</string>
-    <string name="menu_item_search">Tìm kiếm</string>
+<string name="menu_item_search">Tìm kiếm</string>
     <string name="menu_item_select_all">Chọn tất cả</string>
     <string name="menu_item_invert_selection">Đảo chọn</string>
-    <string name="msg_enter_keywords">Nhập từ khoá</string>
-    <string name="switch_bypass_apps_mode">Chế độ Bypass</string>
+<string name="switch_bypass_apps_mode">Chế độ Bypass</string>
     <string name="menu_item_select_proxy_app">Tự động chọn ứng dụng Proxy</string>
     <string name="msg_downloading_content">Đang tải xuống nội dung...</string>
     <string name="menu_item_export_proxy_app">Xuất và Sao chép</string>
@@ -141,13 +121,10 @@
     <string name="per_app_proxy_settings">Per-app settings</string>
     <string name="per_app_proxy_settings_enable">Enable per-app</string>
 
-
     <!-- Preferences -->
     <string name="title_settings">Cài đặt</string>
     <string name="title_advanced">Cài đặt nâng cao</string>
-    <string name="title_core_settings">Cài đặt lõi</string>
-    <string name="title_vpn_settings">Cài đặt VPN</string>
-    <string name="title_pref_per_app_proxy">Proxy theo Ứng dụng</string>
+<string name="title_pref_per_app_proxy">Proxy theo Ứng dụng</string>
     <string name="summary_pref_per_app_proxy">- Bình thường: Ứng dụng đã chọn sẽ kết nối thông qua Proxy, chưa chọn sẽ kết nối trực tiếp. \n- Chế độ Bypass: Ứng dụng đã chọn sẽ kết nối trực tiếp, chưa chọn sẽ kết nối qua Proxy. \n- Nếu bạn đang ở Trung Quốc thì vào Menu, chọn Tự động chọn ứng dụng Proxy.</string>
     <string name="title_pref_is_booted">Auto connect at startup</string>
     <string name="summary_pref_is_booted">Automatically connects to the selected server at startup, which may be unsuccessful</string>
@@ -156,9 +133,7 @@
     <string name="summary_pref_auto_remove_invalid_after_test">Test results may not be accurate; deleted config cannot be recovered.</string>
     <string name="title_pref_auto_sort_after_test">Auto sort after testing</string>
     <string name="summary_pref_auto_sort_after_test">Test results may not be accurate;</string>
-
-    <string name="title_mux_settings">Cài đặt Mux</string>
-    <string name="title_pref_mux_enabled">Bật Mux</string>
+<string name="title_pref_mux_enabled">Bật Mux</string>
     <string name="summary_pref_mux_enabled">Giảm độ trễ nhưng có thể làm gián đoạn luồng, vì vậy không nên kích hoạt nó. \nCác phương pháp xử lý lưu lượng truy cập TCP, UDP và QUIC có sẵn bên dưới.</string>
     <string name="title_pref_mux_concurency">Số lượng liên kết con tái sử dụng TCP (-1 đến 1024)</string>
     <string name="title_pref_mux_xudp_concurency">Số lượng liên kết con tái sử dụng XUDP (-1 đến 1024)</string>
@@ -169,7 +144,6 @@
         <item>Bỏ qua</item>
     </string-array>
 
-
     <string name="title_pref_speed_enabled">Hiển thị tốc độ mạng</string>
     <string name="summary_pref_speed_enabled">Hiển thị tốc độ mạng hiện tại trên thanh thông báo. \nBiểu tượng trên thanh trạng thái có thể thay đổi tùy vào mức sử dụng.</string>
 
@@ -177,7 +151,6 @@
     <string name="summary_pref_sniffing_enabled">Phát hiện tên miền từ lưu lượng truy cập (Được bật theo mặc định). \nỞ Việt Nam: tắt để sử dụng Zalo.</string>
     <string name="title_pref_route_only_enabled">Bật RouteOnly</string>
     <string name="summary_pref_route_only_enabled">Chỉ sử dụng tên miền được đánh dấu để định tuyến và giữ địa chỉ đích làm địa chỉ IP.</string>
-
 
     <string name="title_pref_local_dns_enabled">Bật Local DNS</string>
     <string name="summary_pref_local_dns_enabled">DNS được xử lý bởi module DNS của Xray-Core (Dùng nếu cần định tuyến Bypass cho mạng LAN và Địa chỉ nội địa).</string>
@@ -211,18 +184,8 @@
 
     <string name="title_pref_proxy_sharing_enabled">Cho phép kết nối từ mạng LAN</string>
     <string name="summary_pref_proxy_sharing_enabled">Các thiết bị khác trong cùng mạng LAN có thể kết nối đến SOCKS / HTTP proxy trên thiết bị của bạn. \nChỉ bật tính năng này trong các mạng đáng tin cậy để tránh kết nối trái phép.</string>
-    <string name="toast_warning_pref_proxysharing_short">Đang bật cho phép kết nối từ mạng LAN</string>
-
-    <string name="title_pref_allow_insecure">Bỏ qua xác minh chứng chỉ</string>
-    <string name="summary_pref_allow_insecure">Khi nhập những cấu hình có bảo mật TLS, mặc định sẽ không xác minh chứng chỉ.</string>
-
-    <string name="title_pref_socks_port">Cổng Proxy Local</string>
-    <string name="summary_pref_socks_port">Cổng Proxy Local</string>
-
-    <string name="title_pref_local_dns_port">Cổng Local DNS</string>
-    <string name="summary_pref_local_dns_port">Cổng Local DNS</string>
-
-    <string name="title_pref_confirm_remove">Xác nhận xóa tệp cấu hình</string>
+<string name="title_pref_socks_port">Cổng Proxy Local</string>
+<string name="title_pref_confirm_remove">Xác nhận xóa tệp cấu hình</string>
     <string name="summary_pref_confirm_remove">Yêu cầu xác nhận từ người dùng khi thực hiện xóa tệp cấu hình.</string>
 
     <string name="title_pref_start_scan_immediate">Quét mã QR ngay lập tức</string>
@@ -237,18 +200,11 @@
     <string name="title_pref_group_all_display">Enable show all groups</string>
     <string name="summary_pref_group_all_display">Add an extra "All Tabs" page</string>
     <!-- AboutActivity -->
-    <string name="title_pref_feedback">Phản hồi lỗi</string>
-    <string name="summary_pref_feedback">Phản hồi cải tiến hoặc lỗi lên GitHub</string>
-    <string name="summary_pref_tg_group">Tham gia nhóm Telegram</string>
-    <string name="toast_tg_app_not_found">Không tìm thấy ứng dụng Telegram!</string>
-
-    <string name="title_privacy_policy">Chính sách bảo mật</string>
+<string name="title_privacy_policy">Chính sách bảo mật</string>
     <string name="title_about">Giới thiệu</string>
     <string name="title_source_code">Mã nguồn</string>
     <string name="title_oss_license">Open Source licenses</string>
-    <string name="title_tg_channel">Kênh Telegram</string>
-
-    <string name="title_pref_auto_update_subscription">Tự động cập nhật các gói đăng ký</string>
+<string name="title_pref_auto_update_subscription">Tự động cập nhật các gói đăng ký</string>
     <string name="summary_pref_auto_update_subscription">Tự động cập nhật các gói đăng ký của bạn ở trong nền với khoảng thời gian cố định. Tùy thiết bị, tính năng này có thể không luôn hoạt động đúng như mong đợi.</string>
     <string name="title_pref_auto_update_interval">Thời gian cập nhật tự động (Phút, giá trị tối thiểu là 15)</string>
 
@@ -257,8 +213,7 @@
     <string name="title_mode">Chế độ kết nối</string>
     <string name="title_mode_help">Nhấn vào đây nếu bạn cần trợ giúp!</string>
     <string name="title_language">Ngôn ngữ</string>
-    <string name="title_ui_settings">Cài đặt UI</string>
-    <string name="title_pref_ui_mode_night">Cài đặt chế độ UI</string>
+<string name="title_pref_ui_mode_night">Cài đặt chế độ UI</string>
     <string name="title_pref_hev_tunnel_loglevel">Hev Tun Log Level</string>
     <string name="title_pref_hev_tunnel_rw_timeout">Hev Tun read/write timeout (seconds) (tcp,udp default 300,60)</string>
 
@@ -286,8 +241,7 @@
     <string name="title_real_ping_all_server">Kiểm tra HTTP tất cả máy chủ</string>
     <string name="title_user_asset_setting">Tệp định tuyến</string>
     <string name="title_sort_by_test_results">Sắp xếp lại theo lần kiểm tra cuối cùng</string>
-    <string name="title_filter_config">Lọc cấu hình theo các gói đăng ký</string>
-    <string name="filter_config_all">All</string>
+<string name="filter_config_all">All</string>
     <string name="title_del_duplicate_config_count">Xoá %d cấu hình trùng lặp</string>
 
     <string name="title_del_config_count">Delete %d configurations</string>
@@ -297,15 +251,11 @@
     <string name="title_update_subscription_result">Updated %1$d configs (%2$d success, %3$d failed, %4$d skipped)</string>
     <string name="title_update_subscription_no_subscription">No subscriptions</string>
     <string name="tasker_start_service">Khởi động XrayNG</string>
-    <string name="tasker_setting_confirm">Xác nhận</string>
-
-    <!-- RoutingSettingActivity -->
+<!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Chiến lược tên miền (DomainStrategy)</string>
     <string name="routing_settings_title">Định tuyến</string>
     <string name="routing_settings_tips">Phân cách bằng dấu phẩy (,). Có thể tải xuống Rules mặc định để tham khảo ở menu ba chấm.</string>
-    <string name="routing_settings_save">Lưu lại</string>
-    <string name="routing_settings_delete">Xoá</string>
-    <string name="routing_settings_rule_title">Routing Rule Settings</string>
+<string name="routing_settings_rule_title">Routing Rule Settings</string>
     <string name="routing_settings_add_rule">Add rule</string>
     <string name="routing_settings_import_predefined_rulesets">Nhập các bộ quy tắc được xác định trước</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
@@ -313,9 +263,7 @@
     <string name="routing_settings_import_rulesets_from_qrcode">Nhập bộ quy tắc từ QRcode</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
-
-    <string name="connection_test_pending">Kiểm tra kết nối</string>
-    <string name="connection_test_testing">Đang kiểm tra kết nối mạng...</string>
+<string name="connection_test_testing">Đang kiểm tra kết nối mạng...</string>
     <string name="connection_test_testing_count">Testing %d configurations…</string>
     <string name="connection_test_available">Kiểm tra thành công: thời gian truy cập Google là %d ms</string>
     <string name="connection_test_error">Lỗi kết nối mạng, hãy thử đổi cấu hình hoặc kiểm tra lại! Mã lỗi: %s</string>
@@ -327,9 +275,7 @@
 
     <string name="import_subscription_success">Nhập gói đăng ký thành công!</string>
     <string name="import_subscription_failure">Nhập gói đăng ký không thành công!</string>
-
-    <string name="title_fragment_settings">Fragment Settings</string>
-    <string name="title_pref_fragment_packets">Fragment Packets</string>
+<string name="title_pref_fragment_packets">Fragment Packets</string>
     <string name="title_pref_fragment_length">Fragment Length (min-max)</string>
     <string name="title_pref_fragment_interval">Fragment Interval (min-max)</string>
     <string name="title_pref_fragment_enabled">Enable Fragment</string>
@@ -356,22 +302,7 @@
     <string name="title_webdav_user">Username</string>
     <string name="title_webdav_pass">Password</string>
     <string name="title_webdav_remote_path">Remote directory (optional)</string>
-
-    <string-array name="share_method">
-        <item>Xuất ra mã QR (Chụp màn hình để lưu)</item>
-        <item>Sao chép vào Clipboard</item>
-        <item>Sao chép thành cấu hình tùy chỉnh</item>
-    </string-array>
-
-    <string-array name="share_method_more">
-        <item>QRcode</item>
-        <item>Export to clipboard</item>
-        <item>Export full configuration to clipboard</item>
-        <item>Edit</item>
-        <item>Delete</item>
-    </string-array>
-
-    <string-array name="share_sub_method">
+<string-array name="share_sub_method">
         <item>Xuất gói ra mã QR (Chụp màn hình để lưu)</item>
         <item>Xuất gói vào Clipboard</item>
     </string-array>

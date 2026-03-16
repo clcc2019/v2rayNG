@@ -27,13 +27,21 @@ class TProxyService(
 
         @JvmStatic
         @Suppress("FunctionName")
-        private external fun TProxyStartService(configPath: String, fd: Int)
+        private fun TProxyStartService(configPath: String, fd: Int) {
+            com.v2ray.ang.service.TProxyService.TProxyStartService(configPath, fd)
+        }
+
         @JvmStatic
         @Suppress("FunctionName")
-        private external fun TProxyStopService()
+        private fun TProxyStopService() {
+            com.v2ray.ang.service.TProxyService.TProxyStopService()
+        }
+
         @JvmStatic
         @Suppress("FunctionName")
-        private external fun TProxyGetStats(): LongArray?
+        private fun TProxyGetStats(): LongArray? {
+            return com.v2ray.ang.service.TProxyService.TProxyGetStats()
+        }
 
         init {
             try {

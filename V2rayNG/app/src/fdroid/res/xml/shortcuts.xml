@@ -2,7 +2,7 @@
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/ic_qu_switch_24dp"
+        android:icon="@drawable/ic_refresh_24dp"
         android:shortcutDisabledMessage="@string/app_widget_name"
         android:shortcutId="shortcuts_switch"
         android:shortcutLongLabel="@string/app_widget_name"
@@ -13,11 +13,10 @@
             android:action="android.intent.action.VIEW"
             android:targetClass="com.xray.ang.ui.ScSwitchActivity"
             android:targetPackage="com.xray.ang.fdroid" />
-        <categories android:name="android.shortcut.conversation" />
     </shortcut>
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/ic_qu_scan_24dp"
+        android:icon="@drawable/ic_shortcut_scan_24dp"
         android:shortcutDisabledMessage="@string/menu_item_import_config_qrcode"
         android:shortcutId="shortcuts_scan"
         android:shortcutLongLabel="@string/menu_item_import_config_qrcode"
@@ -28,6 +27,5 @@
             android:action="android.intent.action.VIEW"
             android:targetClass="com.xray.ang.ui.ScScannerActivity"
             android:targetPackage="com.xray.ang.fdroid" />
-        <categories android:name="android.shortcut.conversation" />
     </shortcut>
 </shortcuts>
