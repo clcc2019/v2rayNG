@@ -6,8 +6,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
-import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.AppConfig
+import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.handler.MmkvManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.handler.V2rayConfigManager
@@ -15,7 +15,6 @@ import com.xray.ang.handler.V2RayServiceManager
 import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.MyContextWrapper
 import java.lang.ref.SoftReference
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,8 +23,7 @@ import kotlinx.coroutines.launch
 
 class V2RayProxyOnlyService : Service(), ServiceControl {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val isStarting = AtomicBoolean(false)
-    private val isStopping = AtomicBoolean(false)
+    private val transitionGuard = ServiceTransitionGuard("Proxy-only")
 
     /**
      * Initializes the service.
@@ -43,6 +41,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * @return The start mode.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        V2RayServiceRuntime.ensureForegroundStarted()
         startService()
         return START_STICKY
     }
@@ -51,10 +50,11 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * Destroys the service.
      */
     override fun onDestroy() {
-        if (!isStopping.get()) {
+        if (!transitionGuard.isStopRequested()) {
             V2RayServiceManager.stopCoreLoop()
         }
         V2RayServiceManager.onServiceDestroyed(this)
+        V2RayServiceRuntime.terminateProcessIfIdle()
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -71,12 +71,10 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * Starts the service.
      */
     override fun startService() {
-        if (!isStarting.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "Proxy-only start already in progress, skipping duplicate request")
+        if (!transitionGuard.beginStart()) {
             return
         }
 
-        isStopping.set(false)
         serviceScope.launch {
             try {
                 val startAt = SystemClock.elapsedRealtime()
@@ -91,6 +89,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid, knownProfile)
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build proxy-only V2Ray config")
+                    transitionGuard.requestStop()
                     MessageUtil.sendMsg2UI(
                         this@V2RayProxyOnlyService,
                         AppConfig.MSG_STATE_START_FAILURE,
@@ -101,13 +100,14 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 }
                 if (!V2RayServiceManager.startCoreLoop(null, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only core loop")
+                    transitionGuard.requestStop()
                     MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopSelf()
                     return@launch
                 }
                 Log.i(AppConfig.TAG, "Proxy-only start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
-                isStarting.set(false)
+                transitionGuard.finishStart()
             }
         }
     }
@@ -116,8 +116,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * Stops the service.
      */
     override fun stopService() {
-        if (!isStopping.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "Proxy-only stop already in progress, skipping duplicate request")
+        if (!transitionGuard.beginStop()) {
             return
         }
 
@@ -126,11 +125,10 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val startAt = SystemClock.elapsedRealtime()
                 V2RayServiceManager.stopCoreLoop()
                 stopSelf()
-                V2RayServiceManager.onServiceStopCompleted(this@V2RayProxyOnlyService)
+                V2RayServiceManager.onServiceStopCompleted()
                 Log.i(AppConfig.TAG, "Proxy-only stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
-                isStarting.set(false)
-                isStopping.set(false)
+                transitionGuard.finishStop()
             }
         }
     }

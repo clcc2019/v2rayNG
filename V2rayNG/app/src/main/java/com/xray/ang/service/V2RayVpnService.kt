@@ -23,7 +23,6 @@ import com.xray.ang.BuildConfig
 import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.contracts.Tun2SocksControl
 import com.xray.ang.handler.MmkvManager
-import com.xray.ang.handler.NotificationManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.handler.V2rayConfigManager
 import com.xray.ang.handler.V2RayServiceManager
@@ -45,8 +44,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private var isRunning = false
     private var tun2SocksService: Tun2SocksControl? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val isStarting = AtomicBoolean(false)
-    private val isStopping = AtomicBoolean(false)
+    private val transitionGuard = ServiceTransitionGuard("VPN")
     private val networkCallbackRegistered = AtomicBoolean(false)
 
     /**destroy
@@ -108,13 +106,14 @@ class V2RayVpnService : VpnService(), ServiceControl {
 //    }
 
     override fun onDestroy() {
-        NotificationManager.cancelNotification()
         V2RayServiceManager.onServiceDestroyed(this)
+        V2RayServiceRuntime.terminateProcessIfIdle()
         serviceScope.cancel()
         super.onDestroy()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        V2RayServiceRuntime.ensureForegroundStarted()
         startService()
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
@@ -125,12 +124,10 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun startService() {
-        if (!isStarting.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "VPN start already in progress, skipping duplicate request")
+        if (!transitionGuard.beginStart()) {
             return
         }
 
-        isStopping.set(false)
         serviceScope.launch {
             try {
                 val startAt = SystemClock.elapsedRealtime()
@@ -147,20 +144,20 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 }
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")
-                    isStopping.set(true)
+                    transitionGuard.requestStop()
                     MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopAllService(isForced = true)
                     configDeferred.cancel()
                     return@launch
                 }
-                if (isStopping.get()) {
+                if (transitionGuard.isStopRequested()) {
                     Log.i(AppConfig.TAG, "VPN start aborted because stop is in progress")
                     configDeferred.cancel()
                     return@launch
                 }
                 if (!::mInterface.isInitialized) {
                     Log.e(AppConfig.TAG, "Failed to create VPN interface")
-                    isStopping.set(true)
+                    transitionGuard.requestStop()
                     stopAllService(isForced = true)
                     configDeferred.cancel()
                     return@launch
@@ -168,38 +165,36 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 val configResult = configDeferred.await()
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build V2Ray config")
-                    isStopping.set(true)
+                    transitionGuard.requestStop()
                     MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     stopAllService(isForced = true)
                     return@launch
                 }
                 if (!V2RayServiceManager.startCoreLoop(mInterface, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
-                    isStopping.set(true)
+                    transitionGuard.requestStop()
                     stopAllService(isForced = true)
                     return@launch
                 }
                 registerPlatformNetworkCallback()
                 Log.i(AppConfig.TAG, "VPN start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
-                isStarting.set(false)
+                transitionGuard.finishStart()
             }
         }
     }
 
     override fun stopService() {
-        if (!isStopping.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "VPN stop already in progress, skipping duplicate request")
+        if (!transitionGuard.beginStop()) {
             return
         }
 
         serviceScope.launch {
             try {
                 stopAllService(true)
-                V2RayServiceManager.onServiceStopCompleted(this@V2RayVpnService)
+                V2RayServiceManager.onServiceStopCompleted()
             } finally {
-                isStarting.set(false)
-                isStopping.set(false)
+                transitionGuard.finishStop()
             }
         }
     }
@@ -430,7 +425,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * Starts the tun2socks process with the appropriate parameters.
      */
     private fun runTun2socks(): Boolean {
-        if (isStopping.get()) {
+        if (transitionGuard.isStopRequested()) {
             return false
         }
 
