@@ -15,6 +15,23 @@ import kotlinx.coroutines.launch
 class AngApplication : Application() {
     companion object {
         lateinit var application: AngApplication
+
+        @Volatile
+        var cachedPreferredDisplayModeId: Int = -1
+            private set
+
+        @Volatile
+        var cachedPreferredRefreshRate: Float = 0f
+            private set
+
+        var preferredDisplayModeResolved = false
+            private set
+
+        fun resolvePreferredDisplayMode(modeId: Int, refreshRate: Float) {
+            cachedPreferredDisplayModeId = modeId
+            cachedPreferredRefreshRate = refreshRate
+            preferredDisplayModeResolved = true
+        }
     }
 
     /**
@@ -27,8 +44,9 @@ class AngApplication : Application() {
         StartupTracer.markAppStart()
     }
 
-    private val workManagerConfiguration: Configuration = Configuration.Builder()
-        .build()
+    private val workManagerConfiguration by lazy {
+        Configuration.Builder().build()
+    }
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @Volatile
     private var workManagerInitialized = false

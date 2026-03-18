@@ -42,6 +42,11 @@ object MmkvManager {
     private val assetStorage by lazy { MMKV.mmkvWithID(ID_ASSET, MMKV.MULTI_PROCESS_MODE) }
     private val settingsStorage by lazy { MMKV.mmkvWithID(ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
 
+    @Volatile
+    private var cachedSubsListJson: String? = null
+    private var cachedSubsList: MutableList<String>? = null
+    private val subsListCacheLock = Any()
+
     //endregion
 
     //region Server
@@ -444,6 +449,14 @@ object MmkvManager {
     }
 
     /**
+     * Encodes the subscription data only, without updating subsList.
+     * Caller is responsible for managing the subsList separately.
+     */
+    fun encodeSubscriptionDirect(guid: String, subItem: SubscriptionItem) {
+        subStorage.encode(guid, JsonUtil.toJson(subItem))
+    }
+
+    /**
      * Decodes the subscription.
      *
      * @param subscriptionId The subscription ID.
@@ -460,7 +473,12 @@ object MmkvManager {
      * @param subsList The list of subscription IDs.
      */
     fun encodeSubsList(subsList: MutableList<String>) {
-        mainStorage.encode(KEY_SUB_IDS, JsonUtil.toJson(subsList))
+        val json = JsonUtil.toJson(subsList)
+        mainStorage.encode(KEY_SUB_IDS, json)
+        synchronized(subsListCacheLock) {
+            cachedSubsListJson = json
+            cachedSubsList = null
+        }
     }
 
     /**
@@ -470,11 +488,20 @@ object MmkvManager {
      */
     fun decodeSubsList(): MutableList<String> {
         val json = mainStorage.decodeString(KEY_SUB_IDS)
-        return if (json.isNullOrBlank()) {
-            mutableListOf()
-        } else {
-            JsonUtil.fromJson(json, Array<String>::class.java)?.toMutableList()?: mutableListOf()
+        if (json.isNullOrBlank()) {
+            return mutableListOf()
         }
+        synchronized(subsListCacheLock) {
+            if (json == cachedSubsListJson && cachedSubsList != null) {
+                return ArrayList(cachedSubsList!!)
+            }
+        }
+        val parsed = JsonUtil.fromJson(json, Array<String>::class.java)?.toMutableList() ?: mutableListOf()
+        synchronized(subsListCacheLock) {
+            cachedSubsListJson = json
+            cachedSubsList = ArrayList(parsed)
+        }
+        return parsed
     }
 
     //endregion

@@ -201,7 +201,6 @@ class MainActivity : HelperBaseActivity() {
             mainViewModel.initAssets(assets)
             setupGroupTab()
             mainViewModel.reloadServerList()
-            mainViewModel.prewarmSelectedConfig()
             refreshConnectionCard()
             checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
             }
