@@ -369,6 +369,14 @@
     <string name="connection_starting_short">"连接中"</string>
     <string name="connection_stopping">"正在关闭代理…"</string>
     <string name="connection_stopping_short">"断开中"</string>
+    <string name="connection_preparing_config">"正在准备配置…"</string>
+    <string name="connection_preparing_vpn">"正在准备 VPN…"</string>
+    <string name="connection_starting_tun">"正在启动 TUN 隧道…"</string>
+    <string name="connection_starting_core">"正在启动核心服务…"</string>
+    <string name="connection_stopping_tun">"正在停止 TUN 隧道…"</string>
+    <string name="connection_stopping_core">"正在停止核心服务…"</string>
+    <string name="connection_releasing_service">"正在释放服务资源…"</string>
+    <string name="connection_restart_queued">"已加入重启队列，等待上一个服务停止…"</string>
     <string name="connection_runing_task_left">运行中的测试任务数：%s</string>
 
     <string name="import_subscription_success">订阅导入成功</string>

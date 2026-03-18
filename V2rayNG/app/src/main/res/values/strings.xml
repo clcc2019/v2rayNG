@@ -385,6 +385,14 @@
     <string name="connection_starting_short">Starting</string>
     <string name="connection_stopping">Stopping proxy…</string>
     <string name="connection_stopping_short">Stopping</string>
+    <string name="connection_preparing_config">Preparing configuration…</string>
+    <string name="connection_preparing_vpn">Preparing VPN…</string>
+    <string name="connection_starting_tun">Starting TUN tunnel…</string>
+    <string name="connection_starting_core">Starting core service…</string>
+    <string name="connection_stopping_tun">Stopping TUN tunnel…</string>
+    <string name="connection_stopping_core">Stopping core service…</string>
+    <string name="connection_releasing_service">Releasing service resources…</string>
+    <string name="connection_restart_queued">Restart queued, waiting for previous service to stop…</string>
     <string name="connection_runing_task_left">Number of running test tasks: %s</string>
 
     <string name="import_subscription_success">Subscription imported Successfully</string>

@@ -25,6 +25,21 @@ class MainServiceEventInterpreterTest {
     }
 
     @Test
+    fun interpret_mapsServicePhaseMessages() {
+        val starting = mock<Intent>().apply {
+            whenever(getIntExtra("key", 0)).thenReturn(AppConfig.MSG_STATE_STARTING)
+            whenever(getIntExtra("content", 0)).thenReturn(101)
+        }
+        val stopping = mock<Intent>().apply {
+            whenever(getIntExtra("key", 0)).thenReturn(AppConfig.MSG_STATE_STOPPING)
+            whenever(getIntExtra("content", 0)).thenReturn(202)
+        }
+
+        assertEquals(MainServiceEvent.ServiceStarting(101), MainServiceEventInterpreter.interpret(starting))
+        assertEquals(MainServiceEvent.ServiceStopping(202), MainServiceEventInterpreter.interpret(stopping))
+    }
+
+    @Test
     fun interpret_mapsConfigTestSuccessPair() {
         val intent = mock<Intent>().apply {
             whenever(getIntExtra("key", 0)).thenReturn(AppConfig.MSG_MEASURE_CONFIG_SUCCESS)

@@ -9,8 +9,10 @@ import java.io.Serializable
 sealed interface MainServiceEvent : Serializable {
     data object ServiceRunning : MainServiceEvent
     data object ServiceNotRunning : MainServiceEvent
+    data class ServiceStarting(@StringRes val messageResId: Int?) : MainServiceEvent
     data object ServiceStartSuccess : MainServiceEvent
     data class ServiceStartFailure(@StringRes val errorResId: Int?) : MainServiceEvent
+    data class ServiceStopping(@StringRes val messageResId: Int?) : MainServiceEvent
     data object ServiceStopSuccess : MainServiceEvent
     data class DelayTestSuccess(val content: String?) : MainServiceEvent
     data class ConfigTestSuccess(val guid: String, val delayMillis: Long) : MainServiceEvent
@@ -23,10 +25,18 @@ object MainServiceEventInterpreter {
         return when (intent?.getIntExtra("key", 0)) {
             AppConfig.MSG_STATE_RUNNING -> MainServiceEvent.ServiceRunning
             AppConfig.MSG_STATE_NOT_RUNNING -> MainServiceEvent.ServiceNotRunning
+            AppConfig.MSG_STATE_STARTING -> {
+                val messageResId = intent.getIntExtra("content", 0).takeIf { it != 0 }
+                MainServiceEvent.ServiceStarting(messageResId)
+            }
             AppConfig.MSG_STATE_START_SUCCESS -> MainServiceEvent.ServiceStartSuccess
             AppConfig.MSG_STATE_START_FAILURE -> {
                 val errorResId = intent.getIntExtra("content", 0).takeIf { it != 0 }
                 MainServiceEvent.ServiceStartFailure(errorResId)
+            }
+            AppConfig.MSG_STATE_STOPPING -> {
+                val messageResId = intent.getIntExtra("content", 0).takeIf { it != 0 }
+                MainServiceEvent.ServiceStopping(messageResId)
             }
             AppConfig.MSG_STATE_STOP_SUCCESS -> MainServiceEvent.ServiceStopSuccess
             AppConfig.MSG_MEASURE_DELAY_SUCCESS -> {

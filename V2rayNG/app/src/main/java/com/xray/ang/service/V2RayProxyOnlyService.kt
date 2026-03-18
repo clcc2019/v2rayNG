@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
+import com.xray.ang.R
 import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.AppConfig
 import com.xray.ang.handler.MmkvManager
@@ -14,7 +15,6 @@ import com.xray.ang.handler.V2rayConfigManager
 import com.xray.ang.handler.V2RayServiceManager
 import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.MyContextWrapper
-import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +32,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      */
     override fun onCreate() {
         super.onCreate()
-        V2RayServiceManager.serviceControl = SoftReference(this)
+        V2RayServiceManager.bindServiceControl(this)
     }
 
     /**
@@ -43,6 +43,9 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * @return The start mode.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Service may be restarted on the same instance before onDestroy runs.
+        // Rebind the control handle so manager lookups do not see a stale null reference.
+        V2RayServiceManager.bindServiceControl(this)
         startService()
         return START_STICKY
     }
@@ -87,6 +90,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                     stopSelf()
                     return@launch
                 }
+                V2RayServiceManager.sendStartingPhase(this@V2RayProxyOnlyService, R.string.connection_preparing_config)
                 val knownProfile = V2RayServiceManager.consumePendingStartProfile(guid)
                 val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid, knownProfile)
                 if (!configResult.status) {
@@ -99,6 +103,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                     stopSelf()
                     return@launch
                 }
+                V2RayServiceManager.sendStartingPhase(this@V2RayProxyOnlyService, R.string.connection_starting_core)
                 if (!V2RayServiceManager.startCoreLoop(null, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only core loop")
                     MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
@@ -124,7 +129,9 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
         serviceScope.launch {
             try {
                 val startAt = SystemClock.elapsedRealtime()
+                V2RayServiceManager.sendStoppingPhase(this@V2RayProxyOnlyService, R.string.connection_stopping_core)
                 V2RayServiceManager.stopCoreLoop()
+                V2RayServiceManager.sendStoppingPhase(this@V2RayProxyOnlyService, R.string.connection_releasing_service)
                 stopSelf()
                 V2RayServiceManager.onServiceStopCompleted(this@V2RayProxyOnlyService)
                 Log.i(AppConfig.TAG, "Proxy-only stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")

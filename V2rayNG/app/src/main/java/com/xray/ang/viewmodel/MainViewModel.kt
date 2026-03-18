@@ -72,6 +72,16 @@ class MainViewModel(
         }
     }
 
+    data class ServicePhaseFeedback(
+        @StringRes val messageResId: Int,
+        val state: State
+    ) {
+        enum class State {
+            STARTING,
+            STOPPING
+        }
+    }
+
     private var serverList = mutableListOf<String>()
     private val serverPositions = mutableMapOf<String, Int>()
     private val serverListVersion = AtomicInteger(0)
@@ -87,6 +97,7 @@ class MainViewModel(
     val updateTestResultAction by lazy { MutableLiveData<String>() }
     val updateConnectionCardAction by lazy { MutableLiveData<Int>() }
     val serviceFeedbackAction by lazy { MutableLiveData<ServiceFeedback>() }
+    val servicePhaseAction by lazy { MutableLiveData<ServicePhaseFeedback>() }
     private var tcpingTestJob: Job? = null
     private var prewarmJob: Job? = null
     private var reloadJob: Job? = null
@@ -825,6 +836,12 @@ class MainViewModel(
                 isRunning.value = false
             }
 
+            is MainServiceEvent.ServiceStarting -> {
+                event.messageResId?.let {
+                    servicePhaseAction.value = ServicePhaseFeedback(it, ServicePhaseFeedback.State.STARTING)
+                }
+            }
+
             MainServiceEvent.ServiceStartSuccess -> {
                 serviceFeedbackAction.value = ServiceFeedback(
                     messageResId = R.string.connection_started,
@@ -839,6 +856,12 @@ class MainViewModel(
                     style = ServiceFeedback.Style.ERROR
                 )
                 isRunning.value = false
+            }
+
+            is MainServiceEvent.ServiceStopping -> {
+                event.messageResId?.let {
+                    servicePhaseAction.value = ServicePhaseFeedback(it, ServicePhaseFeedback.State.STOPPING)
+                }
             }
 
             MainServiceEvent.ServiceStopSuccess -> {

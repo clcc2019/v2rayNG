@@ -47,6 +47,15 @@ object V2RayServiceManager {
         val profile: ProfileItem
     )
 
+    private enum class LifecycleState {
+        IDLE,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        RESTART_PENDING,
+        FAILED
+    }
+
     private val coreController: CoreController = V2RayNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -57,14 +66,20 @@ object V2RayServiceManager {
     private var pendingRestartRequest: PendingRestartRequest? = null
     private val pendingStartProfileLock = Any()
     private var pendingStartProfile: PendingStartProfile? = null
+    private val lifecycleLock = Any()
     private val receiverRegistered = AtomicBoolean(false)
     private val stopInProgress = AtomicBoolean(false)
+    private var lifecycleState = LifecycleState.IDLE
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
             field = value
             V2RayNativeManager.initCoreEnv(value?.get()?.getService())
         }
+
+    fun bindServiceControl(control: ServiceControl) {
+        serviceControl = SoftReference(control)
+    }
 
     /**
      * Starts the V2Ray service from a toggle action.
@@ -92,10 +107,25 @@ object V2RayServiceManager {
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
             return
         }
-        clearPendingRestart()
-        if (isServiceActive()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
-            return
+        when (currentLifecycleState()) {
+            LifecycleState.STOPPING -> {
+                queuePendingRestart(context, targetGuid)
+                updateLifecycleState(LifecycleState.RESTART_PENDING)
+                sendStartingPhase(context, R.string.connection_restart_queued)
+                return
+            }
+
+            LifecycleState.STARTING,
+            LifecycleState.RUNNING,
+            LifecycleState.RESTART_PENDING -> {
+                MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+                return
+            }
+
+            LifecycleState.IDLE,
+            LifecycleState.FAILED -> {
+                clearPendingRestart()
+            }
         }
         startContextService(context, targetGuid)
     }
@@ -111,6 +141,8 @@ object V2RayServiceManager {
             return
         }
         queuePendingRestart(context, targetGuid)
+        updateLifecycleState(LifecycleState.RESTART_PENDING)
+        sendStartingPhase(context, R.string.connection_restart_queued)
         restartScope.launch(Dispatchers.Default) {
             V2rayConfigManager.prewarmConfig(context.applicationContext, targetGuid)
         }
@@ -128,6 +160,16 @@ object V2RayServiceManager {
     fun stopVService(context: Context) {
         clearPendingRestart()
         clearPendingStartProfile()
+        when (currentLifecycleState()) {
+            LifecycleState.IDLE,
+            LifecycleState.FAILED -> {
+                MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_NOT_RUNNING, "")
+                return
+            }
+
+            LifecycleState.STOPPING -> return
+            else -> Unit
+        }
         requestServiceStop(context)
     }
 
@@ -191,6 +233,7 @@ object V2RayServiceManager {
             pendingStartProfile = PendingStartProfile(guid, config.copy())
         }
         MmkvManager.setSelectServer(guid)
+        updateLifecycleState(LifecycleState.STARTING)
         val intent = if (SettingsManager.isVpnMode()) {
             Intent(context.applicationContext, V2RayVpnService::class.java)
         } else {
@@ -200,6 +243,7 @@ object V2RayServiceManager {
             clearPendingRestart()
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
+            updateLifecycleState(LifecycleState.FAILED)
             clearPendingRestart()
             clearPendingStartProfile()
             Log.e(AppConfig.TAG, "Failed to start foreground service", e)
@@ -224,6 +268,7 @@ object V2RayServiceManager {
             serviceControl = null
         }
         currentConfig = null
+        updateLifecycleState(LifecycleState.STOPPING)
     }
 
     fun onServiceDestroyed(control: ServiceControl) {
@@ -231,6 +276,7 @@ object V2RayServiceManager {
             serviceControl = null
         }
         currentConfig = null
+        updateLifecycleState(LifecycleState.IDLE)
         // Restart only after the Android Service instance has fully torn down.
         // Starting too early can reuse the same instance and let the old destroy path
         // cancel the new start, which looks like "switch config -> service stops".
@@ -248,6 +294,7 @@ object V2RayServiceManager {
         }
 
         stopInProgress.set(false)
+        updateLifecycleState(LifecycleState.STARTING)
 
         val service = getService() ?: return false
         val guid = prebuiltConfig?.guid ?: pendingConfigGuid ?: MmkvManager.getSelectServer()
@@ -307,17 +354,20 @@ object V2RayServiceManager {
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to start Core loop", e)
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+            updateLifecycleState(LifecycleState.FAILED)
             cleanupStartArtifacts(service)
             return false
         }
 
         if (coreController.isRunning == false) {
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+            updateLifecycleState(LifecycleState.FAILED)
             cleanupStartArtifacts(service)
             return false
         }
 
         try {
+            updateLifecycleState(LifecycleState.RUNNING)
             MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
             NotificationManager.showNotification(currentConfig)
             NotificationManager.startSpeedNotification(currentConfig)
@@ -342,6 +392,7 @@ object V2RayServiceManager {
         }
 
         val startAt = SystemClock.elapsedRealtime()
+        updateLifecycleState(LifecycleState.STOPPING)
 
         try {
             measureDelayJob?.cancel()
@@ -535,6 +586,22 @@ object V2RayServiceManager {
         unregisterMessageReceiver(service)
     }
 
+    fun sendStartingPhase(service: Service, messageResId: Int) {
+        updateLifecycleState(
+            if (currentLifecycleState() == LifecycleState.RESTART_PENDING) LifecycleState.RESTART_PENDING else LifecycleState.STARTING
+        )
+        MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STARTING, messageResId)
+    }
+
+    fun sendStartingPhase(context: Context, messageResId: Int) {
+        MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_STARTING, messageResId)
+    }
+
+    fun sendStoppingPhase(service: Service, messageResId: Int) {
+        updateLifecycleState(LifecycleState.STOPPING)
+        MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOPPING, messageResId)
+    }
+
     private fun unregisterMessageReceiver(service: Service) {
         if (!receiverRegistered.compareAndSet(true, false)) {
             return
@@ -579,6 +646,7 @@ object V2RayServiceManager {
             }
             if (isServiceActive()) {
                 clearPendingRestart()
+                updateLifecycleState(LifecycleState.FAILED)
                 Log.w(AppConfig.TAG, "Pending restart timed out before service became inactive")
                 return@launch
             }
@@ -587,6 +655,22 @@ object V2RayServiceManager {
     }
 
     private fun isServiceActive(): Boolean {
-        return coreController.isRunning || serviceControl?.get() != null || stopInProgress.get()
+        return currentLifecycleState() != LifecycleState.IDLE
+            && currentLifecycleState() != LifecycleState.FAILED
+            || coreController.isRunning
+            || serviceControl?.get() != null
+            || stopInProgress.get()
+    }
+
+    private fun currentLifecycleState(): LifecycleState {
+        return synchronized(lifecycleLock) {
+            lifecycleState
+        }
+    }
+
+    private fun updateLifecycleState(newState: LifecycleState) {
+        synchronized(lifecycleLock) {
+            lifecycleState = newState
+        }
     }
 }

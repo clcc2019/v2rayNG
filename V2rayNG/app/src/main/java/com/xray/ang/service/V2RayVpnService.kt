@@ -20,6 +20,7 @@ import androidx.annotation.RequiresApi
 import com.xray.ang.AppConfig
 import com.xray.ang.AppConfig.LOOPBACK
 import com.xray.ang.BuildConfig
+import com.xray.ang.R
 import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.contracts.Tun2SocksControl
 import com.xray.ang.handler.MmkvManager
@@ -30,7 +31,6 @@ import com.xray.ang.handler.V2RayServiceManager
 import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.MyContextWrapper
 import com.xray.ang.util.Utils
-import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +95,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 .build()
             StrictMode.setThreadPolicy(policy)
         }
-        V2RayServiceManager.serviceControl = SoftReference(this)
+        V2RayServiceManager.bindServiceControl(this)
     }
 
     override fun onRevoke() {
@@ -115,6 +115,9 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Service may be restarted on the same instance before onDestroy runs.
+        // Rebind the control handle so manager lookups do not see a stale null reference.
+        V2RayServiceManager.bindServiceControl(this)
         startService()
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
@@ -141,10 +144,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
                     stopSelf()
                     return@launch
                 }
+                V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_preparing_config)
                 val knownProfile = V2RayServiceManager.consumePendingStartProfile(guid)
                 val configDeferred = async {
                     V2rayConfigManager.getV2rayConfig(this@V2RayVpnService, guid, knownProfile)
                 }
+                V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_preparing_vpn)
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")
                     isStopping.set(true)
@@ -173,8 +178,10 @@ class V2RayVpnService : VpnService(), ServiceControl {
                     stopAllService(isForced = true)
                     return@launch
                 }
+                V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_starting_core)
                 if (!V2RayServiceManager.startCoreLoop(mInterface, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
+                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
                     isStopping.set(true)
                     stopAllService(isForced = true)
                     return@launch
@@ -195,6 +202,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
 
         serviceScope.launch {
             try {
+                V2RayServiceManager.sendStoppingPhase(this@V2RayVpnService, R.string.connection_stopping_tun)
                 stopAllService(true)
                 V2RayServiceManager.onServiceStopCompleted(this@V2RayVpnService)
             } finally {
@@ -236,6 +244,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
                 Log.i(AppConfig.TAG, "VPN configure finished in ${SystemClock.elapsedRealtime() - configureStartAt}ms")
 
         val tunStartAt = SystemClock.elapsedRealtime()
+        V2RayServiceManager.sendStartingPhase(this, R.string.connection_starting_tun)
         if (!runTun2socks()) {
             Log.e(AppConfig.TAG, "Failed to start tun2socks")
             return false
@@ -468,9 +477,11 @@ class V2RayVpnService : VpnService(), ServiceControl {
         tun2SocksService?.stopTun2Socks()
         tun2SocksService = null
 
+        V2RayServiceManager.sendStoppingPhase(this, R.string.connection_stopping_core)
         V2RayServiceManager.stopCoreLoop()
 
         if (isForced) {
+            V2RayServiceManager.sendStoppingPhase(this, R.string.connection_releasing_service)
             //stopSelf has to be called ahead of mInterface.close(). otherwise v2ray core cannot be stooped
             //It's strage but true.
             //This can be verified by putting stopself() behind and call stopLoop and startLoop

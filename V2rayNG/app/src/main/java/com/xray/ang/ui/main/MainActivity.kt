@@ -341,6 +341,15 @@ class MainActivity : HelperBaseActivity() {
             toolbarController.showTransientMessage(getString(feedback.messageResId))
             performServiceFeedbackHaptic(feedback.style)
         }
+        mainViewModel.servicePhaseAction.observe(this) { phase ->
+            toolbarController.showTransientMessage(getString(phase.messageResId))
+            renderServiceUiState(
+                when (phase.state) {
+                    MainViewModel.ServicePhaseFeedback.State.STARTING -> ServiceUiState.STARTING
+                    MainViewModel.ServicePhaseFeedback.State.STOPPING -> ServiceUiState.STOPPING
+                }
+            )
+        }
         mainViewModel.isRunning.observe(this) { isRunning ->
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
