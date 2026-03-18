@@ -7,22 +7,37 @@ import com.xray.ang.BuildConfig
 
 object StartupTracer {
     private const val TAG = "StartupTrace"
+
     @Volatile
     private var appStartElapsedMs: Long = 0L
 
+    @Volatile
+    var onCreateElapsedMs: Long = 0L
+        private set
+
+    @Volatile
+    var firstFrameElapsedMs: Long = 0L
+        private set
+
     fun markAppStart() {
-        if (!BuildConfig.DEBUG) return
         if (appStartElapsedMs == 0L) {
             appStartElapsedMs = SystemClock.elapsedRealtime()
         }
     }
 
     fun mark(label: String) {
-        if (!BuildConfig.DEBUG) return
         val start = appStartElapsedMs
         if (start == 0L) return
         val elapsed = SystemClock.elapsedRealtime() - start
-        Log.i(TAG, "$label: ${elapsed}ms")
+
+        when (label) {
+            "MainActivity.onCreate.end" -> onCreateElapsedMs = elapsed
+            "MainActivity.firstFrame" -> firstFrameElapsedMs = elapsed
+        }
+
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, "$label: ${elapsed}ms")
+        }
     }
 
     fun beginSection(name: String) {
@@ -33,5 +48,10 @@ object StartupTracer {
     fun endSection() {
         if (!BuildConfig.DEBUG) return
         Trace.endSection()
+    }
+
+    fun getStartupSummary(): String? {
+        if (firstFrameElapsedMs <= 0L) return null
+        return "onCreate=${onCreateElapsedMs}ms, firstFrame=${firstFrameElapsedMs}ms"
     }
 }

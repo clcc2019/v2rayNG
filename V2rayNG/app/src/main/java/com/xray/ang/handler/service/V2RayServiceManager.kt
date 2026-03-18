@@ -47,6 +47,11 @@ object V2RayServiceManager {
         val profile: ProfileItem
     )
 
+    private data class PreparedStartRequest(
+        val guid: String,
+        val profile: ProfileItem
+    )
+
     private enum class LifecycleState {
         IDLE,
         STARTING,
@@ -102,9 +107,10 @@ object V2RayServiceManager {
      * @param guid The GUID of the server configuration to use (optional).
      */
     fun startVService(context: Context, guid: String? = null) {
-        val targetGuid = guid ?: MmkvManager.getSelectServer()
-        if (targetGuid.isNullOrEmpty()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+        val targetGuid = resolveStartGuid(context, guid) ?: return
+        clearPendingRestart()
+        if (isServiceTearingDown()) {
+            queuePendingRestart(context, targetGuid)
             return
         }
         when (currentLifecycleState()) {
@@ -127,6 +133,10 @@ object V2RayServiceManager {
                 clearPendingRestart()
             }
         }
+        if (isServiceActive()) {
+            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+            return
+        }
         startContextService(context, targetGuid)
     }
 
@@ -135,11 +145,7 @@ object V2RayServiceManager {
      * It starts as soon as the core is fully stopped (or timeout reached).
      */
     fun restartVService(context: Context, guid: String? = null) {
-        val targetGuid = guid ?: MmkvManager.getSelectServer()
-        if (targetGuid.isNullOrEmpty()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
-            return
-        }
+        val targetGuid = resolveStartGuid(context, guid) ?: return
         queuePendingRestart(context, targetGuid)
         updateLifecycleState(LifecycleState.RESTART_PENDING)
         sendStartingPhase(context, R.string.connection_restart_queued)
@@ -203,36 +209,26 @@ object V2RayServiceManager {
      * @param context The context from which the service is started.
      */
     private fun startContextService(context: Context, guid: String) {
+        if (isServiceTearingDown()) {
+            queuePendingRestart(context, guid)
+            return
+        }
         if (isServiceActive()) {
             MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
             return
         }
 
-        val config = MmkvManager.decodeServerConfig(guid)
-        if (config == null) {
-            clearPendingRestart()
-            clearPendingStartProfile()
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+        val request = prepareStartRequest(guid)
+        if (request == null) {
+            abortStartRequest(context)
             return
         }
-        if (config.configType != EConfigType.CUSTOM
-            && config.configType != EConfigType.POLICYGROUP
-            && !Utils.isValidUrl(config.server)
-            && !Utils.isPureIpAddress(config.server.orEmpty())
-        ) {
-            clearPendingRestart()
-            clearPendingStartProfile()
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
-            return
-        }
-//        val result = V2rayConfigUtil.getV2rayConfig(context, guid)
-//        if (!result.status) return
 
-        pendingConfigGuid = guid
+        pendingConfigGuid = request.guid
         synchronized(pendingStartProfileLock) {
-            pendingStartProfile = PendingStartProfile(guid, config.copy())
+            pendingStartProfile = PendingStartProfile(request.guid, request.profile)
         }
-        MmkvManager.setSelectServer(guid)
+        MmkvManager.setSelectServer(request.guid)
         updateLifecycleState(LifecycleState.STARTING)
         val intent = if (SettingsManager.isVpnMode()) {
             Intent(context.applicationContext, V2RayVpnService::class.java)
@@ -247,7 +243,7 @@ object V2RayServiceManager {
             clearPendingRestart()
             clearPendingStartProfile()
             Log.e(AppConfig.TAG, "Failed to start foreground service", e)
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+            abortStartRequest(context)
         }
     }
 
@@ -256,6 +252,7 @@ object V2RayServiceManager {
             val pending = pendingStartProfile ?: return null
             if (pending.guid != guid) {
                 pendingStartProfile = null
+                pendingConfigGuid = null
                 return null
             }
             pendingStartProfile = null
@@ -263,11 +260,9 @@ object V2RayServiceManager {
         }
     }
 
-    fun onServiceStopCompleted(control: ServiceControl) {
-        if (serviceControl?.get() === control) {
-            serviceControl = null
-        }
+    fun onServiceStopCompleted() {
         currentConfig = null
+        pendingConfigGuid = null
         updateLifecycleState(LifecycleState.STOPPING)
     }
 
@@ -281,6 +276,10 @@ object V2RayServiceManager {
         // Starting too early can reuse the same instance and let the old destroy path
         // cancel the new start, which looks like "switch config -> service stops".
         schedulePendingRestart()
+    }
+
+    fun shouldTerminateDaemonProcess(): Boolean {
+        return pendingRestartRequest == null && isServiceActive().not()
     }
 
     /**
@@ -602,6 +601,38 @@ object V2RayServiceManager {
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOPPING, messageResId)
     }
 
+    private fun resolveStartGuid(context: Context, guid: String?): String? {
+        val targetGuid = guid ?: MmkvManager.getSelectServer()
+        if (!targetGuid.isNullOrEmpty()) {
+            return targetGuid
+        }
+
+        MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+        return null
+    }
+
+    private fun prepareStartRequest(guid: String): PreparedStartRequest? {
+        val profile = MmkvManager.decodeServerConfig(guid) ?: return null
+        if (!isStartableProfile(profile)) {
+            return null
+        }
+        return PreparedStartRequest(guid, profile.copy())
+    }
+
+    private fun isStartableProfile(profile: ProfileItem): Boolean {
+        return profile.configType == EConfigType.CUSTOM
+            || profile.configType == EConfigType.POLICYGROUP
+            || Utils.isValidUrl(profile.server)
+            || Utils.isPureIpAddress(profile.server.orEmpty())
+    }
+
+    private fun abortStartRequest(context: Context) {
+        clearPendingRestart()
+        clearPendingStartProfile()
+        pendingConfigGuid = null
+        MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_START_FAILURE, "")
+    }
+
     private fun unregisterMessageReceiver(service: Service) {
         if (!receiverRegistered.compareAndSet(true, false)) {
             return
@@ -630,6 +661,7 @@ object V2RayServiceManager {
         synchronized(pendingStartProfileLock) {
             pendingStartProfile = null
         }
+        pendingConfigGuid = null
     }
 
     private fun schedulePendingRestart() {
@@ -672,5 +704,11 @@ object V2RayServiceManager {
         synchronized(lifecycleLock) {
             lifecycleState = newState
         }
+    }
+
+    private fun isServiceTearingDown(): Boolean {
+        // After stop succeeds, Android can still keep the Service instance alive until onDestroy.
+        // Starting again in this window may reuse the same instance and let the old destroy path cancel the new start.
+        return coreController.isRunning == false && serviceControl?.get() != null
     }
 }

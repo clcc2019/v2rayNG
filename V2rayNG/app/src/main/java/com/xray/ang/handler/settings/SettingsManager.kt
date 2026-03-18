@@ -480,22 +480,30 @@ object SettingsManager {
     }
 
     private fun ensureDefaultSettings() {
-        // Write defaults in the exact order requested by the user
-        ensureDefaultValue(AppConfig.PREF_MODE, AppConfig.VPN)
-        ensureDefaultValue(AppConfig.PREF_LOCAL_DNS_ENABLED, true)
-        ensureDefaultValue(AppConfig.PREF_VPN_DNS, AppConfig.DNS_VPN)
-        ensureDefaultValue(AppConfig.PREF_VPN_MTU, AppConfig.VPN_MTU.toString())
-        ensureDefaultValue(AppConfig.SUBSCRIPTION_AUTO_UPDATE_INTERVAL, AppConfig.SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL)
-        ensureDefaultValue(AppConfig.PREF_SOCKS_PORT, AppConfig.PORT_SOCKS)
-        ensureDefaultValue(AppConfig.PREF_REMOTE_DNS, AppConfig.DNS_PROXY)
-        ensureDefaultValue(AppConfig.PREF_DOMESTIC_DNS, AppConfig.DNS_DIRECT)
-        ensureDefaultValue(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DELAY_TEST_URL)
-        ensureDefaultValue(AppConfig.PREF_IP_API_URL, AppConfig.IP_API_URL)
-        ensureDefaultValue(AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT, AppConfig.HEVTUN_RW_TIMEOUT)
-        ensureDefaultValue(AppConfig.PREF_MUX_CONCURRENCY, "8")
-        ensureDefaultValue(AppConfig.PREF_MUX_XUDP_CONCURRENCY, "8")
-        ensureDefaultValue(AppConfig.PREF_FRAGMENT_LENGTH, "50-100")
-        ensureDefaultValue(AppConfig.PREF_FRAGMENT_INTERVAL, "10-20")
+        val stringDefaults = arrayOf(
+            AppConfig.PREF_MODE to AppConfig.VPN,
+            AppConfig.PREF_VPN_DNS to AppConfig.DNS_VPN,
+            AppConfig.PREF_VPN_MTU to AppConfig.VPN_MTU.toString(),
+            AppConfig.SUBSCRIPTION_AUTO_UPDATE_INTERVAL to AppConfig.SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL,
+            AppConfig.PREF_SOCKS_PORT to AppConfig.PORT_SOCKS,
+            AppConfig.PREF_REMOTE_DNS to AppConfig.DNS_PROXY,
+            AppConfig.PREF_DOMESTIC_DNS to AppConfig.DNS_DIRECT,
+            AppConfig.PREF_DELAY_TEST_URL to AppConfig.DELAY_TEST_URL,
+            AppConfig.PREF_IP_API_URL to AppConfig.IP_API_URL,
+            AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT to AppConfig.HEVTUN_RW_TIMEOUT,
+            AppConfig.PREF_MUX_CONCURRENCY to "8",
+            AppConfig.PREF_MUX_XUDP_CONCURRENCY to "8",
+            AppConfig.PREF_FRAGMENT_LENGTH to "50-100",
+            AppConfig.PREF_FRAGMENT_INTERVAL to "10-20",
+        )
+        for ((key, default) in stringDefaults) {
+            if (MmkvManager.decodeSettingsString(key).isNullOrEmpty()) {
+                MmkvManager.encodeSettings(key, default)
+            }
+        }
+        if (MmkvManager.decodeSettingsString(AppConfig.PREF_LOCAL_DNS_ENABLED) == null) {
+            MmkvManager.encodeSettings(AppConfig.PREF_LOCAL_DNS_ENABLED, true)
+        }
     }
 
     private fun ensureDefaultSubscriptionInitialized() {
@@ -506,18 +514,6 @@ object SettingsManager {
         }
         ensureDefaultSubscription()
         MmkvManager.encodeSettings(KEY_DEFAULT_SUBSCRIPTION_VERSION, DEFAULT_SUBSCRIPTION_VERSION.toString())
-    }
-
-    private fun ensureDefaultValue(key: String, default: String) {
-        if (MmkvManager.decodeSettingsString(key).isNullOrEmpty()) {
-            MmkvManager.encodeSettings(key, default)
-        }
-    }
-
-    private fun ensureDefaultValue(key: String, default: Boolean) {
-        if (MmkvManager.decodeSettingsString(key) == null) {
-            MmkvManager.encodeSettings(key, default)
-        }
     }
 
     private fun migrateHysteria2PinSHA256() {
@@ -599,18 +595,19 @@ object SettingsManager {
      */
     private fun ensureDefaultSubscription() {
         val subsList = decodeSubsList()
-        if (!subsList.contains(DEFAULT_SUBSCRIPTION_ID) || decodeSubscription(DEFAULT_SUBSCRIPTION_ID) == null) {
-            val defaultSub = SubscriptionItem(
-                remarks = "Default",
-            )
-            encodeSubscription(DEFAULT_SUBSCRIPTION_ID, defaultSub)
-
-            // Move top
-            val updatedSubsList = decodeSubsList()
-            if (updatedSubsList.count() > 1) {
-                swapSubscriptions(0, updatedSubsList.count() - 1)
-            }
+        if (subsList.contains(DEFAULT_SUBSCRIPTION_ID) && decodeSubscription(DEFAULT_SUBSCRIPTION_ID) != null) {
+            return
         }
+        val defaultSub = SubscriptionItem(remarks = "Default")
+        MmkvManager.encodeSubscriptionDirect(DEFAULT_SUBSCRIPTION_ID, defaultSub)
+
+        if (!subsList.contains(DEFAULT_SUBSCRIPTION_ID)) {
+            subsList.add(DEFAULT_SUBSCRIPTION_ID)
+        }
+        if (subsList.size > 1 && subsList.last() == DEFAULT_SUBSCRIPTION_ID) {
+            Collections.swap(subsList, 0, subsList.size - 1)
+        }
+        MmkvManager.encodeSubsList(subsList)
     }
 
 }

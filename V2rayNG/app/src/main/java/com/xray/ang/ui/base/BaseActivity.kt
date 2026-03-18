@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.xray.ang.AngApplication
 import com.xray.ang.R
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.helper.CustomDividerItemDecoration
@@ -381,14 +382,22 @@ abstract class BaseActivity : AppCompatActivity() {
     @Suppress("DEPRECATION")
     private fun applyPreferredRefreshRate() {
         val layoutParams = window.attributes ?: return
-        val display = windowManager.defaultDisplay ?: return
 
+        if (AngApplication.preferredDisplayModeResolved) {
+            layoutParams.preferredDisplayModeId = AngApplication.cachedPreferredDisplayModeId
+            layoutParams.preferredRefreshRate = AngApplication.cachedPreferredRefreshRate
+            window.attributes = layoutParams
+            return
+        }
+
+        val display = windowManager.defaultDisplay ?: return
         val currentMode = display.mode
         val preferredMode = display.supportedModes
             .filter { it.physicalWidth == currentMode.physicalWidth && it.physicalHeight == currentMode.physicalHeight }
             .maxByOrNull { it.refreshRate }
 
         preferredMode?.let {
+            AngApplication.resolvePreferredDisplayMode(it.modeId, it.refreshRate)
             layoutParams.preferredDisplayModeId = it.modeId
             layoutParams.preferredRefreshRate = it.refreshRate
         }

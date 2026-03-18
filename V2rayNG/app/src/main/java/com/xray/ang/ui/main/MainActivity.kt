@@ -26,6 +26,7 @@ import androidx.core.view.updatePadding
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityMainBinding
 import com.xray.ang.enums.PermissionType
@@ -39,6 +40,7 @@ import com.xray.ang.ui.common.hapticConfirm
 import com.xray.ang.ui.common.hapticReject
 import com.xray.ang.ui.common.hapticVirtualKey
 import com.xray.ang.ui.common.launchActivityWithDefaultTransition
+import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.StartupTracer
 import com.xray.ang.util.Utils
 import com.xray.ang.viewmodel.MainViewModel
@@ -81,6 +83,7 @@ class MainActivity : HelperBaseActivity() {
         )
     }
     private var serviceUiState = ServiceUiState.STOPPED
+    private var pendingRestartGuid: String? = null
     private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
     private var defaultConnectionCardBottomMargin = 0
@@ -201,7 +204,6 @@ class MainActivity : HelperBaseActivity() {
             mainViewModel.initAssets(assets)
             setupGroupTab()
             mainViewModel.reloadServerList()
-            mainViewModel.prewarmSelectedConfig()
             refreshConnectionCard()
             checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
             }
@@ -338,6 +340,14 @@ class MainActivity : HelperBaseActivity() {
             refreshConnectionCard()
         }
         mainViewModel.serviceFeedbackAction.observe(this) { feedback ->
+            if (pendingRestartGuid != null) {
+                if (feedback.style == MainViewModel.ServiceFeedback.Style.NEUTRAL) {
+                    return@observe
+                }
+                if (feedback.style == MainViewModel.ServiceFeedback.Style.ERROR) {
+                    pendingRestartGuid = null
+                }
+            }
             toolbarController.showTransientMessage(getString(feedback.messageResId))
             performServiceFeedbackHaptic(feedback.style)
         }
@@ -351,6 +361,13 @@ class MainActivity : HelperBaseActivity() {
             )
         }
         mainViewModel.isRunning.observe(this) { isRunning ->
+            if (pendingRestartGuid != null) {
+                if (isRunning) {
+                    pendingRestartGuid = null
+                    renderServiceUiState(ServiceUiState.RUNNING)
+                }
+                return@observe
+            }
             renderServiceUiState(if (isRunning) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
@@ -403,6 +420,7 @@ class MainActivity : HelperBaseActivity() {
         }
 
         if (mainViewModel.isRunning.value == true) {
+            pendingRestartGuid = null
             renderServiceUiState(ServiceUiState.STOPPING)
             V2RayServiceManager.stopVService(this)
         } else {
@@ -457,8 +475,10 @@ class MainActivity : HelperBaseActivity() {
             return
         }
         if (mainViewModel.isRunning.value == true) {
+            MmkvManager.setSelectServer(targetGuid)
+            pendingRestartGuid = targetGuid
             renderServiceUiState(ServiceUiState.STOPPING)
-            V2RayServiceManager.restartVService(this, targetGuid)
+            MessageUtil.sendMsg2Service(this, AppConfig.MSG_STATE_RESTART, "")
         } else {
             startAfterRestart(targetGuid)
         }
