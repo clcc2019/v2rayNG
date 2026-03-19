@@ -106,6 +106,13 @@ class V2RayVpnService : VpnService(), ServiceControl {
 //    }
 
     override fun onDestroy() {
+        if (!transitionGuard.isStopRequested()) {
+            Log.w(AppConfig.TAG, "VPN service destroyed without explicit stop, running safety-net cleanup")
+            isRunning = false
+            V2RayServiceManager.stopCoreLoop()
+            V2RayServiceManager.onServiceStopCompleted()
+            V2RayServiceManager.sendStopSuccess(this)
+        }
         V2RayServiceManager.onServiceDestroyed(this)
         V2RayServiceRuntime.terminateProcessIfIdle()
         serviceScope.cancel()
@@ -132,63 +139,61 @@ class V2RayVpnService : VpnService(), ServiceControl {
         }
 
         serviceScope.launch {
+            var configDeferred: kotlinx.coroutines.Deferred<com.xray.ang.dto.ConfigResult>? = null
             try {
                 val startAt = SystemClock.elapsedRealtime()
                 val guid = MmkvManager.getSelectServer()
                 if (guid.isNullOrEmpty()) {
                     Log.e(AppConfig.TAG, "Failed to start VPN: no selected server")
-                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    stopSelf()
+                    abortStart("")
                     return@launch
                 }
                 V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_preparing_config)
                 val knownProfile = V2RayServiceManager.consumePendingStartProfile(guid)
-                val configDeferred = async {
+                configDeferred = async {
                     V2rayConfigManager.getV2rayConfig(this@V2RayVpnService, guid, knownProfile)
                 }
                 V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_preparing_vpn)
                 if (!setupVpnService()) {
                     Log.e(AppConfig.TAG, "Failed to setup VPN service")
-                    transitionGuard.requestStop()
-                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    stopAllService(isForced = true)
-                    configDeferred.cancel()
+                    abortStart("")
                     return@launch
                 }
                 if (transitionGuard.isStopRequested()) {
                     Log.i(AppConfig.TAG, "VPN start aborted because stop is in progress")
-                    configDeferred.cancel()
                     return@launch
                 }
                 if (!::mInterface.isInitialized) {
                     Log.e(AppConfig.TAG, "Failed to create VPN interface")
-                    transitionGuard.requestStop()
-                    stopAllService(isForced = true)
-                    configDeferred.cancel()
+                    abortStart("")
                     return@launch
                 }
                 val configResult = configDeferred.await()
+                configDeferred = null
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build V2Ray config")
-                    transitionGuard.requestStop()
-                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    stopAllService(isForced = true)
+                    abortStart(configResult.errorResId ?: "")
                     return@launch
                 }
                 V2RayServiceManager.sendStartingPhase(this@V2RayVpnService, R.string.connection_starting_core)
                 if (!V2RayServiceManager.startCoreLoop(mInterface, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start V2Ray core loop")
-                    MessageUtil.sendMsg2UI(this@V2RayVpnService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    transitionGuard.requestStop()
-                    stopAllService(isForced = true)
+                    abortStart("")
                     return@launch
                 }
                 registerPlatformNetworkCallback()
                 Log.i(AppConfig.TAG, "VPN start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
+                configDeferred?.cancel()
                 transitionGuard.finishStart()
             }
         }
+    }
+
+    private fun abortStart(errorInfo: java.io.Serializable) {
+        transitionGuard.requestStop()
+        MessageUtil.sendMsg2UI(this, AppConfig.MSG_STATE_START_FAILURE, errorInfo)
+        stopAllService(isForced = true, emitStopSuccess = true)
     }
 
     override fun stopService() {
@@ -199,8 +204,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         serviceScope.launch {
             try {
                 V2RayServiceManager.sendStoppingPhase(this@V2RayVpnService, R.string.connection_stopping_tun)
-                stopAllService(true)
-                V2RayServiceManager.onServiceStopCompleted()
+                stopAllService(isForced = true, emitStopSuccess = true)
             } finally {
                 transitionGuard.finishStop()
             }
@@ -454,7 +458,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         return true
     }
 
-    private fun stopAllService(isForced: Boolean = true) {
+    private fun stopAllService(isForced: Boolean = true, emitStopSuccess: Boolean = false) {
         val startAt = SystemClock.elapsedRealtime()
 //        val configName = defaultDPreference.getPrefString(PREF_CURR_CONFIG_GUID, "")
 //        val emptyInfo = VpnNetworkInfo()
@@ -473,10 +477,18 @@ class V2RayVpnService : VpnService(), ServiceControl {
         tun2SocksService = null
 
         V2RayServiceManager.sendStoppingPhase(this, R.string.connection_stopping_core)
-        V2RayServiceManager.stopCoreLoop()
 
         if (isForced) {
             V2RayServiceManager.sendStoppingPhase(this, R.string.connection_releasing_service)
+        }
+
+        V2RayServiceManager.stopCoreLoop()
+
+        if (isForced) {
+            if (emitStopSuccess) {
+                V2RayServiceManager.onServiceStopCompleted()
+                V2RayServiceManager.sendStopSuccess(this)
+            }
             //stopSelf has to be called ahead of mInterface.close(). otherwise v2ray core cannot be stooped
             //It's strage but true.
             //This can be verified by putting stopself() behind and call stopLoop and startLoop

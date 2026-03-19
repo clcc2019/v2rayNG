@@ -34,8 +34,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object V2RayServiceManager {
     private const val RESTART_START_DELAY_MS = 120L
-    private const val RESTART_MAX_WAIT_MS = 1_500L
-    private const val RESTART_WAIT_INTERVAL_MS = 40L
+    private const val RESTART_MAX_WAIT_MS = 3_000L
+    private const val RESTART_WAIT_INTERVAL_MS = 50L
+    private const val RESTART_WAIT_INTERVAL_MAX_MS = 200L
+    private const val STOP_TIMEOUT_MS = 5_000L
 
     private data class PendingRestartRequest(
         val context: Context,
@@ -65,6 +67,7 @@ object V2RayServiceManager {
     private val mMsgReceive = ReceiveMessageHandler()
     private val restartScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var restartJob: Job? = null
+    private var stopTimeoutJob: Job? = null
     private var measureDelayJob: Job? = null
     private var currentConfig: ProfileItem? = null
     private var pendingConfigGuid: String? = null
@@ -111,21 +114,48 @@ object V2RayServiceManager {
         clearPendingRestart()
         if (isServiceTearingDown()) {
             queuePendingRestart(context, targetGuid)
+            updateLifecycleState(LifecycleState.RESTART_PENDING)
+            sendStartingPhase(context, R.string.connection_restart_queued)
             return
         }
         when (currentLifecycleState()) {
             LifecycleState.STOPPING -> {
-                queuePendingRestart(context, targetGuid)
-                updateLifecycleState(LifecycleState.RESTART_PENDING)
-                sendStartingPhase(context, R.string.connection_restart_queued)
-                return
+                if (hasLiveServiceControl()) {
+                    queuePendingRestart(context, targetGuid)
+                    updateLifecycleState(LifecycleState.RESTART_PENDING)
+                    sendStartingPhase(context, R.string.connection_restart_queued)
+                    return
+                }
+                Log.i(AppConfig.TAG, "Recovering from stale STOPPING state (service process likely dead)")
+                resetStaleState()
             }
 
-            LifecycleState.STARTING,
-            LifecycleState.RUNNING,
             LifecycleState.RESTART_PENDING -> {
-                MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
-                return
+                if (hasLiveServiceControl()) {
+                    queuePendingRestart(context, targetGuid)
+                    sendStartingPhase(context, R.string.connection_restart_queued)
+                    return
+                }
+                Log.i(AppConfig.TAG, "Recovering from stale RESTART_PENDING state (service process likely dead)")
+                resetStaleState()
+            }
+
+            LifecycleState.STARTING -> {
+                if (hasLiveServiceControl()) {
+                    sendStartingPhase(context, R.string.connection_starting)
+                    return
+                }
+                Log.i(AppConfig.TAG, "Recovering from stale STARTING state (service process likely dead)")
+                resetStaleState()
+            }
+
+            LifecycleState.RUNNING -> {
+                if (hasLiveServiceControl() || coreController.isRunning) {
+                    MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+                    return
+                }
+                Log.i(AppConfig.TAG, "Recovering from stale RUNNING state (service process likely dead)")
+                resetStaleState()
             }
 
             LifecycleState.IDLE,
@@ -134,7 +164,9 @@ object V2RayServiceManager {
             }
         }
         if (isServiceActive()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+            queuePendingRestart(context, targetGuid)
+            updateLifecycleState(LifecycleState.RESTART_PENDING)
+            sendStartingPhase(context, R.string.connection_restart_queued)
             return
         }
         startContextService(context, targetGuid)
@@ -153,8 +185,13 @@ object V2RayServiceManager {
             V2rayConfigManager.prewarmConfig(context.applicationContext, targetGuid)
         }
         if (isServiceActive()) {
-            requestServiceStop(context.applicationContext)
-            return
+            if (hasLiveServiceControl()) {
+                requestServiceStop(context.applicationContext)
+                return
+            }
+            Log.i(AppConfig.TAG, "Restart: service appears active but no live control, resetting stale state")
+            resetStaleState()
+            queuePendingRestart(context, targetGuid)
         }
         startContextService(context, targetGuid)
     }
@@ -176,7 +213,23 @@ object V2RayServiceManager {
             LifecycleState.STOPPING -> return
             else -> Unit
         }
+        updateLifecycleState(LifecycleState.STOPPING)
         requestServiceStop(context)
+        scheduleStopTimeout(context.applicationContext)
+    }
+
+    private fun scheduleStopTimeout(context: Context) {
+        stopTimeoutJob?.cancel()
+        stopTimeoutJob = restartScope.launch {
+            delay(STOP_TIMEOUT_MS)
+            if (currentLifecycleState() == LifecycleState.STOPPING) {
+                Log.w(AppConfig.TAG, "Stop timed out after ${STOP_TIMEOUT_MS}ms, forcing state reset")
+                serviceControl = null
+                stopInProgress.set(false)
+                updateLifecycleState(LifecycleState.IDLE)
+                MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_STOP_SUCCESS, "")
+            }
+        }
     }
 
     private fun requestServiceStop(context: Context) {
@@ -211,10 +264,18 @@ object V2RayServiceManager {
     private fun startContextService(context: Context, guid: String) {
         if (isServiceTearingDown()) {
             queuePendingRestart(context, guid)
+            updateLifecycleState(LifecycleState.RESTART_PENDING)
+            sendStartingPhase(context, R.string.connection_restart_queued)
             return
         }
         if (isServiceActive()) {
-            MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+            if (coreController.isRunning) {
+                MessageUtil.sendMsg2UI(context, AppConfig.MSG_STATE_RUNNING, "")
+            } else {
+                queuePendingRestart(context, guid)
+                updateLifecycleState(LifecycleState.RESTART_PENDING)
+                sendStartingPhase(context, R.string.connection_restart_queued)
+            }
             return
         }
 
@@ -261,20 +322,21 @@ object V2RayServiceManager {
     }
 
     fun onServiceStopCompleted() {
+        stopTimeoutJob?.cancel()
+        stopTimeoutJob = null
         currentConfig = null
         pendingConfigGuid = null
         updateLifecycleState(LifecycleState.STOPPING)
     }
 
     fun onServiceDestroyed(control: ServiceControl) {
+        stopTimeoutJob?.cancel()
+        stopTimeoutJob = null
         if (serviceControl?.get() === control) {
             serviceControl = null
         }
         currentConfig = null
         updateLifecycleState(LifecycleState.IDLE)
-        // Restart only after the Android Service instance has fully torn down.
-        // Starting too early can reuse the same instance and let the old destroy path
-        // cancel the new start, which looks like "switch config -> service stops".
         schedulePendingRestart()
     }
 
@@ -404,7 +466,6 @@ object V2RayServiceManager {
                 }
             }
 
-            MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
             NotificationManager.cancelNotification()
             unregisterMessageReceiver(service)
             Log.i(AppConfig.TAG, "V2Ray core stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
@@ -601,6 +662,10 @@ object V2RayServiceManager {
         MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOPPING, messageResId)
     }
 
+    fun sendStopSuccess(service: Service) {
+        MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
+    }
+
     private fun resolveStartGuid(context: Context, guid: String?): String? {
         val targetGuid = guid ?: MmkvManager.getSelectServer()
         if (!targetGuid.isNullOrEmpty()) {
@@ -670,25 +735,34 @@ object V2RayServiceManager {
         restartJob = restartScope.launch {
             delay(RESTART_START_DELAY_MS)
             val deadline = SystemClock.elapsedRealtime() + RESTART_MAX_WAIT_MS
+            var interval = RESTART_WAIT_INTERVAL_MS
             while (isActive && isServiceActive() && SystemClock.elapsedRealtime() < deadline) {
-                delay(RESTART_WAIT_INTERVAL_MS)
+                delay(interval)
+                interval = (interval * 2).coerceAtMost(RESTART_WAIT_INTERVAL_MAX_MS)
             }
             if (!isActive || pendingRestartRequest != request) {
                 return@launch
             }
             if (isServiceActive()) {
-                clearPendingRestart()
-                updateLifecycleState(LifecycleState.FAILED)
-                Log.w(AppConfig.TAG, "Pending restart timed out before service became inactive")
-                return@launch
+                Log.w(AppConfig.TAG, "Pending restart timed out, forcing stale reference cleanup")
+                serviceControl = null
+                stopInProgress.set(false)
+                if (isServiceActive()) {
+                    clearPendingRestart()
+                    updateLifecycleState(LifecycleState.FAILED)
+                    MessageUtil.sendMsg2UI(request.context, AppConfig.MSG_STATE_START_FAILURE, "")
+                    Log.w(AppConfig.TAG, "Pending restart abandoned after forced cleanup")
+                    return@launch
+                }
             }
             startContextService(request.context, request.guid)
         }
     }
 
     private fun isServiceActive(): Boolean {
-        return currentLifecycleState() != LifecycleState.IDLE
+        val lifecycleActive = currentLifecycleState() != LifecycleState.IDLE
             && currentLifecycleState() != LifecycleState.FAILED
+        return lifecycleActive
             || coreController.isRunning
             || serviceControl?.get() != null
             || stopInProgress.get()
@@ -706,9 +780,23 @@ object V2RayServiceManager {
         }
     }
 
+    private fun hasLiveServiceControl(): Boolean {
+        return serviceControl?.get() != null
+    }
+
+    private fun resetStaleState() {
+        stopTimeoutJob?.cancel()
+        stopTimeoutJob = null
+        serviceControl = null
+        stopInProgress.set(false)
+        clearPendingRestart()
+        clearPendingStartProfile()
+        currentConfig = null
+        pendingConfigGuid = null
+        updateLifecycleState(LifecycleState.IDLE)
+    }
+
     private fun isServiceTearingDown(): Boolean {
-        // After stop succeeds, Android can still keep the Service instance alive until onDestroy.
-        // Starting again in this window may reuse the same instance and let the old destroy path cancel the new start.
         return coreController.isRunning == false && serviceControl?.get() != null
     }
 }

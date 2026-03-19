@@ -54,7 +54,10 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      */
     override fun onDestroy() {
         if (!transitionGuard.isStopRequested()) {
+            Log.w(AppConfig.TAG, "Proxy-only service destroyed without explicit stop, running safety-net cleanup")
             V2RayServiceManager.stopCoreLoop()
+            V2RayServiceManager.onServiceStopCompleted()
+            V2RayServiceManager.sendStopSuccess(this)
         }
         V2RayServiceManager.onServiceDestroyed(this)
         V2RayServiceRuntime.terminateProcessIfIdle()
@@ -84,8 +87,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val guid = MmkvManager.getSelectServer()
                 if (guid.isNullOrEmpty()) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only: no selected server")
-                    MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    stopSelf()
+                    abortStart("")
                     return@launch
                 }
                 V2RayServiceManager.sendStartingPhase(this@V2RayProxyOnlyService, R.string.connection_preparing_config)
@@ -93,21 +95,13 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 val configResult = V2rayConfigManager.getV2rayConfig(this@V2RayProxyOnlyService, guid, knownProfile)
                 if (!configResult.status) {
                     Log.e(AppConfig.TAG, "Failed to build proxy-only V2Ray config")
-                    transitionGuard.requestStop()
-                    MessageUtil.sendMsg2UI(
-                        this@V2RayProxyOnlyService,
-                        AppConfig.MSG_STATE_START_FAILURE,
-                        configResult.errorResId ?: ""
-                    )
-                    stopSelf()
+                    abortStart(configResult.errorResId ?: "")
                     return@launch
                 }
                 V2RayServiceManager.sendStartingPhase(this@V2RayProxyOnlyService, R.string.connection_starting_core)
                 if (!V2RayServiceManager.startCoreLoop(null, configResult)) {
                     Log.e(AppConfig.TAG, "Failed to start proxy-only core loop")
-                    transitionGuard.requestStop()
-                    MessageUtil.sendMsg2UI(this@V2RayProxyOnlyService, AppConfig.MSG_STATE_START_FAILURE, "")
-                    stopSelf()
+                    abortStart("")
                     return@launch
                 }
                 Log.i(AppConfig.TAG, "Proxy-only start finished in ${SystemClock.elapsedRealtime() - startAt}ms")
@@ -115,6 +109,15 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
                 transitionGuard.finishStart()
             }
         }
+    }
+
+    private fun abortStart(errorInfo: java.io.Serializable) {
+        transitionGuard.requestStop()
+        MessageUtil.sendMsg2UI(this, AppConfig.MSG_STATE_START_FAILURE, errorInfo)
+        V2RayServiceManager.stopCoreLoop()
+        V2RayServiceManager.onServiceStopCompleted()
+        V2RayServiceManager.sendStopSuccess(this)
+        stopSelf()
     }
 
     /**
@@ -129,10 +132,11 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
             try {
                 val startAt = SystemClock.elapsedRealtime()
                 V2RayServiceManager.sendStoppingPhase(this@V2RayProxyOnlyService, R.string.connection_stopping_core)
-                V2RayServiceManager.stopCoreLoop()
                 V2RayServiceManager.sendStoppingPhase(this@V2RayProxyOnlyService, R.string.connection_releasing_service)
-                stopSelf()
+                V2RayServiceManager.stopCoreLoop()
                 V2RayServiceManager.onServiceStopCompleted()
+                V2RayServiceManager.sendStopSuccess(this@V2RayProxyOnlyService)
+                stopSelf()
                 Log.i(AppConfig.TAG, "Proxy-only stop finished in ${SystemClock.elapsedRealtime() - startAt}ms")
             } finally {
                 transitionGuard.finishStop()

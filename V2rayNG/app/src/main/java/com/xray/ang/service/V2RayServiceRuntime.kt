@@ -7,43 +7,48 @@ import android.util.Log
 import com.xray.ang.AppConfig
 import com.xray.ang.handler.NotificationManager
 import com.xray.ang.handler.V2RayServiceManager
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal class ServiceTransitionGuard(private val serviceName: String) {
-    private val isStarting = AtomicBoolean(false)
-    private val isStopping = AtomicBoolean(false)
+    enum class Phase { IDLE, STARTING, RUNNING, STOPPING }
 
-    fun beginStart(): Boolean {
-        if (!isStarting.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "$serviceName start already in progress, skipping duplicate request")
+    private val lock = Any()
+    private var phase = Phase.IDLE
+    private var stopRequested = false
+
+    fun beginStart(): Boolean = synchronized(lock) {
+        if (phase != Phase.IDLE) {
+            Log.d(AppConfig.TAG, "$serviceName start rejected in phase=$phase")
             return false
         }
-        isStopping.set(false)
-        return true
+        phase = Phase.STARTING
+        stopRequested = false
+        true
     }
 
-    fun finishStart() {
-        isStarting.set(false)
+    fun finishStart(): Unit = synchronized(lock) {
+        if (phase == Phase.STARTING) phase = Phase.RUNNING
     }
 
-    fun requestStop() {
-        isStopping.set(true)
-    }
+    fun requestStop(): Unit = synchronized(lock) { stopRequested = true }
 
-    fun isStopRequested(): Boolean = isStopping.get()
+    fun isStopRequested(): Boolean = synchronized(lock) { stopRequested }
 
-    fun beginStop(): Boolean {
-        if (!isStopping.compareAndSet(false, true)) {
-            Log.d(AppConfig.TAG, "$serviceName stop already in progress, skipping duplicate request")
+    fun beginStop(): Boolean = synchronized(lock) {
+        if (phase == Phase.IDLE || phase == Phase.STOPPING) {
+            Log.d(AppConfig.TAG, "$serviceName stop rejected in phase=$phase")
             return false
         }
-        return true
+        phase = Phase.STOPPING
+        stopRequested = true
+        true
     }
 
-    fun finishStop() {
-        isStarting.set(false)
-        isStopping.set(false)
+    fun finishStop(): Unit = synchronized(lock) {
+        phase = Phase.IDLE
+        stopRequested = false
     }
+
+    fun currentPhase(): Phase = synchronized(lock) { phase }
 }
 
 internal object V2RayServiceRuntime {
