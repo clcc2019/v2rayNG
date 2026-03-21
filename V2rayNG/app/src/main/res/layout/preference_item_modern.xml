@@ -14,17 +14,7 @@
 
         <LinearLayout
             android:id="@+id/settings_row_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_row_ripple"
-            android:baselineAligned="false"
-            android:gravity="center_vertical"
-            android:minHeight="68dp"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/padding_spacing_dp16"
-            android:paddingTop="@dimen/padding_spacing_dp12"
-            android:paddingEnd="@dimen/padding_spacing_dp16"
-            android:paddingBottom="@dimen/padding_spacing_dp12">
+            style="@style/Widget.V2Ray.Settings.Row">
 
             <LinearLayout
                 android:id="@android:id/icon_frame"
@@ -36,36 +26,24 @@
 
                 <ImageView
                     android:id="@android:id/icon"
+                    style="@style/Widget.V2Ray.Settings.Icon"
                     android:layout_width="18dp"
                     android:layout_height="18dp"
-                    android:alpha="0.88"
-                    android:tint="?attr/colorOnSurface"
                     android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                style="@style/Widget.V2Ray.Settings.Content">
 
                 <TextView
                     android:id="@android:id/title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="15sp" />
+                    style="@style/Widget.V2Ray.Settings.Title" />
 
                 <TextView
                     android:id="@android:id/summary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                    style="@style/Widget.V2Ray.Settings.Subtitle"
                     android:maxLines="4"
-                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="12sp" />
+                    />
 
             </LinearLayout>
 
@@ -82,10 +60,7 @@
 
         <View
             android:id="@+id/settings_row_divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="54dp"
-            android:background="@color/color_card_outline"
+            style="@style/Widget.V2Ray.Settings.Divider"
             android:visibility="gone" />
 
     </LinearLayout>

@@ -80,6 +80,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
         if (!transitionGuard.beginStart()) {
             return
         }
+        V2RayServiceManager.onServiceStartAccepted()
 
         serviceScope.launch {
             try {

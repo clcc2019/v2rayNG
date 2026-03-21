@@ -26,11 +26,17 @@ class MainServerTestCoordinator(
     private val tcpingDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(
         Runtime.getRuntime().availableProcessors().coerceAtLeast(2) * 2
     ),
-    private val tcpingRunner: suspend (String, Int) -> Long = SpeedtestManager::tcping,
+    private val tcpingRunner: suspend (String, Int, SpeedtestManager.TcpingOptions) -> Long =
+        { host, port, options -> SpeedtestManager.tcping(host, port, options) },
     private val closeAllTcpSockets: () -> Unit = SpeedtestManager::closeAllTcpSockets,
     private val sendTestServiceMessage: (Context, TestServiceMessage) -> Unit = MessageUtil::sendMsg2TestService,
     private val sendServiceMessage: (Context, Int, String) -> Unit = MessageUtil::sendMsg2Service
 ) {
+    companion object {
+        internal val BULK_TCPING_OPTIONS = SpeedtestManager.TcpingOptions()
+        internal val SINGLE_TCPING_OPTIONS = SpeedtestManager.INTERACTIVE_TCPING_OPTIONS
+    }
+
     suspend fun runTcping(
         targets: List<ServerTestTarget>,
         onResult: suspend (ServerTestResult) -> Unit
@@ -38,7 +44,11 @@ class MainServerTestCoordinator(
         coroutineScope {
             targets.forEach { target ->
                 launch(tcpingDispatcher) {
-                    val delayMillis = tcpingRunner(target.serverAddress, target.serverPort)
+                    val delayMillis = tcpingRunner(
+                        target.serverAddress,
+                        target.serverPort,
+                        BULK_TCPING_OPTIONS
+                    )
                     onResult(ServerTestResult(target.guid, delayMillis))
                 }
             }
@@ -47,7 +57,11 @@ class MainServerTestCoordinator(
 
     suspend fun testTcping(target: ServerTestTarget): ServerTestResult {
         val delayMillis = withContext(tcpingDispatcher) {
-            tcpingRunner(target.serverAddress, target.serverPort)
+            tcpingRunner(
+                target.serverAddress,
+                target.serverPort,
+                SINGLE_TCPING_OPTIONS
+            )
         }
         return ServerTestResult(target.guid, delayMillis)
     }

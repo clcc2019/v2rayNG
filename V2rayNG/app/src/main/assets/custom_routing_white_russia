@@ -27,6 +27,28 @@
     ]
   },
   {
+    "remarks": "Proxy AI services",
+    "outboundTag": "proxy",
+    "domain": [
+      "openai.com",
+      "chatgpt.com",
+      "oaistatic.com",
+      "oaiusercontent.com",
+      "x.ai",
+      "grok.com",
+      "anthropic.com",
+      "claude.ai",
+      "claudeusercontent.com",
+      "perplexity.ai",
+      "openrouter.ai",
+      "meta.ai",
+      "gemini.google.com",
+      "aistudio.google.com",
+      "makersuite.google.com",
+      "generativelanguage.googleapis.com"
+    ]
+  },
+  {
     "remarks": "Bypass Russia domains",
     "outboundTag": "direct",
     "domain": [

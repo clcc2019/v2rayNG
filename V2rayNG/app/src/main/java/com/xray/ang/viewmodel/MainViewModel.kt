@@ -95,6 +95,7 @@ class MainViewModel(
     val updateListAction by lazy { MutableLiveData<ServerListUpdate>() }
     val updateGroupsAction by lazy { MutableLiveData<List<GroupMapItem>>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
+    val updateConnectionTestAction by lazy { MutableLiveData<String>() }
     val updateConnectionCardAction by lazy { MutableLiveData<Int>() }
     val serviceFeedbackAction by lazy { MutableLiveData<ServiceFeedback>() }
     val servicePhaseAction by lazy { MutableLiveData<ServicePhaseFeedback>() }
@@ -209,13 +210,15 @@ class MainViewModel(
     /**
      * Reloads the server list based on current subscription filter.
      */
-    fun reloadServerList() {
+    fun reloadServerList(immediate: Boolean = false) {
         if (reloadJobScheduled?.isActive == true) {
             return
         }
         reloadJobScheduled?.cancel()
         reloadJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
-            delay(32L)
+            if (!immediate) {
+                delay(32L)
+            }
             reloadServerListInternal()
         }
     }
@@ -437,10 +440,12 @@ class MainViewModel(
      * @param context The context.
      * @return A pair of lists containing the subscription IDs and remarks.
      */
-    fun loadSubscriptions(context: Context) {
+    fun loadSubscriptions(context: Context, immediate: Boolean = false) {
         subscriptionsJobScheduled?.cancel()
         subscriptionsJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
-            delay(32L)
+            if (!immediate) {
+                delay(32L)
+            }
             val appContext = context.applicationContext
             val requestVersion = groupListVersion.incrementAndGet()
             val currentSubscriptionId = subscriptionId
@@ -473,7 +478,7 @@ class MainViewModel(
             if (cachedGroupCountsVersion == serverListVersion.get() && cachedGroupIds == subscriptionIds) {
                 cachedGroupCounts
             } else {
-                val counts = subscriptionIds.associateWith(mainServerRepository::getServerCount)
+                val counts = mainServerRepository.getServerCounts(subscriptionIds)
                 cachedGroupCountsVersion = serverListVersion.get()
                 cachedGroupIds = subscriptionIds
                 cachedGroupCounts = counts
@@ -873,7 +878,7 @@ class MainViewModel(
             }
 
             is MainServiceEvent.DelayTestSuccess -> {
-                updateTestResultAction.value = event.content
+                updateConnectionTestAction.value = event.content
                 saveSelectedServerDelayResult(event.content)
             }
 

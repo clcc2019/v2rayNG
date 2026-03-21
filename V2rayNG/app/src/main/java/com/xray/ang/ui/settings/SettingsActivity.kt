@@ -183,22 +183,18 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
-        private fun applyPreferenceVisuals(group: PreferenceGroup, depth: Int = 0) {
+        private fun applyPreferenceVisuals(group: PreferenceGroup) {
             for (index in 0 until group.preferenceCount) {
                 val preference = group.getPreference(index)
                 preference.isIconSpaceReserved = false
                 when {
                     preference is PreferenceCategory -> {
-                        preference.layoutResource = if (depth == 0) {
-                            R.layout.preference_category_primary
-                        } else {
-                            R.layout.preference_category_modern
-                        }
-                        applyPreferenceVisuals(preference, depth + 1)
+                        preference.layoutResource = R.layout.preference_category_primary
+                        applyPreferenceVisuals(preference)
                     }
                     preference is PreferenceGroup -> {
                         preference.layoutResource = R.layout.preference_item_modern
-                        applyPreferenceVisuals(preference, depth + 1)
+                        applyPreferenceVisuals(preference)
                     }
                     else -> {
                         preference.layoutResource = R.layout.preference_item_modern

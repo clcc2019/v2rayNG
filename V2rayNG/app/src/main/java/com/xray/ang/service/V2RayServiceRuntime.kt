@@ -26,10 +26,17 @@ internal class ServiceTransitionGuard(private val serviceName: String) {
     }
 
     fun finishStart(): Unit = synchronized(lock) {
-        if (phase == Phase.STARTING) phase = Phase.RUNNING
+        if (phase == Phase.STARTING && !stopRequested) {
+            phase = Phase.RUNNING
+        }
     }
 
-    fun requestStop(): Unit = synchronized(lock) { stopRequested = true }
+    fun requestStop(): Unit = synchronized(lock) {
+        if (phase == Phase.STARTING) {
+            phase = Phase.STOPPING
+        }
+        stopRequested = true
+    }
 
     fun isStopRequested(): Boolean = synchronized(lock) { stopRequested }
 

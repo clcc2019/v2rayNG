@@ -3,6 +3,7 @@ package com.xray.ang.domain.main
 import android.content.Context
 import com.xray.ang.AppConfig
 import com.xray.ang.dto.TestServiceMessage
+import com.xray.ang.handler.SpeedtestManager
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -14,7 +15,7 @@ class MainServerTestCoordinatorTest {
     fun runTcping_emitsAllResults() = runBlocking {
         val emitted = Collections.synchronizedList(mutableListOf<ServerTestResult>())
         val coordinator = MainServerTestCoordinator(
-            tcpingRunner = { host, port -> "$host:$port".length.toLong() }
+            tcpingRunner = { host, port, _ -> "$host:$port".length.toLong() }
         )
 
         coordinator.runTcping(
@@ -28,6 +29,23 @@ class MainServerTestCoordinatorTest {
 
         assertEquals(setOf("a", "b"), emitted.map { it.guid }.toSet())
         assertEquals(setOf(11L, 10L), emitted.map { it.delayMillis }.toSet())
+    }
+
+    @Test
+    fun testTcping_usesInteractiveTcpingOptions() = runBlocking {
+        var capturedOptions: SpeedtestManager.TcpingOptions? = null
+        val coordinator = MainServerTestCoordinator(
+            tcpingRunner = { _, _, options ->
+                capturedOptions = options
+                42L
+            }
+        )
+
+        val result = coordinator.testTcping(ServerTestTarget("a", "1.1.1.1", 443))
+
+        assertEquals(42L, result.delayMillis)
+        assertEquals(1, capturedOptions?.attempts)
+        assertEquals(1500, capturedOptions?.connectTimeoutMillis)
     }
 
     @Test

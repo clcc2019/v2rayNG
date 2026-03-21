@@ -40,6 +40,7 @@ class MainGroupTabsController(
     private var isGroupTabHidden = false
     private var lastRenderedGroupCount = -1
     private var groupTabSlotAnimator: ValueAnimator? = null
+    private var hasAnimatedGroupTabReveal = false
     private val expandedSlotHeightPx by lazy {
         activity.resources.getDimensionPixelSize(R.dimen.view_height_dp34)
     }
@@ -65,8 +66,8 @@ class MainGroupTabsController(
         binding.viewPager.isUserInputEnabled = false
     }
 
-    fun setupGroupTabs() {
-        mainViewModel.loadSubscriptions(activity.applicationContext)
+    fun setupGroupTabs(immediate: Boolean = false) {
+        mainViewModel.loadSubscriptions(activity.applicationContext, immediate = immediate)
     }
 
     fun renderGroupTabs(groups: List<GroupMapItem>) {
@@ -75,6 +76,7 @@ class MainGroupTabsController(
             tabMediator?.detach()
             tabMediator = null
             lastRenderedGroupCount = 0
+            hasAnimatedGroupTabReveal = false
             binding.tabGroup.removeOnTabSelectedListener(groupTabSelectedListener)
             binding.tabGroup.isVisible = false
             binding.cardTabGroup.isVisible = false
@@ -86,7 +88,7 @@ class MainGroupTabsController(
 
         val updateResult = groupPagerAdapter.update(groups)
         configureGroupTabLayout(groups.size)
-        val targetOffscreenLimit = maxOf(1, minOf(2, groups.size))
+        val targetOffscreenLimit = 1
         if (binding.viewPager.offscreenPageLimit != targetOffscreenLimit) {
             binding.viewPager.offscreenPageLimit = targetOffscreenLimit
         }
@@ -117,13 +119,13 @@ class MainGroupTabsController(
         binding.tabGroup.isVisible = groups.size > 1
         binding.cardTabGroup.isVisible = groups.size > 1
         setGroupTabVisible(groups.size > 1, immediate = true)
+        if (groups.size > 1) {
+            animateGroupTabRevealIfNeeded()
+        } else {
+            hasAnimatedGroupTabReveal = false
+        }
         activity.refreshConnectionCard()
         lastRenderedGroupCount = groups.size
-    }
-
-    fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
-        if (!binding.cardTabGroup.isVisible) return
-        setGroupTabVisible(true)
     }
 
     fun scrollCurrentServerListToTop(animate: Boolean = true) {
@@ -262,8 +264,22 @@ class MainGroupTabsController(
         val hasCount = tabState.group.count > 0
         tabState.countView.isVisible = hasCount
         if (!hasCount) return
+        val targetAlpha = if (selected) 1f else 0.94f
+        val countChanged = tabState.lastCount != null && tabState.lastCount != tabState.group.count
         if (tabState.lastCount != tabState.group.count) {
-            tabState.countView.text = tabState.group.count.toString()
+            if (countChanged) {
+                UiMotion.animateTextChange(
+                    textView = tabState.countView,
+                    newText = tabState.group.count.toString(),
+                    settledAlpha = targetAlpha,
+                    translationOffsetDp = 3f,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
+            } else {
+                tabState.countView.text = tabState.group.count.toString()
+                tabState.countView.alpha = targetAlpha
+                tabState.countView.translationY = 0f
+            }
             tabState.lastCount = tabState.group.count
         }
         tabState.countView.setBackgroundResource(
@@ -275,7 +291,12 @@ class MainGroupTabsController(
                 if (selected) R.color.color_home_on_primary else R.color.color_home_on_surface_muted
             )
         )
-        tabState.countView.alpha = if (selected) 1f else 0.94f
+        if (!countChanged) {
+            tabState.countView.alpha = targetAlpha
+        }
+        if (countChanged) {
+            UiMotion.animatePulse(tabState.countView, pulseScale = 1.05f, duration = MotionTokens.PULSE_QUICK)
+        }
     }
 
     private fun updateTabSelectionAnimation(tabState: GroupTabViewState, selected: Boolean) {
@@ -372,6 +393,29 @@ class MainGroupTabsController(
             .setInterpolator(motionInterpolator)
             .start()
         groupTabSlotAnimator?.start()
+    }
+
+    private fun animateGroupTabRevealIfNeeded() {
+        if (hasAnimatedGroupTabReveal) return
+        binding.layoutGroupTabSlot.post {
+            if (hasAnimatedGroupTabReveal || !binding.cardTabGroup.isVisible) {
+                return@post
+            }
+            UiMotion.animateEntrance(
+                view = binding.cardTabGroup,
+                translationOffsetDp = 10f,
+                duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+            )
+            (binding.tabGroup.getChildAt(0) as? ViewGroup)?.let { slidingTabIndicator ->
+                UiMotion.animateStaggeredChildren(
+                    container = slidingTabIndicator,
+                    translationOffsetDp = 6f,
+                    stepDelay = 18L,
+                    startDelay = MotionTokens.STAGGER_START_DELAY
+                )
+            }
+            hasAnimatedGroupTabReveal = true
+        }
     }
 
     private fun updateGroupTabSlotHeight(height: Int) {

@@ -176,7 +176,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             resetContext = true
         )
         ownerActivity.onServerListScrollStateChanged(binding.recyclerView.scrollState, binding.recyclerView.canScrollVertically(-1))
-        ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
+        ownerActivity.onServerListScrolled(binding.recyclerView.canScrollVertically(-1))
     }
 
     private fun setupRecyclerView() {
@@ -204,11 +204,11 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
                 ownerActivity.onServerListScrollStateChanged(newState, recyclerView.canScrollVertically(-1))
             }
 
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            override fun onScrolled(recyclerView: RecyclerView, unusedDx: Int, unusedDy: Int) {
                 if (mainViewModel.subscriptionId != subId) {
                     return
                 }
-                ownerActivity.onServerListScrolled(dy, recyclerView.canScrollVertically(-1))
+                ownerActivity.onServerListScrolled(recyclerView.canScrollVertically(-1))
             }
         })
         ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false, allowLongPressDrag = false))

@@ -16,15 +16,36 @@ interface MainServerRepository {
     fun getServerIds(subscriptionId: String): MutableList<String>
     fun saveServerIds(subscriptionId: String, serverIds: MutableList<String>)
     fun getServer(guid: String): ProfileItem?
+    fun getServers(guids: Collection<String>): Map<String, ProfileItem> {
+        val servers = LinkedHashMap<String, ProfileItem>(guids.size)
+        guids.forEach { guid ->
+            getServer(guid)?.let { profile -> servers[guid] = profile }
+        }
+        return servers
+    }
     fun removeServer(guid: String)
     fun removeAllServers(): Int
     fun removeInvalidServer(guid: String): Int
     fun getSelectedServerId(): String?
     fun getServerDelayMillis(guid: String): Long?
+    fun getServerDelayMillisMap(guids: Collection<String>): Map<String, Long> {
+        val delays = LinkedHashMap<String, Long>(guids.size)
+        guids.forEach { guid ->
+            delays[guid] = getServerDelayMillis(guid) ?: 0L
+        }
+        return delays
+    }
     fun saveServerDelayMillis(guid: String, delayMillis: Long)
     fun clearServerDelayResults(guids: List<String>)
     fun getAllServerCount(): Int
     fun getServerCount(subscriptionId: String): Int
+    fun getServerCounts(subscriptionIds: Collection<String>): Map<String, Int> {
+        val counts = LinkedHashMap<String, Int>(subscriptionIds.size)
+        subscriptionIds.forEach { subscriptionId ->
+            counts[subscriptionId] = getServerCount(subscriptionId)
+        }
+        return counts
+    }
     fun isGroupAllDisplayEnabled(): Boolean
     fun isAutoRemoveInvalidAfterTestEnabled(): Boolean
     fun isAutoSortAfterTestEnabled(): Boolean
@@ -59,6 +80,10 @@ object DefaultMainServerRepository : MainServerRepository {
 
     override fun getServer(guid: String): ProfileItem? = MmkvManager.decodeServerConfig(guid)
 
+    override fun getServers(guids: Collection<String>): Map<String, ProfileItem> {
+        return MmkvManager.decodeServerConfigs(guids)
+    }
+
     override fun removeServer(guid: String) {
         MmkvManager.removeServer(guid)
     }
@@ -79,9 +104,13 @@ object DefaultMainServerRepository : MainServerRepository {
         MmkvManager.clearAllTestDelayResults(guids)
     }
 
-    override fun getAllServerCount(): Int = MmkvManager.decodeAllServerList().size
+    override fun getAllServerCount(): Int = MmkvManager.decodeAllServerCount()
 
-    override fun getServerCount(subscriptionId: String): Int = MmkvManager.decodeServerList(subscriptionId).size
+    override fun getServerCount(subscriptionId: String): Int = MmkvManager.decodeServerCount(subscriptionId)
+
+    override fun getServerCounts(subscriptionIds: Collection<String>): Map<String, Int> {
+        return MmkvManager.decodeServerCounts(subscriptionIds)
+    }
 
     override fun isGroupAllDisplayEnabled(): Boolean {
         return MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_ALL_DISPLAY)

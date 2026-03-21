@@ -246,7 +246,15 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     protected fun applyPressMotion(vararg views: View, pressedScale: Float = 0.985f) {
-        views.forEach { UiMotion.attachPressFeedback(it, pressedScale = pressedScale) }
+        views.forEach {
+            UiMotion.attachPressFeedbackComposite(
+                source = it,
+                scaleTarget = it,
+                alphaTarget = it,
+                pressedScale = pressedScale,
+                pressedAlpha = 0.96f
+            )
+        }
     }
 
     protected fun postEnterMotion(

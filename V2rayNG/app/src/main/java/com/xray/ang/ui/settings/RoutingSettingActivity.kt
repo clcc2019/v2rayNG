@@ -19,6 +19,7 @@ import com.xray.ang.extension.toast
 import com.xray.ang.extension.toastError
 import com.xray.ang.extension.toastSuccess
 import com.xray.ang.handler.MmkvManager
+import com.xray.ang.handler.SettingsChangeManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.helper.SimpleItemTouchHelperCallback
 import com.xray.ang.ui.common.actionBottomSheetItem
@@ -159,6 +160,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
             try {
                 val value = routing_domain_strategy[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY, value)
+                SettingsChangeManager.makeRestartService()
                 binding.tvDomainStrategySummary.text = value
             } catch (e: Exception) {
                 Log.e(AppConfig.TAG, "Failed to set domain strategy", e)

@@ -44,6 +44,7 @@ class MainRecyclerAdapter(
         private const val PAYLOAD_TEST_RESULT = "payload_test_result"
         private const val PAYLOAD_SELECTION = "payload_selection"
         private const val PAYLOAD_CONTENT = "payload_content"
+        private const val INITIAL_ENTRANCE_ITEM_LIMIT = 4
         private const val FLOAT_EPSILON = 0.001f
         private val selectionInterpolator = FastOutSlowInInterpolator()
 
@@ -254,6 +255,12 @@ class MainRecyclerAdapter(
             ensureRestingCardState(holder)
             return
         }
+        val maxAnimatedIndex = minOf(INITIAL_ENTRANCE_ITEM_LIMIT - 1, data.lastIndex)
+        if (position > maxAnimatedIndex) {
+            hasAnimatedInitialList = true
+            ensureRestingCardState(holder)
+            return
+        }
         val startDelay = if (!hasAnimatedInitialList) {
             (position.coerceAtMost(7) * MotionTokens.LIST_ITEM_STAGGER_DELAY)
         } else {
@@ -262,17 +269,18 @@ class MainRecyclerAdapter(
         UiMotion.animateEntranceOnce(
             view = holder.itemMainBinding.itemBg,
             key = item.guid,
-            translationOffsetDp = if (position == 0) 18f else 14f,
-            scaleFrom = 0.988f,
-            startDelay = startDelay
+            translationOffsetDp = if (position == 0) 14f else 10f,
+            scaleFrom = 0.992f,
+            startDelay = startDelay,
+            duration = MotionTokens.REVEAL_DURATION
         )
-        if (!hasAnimatedInitialList && position >= data.lastIndex.coerceAtMost(7)) {
+        if (!hasAnimatedInitialList && position >= maxAnimatedIndex) {
             hasAnimatedInitialList = true
         }
     }
 
     private fun bindPrimaryContent(holder: MainViewHolder, item: ServersCache) {
-        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.96f else 0.9f
+        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.94f else 0.86f
         holder.itemMainBinding.tvStatistics.apply {
             if (abs(translationY) > FLOAT_EPSILON || abs(alpha - targetStatisticsAlpha) > FLOAT_EPSILON) {
                 animate().cancel()
@@ -321,19 +329,14 @@ class MainRecyclerAdapter(
         holder.lastSelectionState = isSelected
 
         holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.95f
-        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.96f else 0.9f
-        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.96f else 0.86f
+        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.94f else 0.86f
+        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.9f else 0.74f
         holder.itemMainBinding.tvActiveStatus.isVisible = isSelected
         holder.itemMainBinding.tvActiveStatus.alpha = if (isSelected) 1f else 0f
-        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.96f
+        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.94f
         holder.itemMainBinding.tvTestResult.alpha = 1f
-        holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 1f else 0.92f
-        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.78f else 0.62f
-        holder.itemMainBinding.viewCardGlassOverlay.animate().cancel()
-        holder.itemMainBinding.viewSelectedEdgeGlow.animate().cancel()
-
-        holder.itemMainBinding.viewCardGlassOverlay.alpha = if (isSelected) 0.12f else 0.08f
-        holder.itemMainBinding.viewSelectedEdgeGlow.alpha = if (isSelected) 0.14f else 0f
+        holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 0.98f else 0.9f
+        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.72f else 0.54f
         updateIndicatorStyle(holder, isSelected)
         holder.itemMainBinding.layoutIndicator.setBackgroundResource(
             if (isSelected) R.drawable.bg_home_selected_indicator else R.drawable.bg_item_indicator_idle
@@ -346,44 +349,22 @@ class MainRecyclerAdapter(
         )
         if (previousSelection != null) {
             if (isSelected) {
-                holder.itemMainBinding.viewCardGlassOverlay.alpha = 0.1f
-                holder.itemMainBinding.viewSelectedEdgeGlow.alpha = 0.04f
-                holder.itemMainBinding.tvActiveStatus.alpha = 0.7f
+                holder.itemMainBinding.tvActiveStatus.alpha = 0.76f
                 holder.itemMainBinding.tvActiveStatus.animate()
                     .alpha(1f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
-                holder.itemMainBinding.viewCardGlassOverlay.animate()
-                    .alpha(0.12f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
-                holder.itemMainBinding.viewSelectedEdgeGlow.animate()
-                    .alpha(0.14f)
                     .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                     .setInterpolator(selectionInterpolator)
                     .start()
                 UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.layoutIndicator)
                 UiMotion.animateStatePulse(
                     holder.itemMainBinding.itemBg,
-                    expandScale = 1.02f,
-                    contractScale = 0.99f,
+                    expandScale = 1.012f,
+                    contractScale = 0.994f,
                     duration = MotionTokens.EMPHASIS_DURATION
                 )
             } else {
-                holder.itemMainBinding.viewCardGlassOverlay.animate()
-                    .alpha(0.08f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
-                holder.itemMainBinding.viewSelectedEdgeGlow.animate()
-                    .alpha(0f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
                 holder.itemMainBinding.tvActiveStatus.animate().cancel()
-                UiMotion.animatePulse(holder.itemMainBinding.layoutIndicator, pulseScale = 1.06f, duration = MotionTokens.PULSE_QUICK)
+                UiMotion.animatePulse(holder.itemMainBinding.layoutIndicator, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
             }
         }
     }
@@ -429,6 +410,19 @@ class MainRecyclerAdapter(
             else -> "--"
         }
         holder.itemMainBinding.tvTestResult.text = testResult
+        holder.itemMainBinding.tvTestResult.contentDescription = testResult
+        if (shouldAnimateResult && delayMillis != 0L) {
+            UiMotion.animateTextChange(
+                textView = holder.itemMainBinding.tvTestResult,
+                newText = testResult,
+                settledAlpha = 1f,
+                translationOffsetDp = 3f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+        } else {
+            holder.itemMainBinding.tvTestResult.alpha = 1f
+            holder.itemMainBinding.tvTestResult.translationY = 0f
+        }
         applyLatencyBadgeStyle(holder.itemMainBinding.tvTestResult, delayMillis, holder.latencyBadgeColors)
         if (shouldAnimateResult && delayMillis != 0L) {
             val targetView = holder.itemMainBinding.tvTestResult
@@ -463,7 +457,6 @@ class MainRecyclerAdapter(
         if (currentDelay == item.testDelayMillis) {
             return
         }
-
         testDelayOverrides[item.guid] = item.testDelayMillis
         notifyItemChanged(position, PAYLOAD_TEST_RESULT)
     }
@@ -485,7 +478,7 @@ class MainRecyclerAdapter(
         val indicatorIdleWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
         val indicatorIdleHeightPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp18)
         val indicatorSelectedWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
-        val indicatorSelectedHeightPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val indicatorSelectedHeightPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.view_height_dp36)
         val indicatorMarginEndPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp14)
         var lastSelectionState: Boolean? = null
         var boundGuid: String? = null
@@ -567,8 +560,6 @@ class MainRecyclerAdapter(
     override fun onViewRecycled(holder: BaseViewHolder) {
         if (holder is MainViewHolder) {
             holder.itemMainBinding.itemBg.animate().cancel()
-            holder.itemMainBinding.viewCardGlassOverlay.animate().cancel()
-            holder.itemMainBinding.viewSelectedEdgeGlow.animate().cancel()
             holder.itemMainBinding.tvActiveStatus.animate().cancel()
             holder.itemMainBinding.layoutIndicator.animate().cancel()
             ensureRestingCardState(holder)
@@ -604,10 +595,10 @@ class MainRecyclerAdapter(
             fun from(view: View): ItemColors {
                 val context = view.context
                 return ItemColors(
-                    surface = ContextCompat.getColor(context, R.color.color_settings_section_surface),
-                    selectedSurface = ContextCompat.getColor(context, R.color.color_settings_nested_surface),
-                    outline = Color.TRANSPARENT,
-                    selectedOutline = Color.TRANSPARENT
+                    surface = ContextCompat.getColor(context, R.color.colorWhite),
+                    selectedSurface = ContextCompat.getColor(context, R.color.color_home_card_bg_selected),
+                    outline = ContextCompat.getColor(context, android.R.color.transparent),
+                    selectedOutline = ContextCompat.getColor(context, R.color.color_home_card_stroke_selected)
                 )
             }
         }

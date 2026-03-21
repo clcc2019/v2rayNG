@@ -12,6 +12,7 @@ import com.xray.ang.dto.SubscriptionCache
 import com.xray.ang.dto.SubscriptionItem
 import com.xray.ang.dto.SubscriptionUpdateResult
 import com.xray.ang.enums.EConfigType
+import com.xray.ang.fmt.ClashFmt
 import com.xray.ang.extension.isNotNullEmpty
 import com.xray.ang.fmt.CustomFmt
 import com.xray.ang.fmt.Hysteria2Fmt
@@ -169,6 +170,12 @@ object AngConfigManager {
         if (count <= 0) {
             count = parseCustomConfigServer(server, subid)
         }
+        if (count <= 0) {
+            count = parseClashSubscription(Utils.decode(server), subid, append)
+        }
+        if (count <= 0) {
+            count = parseClashSubscription(server, subid, append)
+        }
 
         var countSub = parseBatchSubscription(server)
         if (countSub <= 0) {
@@ -221,22 +228,6 @@ object AngConfigManager {
             if (servers == null) {
                 return 0
             }
-            val removedSelectedServer =
-                if (!TextUtils.isEmpty(subid) && !append) {
-                    MmkvManager.decodeServerConfig(
-                        MmkvManager.getSelectServer().orEmpty()
-                    )?.let {
-                        if (it.subscriptionId == subid) {
-                            return@let it
-                        }
-                        return@let null
-                    }
-                } else {
-                    null
-                }
-            if (!append) {
-                MmkvManager.removeServerViaSubid(subid)
-            }
 
             val subItem = MmkvManager.decodeSubscription(subid)
 
@@ -252,27 +243,69 @@ object AngConfigManager {
                     }
                 }
 
-            // Batch save all parsed configs (only one serverList read/write)
-            if (configs.isNotEmpty()) {
-                val keys = batchSaveConfigs(configs, subid)
-
-                // Handle removed selected server
-                removedSelectedServer?.let { removed ->
-                    val matchKey = keys.find { key ->
-                        val savedConfig = MmkvManager.decodeServerConfig(key)
-                        savedConfig != null &&
-                                savedConfig.server == removed.server &&
-                                savedConfig.serverPort == removed.serverPort
-                    }
-                    matchKey?.let { MmkvManager.setSelectServer(it) }
-                }
-            }
-
-            return configs.size
+            return saveParsedConfigs(configs, subid, append)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to parse batch config", e)
         }
         return 0
+    }
+
+    private fun parseClashSubscription(servers: String?, subid: String, append: Boolean): Int {
+        try {
+            if (servers.isNullOrBlank()) {
+                return 0
+            }
+
+            val subItem = MmkvManager.decodeSubscription(subid)
+            val configs = ClashFmt.parseSubscription(servers)
+                .filter { matchesSubscriptionFilter(it, subItem) }
+                .onEach { config ->
+                    config.subscriptionId = subid
+                    config.description = generateDescription(config)
+                }
+
+            return saveParsedConfigs(configs, subid, append)
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to parse Clash subscription", e)
+        }
+        return 0
+    }
+
+    private fun saveParsedConfigs(configs: List<ProfileItem>, subid: String, append: Boolean): Int {
+        if (configs.isEmpty()) {
+            return 0
+        }
+
+        val removedSelectedServer =
+            if (!TextUtils.isEmpty(subid) && !append) {
+                MmkvManager.decodeServerConfig(
+                    MmkvManager.getSelectServer().orEmpty()
+                )?.let {
+                    if (it.subscriptionId == subid) {
+                        return@let it
+                    }
+                    return@let null
+                }
+            } else {
+                null
+            }
+        if (!append) {
+            MmkvManager.removeServerViaSubid(subid)
+        }
+
+        val keys = batchSaveConfigs(configs, subid)
+
+        removedSelectedServer?.let { removed ->
+            val matchKey = keys.find { key ->
+                val savedConfig = MmkvManager.decodeServerConfig(key)
+                savedConfig != null &&
+                        savedConfig.server == removed.server &&
+                        savedConfig.serverPort == removed.serverPort
+            }
+            matchKey?.let { MmkvManager.setSelectServer(it) }
+        }
+
+        return configs.size
     }
 
     /**
@@ -531,6 +564,12 @@ object AngConfigManager {
         }
         if (count <= 0) {
             count = parseCustomConfigServer(server, subid)
+        }
+        if (count <= 0) {
+            count = parseClashSubscription(Utils.decode(server), subid, append)
+        }
+        if (count <= 0) {
+            count = parseClashSubscription(server, subid, append)
         }
         return count
     }

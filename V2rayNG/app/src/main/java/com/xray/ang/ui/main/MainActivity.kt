@@ -1,18 +1,21 @@
 package com.xray.ang.ui
 
+import android.app.ActivityManager
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.StringRes
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
@@ -25,6 +28,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.xray.ang.AppConfig
 import com.xray.ang.R
@@ -44,17 +48,25 @@ import com.xray.ang.util.MessageUtil
 import com.xray.ang.util.StartupTracer
 import com.xray.ang.util.Utils
 import com.xray.ang.viewmodel.MainViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : HelperBaseActivity() {
     companion object {
         private val LATENCY_MS_REGEX = Regex("(\\d+)\\s*ms", RegexOption.IGNORE_CASE)
         private val LATENCY_MS_ZH_REGEX = Regex("(\\d+)\\s*毫秒")
+        private const val DAEMON_PROCESS_SUFFIX = ":RunSoLibV2RayDaemon"
+        private const val RESTART_WAIT_TIMEOUT_MS = 2_000L
+        private const val RESTART_WAIT_INTERVAL_MS = 50L
+        private const val NON_CRITICAL_LAUNCH_DELAY_MS = 180L
+        private const val NOTIFICATION_PERMISSION_DELAY_MS = 1_200L
+        private const val LANDING_INFO_FALLBACK_DELAY_MS = 1_600L
     }
 
     private data class ActionButtonUiModel(
         @param:StringRes val textResId: Int,
-        val iconRes: Int,
-        val contentColorRes: Int
+        val iconRes: Int
     )
 
     private val binding by lazy {
@@ -84,27 +96,29 @@ class MainActivity : HelperBaseActivity() {
     }
     private var serviceUiState = ServiceUiState.STOPPED
     private var pendingRestartGuid: String? = null
+    private var pendingRestartJob: Job? = null
+    private var deferredStartupJob: Job? = null
+    private var notificationPermissionJob: Job? = null
+    private var connectionTestFallbackJob: Job? = null
+    private var hasAttemptedLaunchNotificationPermission = false
     private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
-    private var defaultConnectionCardBottomMargin = 0
-    private var isImeVisible = false
     private var toolbarSearchMenuItem: MenuItem? = null
+    private var toolbarAppActionView: View? = null
     private val toolbarActionViews = mutableListOf<FrameLayout>()
     private var currentChromeState: AppChromeState? = null
-    private val toolbarController by lazy {
-        MainToolbarController(
-            activity = this,
-            binding = binding,
-            motionInterpolator = motionInterpolator,
-            onOpenMorePage = { openMorePage() },
-            statusProvider = { serviceUiState }
-        )
-    }
+    private var lastConnectionCardGuid: String? = null
     private val chromeStateReducer by lazy {
         AppChromeStateReducer(AppChromePageKind.HOME)
     }
-    private val topBarRenderer by lazy {
-        MainTopBarRenderer(binding.appBarHome.background, motionInterpolator)
+    private val topBarBackgroundDrawable by lazy {
+        binding.appBarHome.background?.mutate()
+    }
+    private val topBarBackgroundAlphaRenderer by lazy {
+        AnimatedFloatRenderer(
+            motionInterpolator = motionInterpolator,
+            debugKey = "top_bar_alpha"
+        )
     }
     private val motionInterpolator = FastOutSlowInInterpolator()
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -112,24 +126,13 @@ class MainActivity : HelperBaseActivity() {
             renderServiceUiState(ServiceUiState.STARTING)
             startSelectedV2Ray()
         } else {
+            pendingRestartJob?.cancel()
+            pendingRestartGuid = null
             renderServiceUiState(if (mainViewModel.isRunning.value == true) ServiceUiState.RUNNING else ServiceUiState.STOPPED)
         }
     }
     private val requestActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        val shouldRestart = SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true
-        val shouldRefreshGroups = SettingsChangeManager.consumeSetupGroupTab()
-        if (shouldRestart) {
-            mainViewModel.prewarmSelectedConfig()
-            restartV2Ray()
-        }
-        if (shouldRefreshGroups) {
-            setupGroupTab()
-            mainViewModel.reloadServerList()
-            refreshConnectionCard()
-        }
-        if (!shouldRestart && !shouldRefreshGroups) {
-            mainViewModel.prewarmSelectedConfig()
-        }
+        handlePendingSettingsChanges(prewarmWhenNoChanges = true)
     }
 
 
@@ -143,7 +146,6 @@ class MainActivity : HelperBaseActivity() {
             configureToolbar()
             defaultViewPagerTopPadding = binding.viewPager.paddingTop
             defaultViewPagerBottomPadding = binding.viewPager.paddingBottom
-            defaultConnectionCardBottomMargin = (binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin
 
             groupTabsController.initialize()
             setupMainContentInsets()
@@ -178,8 +180,7 @@ class MainActivity : HelperBaseActivity() {
         binding.toolbar.setSubtitleTextColor(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
         binding.toolbar.navigationIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
         binding.toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.color_home_on_surface))
-        toolbarController.attach()
-        toolbarController.updateStatus(serviceUiState)
+        attachToolbarAppAction()
     }
 
     private fun configureHomeChrome() {
@@ -195,16 +196,52 @@ class MainActivity : HelperBaseActivity() {
 
     private fun setupActionControls() {
         binding.fab.setOnClickListener { handleFabAction() }
+        binding.cardConnection.setOnClickListener {
+            if (serviceUiState == ServiceUiState.RUNNING && mainViewModel.isRunning.value == true) {
+                binding.cardConnection.hapticClick()
+                handleConnectionTestAction()
+            }
+        }
+        UiMotion.attachPressFeedbackDock(
+            source = binding.cardConnection,
+            surfaceTarget = binding.cardConnection,
+            pressedScale = 0.996f,
+            pressedTranslationDp = 1f,
+            pressedAlpha = 0.985f
+        )
         UiMotion.attachPressFeedback(binding.fab)
     }
 
     private fun schedulePostLaunchWork() {
         runAfterFirstFrame {
-            mainViewModel.startListenBroadcast()
-            mainViewModel.initAssets(assets)
-            setupGroupTab()
-            mainViewModel.reloadServerList()
             refreshConnectionCard()
+            mainViewModel.startListenBroadcast()
+            mainViewModel.reloadServerList(immediate = true)
+            setupGroupTab(immediate = true)
+            scheduleDeferredStartupWork()
+            scheduleNotificationPermissionPrompt()
+        }
+    }
+
+    private fun scheduleDeferredStartupWork() {
+        deferredStartupJob?.cancel()
+        deferredStartupJob = lifecycleScope.launch {
+            delay(NON_CRITICAL_LAUNCH_DELAY_MS)
+            mainViewModel.initAssets(assets)
+        }
+    }
+
+    private fun scheduleNotificationPermissionPrompt() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || hasAttemptedLaunchNotificationPermission) {
+            return
+        }
+        notificationPermissionJob?.cancel()
+        notificationPermissionJob = lifecycleScope.launch {
+            delay(NOTIFICATION_PERMISSION_DELAY_MS)
+            if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                return@launch
+            }
+            hasAttemptedLaunchNotificationPermission = true
             checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
             }
         }
@@ -246,7 +283,27 @@ class MainActivity : HelperBaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        handlePendingSettingsChanges()
         updateConnectionCardVisibility()
+        scheduleNotificationPermissionPrompt()
+    }
+
+    private fun handlePendingSettingsChanges(prewarmWhenNoChanges: Boolean = false) {
+        val shouldRestart = SettingsChangeManager.consumeRestartService() && mainViewModel.isRunning.value == true
+        val shouldRefreshGroups = SettingsChangeManager.consumeSetupGroupTab()
+
+        if (shouldRestart) {
+            mainViewModel.prewarmSelectedConfig()
+            restartV2Ray()
+        }
+        if (shouldRefreshGroups) {
+            setupGroupTab()
+            mainViewModel.reloadServerList()
+            refreshConnectionCard()
+        }
+        if (!shouldRestart && !shouldRefreshGroups && prewarmWhenNoChanges) {
+            mainViewModel.prewarmSelectedConfig()
+        }
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
@@ -284,12 +341,10 @@ class MainActivity : HelperBaseActivity() {
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
             val floatingBottomInset = (systemBars.bottom * 0.08f).toInt()
-            isImeVisible = imeVisible
             searchController.onInsetsChanged(insets)
             binding.appBarHome.updatePadding(top = systemBars.top)
             val chromeContentHeight = binding.appBarHome.height.takeIf { it > 0 } ?: fallbackTopChromeHeight
             val targetListTopPadding = maxOf(defaultViewPagerTopPadding, chromeContentHeight)
-            updateConnectionDockLayout()
 
             val targetListBottomPadding = if (imeVisible) {
                 imeInsets.bottom + imeSpacing
@@ -304,16 +359,6 @@ class MainActivity : HelperBaseActivity() {
             insets
         }
         ViewCompat.requestApplyInsets(binding.mainContent)
-    }
-
-    private fun updateConnectionDockLayout() {
-        val cardLayoutParams = binding.cardConnection.layoutParams as CoordinatorLayout.LayoutParams
-        val targetCardBottomMargin = defaultConnectionCardBottomMargin
-        if (cardLayoutParams.bottomMargin != targetCardBottomMargin || cardLayoutParams.width != ViewGroup.LayoutParams.MATCH_PARENT) {
-            cardLayoutParams.bottomMargin = targetCardBottomMargin
-            cardLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-            binding.cardConnection.layoutParams = cardLayoutParams
-        }
     }
 
     private fun updateConnectionCardVisibility() {
@@ -336,6 +381,9 @@ class MainActivity : HelperBaseActivity() {
                 toast(message)
             }
         }
+        mainViewModel.updateConnectionTestAction.observe(this) { result ->
+            renderConnectionTestResult(result)
+        }
         mainViewModel.updateConnectionCardAction.observe(this) {
             refreshConnectionCard()
         }
@@ -345,14 +393,21 @@ class MainActivity : HelperBaseActivity() {
                     return@observe
                 }
                 if (feedback.style == MainViewModel.ServiceFeedback.Style.ERROR) {
-                    pendingRestartGuid = null
+                    clearPendingRestart()
                 }
             }
-            toolbarController.showTransientMessage(getString(feedback.messageResId))
+            connectionCardController.clearPinnedServiceMessage()
+            connectionCardController.showTransientServiceMessage(
+                message = getString(feedback.messageResId),
+                tone = feedback.toDockMessageTone()
+            )
             performServiceFeedbackHaptic(feedback.style)
         }
         mainViewModel.servicePhaseAction.observe(this) { phase ->
-            toolbarController.showTransientMessage(getString(phase.messageResId))
+            connectionCardController.showPinnedServiceMessage(
+                message = getString(phase.messageResId),
+                tone = phase.toDockMessageTone()
+            )
             renderServiceUiState(
                 when (phase.state) {
                     MainViewModel.ServicePhaseFeedback.State.STARTING -> ServiceUiState.STARTING
@@ -363,8 +418,9 @@ class MainActivity : HelperBaseActivity() {
         mainViewModel.isRunning.observe(this) { isRunning ->
             if (pendingRestartGuid != null) {
                 if (isRunning) {
-                    pendingRestartGuid = null
-                    renderServiceUiState(ServiceUiState.RUNNING)
+                    finishPendingRestart()
+                } else if (serviceUiState == ServiceUiState.STOPPING) {
+                    scheduleRestartAfterDaemonShutdown(pendingRestartGuid!!)
                 }
                 return@observe
             }
@@ -372,8 +428,58 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    private fun setupGroupTab() {
-        groupTabsController.setupGroupTabs()
+    private fun scheduleRestartAfterDaemonShutdown(guid: String) {
+        if (pendingRestartJob?.isActive == true) {
+            return
+        }
+        pendingRestartJob = lifecycleScope.launch {
+            try {
+                val deadline = android.os.SystemClock.elapsedRealtime() + RESTART_WAIT_TIMEOUT_MS
+                while (pendingRestartGuid == guid
+                    && isDaemonProcessRunning()
+                    && android.os.SystemClock.elapsedRealtime() < deadline
+                ) {
+                    delay(RESTART_WAIT_INTERVAL_MS)
+                }
+                if (pendingRestartGuid != guid || mainViewModel.isRunning.value == true) {
+                    return@launch
+                }
+                startAfterRestart(guid)
+            } finally {
+                pendingRestartJob = null
+            }
+        }
+    }
+
+    private fun isDaemonProcessRunning(): Boolean {
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as? ActivityManager ?: return false
+        val daemonProcessName = applicationContext.packageName + DAEMON_PROCESS_SUFFIX
+        return activityManager.runningAppProcesses?.any { it.processName == daemonProcessName } == true
+    }
+
+    private fun queuePendingRestart(guid: String) {
+        cancelPendingRestartJob()
+        pendingRestartGuid = guid
+    }
+
+    private fun finishPendingRestart() {
+        cancelPendingRestartJob()
+        pendingRestartGuid = null
+        renderServiceUiState(ServiceUiState.RUNNING)
+    }
+
+    private fun clearPendingRestart() {
+        cancelPendingRestartJob()
+        pendingRestartGuid = null
+    }
+
+    private fun cancelPendingRestartJob() {
+        pendingRestartJob?.cancel()
+        pendingRestartJob = null
+    }
+
+    private fun setupGroupTab(immediate: Boolean = false) {
+        groupTabsController.setupGroupTabs(immediate = immediate)
     }
 
     fun onServerListContextChanged(isEmpty: Boolean, canScrollUp: Boolean, resetContext: Boolean) {
@@ -398,8 +504,7 @@ class MainActivity : HelperBaseActivity() {
         renderChromeState(chromeStateReducer.onScrollPhaseChanged(phase, canScrollUp), event = "scroll_phase")
     }
 
-    fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
-        groupTabsController.onServerListScrolled(dy, canScrollUp)
+    fun onServerListScrolled(canScrollUp: Boolean) {
         renderChromeState(chromeStateReducer.onScrollPositionChanged(canScrollUp), event = "scroll_position")
     }
 
@@ -409,7 +514,9 @@ class MainActivity : HelperBaseActivity() {
             AppChromeDebugTracer.recordRenderSkip("render_state:$event")
             return
         }
-        topBarRenderer.renderChromeState(state, animate = animate)
+        topBarBackgroundAlphaRenderer.render(state.topBarBackgroundAlpha, animate = animate) { alpha ->
+            topBarBackgroundDrawable?.alpha = (alpha * 255).toInt()
+        }
         connectionCardController.renderChromeState(state, animate = animate)
         currentChromeState = state
     }
@@ -420,12 +527,25 @@ class MainActivity : HelperBaseActivity() {
         }
 
         if (mainViewModel.isRunning.value == true) {
-            pendingRestartGuid = null
+            clearPendingRestart()
             renderServiceUiState(ServiceUiState.STOPPING)
             V2RayServiceManager.stopVService(this)
         } else {
             startServiceWithVpnPreparation()
         }
+    }
+
+    private fun handleConnectionTestAction() {
+        if (serviceUiState != ServiceUiState.RUNNING ||
+            mainViewModel.isRunning.value != true ||
+            connectionTestFallbackJob?.isActive == true
+        ) {
+            return
+        }
+        connectionCardController.dismissServiceMessages()
+        connectionCardController.showLandingInfoLoading(getString(R.string.connection_test_testing))
+        scheduleConnectionTestFallback()
+        MessageUtil.sendMsg2Service(this, AppConfig.MSG_MEASURE_DELAY, "")
     }
 
     private fun startV2Ray(guid: String) {
@@ -476,9 +596,10 @@ class MainActivity : HelperBaseActivity() {
         }
         if (mainViewModel.isRunning.value == true) {
             MmkvManager.setSelectServer(targetGuid)
-            pendingRestartGuid = targetGuid
+            queuePendingRestart(targetGuid)
             renderServiceUiState(ServiceUiState.STOPPING)
-            MessageUtil.sendMsg2Service(this, AppConfig.MSG_STATE_RESTART, "")
+            // Stop first and wait until the daemon process is gone before starting again.
+            MessageUtil.sendMsg2Service(this, AppConfig.MSG_STATE_STOP, "")
         } else {
             startAfterRestart(targetGuid)
         }
@@ -503,6 +624,65 @@ class MainActivity : HelperBaseActivity() {
         return raw
     }
 
+    private fun renderConnectionTestResult(content: String?) {
+        val raw = content.orEmpty().trim()
+        if (raw.isEmpty()) {
+            return
+        }
+        val landingInfo = ConnectionLandingInfoFormatter.extract(raw)
+        when {
+            landingInfo != null -> {
+                cancelConnectionTestFallback()
+                connectionCardController.dismissServiceMessages()
+                connectionCardController.showLandingInfo(
+                    message = landingInfo,
+                    tone = MainConnectionCardController.ServiceMessageTone.PRIMARY
+                )
+            }
+
+            isConnectionTestFailure(raw) -> {
+                cancelConnectionTestFallback()
+                connectionCardController.dismissServiceMessages()
+                connectionCardController.showLandingInfo(
+                    message = compactTestResult(raw),
+                    tone = MainConnectionCardController.ServiceMessageTone.ERROR
+                )
+            }
+
+            connectionTestFallbackJob == null -> {
+                connectionCardController.showLandingInfo(
+                    message = getString(R.string.home_connection_endpoint_unavailable),
+                    tone = MainConnectionCardController.ServiceMessageTone.WARNING
+                )
+            }
+        }
+    }
+
+    private fun isConnectionTestFailure(content: String): Boolean {
+        return content.contains("error", ignoreCase = true) ||
+            content.contains("fail", ignoreCase = true) ||
+            content.contains("failed", ignoreCase = true) ||
+            content.contains("失败") ||
+            content.contains("无互联网")
+    }
+
+    private fun scheduleConnectionTestFallback() {
+        cancelConnectionTestFallback()
+        connectionTestFallbackJob = lifecycleScope.launch {
+            delay(LANDING_INFO_FALLBACK_DELAY_MS)
+            connectionCardController.showLandingInfo(
+                message = getString(R.string.home_connection_endpoint_unavailable),
+                tone = MainConnectionCardController.ServiceMessageTone.WARNING
+            )
+            connectionTestFallbackJob = null
+        }
+    }
+
+    private fun cancelConnectionTestFallback() {
+        connectionTestFallbackJob?.cancel()
+        connectionTestFallbackJob = null
+    }
+
     private fun renderServiceUiState(state: ServiceUiState) {
         val previousState = serviceUiState
         serviceUiState = state
@@ -511,17 +691,21 @@ class MainActivity : HelperBaseActivity() {
         binding.fab.isEnabled = !isTransitioning
         binding.fab.isClickable = !isTransitioning
         binding.fab.alpha = if (isTransitioning) 0.92f else 1f
-        syncStatusControls(state)
+        binding.cardConnection.isClickable = state == ServiceUiState.RUNNING
+        binding.cardConnection.isFocusable = state == ServiceUiState.RUNNING
+        if (state != ServiceUiState.RUNNING) {
+            cancelConnectionTestFallback()
+            connectionCardController.clearLandingInfo()
+        }
+        if (!isTransitioning) {
+            connectionCardController.clearPinnedServiceMessage()
+        }
         connectionCardController.render(state)
         connectionCardController.updateStateVisuals(state, animate = previousState != state)
         updateToolbarSubtitle()
         animateServiceStateChange(previousState, state)
         performServiceStateHaptic(previousState, state)
         applyActionButtonUiModel(buildActionButtonUiModel(state))
-    }
-
-    private fun syncStatusControls(state: ServiceUiState) {
-        toolbarController.updateStatus(state)
     }
 
     private fun performServiceStateHaptic(previousState: ServiceUiState, newState: ServiceUiState) {
@@ -543,44 +727,47 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
+    private fun MainViewModel.ServiceFeedback.toDockMessageTone(): MainConnectionCardController.ServiceMessageTone {
+        return when (style) {
+            MainViewModel.ServiceFeedback.Style.SUCCESS -> MainConnectionCardController.ServiceMessageTone.SUCCESS
+            MainViewModel.ServiceFeedback.Style.ERROR -> MainConnectionCardController.ServiceMessageTone.ERROR
+            MainViewModel.ServiceFeedback.Style.NEUTRAL -> MainConnectionCardController.ServiceMessageTone.PRIMARY
+        }
+    }
+
+    private fun MainViewModel.ServicePhaseFeedback.toDockMessageTone(): MainConnectionCardController.ServiceMessageTone {
+        return MainConnectionCardController.ServiceMessageTone.WARNING
+    }
+
     private fun buildActionButtonUiModel(state: ServiceUiState): ActionButtonUiModel {
         return when (state) {
-            ServiceUiState.STARTING -> actionButtonUiModel(
+            ServiceUiState.STARTING -> ActionButtonUiModel(
                 textResId = R.string.connection_starting,
                 iconRes = R.drawable.ic_play_24dp
             )
 
-            ServiceUiState.STOPPING -> actionButtonUiModel(
+            ServiceUiState.STOPPING -> ActionButtonUiModel(
                 textResId = R.string.connection_stopping,
                 iconRes = R.drawable.ic_stop_24dp
             )
 
-            ServiceUiState.RUNNING -> actionButtonUiModel(
+            ServiceUiState.RUNNING -> ActionButtonUiModel(
                 textResId = R.string.action_stop_service,
                 iconRes = R.drawable.ic_stop_24dp
             )
 
-            ServiceUiState.STOPPED -> actionButtonUiModel(
+            ServiceUiState.STOPPED -> ActionButtonUiModel(
                 textResId = R.string.tasker_start_service,
                 iconRes = R.drawable.ic_play_24dp
             )
         }
     }
 
-    private fun actionButtonUiModel(
-        @StringRes textResId: Int,
-        iconRes: Int
-    ) = ActionButtonUiModel(
-        textResId = textResId,
-        iconRes = iconRes,
-        contentColorRes = R.color.md_theme_onPrimary
-    )
-
     private fun applyActionButtonUiModel(model: ActionButtonUiModel) {
         binding.fab.setImageResource(model.iconRes)
         binding.fab.setBackgroundResource(R.drawable.bg_connection_action_circle)
         binding.fab.backgroundTintList = null
-        binding.fab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, model.contentColorRes))
+        binding.fab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onPrimary))
         binding.fab.contentDescription = getString(model.textResId)
     }
 
@@ -659,6 +846,12 @@ class MainActivity : HelperBaseActivity() {
     }
 
     fun refreshConnectionCard() {
+        val selectedGuid = mainViewModel.getSelectedServerSnapshot()?.guid
+        if (selectedGuid != lastConnectionCardGuid) {
+            lastConnectionCardGuid = selectedGuid
+            cancelConnectionTestFallback()
+            connectionCardController.clearLandingInfo()
+        }
         connectionCardController.render(serviceUiState)
         updateToolbarSubtitle()
     }
@@ -823,8 +1016,40 @@ class MainActivity : HelperBaseActivity() {
         launchActivityWithDefaultTransition(requestActivityLauncher, Intent(this, MoreActivity::class.java))
     }
 
+    private fun attachToolbarAppAction() {
+        if (toolbarAppActionView != null) return
+        val actionView = layoutInflater.inflate(R.layout.item_toolbar_app_action, binding.toolbar, false)
+        val layoutParams = Toolbar.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        }
+        binding.toolbar.addView(actionView, 0, layoutParams)
+        toolbarAppActionView = actionView
+        UiMotion.attachPressFeedback(actionView, pressedScale = 0.97f)
+        val openMoreAction: (View) -> Unit = { view ->
+            view.hapticClick()
+            openMorePage()
+        }
+        actionView.setOnClickListener { openMoreAction(actionView) }
+        actionView.findViewById<View>(R.id.toolbar_app_icon)?.setOnClickListener { icon ->
+            openMoreAction(icon)
+        }
+    }
+
+    private fun clearToolbarAppAction() {
+        toolbarAppActionView?.let(binding.toolbar::removeView)
+        toolbarAppActionView = null
+    }
+
     override fun onDestroy() {
-        toolbarController.clear()
+        deferredStartupJob?.cancel()
+        notificationPermissionJob?.cancel()
+        cancelConnectionTestFallback()
+        cancelPendingRestartJob()
+        clearToolbarAppAction()
+        connectionCardController.clear()
         groupTabsController.onDestroy()
         super.onDestroy()
     }

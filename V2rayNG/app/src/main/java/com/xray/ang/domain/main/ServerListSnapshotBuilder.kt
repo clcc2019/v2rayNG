@@ -34,12 +34,14 @@ class ServerListSnapshotBuilder(
         } else {
             repository.getServerIds(targetSubscriptionId)
         }
+        val profilesByGuid = repository.getServers(targetServerList)
+        val delaysByGuid = repository.getServerDelayMillisMap(targetServerList)
 
         val servers = ArrayList<ServersCache>(targetServerList.size)
         val positions = HashMap<String, Int>(targetServerList.size)
         val includeSubscriptionRemarks = targetSubscriptionId.isEmpty()
         targetServerList.forEach { guid ->
-            val profile = repository.getServer(guid) ?: return@forEach
+            val profile = profilesByGuid[guid] ?: return@forEach
             val displayAddress = if (keyword.isEmpty()) {
                 resolveDisplayAddress(guid, profile)
             } else {
@@ -53,7 +55,7 @@ class ServerListSnapshotBuilder(
                     resolved
                 }
             }
-            val testDelayMillis = repository.getServerDelayMillis(guid) ?: 0L
+            val testDelayMillis = delaysByGuid[guid] ?: 0L
             positions[guid] = servers.size
             val remarks = if (includeSubscriptionRemarks) subscriptionRemarkFor(profile.subscriptionId) else ""
             servers += ServersCache(guid, profile, displayAddress, testDelayMillis, remarks)

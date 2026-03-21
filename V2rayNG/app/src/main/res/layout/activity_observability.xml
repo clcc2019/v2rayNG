@@ -48,13 +48,11 @@
             android:text="@string/observability_group_metrics" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -99,13 +97,11 @@
             android:text="@string/observability_group_traffic" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"

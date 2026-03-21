@@ -19,33 +19,19 @@
         android:clipToOutline="true"
         android:foreground="@drawable/bg_home_list_item_ripple"
         android:nextFocusRight="@+id/layout_more"
-        app:cardBackgroundColor="@color/color_settings_section_surface"
+        app:cardBackgroundColor="@color/colorWhite"
         app:strokeColor="@android:color/transparent"
         app:strokeWidth="0dp">
 
-        <FrameLayout
+        <LinearLayout
+            android:id="@+id/info_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipChildren="true"
-            android:clipToPadding="true">
-
-            <View
-                android:id="@+id/view_card_glass_overlay"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:alpha="0.08"
-                android:background="@drawable/bg_home_card_glass_overlay"
-                android:importantForAccessibility="no" />
-
-            <LinearLayout
-                android:id="@+id/info_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="@dimen/padding_spacing_dp16"
-                android:paddingTop="12dp"
-                android:paddingEnd="@dimen/padding_spacing_dp16"
-                android:paddingBottom="12dp">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/padding_spacing_dp16"
+            android:paddingTop="14dp"
+            android:paddingEnd="@dimen/padding_spacing_dp16"
+            android:paddingBottom="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -112,9 +98,9 @@
 
                     <FrameLayout
                         android:id="@+id/layout_more"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginStart="@dimen/padding_spacing_dp6"
                         android:background="@drawable/bg_home_icon_circle_clear_ripple"
                         android:clickable="true"
                         android:contentDescription="@string/action_more"
@@ -136,20 +122,19 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/layout_meta_panel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp5"
-                    android:orientation="vertical">
+                        android:id="@+id/layout_meta_panel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:orientation="vertical">
 
                     <View
                         android:id="@+id/view_meta_divider"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_marginStart="@dimen/padding_spacing_dp2"
-                        android:layout_marginEnd="@dimen/padding_spacing_dp2"
-                        android:layout_marginBottom="@dimen/padding_spacing_dp4"
-                        android:alpha="0.7"
+                        android:layout_marginStart="@dimen/padding_spacing_dp18"
+                        android:layout_marginBottom="@dimen/padding_spacing_dp6"
+                        android:alpha="0.8"
                         android:background="@color/color_connection_dock_divider"
                         android:importantForAccessibility="no" />
 
@@ -169,9 +154,10 @@
                             android:ellipsize="end"
                             android:maxLines="1"
                             android:minLines="1"
+                            android:paddingStart="@dimen/padding_spacing_dp18"
                             android:textAppearance="@style/TextAppearance.V2Ray.Body"
                             android:textColor="@color/color_home_on_surface_muted"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:alpha="0.9"
                             tools:text="13.213.104.*** : 443" />
 
@@ -191,7 +177,7 @@
                     android:id="@+id/layout_subscription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp3"
+                    android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:background="@drawable/bg_home_secondary_panel"
                     android:gravity="center_vertical"
                     android:minHeight="26dp"
@@ -225,17 +211,7 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
-
-            <View
-                android:id="@+id/view_selected_edge_glow"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:alpha="0"
-                android:background="@drawable/bg_home_card_edge_glow"
-                android:importantForAccessibility="no" />
-
-        </FrameLayout>
+        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

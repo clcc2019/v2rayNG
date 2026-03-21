@@ -26,6 +26,7 @@ recyclerview = "1.4.0"
 viewpager2 = "1.1.0"
 fragment = "1.8.9"
 profileinstaller = "1.4.1"
+snakeYamlEngine = "2.10"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -55,6 +56,7 @@ preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = 
 androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 androidx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeYamlEngine" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

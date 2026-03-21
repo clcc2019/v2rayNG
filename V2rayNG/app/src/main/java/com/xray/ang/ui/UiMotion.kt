@@ -9,6 +9,7 @@ import android.animation.ValueAnimator
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.xray.ang.R
@@ -26,6 +27,10 @@ object UiMotion {
         return isMotionEnabled(view) && view.isAttachedToWindow
     }
 
+    private fun canHandlePress(view: View): Boolean {
+        return view.isEnabled && (view.isClickable || view.isLongClickable)
+    }
+
     fun attachPressFeedback(
         view: View,
         pressedScale: Float = 0.975f
@@ -33,6 +38,9 @@ object UiMotion {
         view.setOnTouchListener { target, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!canHandlePress(target)) {
+                        return@setOnTouchListener false
+                    }
                     if (!isMotionEnabled(target)) {
                         return@setOnTouchListener false
                     }
@@ -75,6 +83,9 @@ object UiMotion {
         source.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!canHandlePress(source)) {
+                        return@setOnTouchListener false
+                    }
                     if (!isMotionEnabled(scaleTarget)) {
                         return@setOnTouchListener false
                     }
@@ -131,6 +142,9 @@ object UiMotion {
         source.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!canHandlePress(source)) {
+                        return@setOnTouchListener false
+                    }
                     if (!isMotionEnabled(surfaceTarget)) {
                         return@setOnTouchListener false
                     }
@@ -177,6 +191,9 @@ object UiMotion {
         source.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!canHandlePress(source)) {
+                        return@setOnTouchListener false
+                    }
                     if (!isMotionEnabled(target)) {
                         return@setOnTouchListener false
                     }
@@ -217,6 +234,9 @@ object UiMotion {
         source.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (!canHandlePress(source)) {
+                        return@setOnTouchListener false
+                    }
                     target.animate().cancel()
                     target.strokeWidth = pressedStrokeWidth
                     target.setStrokeColor(pressedStrokeColor)
@@ -323,6 +343,64 @@ object UiMotion {
                     .scaleX(1f)
                     .scaleY(1f)
                     .setDuration(duration)
+                    .setInterpolator(motionInterpolator)
+                    .start()
+            }
+            .start()
+    }
+
+    fun animateTextChange(
+        textView: TextView,
+        newText: CharSequence?,
+        settledAlpha: Float = 1f,
+        translationOffsetDp: Float = 4f,
+        duration: Long = MotionTokens.MEDIUM_ANIMATION_DURATION
+    ) {
+        val targetText = newText ?: ""
+        val textChanged = textView.text?.toString().orEmpty() != targetText.toString()
+        val alphaChanged = abs(textView.alpha - settledAlpha) > FLOAT_EPSILON
+        if (!textChanged && !alphaChanged) {
+            return
+        }
+        if (!canRunTransition(textView)) {
+            textView.text = targetText
+            textView.alpha = settledAlpha
+            textView.translationY = 0f
+            return
+        }
+        if (!textChanged) {
+            textView.animate().cancel()
+            textView.translationY = 0f
+            textView.animate()
+                .alpha(settledAlpha)
+                .setDuration(duration)
+                .setInterpolator(motionInterpolator)
+                .start()
+            return
+        }
+
+        val offsetPx = textView.resources.displayMetrics.density * translationOffsetDp
+        val exitDuration = (duration * 0.42f).toLong().coerceAtLeast(60L)
+        val enterDuration = (duration - exitDuration).coerceAtLeast(90L)
+        textView.animate().cancel()
+        textView.animate()
+            .alpha(0f)
+            .translationY(-offsetPx * 0.35f)
+            .setDuration(exitDuration)
+            .setInterpolator(motionInterpolator)
+            .withEndAction {
+                textView.text = targetText
+                if (!canRunTransition(textView)) {
+                    textView.alpha = settledAlpha
+                    textView.translationY = 0f
+                    return@withEndAction
+                }
+                textView.translationY = offsetPx * 0.35f
+                textView.animate().cancel()
+                textView.animate()
+                    .alpha(settledAlpha)
+                    .translationY(0f)
+                    .setDuration(enterDuration)
                     .setInterpolator(motionInterpolator)
                     .start()
             }

@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:maxWidth="@dimen/settings_page_max_width"
         android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textColor="@color/color_section_heading" />
 
     <TextView
         android:id="@android:id/summary"

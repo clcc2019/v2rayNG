@@ -89,6 +89,59 @@ class ServerListSnapshotBuilderTest {
         assertTrue(snapshot.servers.first().displayAddress.startsWith("generated:"))
     }
 
+    @Test
+    fun build_prefersBulkRepositoryReadsWhenAvailable() {
+        val bulkServerReads = AtomicInteger(0)
+        val bulkDelayReads = AtomicInteger(0)
+        val singleServerReads = AtomicInteger(0)
+        val singleDelayReads = AtomicInteger(0)
+        val repository = object : FakeMainServerRepository(
+            serverIdsBySubscription = linkedMapOf("sub1" to mutableListOf("a", "b")),
+            profiles = mapOf(
+                "a" to profile(remarks = "Alpha", server = "1.1.1.1", subscriptionId = "sub1"),
+                "b" to profile(remarks = "Beta", server = "8.8.8.8", subscriptionId = "sub1")
+            ),
+            delays = mapOf("a" to 10L, "b" to 20L)
+        ) {
+            override fun getServer(guid: String): ProfileItem? {
+                singleServerReads.incrementAndGet()
+                return super.getServer(guid)
+            }
+
+            override fun getServers(guids: Collection<String>): Map<String, ProfileItem> {
+                bulkServerReads.incrementAndGet()
+                val result = LinkedHashMap<String, ProfileItem>(guids.size)
+                guids.forEach { guid ->
+                    profiles[guid]?.let { profile -> result[guid] = profile }
+                }
+                return result
+            }
+
+            override fun getServerDelayMillis(guid: String): Long? {
+                singleDelayReads.incrementAndGet()
+                return super.getServerDelayMillis(guid)
+            }
+
+            override fun getServerDelayMillisMap(guids: Collection<String>): Map<String, Long> {
+                bulkDelayReads.incrementAndGet()
+                val result = LinkedHashMap<String, Long>(guids.size)
+                guids.forEach { guid ->
+                    result[guid] = delays[guid] ?: 0L
+                }
+                return result
+            }
+        }
+        val builder = ServerListSnapshotBuilder(repository) { "${it.server}:${it.serverPort}" }
+
+        val snapshot = builder.build(targetSubscriptionId = "sub1", keyword = "")
+
+        assertEquals(listOf("a", "b"), snapshot.servers.map { it.guid })
+        assertEquals(1, bulkServerReads.get())
+        assertEquals(1, bulkDelayReads.get())
+        assertEquals(0, singleServerReads.get())
+        assertEquals(0, singleDelayReads.get())
+    }
+
     private fun profile(
         remarks: String,
         server: String,
@@ -102,11 +155,11 @@ class ServerListSnapshotBuilderTest {
         }
     }
 
-    private class FakeMainServerRepository(
-        private val subscriptions: Map<String, SubscriptionItem> = emptyMap(),
-        private val serverIdsBySubscription: LinkedHashMap<String, MutableList<String>> = linkedMapOf(),
-        private val profiles: Map<String, ProfileItem> = emptyMap(),
-        private val delays: Map<String, Long> = emptyMap()
+    private open class FakeMainServerRepository(
+        protected val subscriptions: Map<String, SubscriptionItem> = emptyMap(),
+        protected val serverIdsBySubscription: LinkedHashMap<String, MutableList<String>> = linkedMapOf(),
+        protected val profiles: Map<String, ProfileItem> = emptyMap(),
+        protected val delays: Map<String, Long> = emptyMap()
     ) : MainServerRepository {
         override fun getCachedSubscriptionId(): String = ""
 

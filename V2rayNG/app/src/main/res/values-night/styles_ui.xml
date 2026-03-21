@@ -21,12 +21,6 @@
         <item name="cardElevation">0dp</item>
     </style>
 
-    <style name="Widget.V2Ray.Card.HomeConnection" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">28dp</item>
-        <item name="cardBackgroundColor">@color/md_theme_surface</item>
-        <item name="cardElevation">12dp</item>
-    </style>
-
     <style name="Widget.V2Ray.Card.HomeDock" parent="Widget.V2Ray.Card.Primary">
         <item name="cardCornerRadius">26dp</item>
         <item name="cardBackgroundColor">@color/color_home_card_bg_dock</item>

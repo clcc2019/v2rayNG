@@ -137,6 +137,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         if (!transitionGuard.beginStart()) {
             return
         }
+        V2RayServiceManager.onServiceStartAccepted()
 
         serviceScope.launch {
             var configDeferred: kotlinx.coroutines.Deferred<com.xray.ang.dto.ConfigResult>? = null

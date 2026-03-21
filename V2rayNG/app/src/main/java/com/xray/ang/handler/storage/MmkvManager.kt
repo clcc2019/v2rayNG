@@ -46,6 +46,84 @@ object MmkvManager {
     private var cachedSubsListJson: String? = null
     private var cachedSubsList: MutableList<String>? = null
     private val subsListCacheLock = Any()
+    private val serverListCache = mutableMapOf<String, List<String>>()
+    private val serverListCacheLock = Any()
+    private val serverConfigCache = mutableMapOf<String, ProfileItem>()
+    private val serverConfigCacheLock = Any()
+
+    private fun getServerListStorageKey(subscriptionId: String?): String {
+        return "$KEY_SUB_SERVER_PREFIX${getSubscriptionId(subscriptionId)}"
+    }
+
+    private fun parseServerList(json: String?): MutableList<String> {
+        return if (json.isNullOrBlank()) {
+            mutableListOf()
+        } else {
+            JsonUtil.fromJson(json, Array<String>::class.java)?.toMutableList() ?: mutableListOf()
+        }
+    }
+
+    private fun cacheServerList(key: String, serverList: Collection<String>) {
+        synchronized(serverListCacheLock) {
+            serverListCache[key] = ArrayList(serverList)
+        }
+    }
+
+    private fun getCachedServerList(key: String): MutableList<String>? {
+        return synchronized(serverListCacheLock) {
+            serverListCache[key]?.let(::ArrayList)
+        }
+    }
+
+    private fun removeServerListFromCache(subscriptionId: String?) {
+        synchronized(serverListCacheLock) {
+            serverListCache.remove(getServerListStorageKey(subscriptionId))
+        }
+    }
+
+    private fun clearServerListCache() {
+        synchronized(serverListCacheLock) {
+            serverListCache.clear()
+        }
+    }
+
+    private fun parseServerConfig(json: String?): ProfileItem? {
+        if (json.isNullOrBlank()) {
+            return null
+        }
+        return JsonUtil.fromJson(json, ProfileItem::class.java)
+    }
+
+    private fun cacheServerConfig(guid: String, config: ProfileItem) {
+        synchronized(serverConfigCacheLock) {
+            serverConfigCache[guid] = config.copy()
+        }
+    }
+
+    private fun getCachedServerConfig(guid: String): ProfileItem? {
+        return synchronized(serverConfigCacheLock) {
+            serverConfigCache[guid]?.copy()
+        }
+    }
+
+    private fun removeServerConfigFromCache(guid: String) {
+        synchronized(serverConfigCacheLock) {
+            serverConfigCache.remove(guid)
+        }
+    }
+
+    private fun clearServerConfigCache() {
+        synchronized(serverConfigCacheLock) {
+            serverConfigCache.clear()
+        }
+    }
+
+    private fun clearSubsListCache() {
+        synchronized(subsListCacheLock) {
+            cachedSubsListJson = null
+            cachedSubsList = null
+        }
+    }
 
     //endregion
 
@@ -88,9 +166,9 @@ object MmkvManager {
      * @param subscriptionId The subscription ID.
      */
     fun encodeServerList(serverList: MutableList<String>, subscriptionId: String) {
-        val subId = getSubscriptionId(subscriptionId)
-        val key = "$KEY_SUB_SERVER_PREFIX$subId"
+        val key = getServerListStorageKey(subscriptionId)
         mainStorage.encode(key, JsonUtil.toJson(serverList))
+        cacheServerList(key, serverList)
     }
 
 
@@ -103,14 +181,12 @@ object MmkvManager {
      * @return The list of server GUIDs.
      */
     fun decodeServerList(subscriptionId: String): MutableList<String> {
-        val subId = getSubscriptionId(subscriptionId)
-        val key = "$KEY_SUB_SERVER_PREFIX$subId"
-        val json = mainStorage.decodeString(key)
-        return if (json.isNullOrBlank()) {
-            mutableListOf()
-        } else {
-            JsonUtil.fromJson(json, Array<String>::class.java)?.toMutableList() ?: mutableListOf()
-        }
+        val key = getServerListStorageKey(subscriptionId)
+        getCachedServerList(key)?.let { return it }
+
+        val parsed = parseServerList(mainStorage.decodeString(key))
+        cacheServerList(key, parsed)
+        return parsed
     }
 
     /**
@@ -130,6 +206,33 @@ object MmkvManager {
         return allServers
     }
 
+    fun decodeServerCount(subscriptionId: String): Int {
+        val key = getServerListStorageKey(subscriptionId)
+        synchronized(serverListCacheLock) {
+            serverListCache[key]?.let { return it.size }
+        }
+
+        val parsed = parseServerList(mainStorage.decodeString(key))
+        cacheServerList(key, parsed)
+        return parsed.size
+    }
+
+    fun decodeServerCounts(subscriptionIds: Collection<String>): Map<String, Int> {
+        val counts = LinkedHashMap<String, Int>(subscriptionIds.size)
+        subscriptionIds.forEach { subscriptionId ->
+            counts[subscriptionId] = decodeServerCount(subscriptionId)
+        }
+        return counts
+    }
+
+    fun decodeAllServerCount(): Int {
+        var count = 0
+        decodeSubsList().forEach { subscriptionId ->
+            count += decodeServerCount(subscriptionId)
+        }
+        return count
+    }
+
 
     /**
      * Decodes the server configuration.
@@ -141,11 +244,35 @@ object MmkvManager {
         if (guid.isBlank()) {
             return null
         }
-        val json = profileFullStorage.decodeString(guid)
-        if (json.isNullOrBlank()) {
-            return null
+        getCachedServerConfig(guid)?.let { return it }
+
+        val parsed = parseServerConfig(profileFullStorage.decodeString(guid)) ?: return null
+        cacheServerConfig(guid, parsed)
+        return parsed
+    }
+
+    fun decodeServerConfigs(guids: Collection<String>): Map<String, ProfileItem> {
+        val configs = LinkedHashMap<String, ProfileItem>(guids.size)
+        val missingGuids = ArrayList<String>()
+        synchronized(serverConfigCacheLock) {
+            guids.forEach { guid ->
+                if (guid.isBlank()) {
+                    return@forEach
+                }
+                val cached = serverConfigCache[guid]
+                if (cached != null) {
+                    configs[guid] = cached.copy()
+                } else {
+                    missingGuids += guid
+                }
+            }
         }
-        return JsonUtil.fromJson(json, ProfileItem::class.java)
+        missingGuids.forEach { guid ->
+            val parsed = parseServerConfig(profileFullStorage.decodeString(guid)) ?: return@forEach
+            cacheServerConfig(guid, parsed)
+            configs[guid] = parsed
+        }
+        return configs
     }
 
 
@@ -159,6 +286,7 @@ object MmkvManager {
     fun encodeServerConfig(guid: String, config: ProfileItem): String {
         val key = guid.ifBlank { Utils.getUuid() }
         profileFullStorage.encode(key, JsonUtil.toJson(config))
+        cacheServerConfig(key, config)
 
         // Use default subscription for servers without subscription
         val subId = getSubscriptionId(config.subscriptionId)
@@ -183,6 +311,12 @@ object MmkvManager {
      */
     fun encodeProfileDirect(key: String, configJson: String) {
         profileFullStorage.encode(key, configJson)
+        val parsed = parseServerConfig(configJson)
+        if (parsed != null) {
+            cacheServerConfig(key, parsed)
+        } else {
+            removeServerConfigFromCache(key)
+        }
     }
 
     /**
@@ -210,6 +344,7 @@ object MmkvManager {
         }
         profileFullStorage.remove(guid)
         serverAffStorage.remove(guid)
+        removeServerConfigFromCache(guid)
     }
 
     /**
@@ -228,6 +363,7 @@ object MmkvManager {
             }
             profileFullStorage.remove(guid)
             serverAffStorage.remove(guid)
+            removeServerConfigFromCache(guid)
         }
 
         serverList.clear()
@@ -295,6 +431,9 @@ object MmkvManager {
         mainStorage.clearAll()
         profileFullStorage.clearAll()
         serverAffStorage.clearAll()
+        clearSubsListCache()
+        clearServerListCache()
+        clearServerConfigCache()
         return count
     }
 
@@ -420,7 +559,8 @@ object MmkvManager {
         val subsList = decodeSubsList()
         subsList.remove(subid)
         removeServerViaSubid(subid)
-        mainStorage.remove("$KEY_SUB_SERVER_PREFIX${getSubscriptionId(subid)}")
+        mainStorage.remove(getServerListStorageKey(subid))
+        removeServerListFromCache(subid)
         subStorage.remove(subid)
         encodeSubsList(subsList)
 

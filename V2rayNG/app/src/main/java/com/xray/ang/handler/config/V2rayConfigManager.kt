@@ -179,8 +179,8 @@ object V2rayConfigManager {
         val result = ConfigResult(false)
 
         val serverList = MmkvManager.decodeAllServerList()
-        val configList = serverList
-            .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
+        val configList = MmkvManager.decodeServerConfigs(serverList)
+            .values
             .filter { profile ->
                 val subscriptionId = config.policyGroupSubscriptionId
                 if (subscriptionId.isNullOrBlank()) {
@@ -468,8 +468,9 @@ object V2rayConfigManager {
         val prevProfileHash = prevProfileRemark?.let { chainedProfileLookup[it]?.hashCode() ?: 0 } ?: 0
         val nextProfileHash = nextProfileRemark?.let { chainedProfileLookup[it]?.hashCode() ?: 0 } ?: 0
         val policyGroupHash = if (config.configType == EConfigType.POLICYGROUP) {
-            MmkvManager.decodeAllServerList()
-                .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
+            MmkvManager.decodeServerConfigs(MmkvManager.decodeAllServerList())
+                .values
+                .toList()
                 .hashCode()
         } else {
             0
@@ -921,12 +922,11 @@ object V2rayConfigManager {
 
         val unresolvedRemarks = HashSet(remarks)
         val resolvedProfiles = HashMap<String, ProfileItem>(remarks.size)
-        val serverGuids = MmkvManager.decodeAllServerList()
-        for (guid in serverGuids) {
+        val profiles = MmkvManager.decodeServerConfigs(MmkvManager.decodeAllServerList()).values
+        for (profile in profiles) {
             if (unresolvedRemarks.isEmpty()) {
                 break
             }
-            val profile = MmkvManager.decodeServerConfig(guid) ?: continue
             val profileRemarks = profile.remarks
             if (profileRemarks.isNotEmpty() && unresolvedRemarks.remove(profileRemarks)) {
                 resolvedProfiles[profileRemarks] = profile
@@ -1480,6 +1480,10 @@ object V2rayConfigManager {
      */
     fun populateTlsSettings(streamSettings: StreamSettingsBean, profileItem: ProfileItem, sniExt: String?) {
         val streamSecurity = profileItem.security.orEmpty()
+        val echForceQuery = profileItem.echForceQuery
+            ?.trim()
+            ?.lowercase()
+            ?.takeIf { it in setOf("none", "half", "full") }
         val sni = if (profileItem.sni.isNullOrEmpty()) {
             when {
                 sniExt.isNotNullEmpty() && Utils.isDomainName(sniExt) -> sniExt
@@ -1497,7 +1501,7 @@ object V2rayConfigManager {
             fingerprint = profileItem.fingerPrint.nullIfBlank(),
             alpn =  profileItem.alpn?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }.takeIf { !it.isNullOrEmpty() },
             echConfigList = profileItem.echConfigList.nullIfBlank(),
-            echForceQuery = profileItem.echForceQuery.nullIfBlank(),
+            echForceQuery = echForceQuery,
             pinnedPeerCertSha256 = profileItem.pinnedCA256.nullIfBlank(),
             publicKey = profileItem.publicKey.nullIfBlank(),
             shortId = profileItem.shortId.nullIfBlank(),

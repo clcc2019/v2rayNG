@@ -16,6 +16,18 @@ import java.net.Socket
 import java.net.UnknownHostException
 
 object SpeedtestManager {
+    data class TcpingOptions(
+        val attempts: Int = DEFAULT_TCPING_ATTEMPTS,
+        val connectTimeoutMillis: Int = DEFAULT_TCPING_CONNECT_TIMEOUT_MS
+    )
+
+    val INTERACTIVE_TCPING_OPTIONS = TcpingOptions(
+        attempts = 1,
+        connectTimeoutMillis = 1500
+    )
+
+    private const val DEFAULT_TCPING_ATTEMPTS = 2
+    private const val DEFAULT_TCPING_CONNECT_TIMEOUT_MS = 3000
 
     private val tcpTestingSockets = ArrayList<Socket?>()
 
@@ -27,9 +39,15 @@ object SpeedtestManager {
      * @return The connection time in milliseconds, or -1 if the connection failed.
      */
     suspend fun tcping(url: String, port: Int): Long {
+        return tcping(url, port, TcpingOptions())
+    }
+
+    suspend fun tcping(url: String, port: Int, options: TcpingOptions): Long {
         var time = -1L
-        for (k in 0 until 2) {
-            val one = socketConnectTime(url, port)
+        val attempts = options.attempts.coerceAtLeast(1)
+        val connectTimeoutMillis = options.connectTimeoutMillis.coerceAtLeast(1)
+        for (attempt in 0 until attempts) {
+            val one = socketConnectTime(url, port, connectTimeoutMillis)
             if (!currentCoroutineContext().isActive) {
                 break
             }
@@ -47,26 +65,32 @@ object SpeedtestManager {
      * @param port The port to connect to.
      * @return The connection time in milliseconds, or -1 if the connection failed.
      */
-    fun socketConnectTime(url: String, port: Int): Long {
+    fun socketConnectTime(
+        url: String,
+        port: Int,
+        connectTimeoutMillis: Int = DEFAULT_TCPING_CONNECT_TIMEOUT_MS
+    ): Long {
+        val socket = Socket()
         try {
-            val socket = Socket()
             synchronized(this) {
                 tcpTestingSockets.add(socket)
             }
-            val start = System.currentTimeMillis()
-            socket.connect(InetSocketAddress(url, port), 3000)
-            val time = System.currentTimeMillis() - start
-            synchronized(this) {
-                tcpTestingSockets.remove(socket)
-            }
-            socket.close()
-            return time
+            val start = SystemClock.elapsedRealtime()
+            socket.connect(InetSocketAddress(url, port), connectTimeoutMillis)
+            return SystemClock.elapsedRealtime() - start
         } catch (e: UnknownHostException) {
             Log.e(AppConfig.TAG, "Unknown host: $url", e)
         } catch (e: IOException) {
             Log.e(AppConfig.TAG, "socketConnectTime IOException: $e")
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to establish socket connection to $url:$port", e)
+        } finally {
+            synchronized(this) {
+                tcpTestingSockets.remove(socket)
+            }
+            runCatching {
+                socket.close()
+            }
         }
         return -1
     }
@@ -126,7 +150,50 @@ object SpeedtestManager {
 
         val httpPort = SettingsManager.getHttpPort()
         val content = HttpUtil.getUrlContent(url, 5000, httpPort) ?: return null
-        val ipInfo = JsonUtil.fromJson(content, IPAPIInfo::class.java) ?: return null
+        return parseRemoteIPInfo(content)
+    }
+
+    internal fun parseRemoteIPInfo(content: String): String? {
+        parseCloudflareTrace(content)?.let { trace ->
+            val ip = trace["ip"]?.takeIf { it.isNotBlank() } ?: return null
+            val location = listOfNotNull(
+                trace["loc"]?.takeIf { it.isNotBlank() },
+                trace["colo"]?.takeIf { it.isNotBlank() }
+            ).joinToString(" ")
+            val details = listOfNotNull(
+                trace["http"]?.takeIf { it.isNotBlank() }?.let { "http=$it" },
+                trace["tls"]?.takeIf { it.isNotBlank() }?.let { "tls=$it" }
+            )
+            val locationPart = "(${location.ifBlank { "unknown" }}) $ip"
+            return if (details.isEmpty()) {
+                locationPart
+            } else {
+                "$locationPart · ${details.joinToString(" · ")}"
+            }
+        }
+
+        return parseLegacyJsonIpInfo(content)
+    }
+
+    private fun parseCloudflareTrace(content: String): Map<String, String>? {
+        val trace = buildMap {
+            content.lineSequence().forEach { line ->
+                val separatorIndex = line.indexOf('=')
+                if (separatorIndex <= 0) return@forEach
+                val key = line.substring(0, separatorIndex).trim()
+                val value = line.substring(separatorIndex + 1).trim()
+                if (key.isNotEmpty() && value.isNotEmpty()) {
+                    put(key, value)
+                }
+            }
+        }
+        return trace.takeIf { !it["ip"].isNullOrBlank() }
+    }
+
+    private fun parseLegacyJsonIpInfo(content: String): String? {
+        val ipInfo = runCatching {
+            JsonUtil.fromJson(content, IPAPIInfo::class.java)
+        }.getOrNull() ?: return null
 
         val ip = listOf(
             ipInfo.ip,

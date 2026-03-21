@@ -38,15 +38,22 @@
     "remarks": "代理 AI 相关域名",
     "outboundTag": "proxy",
     "domain": [
-      "domain:openai.com",
-      "domain:chatgpt.com",
-      "domain:oaistatic.com",
-      "domain:oaiusercontent.com",
-      "domain:x.ai",
-      "domain:grok.com",
-      "domain:gemini.google.com",
-      "domain:aistudio.google.com",
-      "domain:generativelanguage.googleapis.com"
+      "openai.com",
+      "chatgpt.com",
+      "oaistatic.com",
+      "oaiusercontent.com",
+      "x.ai",
+      "grok.com",
+      "anthropic.com",
+      "claude.ai",
+      "claudeusercontent.com",
+      "perplexity.ai",
+      "openrouter.ai",
+      "meta.ai",
+      "gemini.google.com",
+      "aistudio.google.com",
+      "makersuite.google.com",
+      "generativelanguage.googleapis.com"
     ]
   },
   {

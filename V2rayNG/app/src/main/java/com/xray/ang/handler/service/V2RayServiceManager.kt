@@ -15,6 +15,7 @@ import com.xray.ang.contracts.ServiceControl
 import com.xray.ang.dto.ConfigResult
 import com.xray.ang.dto.ProfileItem
 import com.xray.ang.enums.EConfigType
+import com.xray.ang.extension.serializable
 import com.xray.ang.extension.toast
 import com.xray.ang.service.V2RayProxyOnlyService
 import com.xray.ang.service.V2RayVpnService
@@ -29,7 +30,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
-import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicBoolean
 
 object V2RayServiceManager {
@@ -79,14 +79,19 @@ object V2RayServiceManager {
     private val stopInProgress = AtomicBoolean(false)
     private var lifecycleState = LifecycleState.IDLE
 
-    var serviceControl: SoftReference<ServiceControl>? = null
+    @Volatile
+    var serviceControl: ServiceControl? = null
         set(value) {
             field = value
-            V2RayNativeManager.initCoreEnv(value?.get()?.getService())
+            V2RayNativeManager.initCoreEnv(value?.getService())
         }
 
     fun bindServiceControl(control: ServiceControl) {
-        serviceControl = SoftReference(control)
+        serviceControl = control
+    }
+
+    fun onServiceStartAccepted() {
+        clearPendingRestart()
     }
 
     /**
@@ -233,7 +238,7 @@ object V2RayServiceManager {
     }
 
     private fun requestServiceStop(context: Context) {
-        val control = serviceControl?.get()
+        val control = serviceControl
         if (control != null) {
             Log.i(AppConfig.TAG, "Stop Service directly via serviceControl")
             control.stopService()
@@ -297,7 +302,6 @@ object V2RayServiceManager {
             Intent(context.applicationContext, V2RayProxyOnlyService::class.java)
         }
         try {
-            clearPendingRestart()
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
             updateLifecycleState(LifecycleState.FAILED)
@@ -332,7 +336,7 @@ object V2RayServiceManager {
     fun onServiceDestroyed(control: ServiceControl) {
         stopTimeoutJob?.cancel()
         stopTimeoutJob = null
-        if (serviceControl?.get() === control) {
+        if (serviceControl === control) {
             serviceControl = null
         }
         currentConfig = null
@@ -540,7 +544,7 @@ object V2RayServiceManager {
      * @return The current service instance, or null if not available.
      */
     private fun getService(): Service? {
-        return serviceControl?.get()?.getService()
+        return serviceControl?.getService()
     }
 
     /**
@@ -561,7 +565,7 @@ object V2RayServiceManager {
          * @return 0 for success, any other value for failure.
          */
         override fun shutdown(): Long {
-            val serviceControl = serviceControl?.get() ?: return -1
+            val serviceControl = serviceControl ?: return -1
             return try {
                 serviceControl.stopService()
                 0
@@ -594,7 +598,7 @@ object V2RayServiceManager {
          * @param intent The intent being received.
          */
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            val serviceControl = serviceControl?.get() ?: return
+            val serviceControl = serviceControl ?: return
             when (intent?.getIntExtra("key", 0)) {
                 AppConfig.MSG_REGISTER_CLIENT -> {
                     if (coreController.isRunning) {
@@ -618,8 +622,9 @@ object V2RayServiceManager {
                 }
 
                 AppConfig.MSG_STATE_RESTART -> {
+                    val restartGuid = intent.serializable<String>("content")
                     Log.i(AppConfig.TAG, "Restart Service")
-                    restartVService(serviceControl.getService())
+                    restartVService(serviceControl.getService(), restartGuid)
                 }
 
                 AppConfig.MSG_MEASURE_DELAY -> {
@@ -764,7 +769,7 @@ object V2RayServiceManager {
             && currentLifecycleState() != LifecycleState.FAILED
         return lifecycleActive
             || coreController.isRunning
-            || serviceControl?.get() != null
+            || serviceControl != null
             || stopInProgress.get()
     }
 
@@ -781,7 +786,7 @@ object V2RayServiceManager {
     }
 
     private fun hasLiveServiceControl(): Boolean {
-        return serviceControl?.get() != null
+        return serviceControl != null
     }
 
     private fun resetStaleState() {
@@ -797,6 +802,6 @@ object V2RayServiceManager {
     }
 
     private fun isServiceTearingDown(): Boolean {
-        return coreController.isRunning == false && serviceControl?.get() != null
+        return coreController.isRunning == false && serviceControl != null
     }
 }

@@ -11,6 +11,16 @@ internal data class RoutingDomainBuckets(
     val blocked: ArrayList<String> = arrayListOf(),
 )
 
+private const val DOMAIN_MATCHER_PREFIX = "domain:"
+private val ROUTING_DOMAIN_MATCHER_PREFIXES = listOf(
+    DOMAIN_MATCHER_PREFIX,
+    "geosite:",
+    "full:",
+    "regexp:",
+    "keyword:",
+    "ext:"
+)
+
 private val routingDomainBucketsCacheLock = Any()
 @Volatile
 private var cachedRoutingDomainBucketsSignature: Int? = null
@@ -30,8 +40,8 @@ internal fun buildRoutingDomainBuckets(rulesetItems: List<RulesetItem>?, signatu
     val buckets = RoutingDomainBuckets()
     rulesetItems?.forEach { key ->
         if (key.enabled && !key.domain.isNullOrEmpty()) {
-            key.domain?.forEach {
-                if (it != AppConfig.GEOSITE_PRIVATE && (it.startsWith("geosite:") || it.startsWith("domain:"))) {
+            key.domain?.forEach { domain ->
+                normalizeRoutingDomainMatcher(domain)?.let {
                     when (key.outboundTag) {
                         AppConfig.TAG_PROXY -> buckets.proxy.add(it)
                         AppConfig.TAG_DIRECT -> buckets.direct.add(it)
@@ -54,6 +64,18 @@ private fun copyRoutingDomainBuckets(buckets: RoutingDomainBuckets): RoutingDoma
         direct = ArrayList(buckets.direct),
         blocked = ArrayList(buckets.blocked)
     )
+}
+
+private fun normalizeRoutingDomainMatcher(value: String): String? {
+    val matcher = value.trim()
+    if (matcher.isEmpty() || matcher == AppConfig.GEOSITE_PRIVATE) {
+        return null
+    }
+    return if (ROUTING_DOMAIN_MATCHER_PREFIXES.any(matcher::startsWith)) {
+        matcher
+    } else {
+        "$DOMAIN_MATCHER_PREFIX$matcher"
+    }
 }
 
 internal fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {

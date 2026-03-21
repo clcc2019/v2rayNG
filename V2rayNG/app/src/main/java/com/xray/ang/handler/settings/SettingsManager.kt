@@ -34,7 +34,7 @@ import java.util.Collections
 import java.util.Locale
 
 object SettingsManager {
-    private const val DEFAULT_SETTINGS_VERSION = 1
+    private const val DEFAULT_SETTINGS_VERSION = 4
     private const val KEY_DEFAULT_SETTINGS_VERSION = "default_settings_version"
     private const val DEFAULT_SUBSCRIPTION_VERSION = 1
     private const val KEY_DEFAULT_SUBSCRIPTION_VERSION = "default_subscription_version"
@@ -179,6 +179,7 @@ object SettingsManager {
 
         rulesetNew.addAll(rulesetList)
         MmkvManager.encodeRoutingRulesets(rulesetNew)
+        SettingsChangeManager.makeRestartService()
     }
 
     /**
@@ -214,6 +215,7 @@ object SettingsManager {
             rulesetList[index] = ruleset
         }
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        SettingsChangeManager.makeRestartService()
     }
 
     /**
@@ -228,6 +230,7 @@ object SettingsManager {
 
         rulesetList.removeAt(index)
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        SettingsChangeManager.makeRestartService()
     }
 
     /**
@@ -271,6 +274,7 @@ object SettingsManager {
 
         Collections.swap(rulesetList, fromPosition, toPosition)
         MmkvManager.encodeRoutingRulesets(rulesetList)
+        SettingsChangeManager.makeRestartService()
     }
 
     /**
@@ -503,6 +507,16 @@ object SettingsManager {
         }
         if (MmkvManager.decodeSettingsString(AppConfig.PREF_LOCAL_DNS_ENABLED) == null) {
             MmkvManager.encodeSettings(AppConfig.PREF_LOCAL_DNS_ENABLED, true)
+        }
+
+        val ipInfoUrl = MmkvManager.decodeSettingsString(AppConfig.PREF_IP_API_URL)
+        if (ipInfoUrl.isNullOrEmpty() || ipInfoUrl == AppConfig.CLOUDFLARE_TRACE_URL) {
+            MmkvManager.encodeSettings(AppConfig.PREF_IP_API_URL, AppConfig.IP_API_URL)
+        }
+
+        val delayTestUrl = MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL)
+        if (delayTestUrl.isNullOrEmpty() || delayTestUrl == AppConfig.CLOUDFLARE_TRACE_URL) {
+            MmkvManager.encodeSettings(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DELAY_TEST_URL)
         }
     }
 

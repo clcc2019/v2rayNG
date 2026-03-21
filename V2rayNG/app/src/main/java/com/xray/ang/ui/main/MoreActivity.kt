@@ -2,10 +2,16 @@ package com.xray.ang.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityMoreBinding
 
 class MoreActivity : BaseActivity() {
+    private data class ActionRow(
+        val view: View,
+        val intentFactory: () -> Intent
+    )
+
     private val binding by lazy { ActivityMoreBinding.inflate(layoutInflater) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,23 +22,19 @@ class MoreActivity : BaseActivity() {
     }
 
     private fun setupActions() {
-        applyPressMotion(
-            binding.rowSubSetting.root,
-            binding.rowRoutingSetting.root,
-            binding.rowSettings.root,
-            binding.rowBackupRestore.root,
-            binding.rowLogcat.root,
-            binding.rowObservability.root,
-            binding.rowCheckUpdate.root,
-            binding.rowAbout.root
+        val actionRows = listOf(
+            ActionRow(binding.rowSubSetting.root) { Intent(this, SubSettingActivity::class.java) },
+            ActionRow(binding.rowRoutingSetting.root) { Intent(this, RoutingSettingActivity::class.java) },
+            ActionRow(binding.rowSettings.root) { Intent(this, SettingsActivity::class.java) },
+            ActionRow(binding.rowBackupRestore.root) { Intent(this, BackupActivity::class.java) },
+            ActionRow(binding.rowLogcat.root) { Intent(this, LogcatActivity::class.java) },
+            ActionRow(binding.rowObservability.root) { Intent(this, ObservabilityActivity::class.java) },
+            ActionRow(binding.rowCheckUpdate.root) { Intent(this, CheckUpdateActivity::class.java) },
+            ActionRow(binding.rowAbout.root) { Intent(this, AboutActivity::class.java) }
         )
-        bindLaunchAction(binding.rowSubSetting.root) { Intent(this, SubSettingActivity::class.java) }
-        bindLaunchAction(binding.rowRoutingSetting.root) { Intent(this, RoutingSettingActivity::class.java) }
-        bindLaunchAction(binding.rowSettings.root) { Intent(this, SettingsActivity::class.java) }
-        bindLaunchAction(binding.rowBackupRestore.root) { Intent(this, BackupActivity::class.java) }
-        bindLaunchAction(binding.rowLogcat.root) { Intent(this, LogcatActivity::class.java) }
-        bindLaunchAction(binding.rowObservability.root) { Intent(this, ObservabilityActivity::class.java) }
-        bindLaunchAction(binding.rowCheckUpdate.root) { Intent(this, CheckUpdateActivity::class.java) }
-        bindLaunchAction(binding.rowAbout.root) { Intent(this, AboutActivity::class.java) }
+        applyPressMotion(*actionRows.map(ActionRow::view).toTypedArray())
+        actionRows.forEach { row ->
+            bindLaunchAction(row.view, intentProvider = row.intentFactory)
+        }
     }
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/md_theme_background"
@@ -18,37 +17,27 @@
         android:orientation="vertical">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxWidth="@dimen/list_card_max_width"
-            android:text="@string/more_group_configuration"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.V2Ray.SectionLabel"
+            android:text="@string/more_group_configuration" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:divider="@drawable/bg_section_row_divider"
+                android:orientation="vertical"
+                android:showDividers="middle">
 
                 <include
                     android:id="@+id/row_sub_setting"
                     layout="@layout/item_more_action_subscriptions" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
 
                 <include
                     android:id="@+id/row_routing_setting"
@@ -59,23 +48,17 @@
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp18"
-            android:maxWidth="@dimen/list_card_max_width"
-            android:text="@string/more_group_preferences"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:text="@string/more_group_preferences" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -91,58 +74,36 @@
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp18"
-            android:maxWidth="@dimen/list_card_max_width"
-            android:text="@string/more_group_tools"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:text="@string/more_group_tools" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:divider="@drawable/bg_section_row_divider"
+                android:orientation="vertical"
+                android:showDividers="middle">
 
                 <include
                     android:id="@+id/row_backup_restore"
                     layout="@layout/item_more_action_backup" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
-
                 <include
                     android:id="@+id/row_check_update"
                     layout="@layout/item_more_action_update" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
-
                 <include
                     android:id="@+id/row_observability"
                     layout="@layout/item_more_action_observability" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="54dp"
-                    android:background="@color/color_card_outline" />
 
                 <include
                     android:id="@+id/row_logcat"
@@ -153,23 +114,17 @@
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.SectionLabel"
             android:layout_marginTop="@dimen/padding_spacing_dp18"
-            android:maxWidth="@dimen/list_card_max_width"
-            android:text="@string/more_group_information"
-            android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:text="@string/more_group_information" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"

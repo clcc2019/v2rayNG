@@ -51,7 +51,6 @@ object AppConfig {
     const val PREF_METRICS_ENABLED = "pref_metrics_enabled"
     const val CACHE_OBSERVABILITY_TRAFFIC_HISTORY = "cache_observability_traffic_history"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
-    const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
     const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
     const val PREF_GROUP_ALL_DISPLAY = "pref_group_all_display"
     const val PREF_LANGUAGE = "pref_language"
@@ -118,10 +117,13 @@ object AppConfig {
     const val APP_WIKI_MODE = "$APP_URL/wiki/Mode"
     const val APP_PRIVACY_POLICY = "$GITHUB_RAW_URL/2dust/v2rayNG/master/CR.md"
     const val TG_CHANNEL_URL = "https://t.me/github_2dust"
-    const val DELAY_TEST_URL = "https://www.gstatic.com/generate_204"
-    const val DELAY_TEST_URL2 = "https://www.google.com/generate_204"
-//    const val IP_API_URL = "https://speed.cloudflare.com/meta"
-    const val IP_API_URL = "https://api.ip.sb/geoip"
+    const val LEGACY_DELAY_TEST_URL = "https://www.gstatic.com/generate_204"
+    const val LEGACY_DELAY_TEST_URL2 = "https://www.google.com/generate_204"
+    const val CLOUDFLARE_TRACE_URL = "https://cloudflare.com/cdn-cgi/trace"
+    const val DELAY_TEST_URL = LEGACY_DELAY_TEST_URL
+    const val DELAY_TEST_URL2 = LEGACY_DELAY_TEST_URL2
+    const val LEGACY_IP_API_URL = "https://api.ip.sb/geoip"
+    const val IP_API_URL = LEGACY_IP_API_URL
 
     /** DNS server addresses. */
     const val DNS_PROXY = "https://1.1.1.1/dns-query"

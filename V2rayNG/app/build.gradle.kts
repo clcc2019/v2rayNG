@@ -152,6 +152,7 @@ dependencies {
     implementation(libs.mmkv.static)
     implementation(libs.gson)
     implementation(libs.okhttp)
+    implementation(libs.snakeyaml.engine)
 
     // Reactive and Utility Libraries
     implementation(libs.kotlinx.coroutines.android)

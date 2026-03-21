@@ -12,7 +12,7 @@ object MotionTokens {
     const val SHORT_ANIMATION_DURATION = 140L
     const val FAST_ANIMATION_DURATION = 100L
     const val MEDIUM_ANIMATION_DURATION = 200L
-    const val SPLASH_EXIT_DURATION = 300L
+    const val SPLASH_EXIT_DURATION = 220L
     const val EMPHASIS_DURATION = 220L
 
     const val PULSE_QUICK = 120L

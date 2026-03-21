@@ -24,13 +24,11 @@
             android:text="@string/sub_group_quick_actions" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -175,13 +173,11 @@
             android:text="@string/routing_group_preferences" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.RoutingSection"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -303,14 +299,12 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/layout_empty_state"
-            style="@style/Widget.V2Ray.Card.Section"
+            style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
             android:maxWidth="@dimen/list_card_max_width"
-            android:visibility="gone"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"

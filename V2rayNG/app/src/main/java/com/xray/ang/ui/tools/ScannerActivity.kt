@@ -8,11 +8,9 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
-import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityNoneBinding
 import com.xray.ang.extension.toast
-import com.xray.ang.handler.MmkvManager
 import com.xray.ang.util.QRCodeDecoder
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
@@ -31,10 +29,7 @@ class ScannerActivity : HelperBaseActivity() {
         super.onCreate(savedInstanceState)
 
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.menu_item_import_config_qrcode))
-
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_START_SCAN_IMMEDIATE)) {
-            launchScan()
-        }
+        launchScan()
     }
 
     private fun launchScan() {
@@ -102,7 +97,7 @@ class ScannerActivity : HelperBaseActivity() {
                             finished(text)
                         }
                     }.onFailure { e ->
-                        Log.e(AppConfig.TAG, "Failed to decode QR code from file", e)
+                        Log.e(javaClass.simpleName, "Failed to decode QR code from file", e)
                         toast(R.string.toast_decoding_failed)
                     }
                 }
