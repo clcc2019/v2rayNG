@@ -22,6 +22,7 @@
     <dimen name="shape_corner_dp16">10dp</dimen>
     <dimen name="shape_corner_dp20">12dp</dimen>
     <dimen name="image_size_dp18">18dp</dimen>
+    <dimen name="image_size_dp20">20dp</dimen>
     <dimen name="image_size_dp22">22dp</dimen>
     <dimen name="image_size_dp24">24dp</dimen>
     <dimen name="view_height_dp36">36dp</dimen>

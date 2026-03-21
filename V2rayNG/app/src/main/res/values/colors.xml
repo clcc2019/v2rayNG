@@ -4,10 +4,10 @@
     <color name="colorPingRed">#C55B5B</color>
     <color name="colorConfigType">#66769A</color>
     <color name="colorWhite">#FCFDFF</color>
-    <color name="color_fab_active">#2F6BFF</color>
+    <color name="color_fab_active">#0580D3</color>
     <color name="color_fab_inactive">#8C99B6</color>
     <color name="divider_color_light">#E2E8F5</color>
-    <color name="colorSelectionIndicator">#C4D4FF</color>
+    <color name="colorSelectionIndicator">#B7DBF2</color>
     <color name="colorStatusIdle">#8692AC</color>
     <color name="color_card_outline">#D9E2F3</color>
     <color name="color_settings_section_surface">#FDFDFF</color>
@@ -23,7 +23,7 @@
     <color name="color_home_background">#F3F6FC</color>
     <color name="color_home_surface">#FDFDFF</color>
     <color name="color_home_surface_raised">#FCFDFF</color>
-    <color name="color_home_surface_selected">#EAF0FF</color>
+    <color name="color_home_surface_selected">#E8F3FC</color>
     <color name="color_home_surface_soft">#F4F7FD</color>
     <color name="color_home_card_bg">@color/color_home_surface_raised</color>
     <color name="color_home_card_bg_selected">@color/color_home_surface_selected</color>
@@ -33,7 +33,7 @@
     <color name="color_home_on_surface_muted">#66738C</color>
     <color name="color_home_outline">#DEE5F3</color>
     <color name="color_home_card_stroke">#D9E2F2</color>
-    <color name="color_home_card_stroke_selected">#B8C9F6</color>
+    <color name="color_home_card_stroke_selected">#B7D8F0</color>
     <color name="color_home_surface_gradient_top">#F6F8FE</color>
     <color name="color_home_surface_gradient_bottom">#EFF3FB</color>
     <color name="color_home_top_scrim_start">#F2F3F6FC</color>
@@ -54,10 +54,10 @@
     <color name="color_connection_dock_highlight_top">#00000000</color>
     <color name="color_connection_dock_highlight_mid">#00000000</color>
     <color name="color_connection_dock_highlight_bottom">#00000000</color>
-    <color name="color_connection_dock_button_surface">#EAF0FF</color>
-    <color name="color_connection_dock_button_stroke">#CDDAFB</color>
-    <color name="color_connection_action_surface_start">#3D78FF</color>
-    <color name="color_connection_action_surface_end">#275BE5</color>
+    <color name="color_connection_dock_button_surface">#E7F3FC</color>
+    <color name="color_connection_dock_button_stroke">#C6DDF0</color>
+    <color name="color_connection_action_surface_start">#1594E6</color>
+    <color name="color_connection_action_surface_end">#056FBB</color>
     <color name="color_connection_action_stroke">#00000000</color>
     <color name="color_connection_backdrop_core">#00000000</color>
     <color name="color_connection_backdrop_edge">#00FFFFFF</color>
@@ -68,13 +68,13 @@
     <color name="color_home_indicator_idle">#D5DDF0</color>
     <color name="color_home_secondary_panel">#F4F7FD</color>
     <color name="color_home_secondary_panel_stroke">#DBE4F4</color>
-    <color name="color_home_primary">#2F6BFF</color>
+    <color name="color_home_primary">#0580D3</color>
     <color name="color_home_on_primary">#FFFFFF</color>
-    <color name="color_home_chip_protocol">#5A6F92</color>
-    <color name="color_home_chip_protocol_bg">#EAF0FF</color>
-    <color name="color_section_heading">#5574B7</color>
-    <color name="color_home_metric_idle">#E8EEFB</color>
-    <color name="color_home_metric_idle_text">#5F74A4</color>
+    <color name="color_home_chip_protocol">#557396</color>
+    <color name="color_home_chip_protocol_bg">#E7F3FC</color>
+    <color name="color_section_heading">#3E75AB</color>
+    <color name="color_home_metric_idle">#E7EFF8</color>
+    <color name="color_home_metric_idle_text">#54779B</color>
     <color name="color_home_metric_good">#EDF8F2</color>
     <color name="color_home_metric_warn">#FCF1E4</color>
     <color name="color_home_metric_good_text">#2F7F58</color>
@@ -82,20 +82,20 @@
     <color name="color_home_metric_bad">#F9ECEC</color>
     <color name="color_home_metric_bad_text">#B95E5D</color>
 
-    <color name="md_theme_primary">#2F6BFF</color>
+    <color name="md_theme_primary">#0580D3</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#EAF0FF</color>
-    <color name="md_theme_onPrimaryContainer">#1E4299</color>
+    <color name="md_theme_primaryContainer">#E3F2FC</color>
+    <color name="md_theme_onPrimaryContainer">#0A5C96</color>
 
-    <color name="md_theme_secondary">#355ECA</color>
+    <color name="md_theme_secondary">#2B679B</color>
     <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#ECF1FF</color>
-    <color name="md_theme_onSecondaryContainer">#243E86</color>
+    <color name="md_theme_secondaryContainer">#EAF2FB</color>
+    <color name="md_theme_onSecondaryContainer">#22486D</color>
 
-    <color name="md_theme_tertiary">#2F6BFF</color>
+    <color name="md_theme_tertiary">#0580D3</color>
     <color name="md_theme_onTertiary">#FFFFFF</color>
-    <color name="md_theme_tertiaryContainer">#EAF0FF</color>
-    <color name="md_theme_onTertiaryContainer">#1E4299</color>
+    <color name="md_theme_tertiaryContainer">#E3F2FC</color>
+    <color name="md_theme_onTertiaryContainer">#0A5C96</color>
 
     <color name="md_theme_error">#C45C5C</color>
     <color name="md_theme_errorContainer">#FFDAD7</color>
@@ -117,8 +117,8 @@
     <color name="md_theme_outline">#D5DEF0</color>
     <color name="md_theme_outlineVariant">#E2E8F5</color>
 
-    <color name="md_theme_inversePrimary">#B7CAFF</color>
+    <color name="md_theme_inversePrimary">#A7D1ED</color>
     <color name="md_theme_shadow">#000000</color>
-    <color name="md_theme_surfaceTint">#2F6BFF</color>
+    <color name="md_theme_surfaceTint">#0580D3</color>
     <color name="md_theme_scrim">#000000</color>
 </resources>

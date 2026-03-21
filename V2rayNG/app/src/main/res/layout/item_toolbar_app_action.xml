@@ -10,8 +10,8 @@
 
     <ImageView
         android:id="@+id/toolbar_app_icon"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="@dimen/image_size_dp20"
+        android:layout_height="@dimen/image_size_dp20"
         android:layout_gravity="center"
         android:contentDescription="@string/action_more"
         android:scaleType="centerInside"

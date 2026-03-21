@@ -12,7 +12,6 @@ import android.provider.Settings
 import android.text.Editable
 import android.util.Base64
 import android.util.Log
-import android.util.Patterns
 import android.webkit.URLUtil
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -26,6 +25,7 @@ import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
+import java.net.IDN
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -209,35 +209,12 @@ object Utils {
         if (value.isNullOrEmpty()) return false
 
         try {
-            var addr = value.trim()
-            if (addr.isEmpty()) return false
-
-            //CIDR
-            if (addr.contains("/")) {
-                val arr = addr.split("/")
-                if (arr.size == 2 && arr[1].toIntOrNull() != null && arr[1].toInt() > -1) {
-                    addr = arr[0]
-                }
-            }
-
-            // Handle IPv4-mapped IPv6 addresses
-            if (addr.startsWith("::ffff:") && '.' in addr) {
-                addr = addr.drop(7)
-            } else if (addr.startsWith("[::ffff:") && '.' in addr) {
-                addr = addr.drop(8).replace("]", "")
-            }
-
-            val octets = addr.split('.')
-            if (octets.size == 4) {
-                if (octets[3].contains(":")) {
-                    addr = addr.substring(0, addr.indexOf(":"))
-                }
-                return isIpv4Address(addr)
-            }
-
-            return isIpv6Address(addr)
+            val candidate = parseIpCandidate(value.trim()) ?: return false
+            val address = parseInetAddressLiteral(candidate.host) ?: return false
+            val maxPrefixLength = address.address.size * 8
+            return candidate.prefixLength?.let { it in 0..maxPrefixLength } ?: true
         } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Failed to validate IP address", e)
+            safeLogError("Failed to validate IP address", e)
             return false
         }
     }
@@ -263,8 +240,7 @@ object Utils {
     fun isDomainName(input: String?): Boolean {
         if (input.isNullOrEmpty()) return false
 
-        // Must not be an IP address and must be a valid URL format
-        return !isPureIpAddress(input) && isValidUrl(input)
+        return !isPureIpAddress(input) && isValidDomainHost(input.trim())
     }
 
     /**
@@ -313,13 +289,13 @@ object Utils {
     fun isValidUrl(value: String?): Boolean {
         if (value.isNullOrEmpty()) return false
 
-        return try {
-            Patterns.WEB_URL.matcher(value).matches() ||
-                    Patterns.DOMAIN_NAME.matcher(value).matches() ||
-                    URLUtil.isValidUrl(value)
-        } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Failed to validate URL", e)
-            false
+        val input = value.trim()
+        if (input.isEmpty()) return false
+
+        return if ("://" in input) {
+            isValidAbsoluteUrl(input)
+        } else {
+            isValidDomainHost(input)
         }
     }
 
@@ -595,15 +571,6 @@ object Utils {
      * @param ip The InetAddress to convert
      * @return The long representation of the IP address
      */
-    private fun inetAddressToLong(ip: InetAddress): Long {
-        val bytes = ip.address
-        var result: Long = 0
-        for (i in bytes.indices) {
-            result = result shl 8 or (bytes[i].toInt() and 0xff).toLong()
-        }
-        return result
-    }
-
     /**
      * Check if an IP address is within a CIDR range
      *
@@ -613,26 +580,123 @@ object Utils {
      */
     fun isIpInCidr(ip: String, cidr: String): Boolean {
         try {
-            if (!isIpAddress(ip)) return false
+            val ipAddress = parseInetAddressLiteral(ip.trim()) ?: return false
+            val cidrCandidate = parseIpCandidate(cidr.trim()) ?: return false
+            val prefixLength = cidrCandidate.prefixLength ?: return false
+            val cidrAddress = parseInetAddressLiteral(cidrCandidate.host) ?: return false
+            val ipBytes = ipAddress.address
+            val cidrBytes = cidrAddress.address
+            if (ipBytes.size != cidrBytes.size) return false
+            val maxPrefixLength = ipBytes.size * 8
+            if (prefixLength !in 0..maxPrefixLength) return false
 
-            // Parse CIDR (e.g., "192.168.1.0/24")
-            val (cidrIp, prefixLen) = cidr.split("/")
-            val prefixLength = prefixLen.toIntOrNull() ?: return false
+            val fullBytes = prefixLength / 8
+            val remainingBits = prefixLength % 8
+            for (index in 0 until fullBytes) {
+                if (ipBytes[index] != cidrBytes[index]) return false
+            }
+            if (remainingBits == 0) return true
 
-            // Convert IP and CIDR's IP portion to Long
-            val ipLong = inetAddressToLong(InetAddress.getByName(ip))
-            val cidrIpLong = inetAddressToLong(InetAddress.getByName(cidrIp))
-
-            // Calculate subnet mask (e.g., /24 → 0xFFFFFF00)
-            val mask = if (prefixLength == 0) 0L else -1L shl (32 - prefixLength)
-
-            // Check if they're in the same subnet
-            val ipMasked = ipLong and mask
-            val cidrMasked = cidrIpLong and mask
+            val mask = ((0xFF shl (8 - remainingBits)) and 0xFF)
+            val ipMasked = ipBytes[fullBytes].toInt() and mask
+            val cidrMasked = cidrBytes[fullBytes].toInt() and mask
             return ipMasked == cidrMasked
         } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Failed to check if IP is in CIDR", e)
+            safeLogError("Failed to check if IP is in CIDR", e)
             return false
+        }
+    }
+
+    private data class IpCandidate(
+        val host: String,
+        val prefixLength: Int? = null
+    )
+
+    private fun parseIpCandidate(rawValue: String): IpCandidate? {
+        if (rawValue.isBlank()) return null
+        val trimmed = rawValue.trim()
+        val slashIndex = trimmed.indexOf('/')
+        val prefixLength = if (slashIndex >= 0) {
+            trimmed.substring(slashIndex + 1).trim().toIntOrNull() ?: return null
+        } else {
+            null
+        }
+        val withoutCidr = if (slashIndex >= 0) trimmed.substring(0, slashIndex).trim() else trimmed
+        if (withoutCidr.isEmpty()) return null
+
+        val host = when {
+            withoutCidr.startsWith("[") -> {
+                val closingIndex = withoutCidr.indexOf(']')
+                if (closingIndex <= 1) return null
+                withoutCidr.substring(1, closingIndex)
+            }
+            withoutCidr.count { it == ':' } == 1 && withoutCidr.count { it == '.' } == 3 -> {
+                withoutCidr.substringBeforeLast(':')
+            }
+            else -> withoutCidr
+        }
+
+        return host.takeIf { it.isNotBlank() }?.let { IpCandidate(it, prefixLength) }
+    }
+
+    private fun parseInetAddressLiteral(rawValue: String): InetAddress? {
+        val candidate = parseIpCandidate(rawValue)?.host ?: return null
+        return when {
+            candidate.contains(':') -> {
+                if (!candidate.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' || it == ':' || it == '.' }) {
+                    null
+                } else {
+                    runCatching { InetAddress.getByName(candidate) }.getOrNull()
+                }
+            }
+            candidate.contains('.') -> {
+                if (!isIpv4Address(candidate)) {
+                    null
+                } else {
+                    runCatching { InetAddress.getByName(candidate) }.getOrNull()
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun isValidDomainHost(input: String): Boolean {
+        if (input.isBlank()) return false
+        if (input.startsWith(".") || input.endsWith(".")) return false
+
+        val ascii = runCatching { IDN.toASCII(input) }.getOrNull() ?: return false
+        if (ascii.length > 253) return false
+        if (ascii.equals("localhost", ignoreCase = true)) return true
+
+        val labels = ascii.split('.')
+        if (labels.size < 2) return false
+        return labels.all { label ->
+            label.isNotEmpty() &&
+                label.length <= 63 &&
+                label.first().isLetterOrDigit() &&
+                label.last().isLetterOrDigit() &&
+                label.all { char -> char.isLetterOrDigit() || char == '-' }
+        }
+    }
+
+    private fun isValidAbsoluteUrl(input: String): Boolean {
+        return runCatching {
+            val uri = URI(input)
+            val scheme = uri.scheme?.takeIf { it.isNotBlank() } ?: return false
+            if (scheme.isBlank()) return false
+            val host = uri.host
+                ?: uri.rawAuthority
+                    ?.substringAfterLast('@')
+                    ?.substringBefore(':')
+                    ?.trim('[', ']')
+                ?: return false
+            isPureIpAddress(host) || isValidDomainHost(host)
+        }.getOrDefault(false)
+    }
+
+    private fun safeLogError(message: String, throwable: Throwable) {
+        runCatching {
+            Log.e(AppConfig.TAG, message, throwable)
         }
     }
 

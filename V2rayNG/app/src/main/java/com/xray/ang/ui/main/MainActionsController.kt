@@ -126,6 +126,7 @@ class MainActionsController(
                 when {
                     result.configCount > 0 -> {
                         activity.toast(activity.getString(R.string.title_import_config_count, result.configCount))
+                        mainViewModel.refreshGroupTabs()
                         mainViewModel.reloadServerList()
                     }
                     result.subscriptionCount > 0 -> onSetupGroupTabs()

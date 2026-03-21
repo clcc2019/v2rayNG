@@ -142,6 +142,44 @@ class ServerListSnapshotBuilderTest {
         assertEquals(0, singleDelayReads.get())
     }
 
+    @Test
+    fun build_resolvesSelectedServerSnapshotWhenSelectionIsFilteredOut() {
+        val repository = FakeMainServerRepository(
+            subscriptions = mapOf("sub1" to SubscriptionItem(remarks = "Group A")),
+            serverIdsBySubscription = linkedMapOf("sub1" to mutableListOf("a", "b")),
+            profiles = mapOf(
+                "a" to profile(remarks = "Alpha", server = "1.1.1.1", subscriptionId = "sub1"),
+                "b" to profile(remarks = "Beta", server = "8.8.8.8", subscriptionId = "sub1")
+            ),
+            delays = mapOf("b" to 20L),
+            selectedServerId = "b"
+        )
+        val builder = ServerListSnapshotBuilder(repository) { "resolved:${it.server}" }
+
+        val snapshot = builder.build(targetSubscriptionId = "sub1", keyword = "alp")
+
+        assertEquals(listOf("a"), snapshot.servers.map { it.guid })
+        assertEquals("b", snapshot.selectedServer?.guid)
+        assertEquals("resolved:8.8.8.8", snapshot.selectedServer?.displayAddress)
+        assertEquals(20L, snapshot.selectedServer?.testDelayMillis)
+    }
+
+    @Test
+    fun build_usesVisibleSelectedServerSnapshotWhenSelectionIsInCurrentList() {
+        val repository = FakeMainServerRepository(
+            serverIdsBySubscription = linkedMapOf("sub1" to mutableListOf("a")),
+            profiles = mapOf(
+                "a" to profile(remarks = "Alpha", server = "1.1.1.1", subscriptionId = "sub1")
+            ),
+            selectedServerId = "a"
+        )
+        val builder = ServerListSnapshotBuilder(repository) { "resolved:${it.server}" }
+
+        val snapshot = builder.build(targetSubscriptionId = "sub1", keyword = "alp")
+
+        assertEquals(snapshot.servers.first(), snapshot.selectedServer)
+    }
+
     private fun profile(
         remarks: String,
         server: String,
@@ -159,7 +197,8 @@ class ServerListSnapshotBuilderTest {
         protected val subscriptions: Map<String, SubscriptionItem> = emptyMap(),
         protected val serverIdsBySubscription: LinkedHashMap<String, MutableList<String>> = linkedMapOf(),
         protected val profiles: Map<String, ProfileItem> = emptyMap(),
-        protected val delays: Map<String, Long> = emptyMap()
+        protected val delays: Map<String, Long> = emptyMap(),
+        private val selectedServerId: String? = null
     ) : MainServerRepository {
         override fun getCachedSubscriptionId(): String = ""
 
@@ -191,7 +230,7 @@ class ServerListSnapshotBuilderTest {
 
         override fun removeInvalidServer(guid: String): Int = 0
 
-        override fun getSelectedServerId(): String? = null
+        override fun getSelectedServerId(): String? = selectedServerId
 
         override fun getServerDelayMillis(guid: String): Long? = delays[guid]
 

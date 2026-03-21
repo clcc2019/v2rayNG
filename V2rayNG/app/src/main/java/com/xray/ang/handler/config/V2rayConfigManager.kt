@@ -91,7 +91,9 @@ object V2rayConfigManager {
         }
     }
 
-    fun prewarmConfig(context: Context, guid: String): Boolean = getV2rayConfig(context, guid).status
+    fun prewarmConfig(context: Context, guid: String, knownProfile: ProfileItem? = null): Boolean {
+        return getV2rayConfig(context, guid, knownProfile).status
+    }
 
     /**
      * Retrieves the speedtest V2ray configuration for the given GUID.

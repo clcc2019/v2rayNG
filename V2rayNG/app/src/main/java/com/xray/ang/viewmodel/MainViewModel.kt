@@ -62,7 +62,7 @@ class MainViewModel(
     private var tcpingCollectorJob: Job? = null
 
     data class ServiceFeedback(
-        @StringRes val messageResId: Int,
+        @param:StringRes val messageResId: Int,
         val style: Style
     ) {
         enum class Style {
@@ -73,7 +73,7 @@ class MainViewModel(
     }
 
     data class ServicePhaseFeedback(
-        @StringRes val messageResId: Int,
+        @param:StringRes val messageResId: Int,
         val state: State
     ) {
         enum class State {
@@ -104,14 +104,16 @@ class MainViewModel(
     private var reloadJob: Job? = null
     private var filterJob: Job? = null
     private var reloadJobScheduled: Job? = null
+    private var isReloadScheduledImmediate = false
     private var subscriptionsJobScheduled: Job? = null
+    private var subscriptionsLoadJob: Job? = null
     private var pendingListUpdateJob: Job? = null
     private val pendingListUpdateLock = Any()
     private val pendingListUpdates = LinkedHashSet<Int>()
     private val groupCountLock = Any()
-    private var cachedGroupCountsVersion = -1
     private var cachedGroupIds: List<String> = emptyList()
     private var cachedGroupCounts: Map<String, Int> = emptyMap()
+    private var isGroupCountCacheDirty = true
     private var connectionCardRefreshVersion = 0
     private var isReceiverRegistered = false
 
@@ -200,6 +202,7 @@ class MainViewModel(
         filterJob?.cancel()
         reloadJobScheduled?.cancel()
         subscriptionsJobScheduled?.cancel()
+        subscriptionsLoadJob?.cancel()
         pendingListUpdateJob?.cancel()
         pendingListUpdates.clear()
         serverTestCoordinator.cancelTcping()
@@ -211,15 +214,27 @@ class MainViewModel(
      * Reloads the server list based on current subscription filter.
      */
     fun reloadServerList(immediate: Boolean = false) {
-        if (reloadJobScheduled?.isActive == true) {
-            return
+        val activeScheduledReload = reloadJobScheduled?.takeIf { it.isActive }
+        if (activeScheduledReload != null) {
+            if (!immediate || isReloadScheduledImmediate) {
+                return
+            }
+            activeScheduledReload.cancel()
         }
         reloadJobScheduled?.cancel()
+        isReloadScheduledImmediate = immediate
         reloadJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
-            if (!immediate) {
-                delay(32L)
+            try {
+                if (!isReloadScheduledImmediate) {
+                    delay(32L)
+                }
+                reloadServerListInternal()
+            } finally {
+                if (reloadJobScheduled === this) {
+                    reloadJobScheduled = null
+                    isReloadScheduledImmediate = false
+                }
             }
-            reloadServerListInternal()
         }
     }
 
@@ -259,6 +274,7 @@ class MainViewModel(
         invalidateServerListRequests()
         serverList.remove(guid)
         mainServerRepository.removeServer(guid)
+        refreshGroupTabs()
         val index = getPosition(guid)
         if (index >= 0) {
             serversCache.removeAt(index)
@@ -304,12 +320,16 @@ class MainViewModel(
      * @return Detailed result of the subscription update operation.
      */
     fun updateConfigViaSubAll(): SubscriptionUpdateResult {
-        if (subscriptionId.isEmpty()) {
-            return AngConfigManager.updateConfigViaSubAll()
+        val result = if (subscriptionId.isEmpty()) {
+            AngConfigManager.updateConfigViaSubAll()
         } else {
             val subItem = mainServerRepository.getSubscription(subscriptionId) ?: return SubscriptionUpdateResult()
-            return AngConfigManager.updateConfigViaSub(SubscriptionCache(subscriptionId, subItem))
+            AngConfigManager.updateConfigViaSub(SubscriptionCache(subscriptionId, subItem))
         }
+        if (result.configCount > 0) {
+            refreshGroupTabs()
+        }
+        return result
     }
 
     /**
@@ -442,6 +462,7 @@ class MainViewModel(
      */
     fun loadSubscriptions(context: Context, immediate: Boolean = false) {
         subscriptionsJobScheduled?.cancel()
+        subscriptionsLoadJob?.cancel()
         subscriptionsJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
             if (!immediate) {
                 delay(32L)
@@ -450,23 +471,29 @@ class MainViewModel(
             val requestVersion = groupListVersion.incrementAndGet()
             val currentSubscriptionId = subscriptionId
 
-            viewModelScope.launch(Dispatchers.Default) {
-                val subscriptions = mainServerRepository.getSubscriptions()
-                val resolvedSubscriptionId = currentSubscriptionId.takeIf { current ->
-                    current.isEmpty() || subscriptions.any { it.guid == current }
-                }.orEmpty()
-                val groups = buildSubscriptions(appContext, subscriptions)
+            subscriptionsLoadJob = viewModelScope.launch(Dispatchers.Default) {
+                try {
+                    val subscriptions = mainServerRepository.getSubscriptions()
+                    val resolvedSubscriptionId = currentSubscriptionId.takeIf { current ->
+                        current.isEmpty() || subscriptions.any { it.guid == current }
+                    }.orEmpty()
+                    val groups = buildSubscriptions(appContext, subscriptions)
 
-                withContext(Dispatchers.Main) {
-                    if (requestVersion != groupListVersion.get()) {
-                        return@withContext
+                    withContext(Dispatchers.Main) {
+                        if (requestVersion != groupListVersion.get()) {
+                            return@withContext
+                        }
+                        if (subscriptionId != resolvedSubscriptionId) {
+                            subscriptionId = resolvedSubscriptionId
+                            mainServerRepository.setCachedSubscriptionId(subscriptionId)
+                            reloadServerList()
+                        }
+                        updateGroupsAction.value = groups
                     }
-                    if (subscriptionId != resolvedSubscriptionId) {
-                        subscriptionId = resolvedSubscriptionId
-                        mainServerRepository.setCachedSubscriptionId(subscriptionId)
-                        reloadServerList()
+                } finally {
+                    if (subscriptionsLoadJob === this) {
+                        subscriptionsLoadJob = null
                     }
-                    updateGroupsAction.value = groups
                 }
             }
         }
@@ -475,13 +502,13 @@ class MainViewModel(
     private fun buildSubscriptions(context: Context, subscriptions: List<SubscriptionCache>): List<GroupMapItem> {
         val subscriptionIds = subscriptions.map { it.guid }
         val serverCountsBySubscriptionId = synchronized(groupCountLock) {
-            if (cachedGroupCountsVersion == serverListVersion.get() && cachedGroupIds == subscriptionIds) {
+            if (!isGroupCountCacheDirty && cachedGroupIds == subscriptionIds) {
                 cachedGroupCounts
             } else {
                 val counts = mainServerRepository.getServerCounts(subscriptionIds)
-                cachedGroupCountsVersion = serverListVersion.get()
                 cachedGroupIds = subscriptionIds
                 cachedGroupCounts = counts
+                isGroupCountCacheDirty = false
                 counts
             }
         }
@@ -511,12 +538,20 @@ class MainViewModel(
     }
 
     fun prewarmSelectedConfig(guid: String? = mainServerRepository.getSelectedServerId()) {
-        if (guid.isNullOrBlank()) {
+        val targetGuid = guid?.takeIf { it.isNotBlank() } ?: mainServerRepository.getSelectedServerId()
+        if (targetGuid.isNullOrBlank()) {
             return
         }
+        val knownProfile = selectedServerSnapshot
+            ?.takeIf { it.guid == targetGuid }
+            ?.profile
         prewarmJob?.cancel()
         prewarmJob = viewModelScope.launch(Dispatchers.Default) {
-            V2rayConfigManager.prewarmConfig(getApplication<AngApplication>(), guid)
+            V2rayConfigManager.prewarmConfig(
+                context = getApplication<AngApplication>(),
+                guid = targetGuid,
+                knownProfile = knownProfile
+            )
         }
     }
 
@@ -527,9 +562,14 @@ class MainViewModel(
 
     fun getSelectedServerSnapshot(): ServersCache? = selectedServerSnapshot
 
+    fun refreshGroupTabs(immediate: Boolean = true) {
+        invalidateGroupCountCache()
+        loadSubscriptions(getApplication<AngApplication>(), immediate = immediate)
+    }
+
     fun countServers(subId: String): Int {
         val cached = synchronized(groupCountLock) {
-            if (cachedGroupCountsVersion == serverListVersion.get()) cachedGroupCounts else null
+            if (!isGroupCountCacheDirty) cachedGroupCounts else null
         }
         if (subId.isEmpty()) {
             if (!cached.isNullOrEmpty()) {
@@ -566,6 +606,9 @@ class MainViewModel(
         }
 
         duplicateGuids.forEach(mainServerRepository::removeServer)
+        if (duplicateGuids.isNotEmpty()) {
+            refreshGroupTabs()
+        }
         return duplicateGuids.size
     }
 
@@ -583,6 +626,9 @@ class MainViewModel(
                 visibleServerGuids.forEach(mainServerRepository::removeServer)
                 visibleServerGuids.size
             }
+        if (count > 0) {
+            refreshGroupTabs()
+        }
         return count
     }
 
@@ -599,6 +645,9 @@ class MainViewModel(
             currentVisibleServerGuids().forEach { guid ->
                 count += mainServerRepository.removeInvalidServer(guid)
             }
+        }
+        if (count > 0) {
+            refreshGroupTabs()
         }
         return count
     }
@@ -800,6 +849,14 @@ class MainViewModel(
         serverListVersion.incrementAndGet()
     }
 
+    private fun invalidateGroupCountCache() {
+        synchronized(groupCountLock) {
+            cachedGroupIds = emptyList()
+            cachedGroupCounts = emptyMap()
+            isGroupCountCacheDirty = true
+        }
+    }
+
     private fun buildServerListSnapshot(targetSubscriptionId: String, keyword: String): MainServerListSnapshot {
         return snapshotBuilder.build(targetSubscriptionId, keyword)
     }
@@ -810,14 +867,8 @@ class MainViewModel(
         serversCache.addAll(snapshot.servers)
         serverPositions.clear()
         serverPositions.putAll(snapshot.positions)
-        refreshSelectedServerSnapshot()
-    }
-
-    private fun refreshSelectedServerSnapshot() {
-        val selectedGuid = mainServerRepository.getSelectedServerId().orEmpty()
-        val newSnapshot = selectedServerForGuid(selectedGuid)
-        val changed = newSnapshot != selectedServerSnapshot
-        selectedServerSnapshot = newSnapshot
+        val changed = snapshot.selectedServer != selectedServerSnapshot
+        selectedServerSnapshot = snapshot.selectedServer
         if (changed) {
             updateConnectionCardAction.postValue(++connectionCardRefreshVersion)
         }

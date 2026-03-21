@@ -927,12 +927,16 @@ class MainActivity : HelperBaseActivity() {
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_home_on_surface))
                 setHintTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_home_on_surface_muted))
                 textSize = 14f
+                setPadding(0, 0, 0, 0)
             }
             searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_plate)?.apply {
                 background = null
                 backgroundTintList = null
             }
-            searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_edit_frame)?.setBackgroundColor(Color.TRANSPARENT)
+            searchView.findViewById<android.view.View>(androidx.appcompat.R.id.search_edit_frame)?.apply {
+                setBackgroundColor(Color.TRANSPARENT)
+                setPadding(0, 0, 0, 0)
+            }
             searchView.findViewById<android.view.View>(androidx.appcompat.R.id.submit_area)?.setBackgroundColor(Color.TRANSPARENT)
             searchView.findViewById<ImageView?>(androidx.appcompat.R.id.search_button)?.let { iconButton ->
                 styleToolbarSearchIconButton(iconButton)
@@ -954,8 +958,8 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun styleToolbarSearchIconButton(iconButton: ImageView) {
-        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
-        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp9)
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp10)
         iconButton.layoutParams = iconButton.layoutParams.apply {
             width = buttonSize
             height = buttonSize
@@ -980,13 +984,13 @@ class MainActivity : HelperBaseActivity() {
     }
 
     fun updateToolbarSearchActionLayout(searchView: SearchView, expanded: Boolean) {
-        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
         val layoutParams = searchView.layoutParams ?: Toolbar.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
             buttonSize
         )
         searchView.layoutParams = layoutParams.apply {
-            width = if (expanded) ViewGroup.LayoutParams.WRAP_CONTENT else 0
+            width = if (expanded) ViewGroup.LayoutParams.MATCH_PARENT else 0
             height = buttonSize
         }
         searchView.minimumWidth = 0

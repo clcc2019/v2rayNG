@@ -237,7 +237,6 @@ class MainRecyclerAdapter(
     private fun bindFullItem(holder: MainViewHolder, position: Int) {
         val item = getItem(position)
         holder.boundItem = item
-        holder.itemView.setBackgroundColor(Color.TRANSPARENT)
         bindPrimaryContent(holder, item)
         bindSubscription(holder, item)
         bindSelectionState(holder, item.guid == selectedGuid)
@@ -331,16 +330,11 @@ class MainRecyclerAdapter(
         holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.95f
         holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.94f else 0.86f
         holder.itemMainBinding.tvType.alpha = if (isSelected) 0.9f else 0.74f
-        holder.itemMainBinding.tvActiveStatus.isVisible = isSelected
-        holder.itemMainBinding.tvActiveStatus.alpha = if (isSelected) 1f else 0f
         holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.94f
         holder.itemMainBinding.tvTestResult.alpha = 1f
         holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 0.98f else 0.9f
         holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.72f else 0.54f
-        updateIndicatorStyle(holder, isSelected)
-        holder.itemMainBinding.layoutIndicator.setBackgroundResource(
-            if (isSelected) R.drawable.bg_home_selected_indicator else R.drawable.bg_item_indicator_idle
-        )
+        holder.itemMainBinding.viewSelectedLeftEdge.alpha = if (isSelected) 1f else 0f
         resetCardState(
             holder.itemMainBinding.itemBg,
             resolveCardBackgroundColor(holder.colors, isSelected),
@@ -349,13 +343,13 @@ class MainRecyclerAdapter(
         )
         if (previousSelection != null) {
             if (isSelected) {
-                holder.itemMainBinding.tvActiveStatus.alpha = 0.76f
-                holder.itemMainBinding.tvActiveStatus.animate()
+                holder.itemMainBinding.viewSelectedLeftEdge.alpha = 0.74f
+                holder.itemMainBinding.viewSelectedLeftEdge.animate()
                     .alpha(1f)
                     .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                     .setInterpolator(selectionInterpolator)
                     .start()
-                UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.layoutIndicator)
+                UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.viewSelectedLeftEdge)
                 UiMotion.animateStatePulse(
                     holder.itemMainBinding.itemBg,
                     expandScale = 1.012f,
@@ -363,37 +357,13 @@ class MainRecyclerAdapter(
                     duration = MotionTokens.EMPHASIS_DURATION
                 )
             } else {
-                holder.itemMainBinding.tvActiveStatus.animate().cancel()
-                UiMotion.animatePulse(holder.itemMainBinding.layoutIndicator, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
+                holder.itemMainBinding.viewSelectedLeftEdge.animate()
+                    .alpha(0f)
+                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
+                    .setInterpolator(selectionInterpolator)
+                    .start()
             }
         }
-    }
-
-    private fun updateIndicatorStyle(holder: MainViewHolder, isSelected: Boolean) {
-        val layoutParams = holder.itemMainBinding.layoutIndicator.layoutParams as ViewGroup.MarginLayoutParams
-        val targetWidth = if (isSelected) holder.indicatorSelectedWidthPx else holder.indicatorIdleWidthPx
-        val targetHeight = if (isSelected) holder.indicatorSelectedHeightPx else holder.indicatorIdleHeightPx
-        var changed = false
-        if (layoutParams.width != targetWidth) {
-            layoutParams.width = targetWidth
-            changed = true
-        }
-        if (layoutParams.height != targetHeight) {
-            layoutParams.height = targetHeight
-            changed = true
-        }
-        if (layoutParams.marginEnd != holder.indicatorMarginEndPx) {
-            layoutParams.marginEnd = holder.indicatorMarginEndPx
-            changed = true
-        }
-        if (layoutParams.topMargin != 0) {
-            layoutParams.topMargin = 0
-            changed = true
-        }
-        if (changed) {
-            holder.itemMainBinding.layoutIndicator.layoutParams = layoutParams
-        }
-        holder.itemMainBinding.layoutIndicator.alpha = if (isSelected) 1f else 0.78f
     }
 
     private fun bindTestResult(holder: MainViewHolder, item: ServersCache) {
@@ -475,11 +445,6 @@ class MainRecyclerAdapter(
         val colors = ItemColors.from(itemMainBinding.root)
         val latencyBadgeColors = LatencyBadgeColors.from(itemMainBinding.root)
         val cardStrokeWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp1)
-        val indicatorIdleWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
-        val indicatorIdleHeightPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp18)
-        val indicatorSelectedWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
-        val indicatorSelectedHeightPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.view_height_dp36)
-        val indicatorMarginEndPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp14)
         var lastSelectionState: Boolean? = null
         var boundGuid: String? = null
         var lastTestDelay: Long? = null
@@ -560,8 +525,7 @@ class MainRecyclerAdapter(
     override fun onViewRecycled(holder: BaseViewHolder) {
         if (holder is MainViewHolder) {
             holder.itemMainBinding.itemBg.animate().cancel()
-            holder.itemMainBinding.tvActiveStatus.animate().cancel()
-            holder.itemMainBinding.layoutIndicator.animate().cancel()
+            holder.itemMainBinding.viewSelectedLeftEdge.animate().cancel()
             ensureRestingCardState(holder)
             holder.itemMainBinding.tvStatistics.translationY = 0f
         }

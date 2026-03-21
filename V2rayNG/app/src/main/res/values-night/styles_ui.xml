@@ -22,7 +22,7 @@
     </style>
 
     <style name="Widget.V2Ray.Card.HomeDock" parent="Widget.V2Ray.Card.Primary">
-        <item name="cardCornerRadius">26dp</item>
+        <item name="cardCornerRadius">18dp</item>
         <item name="cardBackgroundColor">@color/color_home_card_bg_dock</item>
         <item name="strokeColor">@color/color_home_card_stroke</item>
         <item name="strokeWidth">1dp</item>

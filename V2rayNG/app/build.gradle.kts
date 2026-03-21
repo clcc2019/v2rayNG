@@ -174,9 +174,11 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
 
     // Testing Libraries
+    testImplementation(libs.androidx.arch.core.testing)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.org.mockito.mockito.inline)
     testImplementation(libs.mockito.kotlin)
 }

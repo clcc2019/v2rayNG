@@ -9,7 +9,8 @@ import com.xray.ang.handler.AngConfigManager
 data class MainServerListSnapshot(
     val serverGuids: MutableList<String>,
     val servers: List<ServersCache>,
-    val positions: Map<String, Int>
+    val positions: Map<String, Int>,
+    val selectedServer: ServersCache? = null
 )
 
 class ServerListSnapshotBuilder(
@@ -36,6 +37,7 @@ class ServerListSnapshotBuilder(
         }
         val profilesByGuid = repository.getServers(targetServerList)
         val delaysByGuid = repository.getServerDelayMillisMap(targetServerList)
+        val selectedServerId = repository.getSelectedServerId().orEmpty()
 
         val servers = ArrayList<ServersCache>(targetServerList.size)
         val positions = HashMap<String, Int>(targetServerList.size)
@@ -61,10 +63,17 @@ class ServerListSnapshotBuilder(
             servers += ServersCache(guid, profile, displayAddress, testDelayMillis, remarks)
         }
 
+        val selectedServer = if (selectedServerId.isBlank()) {
+            null
+        } else {
+            resolveSelectedServerSnapshot(selectedServerId, servers)
+        }
+
         return MainServerListSnapshot(
             serverGuids = targetServerList,
             servers = servers,
-            positions = positions
+            positions = positions,
+            selectedServer = selectedServer
         )
     }
 

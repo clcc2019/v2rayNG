@@ -56,9 +56,9 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     )
 
     private data class EmptyActionSpec(
-        @DrawableRes val iconRes: Int,
-        @StringRes val titleRes: Int,
-        @StringRes val subtitleRes: Int,
+        @param:DrawableRes val iconRes: Int,
+        @param:StringRes val titleRes: Int,
+        @param:StringRes val subtitleRes: Int,
         val onClick: () -> Unit
     )
 
@@ -161,10 +161,14 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
 
     override fun onResume() {
         super.onResume()
+        val forceRefresh = shouldRefreshOnResume
         if (mainViewModel.keywordFilter.isBlank()) {
             fetchStoredItemCount()
         }
-        mainViewModel.ensureSubscriptionLoaded(subId, forceReload = shouldRefreshOnResume)
+        if (forceRefresh) {
+            mainViewModel.refreshGroupTabs()
+        }
+        mainViewModel.ensureSubscriptionLoaded(subId, forceReload = forceRefresh)
         shouldRefreshOnResume = false
         if (mainViewModel.subscriptionId == subId) {
             lastKnownItemCount = mainViewModel.serversCache.size
@@ -530,6 +534,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         when {
             result.configCount > 0 -> {
                 ownerActivity.toast(getString(R.string.title_import_config_count, result.configCount))
+                mainViewModel.refreshGroupTabs()
                 mainViewModel.reloadServerList()
             }
 

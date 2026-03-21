@@ -16,8 +16,8 @@ class AppChromeStateReducerTest {
         assertEquals(AppChromeMode.STABLE, state.mode)
         assertEquals(AppChromeScrollPhase.IDLE, state.scrollPhase)
         assertTrue(state.showBottomBar)
-        assertEquals(0.98f, state.topBarBackgroundAlpha)
-        assertEquals(0.98f, state.bottomBarBackgroundAlpha)
+        assertEquals(0.96f, state.topBarBackgroundAlpha)
+        assertEquals(1f, state.bottomBarBackgroundAlpha)
     }
 
     @Test
@@ -29,12 +29,12 @@ class AppChromeStateReducerTest {
 
         assertEquals(AppChromeMode.SCROLLING_IMMERSIVE, scrollingState.mode)
         assertEquals(AppChromeTransparencyTier.FLOATING, scrollingState.transparencyTier)
-        assertEquals(0.02f, scrollingState.topBarBackgroundAlpha)
-        assertEquals(0.42f, scrollingState.bottomBarBackgroundAlpha)
+        assertEquals(0.12f, scrollingState.topBarBackgroundAlpha)
+        assertEquals(1f, scrollingState.bottomBarBackgroundAlpha)
 
         assertEquals(AppChromeMode.STABLE, idleState.mode)
-        assertEquals(0.98f, idleState.topBarBackgroundAlpha)
-        assertEquals(0.98f, idleState.bottomBarBackgroundAlpha)
+        assertEquals(0.96f, idleState.topBarBackgroundAlpha)
+        assertEquals(1f, idleState.bottomBarBackgroundAlpha)
     }
 
     @Test
