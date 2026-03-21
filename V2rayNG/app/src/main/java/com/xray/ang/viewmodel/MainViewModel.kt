@@ -29,6 +29,7 @@ import com.xray.ang.dto.ProfileItem
 import com.xray.ang.dto.ServersCache
 import com.xray.ang.dto.SubscriptionCache
 import com.xray.ang.dto.SubscriptionUpdateResult
+import com.xray.ang.handler.MmkvManager
 import com.xray.ang.handler.AngConfigManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.handler.V2rayConfigManager
@@ -535,6 +536,19 @@ class MainViewModel(
             )
         }
         return groups
+    }
+
+    fun renameSubscriptionGroup(groupId: String, remarks: String): Boolean {
+        val trimmed = remarks.trim()
+        if (groupId.isBlank() || trimmed.isBlank()) return false
+        val subscription = mainServerRepository.getSubscription(groupId) ?: return false
+        if (subscription.remarks == trimmed) return true
+        subscription.remarks = trimmed
+        MmkvManager.encodeSubscriptionDirect(groupId, subscription)
+        snapshotBuilder.clearSubscriptionRemarksCache()
+        refreshGroupTabs(immediate = true)
+        reloadServerList(immediate = true)
+        return true
     }
 
     fun prewarmSelectedConfig(guid: String? = mainServerRepository.getSelectedServerId()) {

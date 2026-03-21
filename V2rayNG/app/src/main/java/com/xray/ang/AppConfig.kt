@@ -35,6 +35,8 @@ object AppConfig {
     const val PREF_VPN_MTU = "pref_vpn_mtu"
     const val PREF_ROUTING_DOMAIN_STRATEGY = "pref_routing_domain_strategy"
     const val PREF_ROUTING_RULESET = "pref_routing_ruleset"
+    const val PREF_ROUTING_ACTIVE_PRESET = "pref_routing_active_preset"
+    const val PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS = "pref_lite_routing_learned_proxy_domains"
     const val PREF_MUX_ENABLED = "pref_mux_enabled"
     const val PREF_MUX_CONCURRENCY = "pref_mux_concurrency"
     const val PREF_MUX_XUDP_CONCURRENCY = "pref_mux_xudp_concurrency"

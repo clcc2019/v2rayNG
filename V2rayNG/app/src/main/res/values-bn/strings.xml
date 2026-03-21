@@ -325,6 +325,7 @@
         <item>গ্লোবাল</item>
         <item>ইরান হোয়াইটলিস্ট</item>
         <item>রাশিয়া হোয়াইটলিস্ট</item>
+        <item>Lite Direct-First</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

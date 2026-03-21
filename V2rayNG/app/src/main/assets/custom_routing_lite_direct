@@ -1,0 +1,143 @@
+[
+  {
+    "remarks": "Block udp443",
+    "outboundTag": "block",
+    "port": "443",
+    "network": "udp"
+  },
+  {
+    "remarks": "Direct bittorrent",
+    "outboundTag": "direct",
+    "protocol": [
+      "bittorrent"
+    ]
+  },
+  {
+    "remarks": "Direct private and local IPs",
+    "outboundTag": "direct",
+    "ip": [
+      "127.0.0.0/8",
+      "10.0.0.0/8",
+      "100.64.0.0/10",
+      "169.254.0.0/16",
+      "172.16.0.0/12",
+      "192.168.0.0/16",
+      "224.0.0.0/4",
+      "240.0.0.0/4",
+      "::1/128",
+      "fc00::/7",
+      "fe80::/10",
+      "ff00::/8"
+    ]
+  },
+  {
+    "remarks": "Direct local domains",
+    "outboundTag": "direct",
+    "domain": [
+      "full:localhost",
+      "local",
+      "lan",
+      "home.arpa"
+    ]
+  },
+  {
+    "remarks": "Proxy AI services",
+    "outboundTag": "proxy",
+    "domain": [
+      "openai.com",
+      "chatgpt.com",
+      "oaistatic.com",
+      "oaiusercontent.com",
+      "x.ai",
+      "grok.com",
+      "anthropic.com",
+      "claude.ai",
+      "claudeusercontent.com",
+      "perplexity.ai",
+      "openrouter.ai",
+      "meta.ai",
+      "gemini.google.com",
+      "aistudio.google.com",
+      "makersuite.google.com",
+      "generativelanguage.googleapis.com"
+    ]
+  },
+  {
+    "remarks": "Proxy Google services",
+    "outboundTag": "proxy",
+    "domain": [
+      "google.com",
+      "googleapis.com",
+      "gstatic.com",
+      "gvt1.com",
+      "gvt2.com",
+      "ggpht.com",
+      "youtube.com",
+      "youtu.be",
+      "ytimg.com",
+      "googlevideo.com",
+      "gmail.com"
+    ]
+  },
+  {
+    "remarks": "Proxy common blocked sites",
+    "outboundTag": "proxy",
+    "domain": [
+      "telegram.org",
+      "t.me",
+      "telegra.ph",
+      "github.com",
+      "githubusercontent.com",
+      "githubassets.com",
+      "discord.com",
+      "discord.gg",
+      "discordapp.com",
+      "x.com",
+      "twitter.com",
+      "twimg.com",
+      "facebook.com",
+      "fbcdn.net",
+      "instagram.com",
+      "cdninstagram.com",
+      "whatsapp.com",
+      "whatsapp.net",
+      "wikipedia.org"
+    ]
+  },
+  {
+    "remarks": "Direct common mainland domains",
+    "outboundTag": "direct",
+    "domain": [
+      "cn",
+      "qq.com",
+      "tencent.com",
+      "baidu.com",
+      "bilibili.com",
+      "taobao.com",
+      "tmall.com",
+      "jd.com",
+      "163.com",
+      "126.com",
+      "sina.com",
+      "weibo.com",
+      "zhihu.com",
+      "douyin.com",
+      "bytedance.com",
+      "toutiao.com",
+      "xiaohongshu.com",
+      "pinduoduo.com",
+      "meituan.com",
+      "ele.me",
+      "iqiyi.com",
+      "youku.com",
+      "aliyun.com",
+      "alibabacloud.com",
+      "mi.com"
+    ]
+  },
+  {
+    "remarks": "Final direct",
+    "port": "0-65535",
+    "outboundTag": "direct"
+  }
+]

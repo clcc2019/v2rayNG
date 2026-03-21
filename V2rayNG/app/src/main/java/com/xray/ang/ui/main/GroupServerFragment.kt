@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -111,6 +112,9 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     private var storedCountRequestVersion = 0
     private var lastEmptyStateMode: EmptyStateMode? = null
     private val switchInterpolator = FastOutSlowInInterpolator()
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
+    private val touchSlop by lazy { ViewConfiguration.get(requireContext()).scaledTouchSlop }
 
     companion object {
         private const val ARG_SUB_ID = "subscriptionId"
@@ -180,7 +184,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             resetContext = true
         )
         ownerActivity.onServerListScrollStateChanged(binding.recyclerView.scrollState, binding.recyclerView.canScrollVertically(-1))
-        ownerActivity.onServerListScrolled(binding.recyclerView.canScrollVertically(-1))
+        ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
     }
 
     private fun setupRecyclerView() {
@@ -192,8 +196,18 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.setOnTouchListener { view, event ->
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN,
-                MotionEvent.ACTION_MOVE -> view.parent?.requestDisallowInterceptTouchEvent(true)
+                MotionEvent.ACTION_DOWN -> {
+                    initialTouchX = event.x
+                    initialTouchY = event.y
+                    view.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = kotlin.math.abs(event.x - initialTouchX)
+                    val dy = kotlin.math.abs(event.y - initialTouchY)
+                    if (dx > touchSlop || dy > touchSlop) {
+                        view.parent?.requestDisallowInterceptTouchEvent(dy > dx)
+                    }
+                }
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_CANCEL -> view.parent?.requestDisallowInterceptTouchEvent(false)
             }
@@ -212,7 +226,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
                 if (mainViewModel.subscriptionId != subId) {
                     return
                 }
-                ownerActivity.onServerListScrolled(recyclerView.canScrollVertically(-1))
+                ownerActivity.onServerListScrolled(unusedDy, recyclerView.canScrollVertically(-1))
             }
         })
         ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false, allowLongPressDrag = false))
@@ -224,7 +238,13 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     }
 
     private fun updateEmptyState() {
-        val itemCount = resolveItemCountForEmptyState() ?: return
+        val itemCount = resolveItemCountForEmptyState()
+        if (itemCount == null) {
+            updateRecyclerVisibility(shouldShowEmptyState = false)
+            updateEmptyStateVisibility(shouldShowEmptyState = false, shouldAnimateEmptyState = false)
+            updateOwnerListContext(shouldShowEmptyState = false)
+            return
+        }
         val shouldShowEmptyState = itemCount == 0
         val shouldAnimateEmptyState =
             lastEmptyStateVisible != null && lastEmptyStateVisible != shouldShowEmptyState && isResumed
@@ -247,6 +267,14 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             mainViewModel.serversCache.size
         } else {
             null
+        }
+        if (mainViewModel.subscriptionId == subId &&
+            currentCount == 0 &&
+            lastKnownItemCount == null &&
+            mainViewModel.keywordFilter.isBlank()
+        ) {
+            fetchStoredItemCount()
+            return null
         }
         val itemCount = currentCount ?: lastKnownItemCount
         if (itemCount == null && mainViewModel.keywordFilter.isBlank()) {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tab_root"
     android:layout_width="wrap_content"
@@ -14,7 +15,7 @@
         android:background="@drawable/bg_group_tab_item_tab"
         android:baselineAligned="false"
         android:gravity="center"
-        android:minHeight="@dimen/view_height_dp30"
+        android:minHeight="@dimen/view_height_dp32"
         android:minWidth="36dp"
         android:orientation="vertical"
         android:paddingTop="1dp"
@@ -36,16 +37,40 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/tv_tab_label"
+                <FrameLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance.V2Ray.TabLarge"
-                    tools:text="Default" />
+                    android:minWidth="28dp">
+
+                    <TextView
+                        android:id="@+id/tv_tab_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.V2Ray.TabLarge"
+                        tools:text="Default" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_tab_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:gravity="center"
+                        android:imeOptions="actionDone"
+                        android:includeFontPadding="false"
+                        android:inputType="textCapSentences"
+                        android:maxLines="1"
+                        android:minWidth="28dp"
+                        android:padding="0dp"
+                        android:textAppearance="@style/TextAppearance.V2Ray.TabLarge"
+                        android:textColor="@color/color_home_on_surface"
+                        android:visibility="gone"
+                        tools:text="Default" />
+
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tv_tab_count"

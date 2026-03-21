@@ -3,7 +3,7 @@
 
     <item
         android:gravity="start"
-        android:width="2dp">
+        android:width="1dp">
         <shape android:shape="rectangle">
             <solid android:color="@color/color_home_primary" />
         </shape>
@@ -11,12 +11,12 @@
 
     <item
         android:gravity="start"
-        android:width="12dp">
+        android:width="8dp">
         <shape android:shape="rectangle">
             <gradient
                 android:angle="0"
-                android:startColor="#4D0580D3"
-                android:centerColor="#140580D3"
+                android:startColor="@color/color_home_selection_glow_start"
+                android:centerColor="@color/color_home_selection_glow_center"
                 android:endColor="@android:color/transparent" />
         </shape>
     </item>

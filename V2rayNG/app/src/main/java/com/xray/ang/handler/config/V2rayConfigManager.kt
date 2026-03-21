@@ -236,8 +236,8 @@ object V2rayConfigManager {
         if (!validateWireguardReserved(config, result)) return result
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
-        val routingRulesets = SettingsManager.getRoutingRulesetsSnapshot(context)
-        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getRoutingRulesetsSignature(context))
+        val routingRulesets = SettingsManager.getEffectiveRoutingRulesetsSnapshot(context)
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getEffectiveRoutingRulesetsSignature(context))
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
@@ -296,8 +296,8 @@ object V2rayConfigManager {
         }
 
         val v2rayConfig = initV2rayConfig(context) ?: return null
-        val routingRulesets = SettingsManager.getRoutingRulesetsSnapshot(context)
-        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getRoutingRulesetsSignature(context))
+        val routingRulesets = SettingsManager.getEffectiveRoutingRulesetsSnapshot(context)
+        val routingDomains = buildRoutingDomainBuckets(routingRulesets, SettingsManager.getEffectiveRoutingRulesetsSignature(context))
         v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 

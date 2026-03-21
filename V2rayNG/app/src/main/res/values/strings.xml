@@ -316,7 +316,7 @@
 <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">Domain strategy</string>
     <string name="routing_settings_title">Routing</string>
-    <string name="routing_settings_tips">Separated by commas(,), choose domain or ip</string>
+    <string name="routing_settings_tips">One item per line or separated by commas.</string>
 <string name="routing_settings_rule_title">Routing Rule Settings</string>
 <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
     <string name="routing_priority_summary">Higher → lower priority, stop at first match</string>
@@ -331,13 +331,22 @@
     <string name="routing_settings_import_rulesets_from_clipboard">Import ruleset from clipboard</string>
     <string name="routing_settings_import_rulesets_from_qrcode">Import ruleset from QRcode</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
+    <string name="routing_settings_lite_learned_domains">Lite learned proxy domains</string>
+    <string name="routing_settings_lite_learned_domains_empty">No learned proxy domains yet. Turn on Lite Direct-First and promote domains from future observations.</string>
+    <string name="routing_settings_lite_learned_domains_inactive">Lite Direct-First is not the active preset. Learned domains are stored but currently inactive.</string>
+    <string name="routing_settings_lite_learned_domains_export">Export Lite learned domains</string>
+    <string name="routing_settings_lite_learned_domains_manage">Manage Lite learned domains</string>
+    <string name="routing_settings_lite_learned_domains_remove">Remove this learned domain</string>
+    <string name="routing_settings_lite_learned_domains_removed">Lite learned domain removed</string>
+    <string name="routing_settings_lite_learned_domains_clear">Clear Lite learned domains</string>
+    <string name="routing_settings_lite_learned_domains_cleared">Lite learned domains cleared</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
     <string name="routing_group_rule_details">Rule details</string>
 <string name="routing_rule_remarks_hint">Use a short name so this rule is easy to find in the priority list.</string>
     <string name="routing_settings_outbound_tag_hint">Choose where matching traffic is sent, for example proxy, direct, or block.</string>
     <string name="routing_lock_rule_hint">Locked rules stay in place when predefined rulesets are imported again.</string>
-    <string name="routing_settings_domain_hint">Match domains or suffixes. Separate multiple entries with commas.</string>
-    <string name="routing_settings_ip_hint">Match IP or CIDR ranges. Separate multiple entries with commas.</string>
+    <string name="routing_settings_domain_hint">Match one domain per line. Commas and line breaks are both supported when saving.</string>
+    <string name="routing_settings_ip_hint">Match one IP or CIDR per line. Commas and line breaks are both supported when saving.</string>
     <string name="routing_settings_port_hint">Optional. Match a single port or a port range such as 80-443.</string>
     <string name="routing_settings_protocol_help">Optional. Match application layer protocols such as http, tls, or bittorrent.</string>
     <string name="routing_settings_network_help">Optional. Match transport types such as tcp or udp.</string>
@@ -501,6 +510,7 @@
         <item>Global</item>
         <item>Iran Whitelist</item>
         <item>Russia Whitelist</item>
+        <item>Lite Direct-First</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

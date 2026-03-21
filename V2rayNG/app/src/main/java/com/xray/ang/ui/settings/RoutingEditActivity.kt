@@ -4,15 +4,13 @@ import android.os.Bundle
 import android.view.View
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityRoutingEditBinding
 import com.xray.ang.dto.RulesetItem
-import com.xray.ang.extension.nullIfBlank
-import com.xray.ang.extension.toast
-import com.xray.ang.extension.toastSuccess
 import com.xray.ang.handler.SettingsManager
-import com.xray.ang.ui.common.showConfirmDialog
 import com.xray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,10 +47,10 @@ class RoutingEditActivity : BaseActivity() {
     private fun bindingServer(rulesetItem: RulesetItem): Boolean {
         binding.etRemarks.text = Utils.getEditable(rulesetItem.remarks)
         binding.chkLocked.isChecked = rulesetItem.locked == true
-        binding.etDomain.text = Utils.getEditable(rulesetItem.domain?.joinToString(","))
-        binding.etIp.text = Utils.getEditable(rulesetItem.ip?.joinToString(","))
+        binding.etDomain.text = Utils.getEditable(formatDomainInput(rulesetItem.domain))
+        binding.etIp.text = Utils.getEditable(formatMultiValueInput(rulesetItem.ip))
         binding.etPort.text = Utils.getEditable(rulesetItem.port)
-        binding.etProtocol.text = Utils.getEditable(rulesetItem.protocol?.joinToString(","))
+        binding.etProtocol.text = Utils.getEditable(formatMultiValueInput(rulesetItem.protocol))
         binding.etNetwork.text = Utils.getEditable(rulesetItem.network)
         val outbound = Utils.arrayFind(outbound_tag, rulesetItem.outboundTag)
         binding.spOutboundTag.setSelection(outbound)
@@ -94,36 +92,67 @@ class RoutingEditActivity : BaseActivity() {
         rulesetItem.apply {
             this.remarks = remarks
             locked = binding.chkLocked.isChecked
-            domain = parseCsv(binding.etDomain.text.toString())
-            ip = parseCsv(binding.etIp.text.toString())
-            protocol = parseCsv(binding.etProtocol.text.toString())
-            port = binding.etPort.text.toString().nullIfBlank()
-            network = binding.etNetwork.text.toString().nullIfBlank()
+            domain = parseDomainInput(binding.etDomain.text.toString())
+            ip = parseMultiValueInput(binding.etIp.text.toString())
+            protocol = parseMultiValueInput(binding.etProtocol.text.toString())
+            port = binding.etPort.text.toString().takeIf { it.isNotBlank() }
+            network = binding.etNetwork.text.toString().takeIf { it.isNotBlank() }
             outboundTag = outbound_tag[binding.spOutboundTag.selectedItemPosition]
         }
 
         if (rulesetItem.remarks.isNullOrEmpty()) {
-            toast(R.string.sub_setting_remarks)
+            showToast(R.string.sub_setting_remarks)
             return false
         }
 
         SettingsManager.saveRoutingRuleset(position, rulesetItem)
-        toastSuccess(R.string.toast_success)
+        showToast(R.string.toast_success)
         finish()
         return true
     }
 
-    private fun parseCsv(value: String): List<String>? {
-        return value.nullIfBlank()
+    private fun formatDomainInput(values: List<String>?): String {
+        return formatMultiValueInput(values?.map(::stripDisplayOnlyDomainPrefix))
+    }
+
+    private fun formatMultiValueInput(values: List<String>?): String {
+        return values
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.joinToString(separator = "\n")
+            .orEmpty()
+    }
+
+    private fun parseDomainInput(value: String): List<String>? {
+        return parseMultiValueInput(value)
+            ?.map(::stripDomainPrefixForStorage)
+    }
+
+    private fun parseMultiValueInput(value: String): List<String>? {
+        val normalized = value
+            .replace('，', ',')
+            .replace(';', ',')
+            .replace('\n', ',')
+            .replace('\r', ',')
+        return normalized.takeIf { it.isNotBlank() }
             ?.split(",")
             ?.map { it.trim() }
             ?.filter { it.isNotEmpty() }
     }
 
+    private fun stripDisplayOnlyDomainPrefix(value: String): String {
+        return if (value.startsWith("domain:")) value.removePrefix("domain:") else value
+    }
+
+    private fun stripDomainPrefixForStorage(value: String): String {
+        val trimmed = value.trim()
+        return if (trimmed.startsWith("domain:")) trimmed.removePrefix("domain:") else trimmed
+    }
+
 
     private fun deleteServer(): Boolean {
         if (position >= 0) {
-            showConfirmDialog {
+            showDeleteConfirmDialog {
                 lifecycleScope.launch(Dispatchers.IO) {
                     SettingsManager.removeRoutingRuleset(position)
                     launch(Dispatchers.Main) {
@@ -158,6 +187,18 @@ class RoutingEditActivity : BaseActivity() {
         }
 
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun showToast(messageResId: Int) {
+        Toast.makeText(this, getString(messageResId), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showDeleteConfirmDialog(onConfirmed: () -> Unit) {
+        AlertDialog.Builder(this)
+            .setMessage(R.string.del_config_comfirm)
+            .setPositiveButton(android.R.string.ok) { _, _ -> onConfirmed() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
 }

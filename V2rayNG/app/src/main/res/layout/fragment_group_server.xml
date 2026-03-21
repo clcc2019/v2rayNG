@@ -15,8 +15,7 @@
         android:paddingStart="0dp"
         android:paddingTop="0dp"
         android:paddingEnd="0dp"
-        android:paddingBottom="0dp"
-        android:scrollbars="vertical" />
+        android:paddingBottom="0dp" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/layout_empty_state"

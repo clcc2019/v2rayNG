@@ -1,6 +1,7 @@
 package com.xray.ang.ui
 
 import android.view.LayoutInflater
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +20,6 @@ import com.xray.ang.dto.RulesetItem
 import com.xray.ang.helper.ItemTouchHelperAdapter
 import com.xray.ang.helper.ItemTouchHelperViewHolder
 import com.xray.ang.helper.ListDiffExecutors
-import com.xray.ang.ui.common.hapticLongPress
 import com.xray.ang.viewmodel.RoutingSettingsViewModel
 import java.util.Collections
 
@@ -89,7 +89,7 @@ class RoutingSettingRecyclerAdapter(
 
         holder.itemRoutingSettingBinding.layoutDragHandle.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                holder.itemRoutingSettingBinding.layoutDragHandle.hapticLongPress()
+                holder.itemRoutingSettingBinding.layoutDragHandle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onStartDrag?.invoke(holder)
             }
             false
@@ -228,7 +228,9 @@ class RoutingSettingRecyclerAdapter(
     }
 
     private fun previewValues(values: List<String>): String {
-        val preview = values.take(2).joinToString(", ")
+        val preview = values.take(2).joinToString(", ") { value ->
+            if (value.startsWith("domain:")) value.removePrefix("domain:") else value
+        }
         val remaining = values.size - 2
         return if (remaining > 0) {
             "$preview +$remaining"

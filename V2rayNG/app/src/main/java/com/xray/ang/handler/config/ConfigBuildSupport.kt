@@ -11,6 +11,8 @@ internal data class RoutingDomainBuckets(
     val blocked: ArrayList<String> = arrayListOf(),
 )
 
+internal const val LITE_LEARNED_PROXY_RULE_REMARK = "Lite learned proxy domains"
+
 private const val DOMAIN_MATCHER_PREFIX = "domain:"
 private val ROUTING_DOMAIN_MATCHER_PREFIXES = listOf(
     DOMAIN_MATCHER_PREFIX,
@@ -76,6 +78,49 @@ private fun normalizeRoutingDomainMatcher(value: String): String? {
     } else {
         "$DOMAIN_MATCHER_PREFIX$matcher"
     }
+}
+
+internal fun normalizeLiteLearnedProxyDomain(value: String): String? {
+    val matcher = value.trim().lowercase()
+    if (matcher.isEmpty()) {
+        return null
+    }
+    return when {
+        matcher.startsWith("regexp:") || matcher.startsWith("keyword:") || matcher.startsWith("ext:") -> null
+        matcher.startsWith("geosite:") || matcher.startsWith("geoip:") -> null
+        matcher.startsWith("full:") -> matcher
+        matcher.startsWith(DOMAIN_MATCHER_PREFIX) -> matcher.removePrefix(DOMAIN_MATCHER_PREFIX)
+        else -> matcher
+    }
+}
+
+internal fun buildLiteLearnedProxyRule(domains: List<String>): RulesetItem? {
+    val normalizedDomains = linkedSetOf<String>()
+    domains.forEach { domain ->
+        normalizeLiteLearnedProxyDomain(domain)?.let(normalizedDomains::add)
+    }
+    if (normalizedDomains.isEmpty()) {
+        return null
+    }
+    return RulesetItem(
+        remarks = LITE_LEARNED_PROXY_RULE_REMARK,
+        domain = normalizedDomains.toList(),
+        outboundTag = AppConfig.TAG_PROXY,
+        enabled = true,
+        locked = true
+    )
+}
+
+internal fun buildEffectiveRoutingRulesets(
+    baseRulesets: List<RulesetItem>,
+    learnedLiteProxyDomains: List<String>,
+    liteDirectRoutingActive: Boolean
+): List<RulesetItem> {
+    if (!liteDirectRoutingActive) {
+        return baseRulesets
+    }
+    val learnedRule = buildLiteLearnedProxyRule(learnedLiteProxyDomains) ?: return baseRulesets
+    return baseRulesets + learnedRule
 }
 
 internal fun getConfigRelevantSettingsSnapshot(): Map<String, Any?> {

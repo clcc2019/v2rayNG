@@ -310,7 +310,7 @@
 <!-- RoutingSettingActivity -->
     <string name="routing_settings_domain_strategy">域名策略</string>
     <string name="routing_settings_title">路由</string>
-    <string name="routing_settings_tips">用逗号(,)隔开, domain 和 ip 二选一填写</string>
+    <string name="routing_settings_tips">建议一行一个值，也支持用逗号分隔。</string>
 <string name="routing_settings_rule_title">路由规则设置</string>
 <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
     <string name="routing_priority_summary">高→低优先级，命中即停止</string>
@@ -325,6 +325,15 @@
     <string name="routing_settings_import_rulesets_from_clipboard">从剪贴板导入规则集</string>
     <string name="routing_settings_import_rulesets_from_qrcode">从 QRcode 导入规则集</string>
     <string name="routing_settings_export_rulesets_to_clipboard">导出规则集至剪贴板</string>
+    <string name="routing_settings_lite_learned_domains">Lite 学习代理域名</string>
+    <string name="routing_settings_lite_learned_domains_empty">当前还没有学习到的代理域名。启用轻量直连优先后，可在后续观察中继续积累。</string>
+    <string name="routing_settings_lite_learned_domains_inactive">当前未启用 Lite Direct-First 预置。学习域名会保留，但暂时不会生效。</string>
+    <string name="routing_settings_lite_learned_domains_export">导出 Lite 学习域名</string>
+    <string name="routing_settings_lite_learned_domains_manage">管理 Lite 学习域名</string>
+    <string name="routing_settings_lite_learned_domains_remove">删除这个学习域名</string>
+    <string name="routing_settings_lite_learned_domains_removed">已删除 Lite 学习域名</string>
+    <string name="routing_settings_lite_learned_domains_clear">清空 Lite 学习域名</string>
+    <string name="routing_settings_lite_learned_domains_cleared">已清空 Lite 学习域名</string>
     <string name="routing_settings_locked">锁定中，导入预设时不删除此规则</string>
     <string name="routing_group_rule_details">规则信息</string>
     <string name="routing_settings_match_conditions">匹配条件</string>
@@ -332,8 +341,8 @@
 <string name="routing_rule_remarks_hint">填写一个简短名称，方便在优先级列表里快速识别这条规则。</string>
     <string name="routing_settings_outbound_tag_hint">选择命中后流量的去向，例如 proxy、direct 或 block。</string>
     <string name="routing_lock_rule_hint">锁定后的规则在重新导入预定义规则集时会被保留。</string>
-    <string name="routing_settings_domain_hint">用于匹配域名或域名后缀，多个值用逗号分隔。</string>
-    <string name="routing_settings_ip_hint">用于匹配 IP 或 CIDR 网段，多个值用逗号分隔。</string>
+    <string name="routing_settings_domain_hint">用于匹配域名或域名后缀，建议一行一个，保存时会自动兼容换行与逗号。</string>
+    <string name="routing_settings_ip_hint">用于匹配 IP 或 CIDR 网段，建议一行一个，保存时会自动兼容换行与逗号。</string>
     <string name="routing_settings_port_hint">可选。可填写单个端口，或类似 80-443 的端口范围。</string>
     <string name="routing_settings_protocol_help">可选。用于匹配 http、tls、bittorrent 等应用层协议。</string>
     <string name="routing_settings_network_help">可选。用于匹配 tcp、udp 等传输类型。</string>
@@ -487,6 +496,7 @@
         <item>全局 (Global)</item>
         <item>伊朗 (Iran)</item>
         <item>俄罗斯白名单 (Russia Whitelist)</item>
+        <item>轻量直连优先 (Lite Direct-First)</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

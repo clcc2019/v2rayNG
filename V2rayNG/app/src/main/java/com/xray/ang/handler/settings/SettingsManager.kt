@@ -11,6 +11,8 @@ import com.xray.ang.AppConfig.ANG_PACKAGE
 import com.xray.ang.AppConfig.DEFAULT_SUBSCRIPTION_ID
 import com.xray.ang.AppConfig.GEOIP_PRIVATE
 import com.xray.ang.AppConfig.GEOSITE_PRIVATE
+import com.xray.ang.AppConfig.PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS
+import com.xray.ang.AppConfig.PREF_ROUTING_ACTIVE_PRESET
 import com.xray.ang.AppConfig.TAG_DIRECT
 import com.xray.ang.AppConfig.VPN
 import com.xray.ang.dto.ProfileItem
@@ -91,11 +93,26 @@ object SettingsManager {
         }
     }
 
+    fun getEffectiveRoutingRulesetsSnapshot(context: Context = AngApplication.application): List<RulesetItem> {
+        val baseRulesets = getRoutingRulesetsSnapshot(context)
+        return buildEffectiveRoutingRulesets(
+            baseRulesets = baseRulesets,
+            learnedLiteProxyDomains = getLiteLearnedProxyDomains(),
+            liteDirectRoutingActive = isLiteDirectRoutingActive()
+        )
+    }
+
     fun getRoutingRulesetsSignature(context: Context = AngApplication.application): Int {
         refreshRoutingRulesetsCacheIfNeeded(context)
         synchronized(routingRulesetsCacheLock) {
             return cachedRoutingRulesetsRaw?.hashCode() ?: 0
         }
+    }
+
+    fun getEffectiveRoutingRulesetsSignature(context: Context = AngApplication.application): Int {
+        return 31 * getRoutingRulesetsSignature(context) +
+            17 * getActiveRoutingPreset().orEmpty().hashCode() +
+            getLiteLearnedProxyDomains().hashCode()
     }
 
     private fun refreshRoutingRulesetsCacheIfNeeded(context: Context) {
@@ -139,6 +156,7 @@ object SettingsManager {
     fun resetRoutingRulesetsFromPresets(context: Context, index: Int) {
         val rulesetList = getPresetRoutingRulesets(context, index) ?: return
         resetRoutingRulesetsCommon(rulesetList)
+        MmkvManager.encodeSettings(PREF_ROUTING_ACTIVE_PRESET, RoutingType.fromIndex(index).name)
     }
 
     /**
@@ -158,6 +176,7 @@ object SettingsManager {
             }
 
             resetRoutingRulesetsCommon(rulesetList)
+            MmkvManager.encodeSettings(PREF_ROUTING_ACTIVE_PRESET, "")
             return true
         } catch (e: Exception) {
             Log.e(ANG_PACKAGE, "Failed to reset routing rulesets", e)
@@ -261,6 +280,59 @@ object SettingsManager {
             it.domain?.contains(GEOSITE_PRIVATE) == true || it.ip?.contains(GEOIP_PRIVATE) == true
         }
         return exist == true
+    }
+
+    fun getActiveRoutingPreset(): String? {
+        return MmkvManager.decodeSettingsString(PREF_ROUTING_ACTIVE_PRESET)?.takeIf { it.isNotBlank() }
+    }
+
+    fun isLiteDirectRoutingActive(): Boolean {
+        return getActiveRoutingPreset() == RoutingType.LITE_DIRECT.name
+    }
+
+    fun getLiteLearnedProxyDomains(): List<String> {
+        val raw = MmkvManager.decodeSettingsString(PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS).orEmpty()
+        if (raw.isBlank()) {
+            return emptyList()
+        }
+        val stored = JsonUtil.fromJson(raw, Array<String>::class.java)?.toList() ?: return emptyList()
+        val normalized = LinkedHashSet<String>()
+        stored.forEach { domain ->
+            normalizeLiteLearnedProxyDomain(domain)?.let(normalized::add)
+        }
+        return normalized.toList()
+    }
+
+    fun promoteLiteLearnedProxyDomain(domain: String, maxEntries: Int = 256): Boolean {
+        val normalized = normalizeLiteLearnedProxyDomain(domain) ?: return false
+        val updated = LinkedHashSet<String>(getLiteLearnedProxyDomains())
+        if (!updated.add(normalized)) {
+            return false
+        }
+        while (updated.size > maxEntries) {
+            val iterator = updated.iterator()
+            if (!iterator.hasNext()) break
+            iterator.next()
+            iterator.remove()
+        }
+        return MmkvManager.encodeSettings(PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS, JsonUtil.toJson(updated.toList()))
+    }
+
+    fun removeLiteLearnedProxyDomain(domain: String): Boolean {
+        val normalized = normalizeLiteLearnedProxyDomain(domain) ?: return false
+        val updated = LinkedHashSet<String>(getLiteLearnedProxyDomains())
+        if (!updated.remove(normalized)) {
+            return false
+        }
+        return if (updated.isEmpty()) {
+            MmkvManager.encodeSettings(PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS, "")
+        } else {
+            MmkvManager.encodeSettings(PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS, JsonUtil.toJson(updated.toList()))
+        }
+    }
+
+    fun clearLiteLearnedProxyDomains(): Boolean {
+        return MmkvManager.encodeSettings(PREF_LITE_ROUTING_LEARNED_PROXY_DOMAINS, "")
     }
 
     /**

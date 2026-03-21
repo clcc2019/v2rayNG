@@ -395,6 +395,7 @@
         <item>全域 (Global)</item>
         <item>伊朗 (Iran)</item>
         <item>俄羅斯白名單 (Russia Whitelist)</item>
+        <item>輕量直連優先 (Lite Direct-First)</item>
     </string-array>
 
     <string-array name="vpn_bypass_lan">

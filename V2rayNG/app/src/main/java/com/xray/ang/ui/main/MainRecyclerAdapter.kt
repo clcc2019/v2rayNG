@@ -273,23 +273,66 @@ class MainRecyclerAdapter(
             startDelay = startDelay,
             duration = MotionTokens.REVEAL_DURATION
         )
+        UiMotion.animateEntranceOnce(
+            view = holder.itemMainBinding.layoutMetaPanel,
+            key = "${item.guid}:meta",
+            translationOffsetDp = 10f,
+            scaleFrom = 0.996f,
+            startDelay = startDelay + 36L,
+            duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+        )
+        UiMotion.animateEntranceOnce(
+            view = holder.itemMainBinding.layoutMore,
+            key = "${item.guid}:more",
+            translationOffsetDp = 8f,
+            scaleFrom = 0.94f,
+            startDelay = startDelay + 52L,
+            duration = MotionTokens.SHORT_ANIMATION_DURATION
+        )
+        if (holder.itemMainBinding.layoutSubscription.isVisible) {
+            UiMotion.animateEntranceOnce(
+                view = holder.itemMainBinding.layoutSubscription,
+                key = "${item.guid}:subscription",
+                translationOffsetDp = 8f,
+                scaleFrom = 0.995f,
+                startDelay = startDelay + 64L,
+                duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+            )
+        }
         if (!hasAnimatedInitialList && position >= maxAnimatedIndex) {
             hasAnimatedInitialList = true
         }
     }
 
     private fun bindPrimaryContent(holder: MainViewHolder, item: ServersCache) {
-        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.94f else 0.86f
-        holder.itemMainBinding.tvStatistics.apply {
-            if (abs(translationY) > FLOAT_EPSILON || abs(alpha - targetStatisticsAlpha) > FLOAT_EPSILON) {
-                animate().cancel()
-                translationY = 0f
-                alpha = targetStatisticsAlpha
-            }
-        }
+        val animateContentChanges = holder.boundGuid == item.guid
+        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.9f else 0.84f
+        val targetProtocolAlpha = if (holder.lastSelectionState == true) 0.94f else 0.82f
         holder.itemMainBinding.tvName.text = item.profile.remarks
-        holder.itemMainBinding.tvStatistics.text = item.displayAddress
-        holder.itemMainBinding.tvType.text = item.profile.configType.name
+        val protocolText = item.profile.configType.name
+        if (animateContentChanges) {
+            UiMotion.animateTextChange(
+                textView = holder.itemMainBinding.tvType,
+                newText = protocolText,
+                settledAlpha = targetProtocolAlpha,
+                translationOffsetDp = 2f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+            UiMotion.animateTextChange(
+                textView = holder.itemMainBinding.tvStatistics,
+                newText = item.displayAddress,
+                settledAlpha = targetStatisticsAlpha,
+                translationOffsetDp = 2f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+        } else {
+            holder.itemMainBinding.tvType.text = protocolText
+            holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
+            holder.itemMainBinding.tvType.translationY = 0f
+            holder.itemMainBinding.tvStatistics.text = item.displayAddress
+            holder.itemMainBinding.tvStatistics.alpha = targetStatisticsAlpha
+            holder.itemMainBinding.tvStatistics.translationY = 0f
+        }
     }
 
     private fun ensureRestingCardState(holder: MainViewHolder) {
@@ -316,8 +359,30 @@ class MainRecyclerAdapter(
 
     private fun bindSubscription(holder: MainViewHolder, item: ServersCache) {
         val subRemarks = item.subscriptionRemarks
-        holder.itemMainBinding.tvSubscription.text = subRemarks
-        holder.itemMainBinding.layoutSubscription.isVisible = subRemarks.isNotEmpty()
+        val shouldShowSubscription = subRemarks.isNotEmpty()
+        val animateSubscription = holder.boundGuid == item.guid
+        if (animateSubscription) {
+            if (holder.itemMainBinding.layoutSubscription.isVisible != shouldShowSubscription) {
+                UiMotion.animateVisibility(
+                    view = holder.itemMainBinding.layoutSubscription,
+                    visible = shouldShowSubscription,
+                    translationOffsetDp = 6f,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
+            }
+            UiMotion.animateTextChange(
+                textView = holder.itemMainBinding.tvSubscription,
+                newText = subRemarks,
+                settledAlpha = 0.98f,
+                translationOffsetDp = 2f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+        } else {
+            holder.itemMainBinding.tvSubscription.text = subRemarks
+            holder.itemMainBinding.tvSubscription.alpha = 0.98f
+            holder.itemMainBinding.tvSubscription.translationY = 0f
+            UiMotion.setVisibility(holder.itemMainBinding.layoutSubscription, shouldShowSubscription)
+        }
     }
 
     private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean) {
@@ -327,14 +392,14 @@ class MainRecyclerAdapter(
         val previousSelection = holder.lastSelectionState
         holder.lastSelectionState = isSelected
 
-        holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.95f
-        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.94f else 0.86f
-        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.9f else 0.74f
-        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.94f
+        holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.96f
+        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.9f else 0.84f
+        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.94f else 0.82f
+        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.95f
         holder.itemMainBinding.tvTestResult.alpha = 1f
-        holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 0.98f else 0.9f
-        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.72f else 0.54f
-        holder.itemMainBinding.viewSelectedLeftEdge.alpha = if (isSelected) 1f else 0f
+        holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 1f else 0.94f
+        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.76f else 0.6f
+        holder.itemMainBinding.viewSelectedLeftEdge.alpha = if (isSelected) 0.84f else 0f
         resetCardState(
             holder.itemMainBinding.itemBg,
             resolveCardBackgroundColor(holder.colors, isSelected),
@@ -343,19 +408,26 @@ class MainRecyclerAdapter(
         )
         if (previousSelection != null) {
             if (isSelected) {
-                holder.itemMainBinding.viewSelectedLeftEdge.alpha = 0.74f
+                holder.itemMainBinding.viewSelectedLeftEdge.alpha = 0.52f
                 holder.itemMainBinding.viewSelectedLeftEdge.animate()
-                    .alpha(1f)
+                    .alpha(0.84f)
                     .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
                     .setInterpolator(selectionInterpolator)
                     .start()
                 UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.viewSelectedLeftEdge)
+                UiMotion.animateFocusShift(
+                    primary = holder.itemMainBinding.tvType,
+                    secondary = holder.itemMainBinding.tvTestResult,
+                    translationOffsetDp = 4f,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
                 UiMotion.animateStatePulse(
                     holder.itemMainBinding.itemBg,
                     expandScale = 1.012f,
                     contractScale = 0.994f,
                     duration = MotionTokens.EMPHASIS_DURATION
                 )
+                UiMotion.animatePulse(holder.itemMainBinding.layoutMore, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
             } else {
                 holder.itemMainBinding.viewSelectedLeftEdge.animate()
                     .alpha(0f)

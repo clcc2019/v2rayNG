@@ -16,8 +16,7 @@
         android:paddingStart="@dimen/padding_spacing_dp16"
         android:paddingTop="8dp"
         android:paddingEnd="@dimen/padding_spacing_dp16"
-        android:paddingBottom="100dp"
-        android:scrollbars="vertical" />
+        android:paddingBottom="100dp" />
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_home"
@@ -38,53 +37,54 @@
             android:paddingBottom="0dp"
             android:background="@android:color/transparent"
             app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
-            app:titleTextAppearance="@style/TextAppearance.V2Ray.ScreenTitle">
+            app:titleTextAppearance="@style/TextAppearance.V2Ray.ScreenTitle" />
 
-            <FrameLayout
-                android:id="@+id/layout_group_tab_slot"
+        <FrameLayout
+            android:id="@+id/layout_group_tab_slot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/padding_spacing_dp16"
+            android:paddingEnd="@dimen/padding_spacing_dp16"
+            android:visibility="gone">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_tab_group"
+                style="@style/Widget.V2Ray.Card.TopTabs"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/view_height_dp30"
-                android:layout_gravity="center"
-                android:clipChildren="false"
-                android:clipToPadding="false"
-                android:visibility="gone">
+                android:layout_height="@dimen/view_height_dp32"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/padding_spacing_dp2"
+                android:layout_marginBottom="@dimen/padding_spacing_dp2"
+                android:alpha="1">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_tab_group"
-                    style="@style/Widget.V2Ray.Card.TopTabs"
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tab_group"
                     android:layout_width="wrap_content"
-                    android:layout_height="@dimen/view_height_dp30"
-                    android:layout_gravity="center"
-                    android:alpha="1">
+                    android:layout_height="match_parent"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:minHeight="@dimen/view_height_dp32"
+                    android:background="@android:color/transparent"
+                    app:tabIndicatorAnimationMode="linear"
+                    app:tabIndicatorColor="@android:color/transparent"
+                    app:tabIndicatorFullWidth="false"
+                    app:tabIndicatorHeight="0dp"
+                    app:tabMinWidth="0dp"
+                    app:tabMode="scrollable"
+                    app:tabPaddingBottom="0dp"
+                    app:tabPaddingEnd="0dp"
+                    app:tabPaddingStart="0dp"
+                    app:tabPaddingTop="0dp"
+                    app:tabRippleColor="@android:color/transparent"
+                    app:tabSelectedTextColor="@color/color_home_on_surface"
+                    app:tabTextAppearance="@style/TabLayoutTextStyle"
+                    app:tabTextColor="@color/color_home_on_surface_muted" />
 
-                    <com.google.android.material.tabs.TabLayout
-                        android:id="@+id/tab_group"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:clipChildren="false"
-                        android:clipToPadding="false"
-                        android:minHeight="@dimen/view_height_dp30"
-                        android:background="@android:color/transparent"
-                        app:tabIndicatorAnimationMode="linear"
-                        app:tabIndicatorColor="@android:color/transparent"
-                        app:tabIndicatorFullWidth="false"
-                        app:tabIndicatorHeight="0dp"
-                        app:tabMinWidth="0dp"
-                        app:tabMode="scrollable"
-                        app:tabPaddingBottom="0dp"
-                        app:tabPaddingEnd="0dp"
-                        app:tabPaddingStart="0dp"
-                        app:tabPaddingTop="0dp"
-                        app:tabRippleColor="@android:color/transparent"
-                        app:tabSelectedTextColor="@color/color_home_on_surface"
-                        app:tabTextAppearance="@style/TabLayoutTextStyle"
-                        app:tabTextColor="@color/color_home_on_surface_muted" />
+            </com.google.android.material.card.MaterialCardView>
 
-                </com.google.android.material.card.MaterialCardView>
-
-            </FrameLayout>
-
-        </com.google.android.material.appbar.MaterialToolbar>
+        </FrameLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -109,12 +109,12 @@
             android:layout_height="wrap_content"
             android:baselineAligned="false"
             android:gravity="center_vertical"
-            android:minHeight="72dp"
+            android:minHeight="76dp"
             android:orientation="horizontal"
             android:paddingStart="@dimen/padding_spacing_dp16"
-            android:paddingTop="@dimen/padding_spacing_dp10"
-            android:paddingEnd="@dimen/padding_spacing_dp10"
-            android:paddingBottom="@dimen/padding_spacing_dp10">
+            android:paddingTop="@dimen/padding_spacing_dp12"
+            android:paddingEnd="@dimen/padding_spacing_dp12"
+            android:paddingBottom="@dimen/padding_spacing_dp12">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -130,7 +130,7 @@
                                 <TextView
                                     android:id="@+id/tv_connection_profile"
                                     style="@style/Widget.V2Ray.HomeDock.Profile"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp4"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp6"
                                     android:ellipsize="end"
                                     android:maxLines="1"
                                     android:minLines="1" />
@@ -139,8 +139,8 @@
                                     android:id="@+id/view_connection_divider"
                                     android:layout_width="match_parent"
                                     android:layout_height="1dp"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp6"
-                                    android:layout_marginBottom="@dimen/padding_spacing_dp4"
+                                    android:layout_marginTop="@dimen/padding_spacing_dp8"
+                                    android:layout_marginBottom="@dimen/padding_spacing_dp6"
                                     android:background="@color/color_connection_dock_divider"
                                     android:importantForAccessibility="no" />
 

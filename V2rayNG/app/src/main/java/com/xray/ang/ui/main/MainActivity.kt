@@ -504,7 +504,8 @@ class MainActivity : HelperBaseActivity() {
         renderChromeState(chromeStateReducer.onScrollPhaseChanged(phase, canScrollUp), event = "scroll_phase")
     }
 
-    fun onServerListScrolled(canScrollUp: Boolean) {
+    fun onServerListScrolled(dy: Int, canScrollUp: Boolean) {
+        groupTabsController.onServerListScrolled(dy, canScrollUp)
         renderChromeState(chromeStateReducer.onScrollPositionChanged(canScrollUp), event = "scroll_position")
     }
 
@@ -897,10 +898,17 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun bindToolbarActionButton(button: FrameLayout, contentDescription: CharSequence, onClick: () -> Unit) {
-        UiMotion.attachPressFeedback(button, pressedScale = 0.97f)
+        UiMotion.attachPressFeedbackComposite(
+            source = button,
+            scaleTarget = button,
+            alphaTarget = button,
+            pressedScale = 0.965f,
+            pressedAlpha = 0.9f
+        )
         button.contentDescription = contentDescription
         button.setOnClickListener {
             button.hapticClick()
+            UiMotion.animatePulse(button, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
             onClick()
         }
     }
@@ -969,12 +977,18 @@ class MainActivity : HelperBaseActivity() {
             params.marginEnd = 0
             iconButton.layoutParams = params
         }
-        iconButton.background = null
+        iconButton.background = ContextCompat.getDrawable(this, R.drawable.bg_home_toolbar_action)
         iconButton.imageTintList =
-            ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_home_on_surface_muted))
+            ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_home_on_surface))
         iconButton.scaleType = ImageView.ScaleType.CENTER
         iconButton.setPadding(iconInset, iconInset, iconInset, iconInset)
-        UiMotion.attachPressFeedback(iconButton, pressedScale = 0.97f)
+        UiMotion.attachPressFeedbackComposite(
+            source = iconButton,
+            scaleTarget = iconButton,
+            alphaTarget = iconButton,
+            pressedScale = 0.965f,
+            pressedAlpha = 0.9f
+        )
     }
 
     private fun openToolbarSearch() {
@@ -1028,12 +1042,20 @@ class MainActivity : HelperBaseActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            marginEnd = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
         }
         binding.toolbar.addView(actionView, 0, layoutParams)
         toolbarAppActionView = actionView
-        UiMotion.attachPressFeedback(actionView, pressedScale = 0.97f)
+        UiMotion.attachPressFeedbackComposite(
+            source = actionView,
+            scaleTarget = actionView,
+            alphaTarget = actionView,
+            pressedScale = 0.965f,
+            pressedAlpha = 0.9f
+        )
         val openMoreAction: (View) -> Unit = { view ->
             view.hapticClick()
+            UiMotion.animatePulse(actionView, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
             openMorePage()
         }
         actionView.setOnClickListener { openMoreAction(actionView) }

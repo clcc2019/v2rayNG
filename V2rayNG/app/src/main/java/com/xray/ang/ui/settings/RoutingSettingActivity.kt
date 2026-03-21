@@ -6,7 +6,11 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -15,17 +19,10 @@ import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.contracts.BaseAdapterListener
 import com.xray.ang.databinding.ActivityRoutingSettingBinding
-import com.xray.ang.extension.toast
-import com.xray.ang.extension.toastError
-import com.xray.ang.extension.toastSuccess
 import com.xray.ang.handler.MmkvManager
 import com.xray.ang.handler.SettingsChangeManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.helper.SimpleItemTouchHelperCallback
-import com.xray.ang.ui.common.actionBottomSheetItem
-import com.xray.ang.ui.common.showActionBottomSheet
-import com.xray.ang.ui.common.showChoiceBottomSheet
-import com.xray.ang.ui.common.startActivityWithDefaultTransition
 import com.xray.ang.util.JsonUtil
 import com.xray.ang.util.Utils
 import com.xray.ang.viewmodel.RoutingSettingsViewModel
@@ -40,6 +37,11 @@ import java.util.Date
 import java.util.Locale
 
 class RoutingSettingActivity : HelperBaseActivity() {
+    private data class RoutingActionItem(
+        val label: CharSequence,
+        val handler: () -> Unit
+    )
+
     private val binding by lazy { ActivityRoutingSettingBinding.inflate(layoutInflater) }
     private val ownerActivity: RoutingSettingActivity
         get() = this
@@ -251,6 +253,15 @@ class RoutingSettingActivity : HelperBaseActivity() {
     }
 
     private fun showMoreActionsSheet() {
+        val learnedDomains = SettingsManager.getLiteLearnedProxyDomains()
+        val liteLearnedLabel = buildString {
+            append(getString(R.string.routing_settings_lite_learned_domains))
+            if (learnedDomains.isNotEmpty()) {
+                append(" (")
+                append(learnedDomains.size)
+                append(')')
+            }
+        }
         showActionBottomSheet(
             title = getString(R.string.routing_settings_title),
             subtitle = getString(R.string.action_more),
@@ -266,9 +277,106 @@ class RoutingSettingActivity : HelperBaseActivity() {
                 },
                 actionBottomSheetItem(R.string.routing_settings_export_rulesets_to_clipboard, R.drawable.ic_share_24dp) {
                     export2Clipboard()
+                },
+                actionBottomSheetItem(liteLearnedLabel, R.drawable.ic_routing_24dp) {
+                    showLiteLearnedDomainsSheet()
                 }
             )
         )
+    }
+
+    private fun showLiteLearnedDomainsSheet() {
+        val learnedDomains = SettingsManager.getLiteLearnedProxyDomains()
+        val title = getString(R.string.routing_settings_lite_learned_domains)
+        val subtitle = if (SettingsManager.isLiteDirectRoutingActive()) {
+            null
+        } else {
+            getString(R.string.routing_settings_lite_learned_domains_inactive)
+        }
+        if (learnedDomains.isEmpty()) {
+            showMessageBottomSheet(
+                title = title,
+                message = getString(R.string.routing_settings_lite_learned_domains_empty),
+                actions = listOf(
+                    actionBottomSheetItem(getString(android.R.string.ok), R.drawable.ic_action_done) {}
+                )
+            )
+            return
+        }
+
+        val message = buildString {
+            subtitle?.let {
+                append(it)
+                append("\n\n")
+            }
+            learnedDomains.forEachIndexed { index, domain ->
+                append(index + 1)
+                append(". ")
+                append(domain)
+                if (index != learnedDomains.lastIndex) {
+                    append('\n')
+                }
+            }
+        }
+
+        showMessageBottomSheet(
+            title = title,
+            message = message,
+            actions = listOf(
+                actionBottomSheetItem(R.string.routing_settings_lite_learned_domains_export, R.drawable.ic_share_24dp) {
+                    exportLiteLearnedDomainsToClipboard(learnedDomains)
+                },
+                actionBottomSheetItem(R.string.routing_settings_lite_learned_domains_manage, R.drawable.ic_routing_24dp) {
+                    showLiteLearnedDomainManagementSheet(learnedDomains)
+                },
+                actionBottomSheetItem(R.string.routing_settings_lite_learned_domains_clear, R.drawable.ic_delete_24dp, destructive = true) {
+                    clearLiteLearnedDomains()
+                },
+                actionBottomSheetItem(getString(android.R.string.ok), R.drawable.ic_action_done, secondary = true) {}
+            )
+        )
+    }
+
+    private fun showLiteLearnedDomainManagementSheet(domains: List<String>) {
+        showChoiceBottomSheet(
+            title = getString(R.string.routing_settings_lite_learned_domains_manage),
+            subtitle = getString(R.string.routing_settings_lite_learned_domains_remove),
+            options = domains,
+            iconRes = R.drawable.ic_delete_24dp
+        ) { index ->
+            val target = domains.getOrNull(index) ?: return@showChoiceBottomSheet
+            showActionBottomSheet(
+                title = target,
+                subtitle = getString(R.string.routing_settings_lite_learned_domains_remove),
+                actions = listOf(
+                    actionBottomSheetItem(R.string.routing_settings_lite_learned_domains_remove, R.drawable.ic_delete_24dp, destructive = true) {
+                        removeLiteLearnedDomain(target)
+                    },
+                    actionBottomSheetItem(getString(android.R.string.cancel), R.drawable.ic_close_20dp, secondary = true) {}
+                )
+            )
+        }
+    }
+
+    private fun exportLiteLearnedDomainsToClipboard(domains: List<String>) {
+        Utils.setClipboard(this, domains.joinToString(separator = "\n"))
+        toastSuccess(R.string.toast_success)
+    }
+
+    private fun clearLiteLearnedDomains() {
+        if (SettingsManager.clearLiteLearnedProxyDomains()) {
+            toastSuccess(R.string.routing_settings_lite_learned_domains_cleared)
+        } else {
+            toastError(R.string.toast_failure)
+        }
+    }
+
+    private fun removeLiteLearnedDomain(domain: String) {
+        if (SettingsManager.removeLiteLearnedProxyDomain(domain)) {
+            toastSuccess(R.string.routing_settings_lite_learned_domains_removed)
+        } else {
+            toastError(R.string.toast_failure)
+        }
     }
 
     private fun showConfirmImportSheet(onConfirmed: () -> Unit) {
@@ -381,5 +489,88 @@ class RoutingSettingActivity : HelperBaseActivity() {
         override fun onRefreshData() {
             refreshData()
         }
+    }
+
+    private fun toast(@StringRes messageResId: Int) {
+        Toast.makeText(this, getString(messageResId), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toast(message: CharSequence) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toastSuccess(@StringRes messageResId: Int) {
+        toast(messageResId)
+    }
+
+    private fun toastError(@StringRes messageResId: Int) {
+        toast(messageResId)
+    }
+
+    private fun startActivityWithDefaultTransition(intent: Intent) {
+        startActivity(intent)
+    }
+
+    private fun actionBottomSheetItem(
+        @StringRes labelResId: Int,
+        @DrawableRes iconRes: Int,
+        destructive: Boolean = false,
+        secondary: Boolean = false,
+        handler: () -> Unit
+    ): RoutingActionItem {
+        return RoutingActionItem(label = getString(labelResId), handler = handler)
+    }
+
+    private fun actionBottomSheetItem(
+        label: CharSequence,
+        @DrawableRes iconRes: Int,
+        destructive: Boolean = false,
+        secondary: Boolean = false,
+        handler: () -> Unit
+    ): RoutingActionItem {
+        return RoutingActionItem(label = label, handler = handler)
+    }
+
+    private fun showActionBottomSheet(
+        title: CharSequence,
+        subtitle: CharSequence? = null,
+        actions: List<RoutingActionItem>
+    ) {
+        val labels = actions.map { it.label }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(subtitle?.takeIf { it.isNotBlank() })
+            .setItems(labels) { _, which -> actions[which].handler() }
+            .show()
+    }
+
+    private fun showChoiceBottomSheet(
+        title: CharSequence,
+        subtitle: CharSequence? = null,
+        options: List<CharSequence>,
+        @DrawableRes iconRes: Int,
+        onSelected: (Int) -> Unit
+    ) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(subtitle?.takeIf { it.isNotBlank() })
+            .setItems(options.map(CharSequence::toString).toTypedArray()) { _, which ->
+                onSelected(which)
+            }
+            .show()
+    }
+
+    private fun showMessageBottomSheet(
+        title: CharSequence,
+        message: CharSequence,
+        actions: List<RoutingActionItem>
+    ) {
+        val builder = AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+        actions.getOrNull(0)?.let { builder.setPositiveButton(it.label) { _, _ -> it.handler() } }
+        actions.getOrNull(1)?.let { builder.setNegativeButton(it.label) { _, _ -> it.handler() } }
+        actions.getOrNull(2)?.let { builder.setNeutralButton(it.label) { _, _ -> it.handler() } }
+        builder.show()
     }
 }
