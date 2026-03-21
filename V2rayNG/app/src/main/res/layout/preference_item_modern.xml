@@ -10,11 +10,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxWidth="@dimen/settings_page_max_width"
+        android:duplicateParentState="true"
         android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/settings_row_container"
-            style="@style/Widget.V2Ray.Settings.Row">
+            style="@style/Widget.V2Ray.Settings.Row"
+            android:clickable="false"
+            android:duplicateParentState="true"
+            android:focusable="false">
 
             <LinearLayout
                 android:id="@android:id/icon_frame"

@@ -39,7 +39,6 @@ class MainGroupTabsController(
         val labelView: TextView,
         val editView: AppCompatEditText,
         val countView: TextView,
-        val indicatorView: View,
         var lastSelected: Boolean? = null,
         var lastRemarks: String? = null,
         var lastCount: Int? = null,
@@ -225,8 +224,7 @@ class MainGroupTabsController(
             surfaceView = tabBinding.layoutTabSurface,
             labelView = tabBinding.tvTabLabel,
             editView = tabBinding.etTabLabel,
-            countView = tabBinding.tvTabCount,
-            indicatorView = tabBinding.viewTabIndicator
+            countView = tabBinding.tvTabCount
         )
         bindGroupTabViewState(tabState, selected = false)
         tabBinding.root.tag = tabState
@@ -311,7 +309,6 @@ class MainGroupTabsController(
         updateTabLabel(tabState, selected)
         updateTabEditState(tabState)
         updateTabCount(tabState, selected)
-        tabState.indicatorView.visibility = if (selected) View.VISIBLE else View.INVISIBLE
         updateTabSelectionAnimation(tabState, selected)
     }
 
@@ -384,15 +381,7 @@ class MainGroupTabsController(
                 .setInterpolator(motionInterpolator)
                 .start()
             UiMotion.animateFocusShift(tabState.labelView, tabState.countView, translationOffsetDp = 4f, duration = MotionTokens.SHORT_ANIMATION_DURATION)
-            tabState.indicatorView.alpha = 0.72f
-            tabState.indicatorView.animate()
-                .alpha(1f)
-                .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                .setInterpolator(motionInterpolator)
-                .start()
         } else {
-            tabState.indicatorView.animate().cancel()
-            tabState.indicatorView.alpha = 0f
             tabState.surfaceView.animate()
                 .alpha(1f)
                 .scaleX(1f)
@@ -407,8 +396,13 @@ class MainGroupTabsController(
         if (visible == !isGroupTabHidden && !immediate) return
         isGroupTabHidden = !visible
 
+        val transitionDuration = if (visible) {
+            MotionTokens.MEDIUM_ANIMATION_DURATION
+        } else {
+            MotionTokens.SHORT_ANIMATION_DURATION
+        }
         val targetAlpha = if (visible) 1f else 0f
-        val targetTranslationY = if (visible) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.45f
+        val targetTranslationY = if (visible) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.34f
         val targetScale = if (visible) 1f else 0.985f
         binding.cardTabGroup.isClickable = visible
         binding.cardTabGroup.isFocusable = visible
@@ -434,7 +428,7 @@ class MainGroupTabsController(
         val startHeight = binding.layoutGroupTabSlot.layoutParams.height
         val endHeight = if (visible) expandedSlotHeightPx else 0
         groupTabSlotAnimator = ValueAnimator.ofInt(startHeight, endHeight).apply {
-            duration = MotionTokens.REVEAL_DURATION
+            duration = transitionDuration
             interpolator = motionInterpolator
             addUpdateListener { animator ->
                 updateGroupTabSlotHeight(animator.animatedValue as Int)
@@ -461,7 +455,7 @@ class MainGroupTabsController(
             .translationY(targetTranslationY)
             .scaleX(targetScale)
             .scaleY(targetScale)
-            .setDuration(MotionTokens.REVEAL_DURATION)
+            .setDuration(transitionDuration)
             .setInterpolator(motionInterpolator)
             .start()
         groupTabSlotAnimator?.start()
@@ -475,17 +469,9 @@ class MainGroupTabsController(
             }
             UiMotion.animateEntrance(
                 view = binding.cardTabGroup,
-                translationOffsetDp = 10f,
+                translationOffsetDp = 8f,
                 duration = MotionTokens.MEDIUM_ANIMATION_DURATION
             )
-            (binding.tabGroup.getChildAt(0) as? ViewGroup)?.let { slidingTabIndicator ->
-                UiMotion.animateStaggeredChildren(
-                    container = slidingTabIndicator,
-                    translationOffsetDp = 6f,
-                    stepDelay = 18L,
-                    startDelay = MotionTokens.STAGGER_START_DELAY
-                )
-            }
             hasAnimatedGroupTabReveal = true
         }
     }

@@ -14,6 +14,7 @@ import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.contracts.BaseAdapterListener
 import com.xray.ang.databinding.ActivityUserAssetBinding
+import com.xray.ang.dto.AssetUrlCache
 import com.xray.ang.dto.AssetUrlItem
 import com.xray.ang.extension.toTrafficString
 import com.xray.ang.extension.toast
@@ -40,17 +41,18 @@ class UserAssetActivity : HelperBaseActivity() {
     private val viewModel: UserAssetViewModel by viewModels()
     private lateinit var adapter: UserAssetAdapter
     private var refreshJob: Job? = null
+    private var lastAssetsSignature: Int? = null
 
     val extDir by lazy { File(Utils.userAssetPath(this)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_user_asset_setting))
-        postScreenContentEnterMotion(binding.root)
 
         binding.recyclerView.setHasFixedSize(false)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.itemAnimator = null
         adapter = UserAssetAdapter(ActivityAdapterListener())
         binding.recyclerView.adapter = adapter
 
@@ -58,6 +60,8 @@ class UserAssetActivity : HelperBaseActivity() {
         bindClickAction(binding.layoutGeoFilesSources, withHaptic = false) {
             setGeoFilesSources()
         }
+        preloadInitialAssets()
+        postScreenContentEnterMotion(binding.root)
     }
 
     override fun onResume() {
@@ -225,20 +229,42 @@ class UserAssetActivity : HelperBaseActivity() {
         }
     }
 
-    fun refreshData() {
+    fun refreshData(force: Boolean = false) {
+        val currentSignature = buildAssetsSignature(MmkvManager.decodeAssetUrls(), extDir.listFiles(), getGeoFilesSources())
+        if (!force && lastAssetsSignature == currentSignature) {
+            return
+        }
         refreshJob?.cancel()
         refreshJob = lifecycleScope.launch(Dispatchers.IO) {
             viewModel.reload(getGeoFilesSources())
             val assets = viewModel.getAssets()
-            val fileMeta = buildAssetFileMeta(extDir.listFiles())
+            val files = extDir.listFiles()
+            val fileMeta = buildAssetFileMeta(files)
+            val signature = buildAssetsSignature(assets, files, getGeoFilesSources())
             withContext(Dispatchers.Main) {
-                // This list sits inside a NestedScrollView with wrap_content height, so it must
-                // request a fresh measurement after async diff updates or rows may stay collapsed.
-                adapter.submitList(assets, fileMeta) {
-                    binding.recyclerView.requestLayout()
-                }
+                renderAssets(assets, fileMeta, signature)
             }
         }
+    }
+
+    private fun preloadInitialAssets() {
+        val geoFilesSource = getGeoFilesSources()
+        viewModel.reload(geoFilesSource)
+        val files = extDir.listFiles()
+        renderAssets(
+            assets = viewModel.getAssets(),
+            fileMeta = buildAssetFileMeta(files),
+            signature = buildAssetsSignature(viewModel.getAssets(), files, geoFilesSource)
+        )
+    }
+
+    private fun renderAssets(
+        assets: List<AssetUrlCache>,
+        fileMeta: Map<String, UserAssetAdapter.AssetFileMeta>,
+        signature: Int
+    ) {
+        adapter.submitList(assets, fileMeta)
+        lastAssetsSignature = signature
     }
 
     private fun buildAssetFileMeta(files: Array<File>?): Map<String, UserAssetAdapter.AssetFileMeta> {
@@ -248,6 +274,20 @@ class UserAssetActivity : HelperBaseActivity() {
             val properties = "${file.length().toTrafficString()}  •  ${dateFormat.format(Date(file.lastModified()))}"
             file.name to UserAssetAdapter.AssetFileMeta(properties)
         }
+    }
+
+    private fun buildAssetsSignature(
+        assets: List<AssetUrlCache>,
+        files: Array<File>?,
+        geoFilesSource: String
+    ): Int {
+        val filesSignature = files
+            ?.sortedBy { it.name }
+            ?.fold(1) { acc, file ->
+                31 * acc + file.name.hashCode() + file.length().hashCode() + file.lastModified().hashCode()
+            }
+            ?: 0
+        return 31 * assets.hashCode() + 17 * filesSignature + geoFilesSource.hashCode()
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {

@@ -106,6 +106,7 @@ class MainActivity : HelperBaseActivity() {
     private var toolbarSearchMenuItem: MenuItem? = null
     private var toolbarAppActionView: View? = null
     private val toolbarActionViews = mutableListOf<FrameLayout>()
+    private var lastToolbarActionsVisible: Boolean? = null
     private var currentChromeState: AppChromeState? = null
     private var lastConnectionCardGuid: String? = null
     private val chromeStateReducer by lazy {
@@ -319,16 +320,39 @@ class MainActivity : HelperBaseActivity() {
         }
 
         if (!runInitialEntrance) {
+            binding.mainContent.post {
+                UiMotion.settleView(binding.viewPager)
+                UiMotion.settleView(binding.cardTabGroup)
+                UiMotion.settleView(binding.cardConnection)
+            }
             return
         }
 
         binding.mainContent.post {
-            UiMotion.animateEntrance(binding.viewPager, translationOffsetDp = 18f)
+            UiMotion.animateEntrance(
+                view = binding.viewPager,
+                translationOffsetDp = 10f,
+                duration = MotionTokens.REVEAL_DURATION
+            )
             if (binding.cardTabGroup.isVisible) {
-                UiMotion.animateEntrance(binding.cardTabGroup, translationOffsetDp = 14f, startDelay = 20L)
+                UiMotion.animateEntrance(
+                    view = binding.cardTabGroup,
+                    translationOffsetDp = 8f,
+                    startDelay = MotionTokens.STAGGER_DELAY,
+                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                )
+            } else {
+                UiMotion.settleView(binding.cardTabGroup)
             }
             if (shouldShowConnectionCard()) {
-                UiMotion.animateEntrance(binding.cardConnection, translationOffsetDp = 22f, startDelay = 40L)
+                UiMotion.animateEntrance(
+                    view = binding.cardConnection,
+                    translationOffsetDp = 14f,
+                    startDelay = MotionTokens.STAGGER_START_DELAY,
+                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                )
+            } else {
+                UiMotion.settleView(binding.cardConnection)
             }
         }
     }
@@ -1013,8 +1037,44 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun updateToolbarActionVisibility(visible: Boolean) {
+        if (lastToolbarActionsVisible == visible) {
+            return
+        }
+        val shouldAnimate = lastToolbarActionsVisible != null
+        lastToolbarActionsVisible = visible
+        val accessibility = if (visible) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+
         toolbarActionViews.forEach { actionView ->
-            actionView.isVisible = visible
+            actionView.isEnabled = visible
+            actionView.isClickable = visible
+            actionView.importantForAccessibility = accessibility
+            if (shouldAnimate) {
+                UiMotion.animateHorizontalVisibility(
+                    view = actionView,
+                    visible = visible,
+                    translationOffsetDp = 8f,
+                    fromStart = false,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
+            } else {
+                UiMotion.setVisibility(actionView, visible)
+            }
+        }
+        toolbarAppActionView?.let { actionView ->
+            actionView.isEnabled = visible
+            actionView.isClickable = visible
+            actionView.importantForAccessibility = accessibility
+            if (shouldAnimate) {
+                UiMotion.animateHorizontalVisibility(
+                    view = actionView,
+                    visible = visible,
+                    translationOffsetDp = 8f,
+                    fromStart = true,
+                    duration = MotionTokens.SHORT_ANIMATION_DURATION
+                )
+            } else {
+                UiMotion.setVisibility(actionView, visible)
+            }
         }
     }
 
@@ -1037,6 +1097,8 @@ class MainActivity : HelperBaseActivity() {
     private fun attachToolbarAppAction() {
         if (toolbarAppActionView != null) return
         val actionView = layoutInflater.inflate(R.layout.item_toolbar_app_action, binding.toolbar, false)
+        val actionButton = actionView.findViewById<FrameLayout>(R.id.toolbar_app_button)
+        val contentDescription = getString(R.string.action_more)
         val layoutParams = Toolbar.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1046,22 +1108,29 @@ class MainActivity : HelperBaseActivity() {
         }
         binding.toolbar.addView(actionView, 0, layoutParams)
         toolbarAppActionView = actionView
+        actionView.contentDescription = contentDescription
+        actionButton.contentDescription = contentDescription
         UiMotion.attachPressFeedbackComposite(
             source = actionView,
-            scaleTarget = actionView,
-            alphaTarget = actionView,
+            scaleTarget = actionButton,
+            alphaTarget = actionButton,
             pressedScale = 0.965f,
             pressedAlpha = 0.9f
         )
-        val openMoreAction: (View) -> Unit = { view ->
-            view.hapticClick()
-            UiMotion.animatePulse(actionView, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
+        UiMotion.attachPressFeedbackComposite(
+            source = actionButton,
+            scaleTarget = actionButton,
+            alphaTarget = actionButton,
+            pressedScale = 0.965f,
+            pressedAlpha = 0.9f
+        )
+        val openMoreAction: (View) -> Unit = { source ->
+            source.hapticClick()
+            UiMotion.animatePulse(actionButton, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
             openMorePage()
         }
         actionView.setOnClickListener { openMoreAction(actionView) }
-        actionView.findViewById<View>(R.id.toolbar_app_icon)?.setOnClickListener { icon ->
-            openMoreAction(icon)
-        }
+        actionButton.setOnClickListener { openMoreAction(actionButton) }
     }
 
     private fun clearToolbarAppAction() {

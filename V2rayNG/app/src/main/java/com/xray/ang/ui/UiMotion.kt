@@ -9,15 +9,23 @@ import android.animation.ValueAnimator
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.core.graphics.ColorUtils
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.google.android.material.card.MaterialCardView
 import com.xray.ang.R
+import kotlin.math.roundToInt
 import kotlin.math.abs
 
 object UiMotion {
     private const val FLOAT_EPSILON = 0.001f
     private val motionInterpolator = FastOutSlowInInterpolator()
+    private val enterInterpolator = PathInterpolator(0.16f, 1f, 0.3f, 1f)
+    private val exitInterpolator = PathInterpolator(0.7f, 0f, 0.84f, 0f)
+    private val settleInterpolator = PathInterpolator(0.25f, 1f, 0.5f, 1f)
+    private val emphasizeInterpolator = PathInterpolator(0.22f, 1f, 0.36f, 1f)
 
     private fun isMotionEnabled(view: View): Boolean {
         return ValueAnimator.areAnimatorsEnabled()
@@ -271,16 +279,17 @@ object UiMotion {
         view.animate().cancel()
         view.alpha = 0f
         view.translationY = offsetPx
-        view.scaleX = 0.985f
-        view.scaleY = 0.985f
+        view.scaleX = 1f
+        view.scaleY = 1f
+        if (!view.isVisible) {
+            view.isVisible = true
+        }
         view.animate()
             .alpha(1f)
             .translationY(0f)
-            .scaleX(1f)
-            .scaleY(1f)
             .setStartDelay(startDelay)
             .setDuration(duration)
-            .setInterpolator(motionInterpolator)
+            .setInterpolator(enterInterpolator)
             .start()
     }
 
@@ -307,16 +316,14 @@ object UiMotion {
             child.animate().cancel()
             child.alpha = 0f
             child.translationY = offsetPx
-            child.scaleX = 0.985f
-            child.scaleY = 0.985f
+            child.scaleX = 1f
+            child.scaleY = 1f
             child.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .scaleX(1f)
-                .scaleY(1f)
                 .setStartDelay(startDelay + (index * stepDelay))
                 .setDuration(MotionTokens.REVEAL_DURATION)
-                .setInterpolator(motionInterpolator)
+                .setInterpolator(enterInterpolator)
                 .start()
         }
     }
@@ -346,6 +353,28 @@ object UiMotion {
                     .setInterpolator(motionInterpolator)
                     .start()
             }
+            .start()
+    }
+
+    fun animateAlpha(
+        view: View,
+        targetAlpha: Float,
+        duration: Long = MotionTokens.SHORT_ANIMATION_DURATION,
+        startDelay: Long = 0L
+    ) {
+        if (abs(view.alpha - targetAlpha) < FLOAT_EPSILON) {
+            return
+        }
+        if (!canRunTransition(view)) {
+            view.alpha = targetAlpha
+            return
+        }
+        view.animate().cancel()
+        view.animate()
+            .alpha(targetAlpha)
+            .setStartDelay(startDelay)
+            .setDuration(duration)
+            .setInterpolator(settleInterpolator)
             .start()
     }
 
@@ -428,11 +457,15 @@ object UiMotion {
             return
         }
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
+        val startScale = scaleFrom.coerceIn(0.9f, 1f)
         view.animate().cancel()
         view.alpha = 0f
         view.translationY = offsetPx
-        view.scaleX = scaleFrom
-        view.scaleY = scaleFrom
+        view.scaleX = startScale
+        view.scaleY = startScale
+        if (!view.isVisible) {
+            view.isVisible = true
+        }
         view.animate()
             .alpha(1f)
             .translationY(0f)
@@ -440,8 +473,17 @@ object UiMotion {
             .scaleY(1f)
             .setStartDelay(startDelay)
             .setDuration(duration)
-            .setInterpolator(motionInterpolator)
+            .setInterpolator(enterInterpolator)
             .start()
+    }
+
+    fun settleView(view: View) {
+        view.animate().cancel()
+        view.alpha = 1f
+        view.translationX = 0f
+        view.translationY = 0f
+        view.scaleX = 1f
+        view.scaleY = 1f
     }
 
     fun animateStatePulse(
@@ -481,6 +523,57 @@ object UiMotion {
             })
         }
         view.setTag(R.id.tag_motion_running_animator, animator)
+        animator.start()
+    }
+
+    fun animateCardSurface(
+        card: MaterialCardView,
+        backgroundColor: Int,
+        strokeColor: Int,
+        strokeWidth: Int = card.strokeWidth,
+        duration: Long = MotionTokens.MEDIUM_ANIMATION_DURATION
+    ) {
+        val currentBackground = card.cardBackgroundColor?.defaultColor ?: backgroundColor
+        val currentStrokeColor = card.strokeColor
+        val currentStrokeWidth = card.strokeWidth
+        val styleChanged = currentBackground != backgroundColor ||
+            currentStrokeColor != strokeColor ||
+            currentStrokeWidth != strokeWidth
+        if (!styleChanged) {
+            return
+        }
+        if (!canRunTransition(card)) {
+            card.setCardBackgroundColor(backgroundColor)
+            card.setStrokeColor(strokeColor)
+            card.strokeWidth = strokeWidth
+            return
+        }
+
+        (card.getTag(R.id.tag_motion_card_style_animator) as? Animator)?.cancel()
+
+        val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            interpolator = emphasizeInterpolator
+            this.duration = duration
+            addUpdateListener { animation ->
+                val fraction = animation.animatedFraction
+                card.setCardBackgroundColor(ColorUtils.blendARGB(currentBackground, backgroundColor, fraction))
+                card.setStrokeColor(ColorUtils.blendARGB(currentStrokeColor, strokeColor, fraction))
+                card.strokeWidth = lerp(currentStrokeWidth, strokeWidth, fraction)
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    card.setTag(R.id.tag_motion_card_style_animator, null)
+                    card.setCardBackgroundColor(backgroundColor)
+                    card.setStrokeColor(strokeColor)
+                    card.strokeWidth = strokeWidth
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    card.setTag(R.id.tag_motion_card_style_animator, null)
+                }
+            })
+        }
+        card.setTag(R.id.tag_motion_card_style_animator, animator)
         animator.start()
     }
 
@@ -535,6 +628,7 @@ object UiMotion {
         duration: Long = MotionTokens.REVEAL_DURATION
     ) {
         val offsetPx = view.resources.displayMetrics.density * translationOffsetDp
+        val exitDuration = (duration * 0.78f).toLong().coerceAtLeast(MotionTokens.FAST_ANIMATION_DURATION)
         view.setTag(R.id.tag_visibility_target, visible)
         if (!canRunTransition(view)) {
             setVisibility(view, visible)
@@ -555,7 +649,7 @@ object UiMotion {
                 .alpha(1f)
                 .translationY(0f)
                 .setDuration(duration)
-                .setInterpolator(motionInterpolator)
+                .setInterpolator(enterInterpolator)
                 .start()
             return
         }
@@ -567,8 +661,8 @@ object UiMotion {
         view.animate()
             .alpha(0f)
             .translationY(offsetPx * 0.72f)
-            .setDuration(duration)
-            .setInterpolator(motionInterpolator)
+            .setDuration(exitDuration)
+            .setInterpolator(exitInterpolator)
             .withEndAction {
                 val targetVisible = (view.getTag(R.id.tag_visibility_target) as? Boolean) == true
                 if (!targetVisible) {
@@ -581,11 +675,87 @@ object UiMotion {
             .start()
     }
 
+    fun animateHorizontalVisibility(
+        view: View,
+        visible: Boolean,
+        translationOffsetDp: Float = 10f,
+        fromStart: Boolean = false,
+        duration: Long = MotionTokens.SHORT_ANIMATION_DURATION
+    ) {
+        val direction = if (fromStart) -1f else 1f
+        val offsetPx = view.resources.displayMetrics.density * translationOffsetDp * direction
+        val exitDuration = (duration * 0.78f).toLong().coerceAtLeast(MotionTokens.FAST_ANIMATION_DURATION)
+        view.setTag(R.id.tag_visibility_target, visible)
+        if (!canRunTransition(view)) {
+            setVisibility(view, visible)
+            return
+        }
+
+        if (visible) {
+            if (view.isVisible &&
+                abs(view.alpha - 1f) < FLOAT_EPSILON &&
+                abs(view.translationX) < FLOAT_EPSILON &&
+                abs(view.scaleX - 1f) < FLOAT_EPSILON &&
+                abs(view.scaleY - 1f) < FLOAT_EPSILON
+            ) {
+                return
+            }
+            view.animate().cancel()
+            if (!view.isVisible) {
+                view.alpha = 0f
+                view.translationX = offsetPx
+                view.scaleX = 0.985f
+                view.scaleY = 0.985f
+                view.isVisible = true
+            }
+            view.animate()
+                .alpha(1f)
+                .translationX(0f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(duration)
+                .setInterpolator(enterInterpolator)
+                .start()
+            return
+        }
+
+        if (!view.isVisible) {
+            return
+        }
+        view.animate().cancel()
+        view.animate()
+            .alpha(0f)
+            .translationX(offsetPx * 0.72f)
+            .scaleX(0.985f)
+            .scaleY(0.985f)
+            .setDuration(exitDuration)
+            .setInterpolator(exitInterpolator)
+            .withEndAction {
+                val targetVisible = (view.getTag(R.id.tag_visibility_target) as? Boolean) == true
+                if (!targetVisible) {
+                    view.isVisible = false
+                } else {
+                    view.alpha = 1f
+                    view.translationX = 0f
+                    view.scaleX = 1f
+                    view.scaleY = 1f
+                }
+            }
+            .start()
+    }
+
     fun setVisibility(view: View, visible: Boolean) {
         view.animate().cancel()
         view.alpha = if (visible) 1f else 0f
+        view.translationX = 0f
         view.translationY = 0f
+        view.scaleX = 1f
+        view.scaleY = 1f
         view.isVisible = visible
         view.setTag(R.id.tag_visibility_target, visible)
+    }
+
+    private fun lerp(start: Int, end: Int, fraction: Float): Int {
+        return (start + (end - start) * fraction).roundToInt()
     }
 }

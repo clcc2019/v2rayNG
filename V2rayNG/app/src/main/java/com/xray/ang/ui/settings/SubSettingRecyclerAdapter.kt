@@ -1,11 +1,13 @@
 package com.xray.ang.ui
 
 import android.content.res.ColorStateList
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -24,7 +26,8 @@ import java.util.Collections
 
 class SubSettingRecyclerAdapter(
     private val viewModel: SubscriptionsViewModel,
-    private val adapterListener: BaseAdapterListener?
+    private val adapterListener: BaseAdapterListener?,
+    private val onStartDrag: ((RecyclerView.ViewHolder) -> Unit)? = null
 ) : RecyclerView.Adapter<SubSettingRecyclerAdapter.MainViewHolder>(), ItemTouchHelperAdapter {
 
     companion object {
@@ -48,6 +51,7 @@ class SubSettingRecyclerAdapter(
     private val items: List<SubscriptionCache>
         get() = differ.currentList
     private var hasAnimatedInitialList = false
+    private var removableGuids = emptySet<String>()
 
     init {
         setHasStableIds(true)
@@ -57,6 +61,10 @@ class SubSettingRecyclerAdapter(
         if (newItems.isEmpty()) {
             hasAnimatedInitialList = false
         }
+        removableGuids = newItems.asSequence()
+            .filter { viewModel.canRemove(it.guid) }
+            .map { it.guid }
+            .toSet()
         differ.submitList(newItems.toList())
     }
 
@@ -72,7 +80,11 @@ class SubSettingRecyclerAdapter(
         val subItem = subscription.subscription
         val binding = holder.itemSubSettingBinding
         val hasUrl = subItem.url.isNotBlank()
+        val canRemove = removableGuids.contains(subId)
 
+        holder.boundGuid = subId
+        holder.boundSubscription = subItem
+        holder.bindStatusBadges(subItem.enabled, subItem.autoUpdate)
         binding.tvName.text = subItem.remarks
         binding.tvUrl.text = subItem.url
         binding.chkEnable.setOnCheckedChangeListener(null)
@@ -85,37 +97,17 @@ class SubSettingRecyclerAdapter(
         holder.itemView.alpha = 1f
         holder.itemView.translationZ = 0f
 
-        bindStatusBadges(holder, subItem.enabled, subItem.autoUpdate)
         bindUrlState(holder, hasUrl)
         bindEntranceMotion(holder, position, subId)
-
-        binding.infoContainer.setOnClickListener {
-            adapterListener?.onEdit(subId, position)
-        }
-
-        binding.layoutEdit.setOnClickListener {
-            adapterListener?.onEdit(subId, position)
-        }
-
-        binding.layoutRemove.setOnClickListener {
-            adapterListener?.onRemove(subId, position)
-        }
-        binding.layoutRemove.isVisible = viewModel.canRemove(subId)
 
         binding.chkEnable.setOnCheckedChangeListener { buttonView, isChecked ->
             if (!buttonView.isPressed) return@setOnCheckedChangeListener
             subItem.enabled = isChecked
             viewModel.update(subId, subItem)
-            bindStatusBadges(holder, isChecked, subItem.autoUpdate)
+            holder.bindStatusBadges(isChecked, subItem.autoUpdate)
         }
-
-        if (hasUrl) {
-            binding.layoutShare.setOnClickListener {
-                adapterListener?.onShare(subItem.url)
-            }
-        } else {
-            binding.layoutShare.setOnClickListener(null)
-        }
+        binding.layoutDragHandle.isVisible = items.size > 1
+        binding.layoutRemove.isVisible = canRemove
     }
 
     private fun bindEntranceMotion(holder: MainViewHolder, position: Int, key: String) {
@@ -147,44 +139,89 @@ class SubSettingRecyclerAdapter(
         holder.itemSubSettingBinding.layoutLastUpdated.isVisible = hasUrl
     }
 
-    private fun bindStatusBadges(holder: MainViewHolder, enabled: Boolean, autoUpdate: Boolean) {
-        val context = holder.itemView.context
-        holder.itemSubSettingBinding.tvStatus.text =
-            context.getString(if (enabled) R.string.sub_status_enabled else R.string.sub_status_paused)
-        holder.itemSubSettingBinding.tvAutoUpdate.text =
-            context.getString(if (autoUpdate) R.string.sub_status_auto_update else R.string.sub_status_manual_update)
-
-        val enabledBg = if (enabled) R.color.color_home_metric_good else R.color.color_home_metric_idle
-        val enabledText = if (enabled) R.color.color_home_metric_good_text else R.color.color_home_metric_idle_text
-        val autoBg = if (autoUpdate) R.color.md_theme_primaryContainer else R.color.md_theme_surfaceVariant
-        val autoText = if (autoUpdate) R.color.md_theme_onPrimaryContainer else R.color.md_theme_onSurfaceVariant
-
-        holder.itemSubSettingBinding.tvStatus.backgroundTintList =
-            ColorStateList.valueOf(ContextCompat.getColor(context, enabledBg))
-        holder.itemSubSettingBinding.tvStatus.setTextColor(ContextCompat.getColor(context, enabledText))
-
-        holder.itemSubSettingBinding.tvAutoUpdate.backgroundTintList =
-            ColorStateList.valueOf(ContextCompat.getColor(context, autoBg))
-        holder.itemSubSettingBinding.tvAutoUpdate.setTextColor(ContextCompat.getColor(context, autoText))
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
         return MainViewHolder(
             ItemRecyclerSubSettingBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
-            )
+            ),
+            adapterListener = adapterListener,
+            onStartDrag = onStartDrag
         )
     }
 
-    class MainViewHolder(val itemSubSettingBinding: ItemRecyclerSubSettingBinding) :
+    class MainViewHolder(
+        val itemSubSettingBinding: ItemRecyclerSubSettingBinding,
+        private val adapterListener: BaseAdapterListener?,
+        private val onStartDrag: ((RecyclerView.ViewHolder) -> Unit)?
+    ) :
         BaseViewHolder(itemSubSettingBinding.root), ItemTouchHelperViewHolder {
+        var boundGuid: String? = null
+        var boundSubscription: com.xray.ang.dto.SubscriptionItem? = null
+
         init {
             UiMotion.attachPressFeedback(itemSubSettingBinding.infoContainer, pressedScale = 0.992f)
-            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutShare, pressedScale = 0.988f)
-            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutEdit, pressedScale = 0.988f)
-            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutRemove, pressedScale = 0.988f)
+            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutShare, pressedScale = 0.984f)
+            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutEdit, pressedScale = 0.984f)
+            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutDragHandle, pressedScale = 0.984f)
+            UiMotion.attachPressFeedback(itemSubSettingBinding.layoutRemove, pressedScale = 0.984f)
+
+            itemSubSettingBinding.infoContainer.setOnClickListener {
+                val guid = boundGuid ?: return@setOnClickListener
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+                adapterListener?.onEdit(guid, position)
+            }
+
+            itemSubSettingBinding.layoutEdit.setOnClickListener {
+                val guid = boundGuid ?: return@setOnClickListener
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+                adapterListener?.onEdit(guid, position)
+            }
+
+            itemSubSettingBinding.layoutShare.setOnClickListener {
+                val subscription = boundSubscription ?: return@setOnClickListener
+                if (subscription.url.isBlank()) return@setOnClickListener
+                adapterListener?.onShare(subscription.url)
+            }
+
+            itemSubSettingBinding.layoutRemove.setOnClickListener {
+                val guid = boundGuid ?: return@setOnClickListener
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+                adapterListener?.onRemove(guid, position)
+            }
+
+            itemSubSettingBinding.layoutDragHandle.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    itemSubSettingBinding.layoutDragHandle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    onStartDrag?.invoke(this)
+                }
+                false
+            }
+        }
+
+        fun bindStatusBadges(enabled: Boolean, autoUpdate: Boolean) {
+            val context = itemView.context
+            itemSubSettingBinding.tvStatus.text =
+                context.getString(if (enabled) R.string.sub_status_enabled else R.string.sub_status_paused)
+            itemSubSettingBinding.tvAutoUpdate.text =
+                context.getString(if (autoUpdate) R.string.sub_status_auto_update else R.string.sub_status_manual_update)
+
+            val enabledBg = if (enabled) R.color.color_home_metric_good else R.color.color_home_metric_idle
+            val enabledText = if (enabled) R.color.color_home_metric_good_text else R.color.color_home_metric_idle_text
+            val autoBg = if (autoUpdate) R.color.md_theme_primaryContainer else R.color.md_theme_surfaceVariant
+            val autoText = if (autoUpdate) R.color.md_theme_onPrimaryContainer else R.color.md_theme_onSurfaceVariant
+
+            itemSubSettingBinding.tvStatus.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, enabledBg))
+            itemSubSettingBinding.tvStatus.setTextColor(ContextCompat.getColor(context, enabledText))
+
+            itemSubSettingBinding.tvAutoUpdate.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, autoBg))
+            itemSubSettingBinding.tvAutoUpdate.setTextColor(ContextCompat.getColor(context, autoText))
         }
     }
 

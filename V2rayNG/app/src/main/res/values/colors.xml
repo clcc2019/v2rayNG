@@ -81,9 +81,6 @@
     <color name="color_home_metric_warn_text">#A56B1B</color>
     <color name="color_home_metric_bad">#F9ECEC</color>
     <color name="color_home_metric_bad_text">#B95E5D</color>
-    <color name="color_home_selection_glow_start">#26121212</color>
-    <color name="color_home_selection_glow_center">#0A121212</color>
-
     <color name="md_theme_primary">#121212</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
     <color name="md_theme_primaryContainer">#EEF2F6</color>

@@ -10,12 +10,13 @@
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@android:color/transparent"
         android:clipToPadding="false"
         android:overScrollMode="never"
         android:paddingStart="0dp"
-        android:paddingTop="0dp"
+        android:paddingTop="@dimen/padding_spacing_dp4"
         android:paddingEnd="0dp"
-        android:paddingBottom="0dp" />
+        android:paddingBottom="@dimen/padding_spacing_dp10" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/layout_empty_state"

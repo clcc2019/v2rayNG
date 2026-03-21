@@ -5,8 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/md_theme_background"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
+    android:paddingStart="@dimen/padding_spacing_dp16"
+    android:paddingTop="@dimen/padding_spacing_dp12"
+    android:paddingEnd="@dimen/padding_spacing_dp16"
+    android:paddingBottom="@dimen/padding_spacing_dp16"
     tools:context=".ui.SubSettingActivity">
 
     <LinearLayout
@@ -14,9 +20,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingStart="@dimen/padding_spacing_dp16"
-        android:paddingTop="@dimen/padding_spacing_dp12"
-        android:paddingEnd="@dimen/padding_spacing_dp16">
+        android:maxWidth="@dimen/list_card_max_width">
 
         <TextView
             style="@style/Widget.V2Ray.SectionLabel"
@@ -96,11 +100,13 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginTop="@dimen/padding_spacing_dp8"
+        android:layout_gravity="center_horizontal"
+        android:maxWidth="@dimen/list_card_max_width"
         android:clipToPadding="false"
-        android:paddingStart="@dimen/padding_spacing_dp16"
         android:paddingTop="@dimen/padding_spacing_dp6"
-        android:paddingEnd="@dimen/padding_spacing_dp16"
-        android:paddingBottom="@dimen/padding_spacing_dp20"
+        android:paddingBottom="@dimen/padding_spacing_dp12"
+        android:scrollbars="vertical"
         tools:listitem="@layout/item_recycler_sub_setting" />
 
 </LinearLayout>

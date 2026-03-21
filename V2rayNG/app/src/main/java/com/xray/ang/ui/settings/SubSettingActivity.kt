@@ -26,6 +26,7 @@ import com.xray.ang.ui.common.showActionBottomSheet
 import com.xray.ang.ui.common.startActivityWithDefaultTransition
 import com.xray.ang.util.QRCodeDecoder
 import com.xray.ang.util.Utils
+import com.xray.ang.dto.SubscriptionCache
 import com.xray.ang.viewmodel.SubscriptionsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,6 +40,7 @@ class SubSettingActivity : BaseActivity() {
     private lateinit var adapter: SubSettingRecyclerAdapter
     private var itemTouchHelper: ItemTouchHelper? = null
     private var refreshJob: Job? = null
+    private var lastSubscriptionsSignature: Int? = null
     private val shareMethods: Array<out String> by lazy {
         resources.getStringArray(R.array.share_sub_method)
     }
@@ -47,9 +49,12 @@ class SubSettingActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_subscription_list))
 
-        adapter = SubSettingRecyclerAdapter(viewModel, ActivityAdapterListener())
+        adapter = SubSettingRecyclerAdapter(viewModel, ActivityAdapterListener()) { viewHolder ->
+            itemTouchHelper?.startDrag(viewHolder)
+        }
         setupHeaderActions()
         setupRecyclerView()
+        preloadInitialSubscriptions()
         applyPressMotion(binding.actionAddSubscription, binding.actionRefreshSubscriptions)
         (binding.root.getChildAt(0) as? android.view.ViewGroup)?.let {
             postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
@@ -95,9 +100,10 @@ class SubSettingActivity : BaseActivity() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
+        binding.recyclerView.itemAnimator = null
         binding.recyclerView.adapter = adapter
 
-        itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
+        itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowLongPressDrag = false))
         itemTouchHelper?.attachToRecyclerView(binding.recyclerView)
     }
 
@@ -136,15 +142,28 @@ class SubSettingActivity : BaseActivity() {
         }
     }
 
-    fun refreshData() {
+    fun refreshData(force: Boolean = false) {
+        val currentSignature = MmkvManager.decodeSubscriptions().hashCode()
+        if (!force && lastSubscriptionsSignature == currentSignature) {
+            return
+        }
         refreshJob?.cancel()
         refreshJob = lifecycleScope.launch(Dispatchers.IO) {
             viewModel.reload()
             val items = viewModel.getAll()
             withContext(Dispatchers.Main) {
-                adapter.submitList(items)
+                renderSubscriptions(items, currentSignature)
             }
         }
+    }
+
+    private fun preloadInitialSubscriptions() {
+        renderSubscriptions(viewModel.getAll(), MmkvManager.decodeSubscriptions().hashCode())
+    }
+
+    private fun renderSubscriptions(items: List<SubscriptionCache>, signature: Int) {
+        adapter.submitList(items)
+        lastSubscriptionsSignature = signature
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {

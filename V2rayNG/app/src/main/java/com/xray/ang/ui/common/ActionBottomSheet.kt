@@ -17,6 +17,7 @@ import androidx.core.view.updateLayoutParams
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.xray.ang.AppConfig
 import com.xray.ang.R
+import com.xray.ang.ui.MotionTokens
 import com.xray.ang.ui.UiMotion
 
 data class ActionBottomSheetItem(
@@ -166,7 +167,24 @@ fun Context.showActionBottomSheet(
 
     bottomSheetDialog.setContentView(sheetView)
     bottomSheetDialog.setOnShowListener {
-        UiMotion.animateStaggeredChildren(actionsContainer)
+        val sheetContent = (sheetView as? ViewGroup)?.getChildAt(0) as? ViewGroup
+        sheetContent?.let {
+            UiMotion.animateStaggeredChildren(
+                container = it,
+                translationOffsetDp = 10f,
+                stepDelay = 24L
+            )
+        }
+        if (actionsContainer.childCount > 0) {
+            actionsContainer.post {
+                UiMotion.animateStaggeredChildren(
+                    container = actionsContainer,
+                    translationOffsetDp = 8f,
+                    stepDelay = 18L,
+                    startDelay = MotionTokens.STAGGER_START_DELAY
+                )
+            }
+        }
     }
     bottomSheetDialog.show()
 }

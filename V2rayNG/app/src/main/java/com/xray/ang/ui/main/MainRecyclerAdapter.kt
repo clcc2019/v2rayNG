@@ -1,5 +1,6 @@
 package com.xray.ang.ui
 
+import android.animation.Animator
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -10,7 +11,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -46,7 +46,6 @@ class MainRecyclerAdapter(
         private const val PAYLOAD_CONTENT = "payload_content"
         private const val INITIAL_ENTRANCE_ITEM_LIMIT = 4
         private const val FLOAT_EPSILON = 0.001f
-        private val selectionInterpolator = FastOutSlowInInterpolator()
 
         private fun resolveCardBackgroundColor(colors: ItemColors, isSelected: Boolean): Int {
             return if (isSelected) colors.selectedSurface else colors.surface
@@ -62,6 +61,8 @@ class MainRecyclerAdapter(
             strokeColor: Int,
             strokeWidth: Int
         ) {
+            (target.getTag(R.id.tag_motion_card_style_animator) as? Animator)?.cancel()
+            target.setTag(R.id.tag_motion_card_style_animator, null)
             target.animate().cancel()
             target.alpha = 1f
             target.translationY = 0f
@@ -237,15 +238,16 @@ class MainRecyclerAdapter(
     private fun bindFullItem(holder: MainViewHolder, position: Int) {
         val item = getItem(position)
         holder.boundItem = item
+        val animateStateChanges = holder.boundGuid == item.guid
         bindPrimaryContent(holder, item)
         bindSubscription(holder, item)
-        bindSelectionState(holder, item.guid == selectedGuid)
+        bindSelectionState(holder, item.guid == selectedGuid, animateStateChanges)
         bindTestResult(holder, item)
         bindEntranceMotion(holder, position, item)
     }
 
     private fun bindSelectionPayload(holder: MainViewHolder, item: ServersCache) {
-        bindSelectionState(holder, item.guid == selectedGuid)
+        bindSelectionState(holder, item.guid == selectedGuid, animateChange = true)
         bindSubscription(holder, item)
     }
 
@@ -385,56 +387,75 @@ class MainRecyclerAdapter(
         }
     }
 
-    private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean) {
+    private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean, animateChange: Boolean) {
         if (holder.lastSelectionState == isSelected) {
             return
         }
         val previousSelection = holder.lastSelectionState
         holder.lastSelectionState = isSelected
+        val targetNameAlpha = if (isSelected) 1f else 0.96f
+        val targetStatisticsAlpha = if (isSelected) 0.9f else 0.84f
+        val targetProtocolAlpha = if (isSelected) 0.94f else 0.82f
+        val targetMetaAlpha = if (isSelected) 1f else 0.95f
+        val targetSubscriptionAlpha = if (isSelected) 1f else 0.94f
+        val targetMoreAlpha = if (isSelected) 0.76f else 0.6f
+        val selectionDuration = if (isSelected) {
+            MotionTokens.MEDIUM_ANIMATION_DURATION
+        } else {
+            MotionTokens.SHORT_ANIMATION_DURATION
+        }
+        val targetBackground = resolveCardBackgroundColor(holder.colors, isSelected)
+        val targetStrokeColor = resolveCardStrokeColor(holder.colors, isSelected)
+        val shouldAnimateSelection = animateChange && previousSelection != null
 
-        holder.itemMainBinding.tvName.alpha = if (isSelected) 1f else 0.96f
-        holder.itemMainBinding.tvStatistics.alpha = if (isSelected) 0.9f else 0.84f
-        holder.itemMainBinding.tvType.alpha = if (isSelected) 0.94f else 0.82f
-        holder.itemMainBinding.layoutMetaPanel.alpha = if (isSelected) 1f else 0.95f
-        holder.itemMainBinding.tvTestResult.alpha = 1f
-        holder.itemMainBinding.layoutSubscription.alpha = if (isSelected) 1f else 0.94f
-        holder.itemMainBinding.layoutMore.alpha = if (isSelected) 0.76f else 0.6f
-        holder.itemMainBinding.viewSelectedLeftEdge.alpha = if (isSelected) 0.84f else 0f
-        resetCardState(
-            holder.itemMainBinding.itemBg,
-            resolveCardBackgroundColor(holder.colors, isSelected),
-            resolveCardStrokeColor(holder.colors, isSelected),
-            holder.cardStrokeWidthPx
-        )
-        if (previousSelection != null) {
+        if (shouldAnimateSelection) {
+            UiMotion.animateAlpha(holder.itemMainBinding.tvName, targetNameAlpha, duration = selectionDuration)
+            UiMotion.animateAlpha(holder.itemMainBinding.tvStatistics, targetStatisticsAlpha, duration = selectionDuration)
+            UiMotion.animateAlpha(holder.itemMainBinding.layoutMetaPanel, targetMetaAlpha, duration = selectionDuration)
+            UiMotion.animateAlpha(holder.itemMainBinding.layoutSubscription, targetSubscriptionAlpha, duration = selectionDuration)
             if (isSelected) {
-                holder.itemMainBinding.viewSelectedLeftEdge.alpha = 0.52f
-                holder.itemMainBinding.viewSelectedLeftEdge.animate()
-                    .alpha(0.84f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
-                UiMotion.animateFocusShift(holder.itemMainBinding.itemBg, holder.itemMainBinding.viewSelectedLeftEdge)
-                UiMotion.animateFocusShift(
-                    primary = holder.itemMainBinding.tvType,
-                    secondary = holder.itemMainBinding.tvTestResult,
-                    translationOffsetDp = 4f,
-                    duration = MotionTokens.SHORT_ANIMATION_DURATION
-                )
-                UiMotion.animateStatePulse(
-                    holder.itemMainBinding.itemBg,
-                    expandScale = 1.012f,
-                    contractScale = 0.994f,
-                    duration = MotionTokens.EMPHASIS_DURATION
-                )
-                UiMotion.animatePulse(holder.itemMainBinding.layoutMore, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
+                holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
+                holder.itemMainBinding.layoutMore.alpha = targetMoreAlpha
             } else {
-                holder.itemMainBinding.viewSelectedLeftEdge.animate()
-                    .alpha(0f)
-                    .setDuration(MotionTokens.SHORT_ANIMATION_DURATION)
-                    .setInterpolator(selectionInterpolator)
-                    .start()
+                UiMotion.animateAlpha(holder.itemMainBinding.tvType, targetProtocolAlpha, duration = selectionDuration)
+                UiMotion.animateAlpha(holder.itemMainBinding.layoutMore, targetMoreAlpha, duration = selectionDuration)
             }
+            UiMotion.animateCardSurface(
+                card = holder.itemMainBinding.itemBg,
+                backgroundColor = targetBackground,
+                strokeColor = targetStrokeColor,
+                strokeWidth = holder.cardStrokeWidthPx,
+                duration = selectionDuration
+            )
+        } else {
+            holder.itemMainBinding.tvName.alpha = targetNameAlpha
+            holder.itemMainBinding.tvStatistics.alpha = targetStatisticsAlpha
+            holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
+            holder.itemMainBinding.layoutMetaPanel.alpha = targetMetaAlpha
+            holder.itemMainBinding.layoutSubscription.alpha = targetSubscriptionAlpha
+            holder.itemMainBinding.layoutMore.alpha = targetMoreAlpha
+            resetCardState(
+                holder.itemMainBinding.itemBg,
+                targetBackground,
+                targetStrokeColor,
+                holder.cardStrokeWidthPx
+            )
+        }
+        holder.itemMainBinding.tvTestResult.alpha = 1f
+        if (shouldAnimateSelection && isSelected) {
+            UiMotion.animateFocusShift(
+                primary = holder.itemMainBinding.tvType,
+                secondary = holder.itemMainBinding.tvTestResult,
+                translationOffsetDp = 4f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
+            )
+            UiMotion.animateStatePulse(
+                holder.itemMainBinding.itemBg,
+                expandScale = 1.012f,
+                contractScale = 0.994f,
+                duration = MotionTokens.EMPHASIS_DURATION
+            )
+            UiMotion.animatePulse(holder.itemMainBinding.layoutMore, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
         }
     }
 
@@ -525,6 +546,7 @@ class MainRecyclerAdapter(
         init {
             itemMainBinding.layoutMore.visibility = View.VISIBLE
             UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
+            UiMotion.attachPressFeedback(itemMainBinding.tvTestResult, pressedScale = 0.97f)
             UiMotion.attachPressFeedbackComposite(
                 source = itemMainBinding.itemBg,
                 scaleTarget = itemMainBinding.itemBg,
@@ -567,6 +589,7 @@ class MainRecyclerAdapter(
                     return@OnClickListener
                 }
                 itemMainBinding.tvTestResult.hapticVirtualKey()
+                UiMotion.animatePulse(itemMainBinding.tvTestResult, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
                 adapterListener?.onTestDelay(item.guid, currentPosition)
             }
             itemMainBinding.tvTestResult.setOnClickListener(onTestDelayClick)
@@ -597,7 +620,12 @@ class MainRecyclerAdapter(
     override fun onViewRecycled(holder: BaseViewHolder) {
         if (holder is MainViewHolder) {
             holder.itemMainBinding.itemBg.animate().cancel()
-            holder.itemMainBinding.viewSelectedLeftEdge.animate().cancel()
+            holder.itemMainBinding.layoutMore.animate().cancel()
+            holder.itemMainBinding.tvTestResult.animate().cancel()
+            holder.itemMainBinding.layoutMore.scaleX = 1f
+            holder.itemMainBinding.layoutMore.scaleY = 1f
+            holder.itemMainBinding.tvTestResult.scaleX = 1f
+            holder.itemMainBinding.tvTestResult.scaleY = 1f
             ensureRestingCardState(holder)
             holder.itemMainBinding.tvStatistics.translationY = 0f
         }

@@ -27,12 +27,12 @@
         android:paddingEnd="@dimen/padding_spacing_dp16"
         android:paddingBottom="@dimen/padding_spacing_dp16">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:gravity="top"
-            android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:gravity="top"
+                android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -71,12 +71,12 @@
 
             </LinearLayout>
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/chk_enable"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_spacing_dp12"
-                app:theme="@style/BrandedSwitch" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/chk_enable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/padding_spacing_dp12"
+                    app:theme="@style/BrandedSwitch" />
 
         </LinearLayout>
 
@@ -126,41 +126,85 @@
 
         </LinearLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/padding_spacing_dp12"
+            android:alpha="0.8"
+            android:background="@color/color_card_outline"
+            android:importantForAccessibility="no" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp14"
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
             android:baselineAligned="false"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
                 android:id="@+id/layout_share"
-                style="@style/Widget.V2Ray.Button.ListAction"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/title_configuration_share"
-                app:icon="@drawable/ic_share_24dp" />
+                style="@style/Widget.V2Ray.SectionIconButton"
+                android:contentDescription="@string/title_configuration_share">
 
-            <com.google.android.material.button.MaterialButton
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:alpha="0.72"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_share_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/layout_edit"
-                style="@style/Widget.V2Ray.Button.ListAction"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                style="@style/Widget.V2Ray.SectionIconButton"
                 android:layout_marginStart="@dimen/padding_spacing_dp8"
-                android:layout_weight="1"
-                android:text="@string/menu_item_edit_config"
-                app:icon="@drawable/ic_edit_24dp" />
+                android:contentDescription="@string/menu_item_edit_config">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/layout_remove"
-                style="@style/Widget.V2Ray.Button.ListAction"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:alpha="0.72"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_edit_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_drag_handle"
+                style="@style/Widget.V2Ray.SectionIconButton"
                 android:layout_marginStart="@dimen/padding_spacing_dp8"
-                android:layout_weight="1"
-                android:text="@string/menu_item_del_config"
-                app:icon="@drawable/ic_delete_24dp" />
+                android:contentDescription="@string/action_reorder">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:alpha="0.5"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_drag_handle_20dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_remove"
+                style="@style/Widget.V2Ray.SectionIconButton"
+                android:layout_marginStart="@dimen/padding_spacing_dp8"
+                android:contentDescription="@string/menu_item_del_config">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:alpha="0.72"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_delete_24dp"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
 
         </LinearLayout>
 

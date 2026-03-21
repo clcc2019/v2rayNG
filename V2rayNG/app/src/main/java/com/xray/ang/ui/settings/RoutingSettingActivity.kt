@@ -7,10 +7,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.widget.Toast
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -23,8 +21,13 @@ import com.xray.ang.handler.MmkvManager
 import com.xray.ang.handler.SettingsChangeManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.helper.SimpleItemTouchHelperCallback
+import com.xray.ang.ui.common.actionBottomSheetItem
+import com.xray.ang.ui.common.showActionBottomSheet
+import com.xray.ang.ui.common.showChoiceBottomSheet
+import com.xray.ang.ui.common.showMessageBottomSheet
 import com.xray.ang.util.JsonUtil
 import com.xray.ang.util.Utils
+import com.xray.ang.dto.RulesetItem
 import com.xray.ang.viewmodel.RoutingSettingsViewModel
 import com.xray.ang.viewmodel.UserAssetViewModel
 import kotlinx.coroutines.Dispatchers
@@ -37,11 +40,6 @@ import java.util.Date
 import java.util.Locale
 
 class RoutingSettingActivity : HelperBaseActivity() {
-    private data class RoutingActionItem(
-        val label: CharSequence,
-        val handler: () -> Unit
-    )
-
     private val binding by lazy { ActivityRoutingSettingBinding.inflate(layoutInflater) }
     private val ownerActivity: RoutingSettingActivity
         get() = this
@@ -54,6 +52,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     private var lastEnabledCount: Int? = null
     private var lastLockedCount: Int? = null
     private var lastEmptyStateVisible: Boolean? = null
+    private var lastRulesSignature: Int? = null
     private val extDir by lazy { File(Utils.userAssetPath(this)) }
     private val routing_domain_strategy: Array<out String> by lazy {
         resources.getStringArray(R.array.routing_domain_strategy)
@@ -75,6 +74,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         // RecyclerView is embedded in a NestedScrollView and needs to fully measure its content.
         binding.recyclerView.setHasFixedSize(false)
+        binding.recyclerView.itemAnimator = null
         binding.recyclerView.adapter = adapter
 
         mItemTouchHelper = ItemTouchHelper(
@@ -122,6 +122,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
         (binding.root.getChildAt(0) as? android.view.ViewGroup)?.let {
             postStaggeredEnterMotion(it, translationOffsetDp = 10f, startDelay = 36L)
         }
+        preloadInitialRules()
     }
 
     override fun onResume() {
@@ -427,22 +428,36 @@ class RoutingSettingActivity : HelperBaseActivity() {
         binding.tvRoutingAssetsUpdated.text = getString(R.string.routing_assets_updated_at, formatted)
     }
 
-    fun refreshData() {
+    fun refreshData(force: Boolean = false) {
+        val currentSignature = SettingsManager.getRoutingRulesetsSignature()
+        if (!force && lastRulesSignature == currentSignature) {
+            return
+        }
         refreshJob?.cancel()
         refreshJob = lifecycleScope.launch(Dispatchers.IO) {
             viewModel.reload()
             val items = viewModel.getAll()
+            val signature = SettingsManager.getRoutingRulesetsSignature()
             withContext(Dispatchers.Main) {
-                updateRuleSummary(items)
-                updateEmptyState(items.isEmpty())
-                adapter.submitList(items) {
-                    binding.recyclerView.requestLayout()
-                }
+                renderRules(items, signature)
             }
         }
     }
 
-    private fun updateRuleSummary(items: List<com.xray.ang.dto.RulesetItem>) {
+    private fun preloadInitialRules() {
+        viewModel.reload()
+        val items = viewModel.getAll()
+        renderRules(items, SettingsManager.getRoutingRulesetsSignature())
+    }
+
+    private fun renderRules(items: List<RulesetItem>, signature: Int) {
+        updateRuleSummary(items)
+        updateEmptyState(items.isEmpty())
+        adapter.submitList(items)
+        lastRulesSignature = signature
+    }
+
+    private fun updateRuleSummary(items: List<RulesetItem>) {
         val total = items.size
         val enabled = items.count { it.enabled }
         val locked = items.count { it.locked == true }
@@ -509,68 +524,5 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
     private fun startActivityWithDefaultTransition(intent: Intent) {
         startActivity(intent)
-    }
-
-    private fun actionBottomSheetItem(
-        @StringRes labelResId: Int,
-        @DrawableRes iconRes: Int,
-        destructive: Boolean = false,
-        secondary: Boolean = false,
-        handler: () -> Unit
-    ): RoutingActionItem {
-        return RoutingActionItem(label = getString(labelResId), handler = handler)
-    }
-
-    private fun actionBottomSheetItem(
-        label: CharSequence,
-        @DrawableRes iconRes: Int,
-        destructive: Boolean = false,
-        secondary: Boolean = false,
-        handler: () -> Unit
-    ): RoutingActionItem {
-        return RoutingActionItem(label = label, handler = handler)
-    }
-
-    private fun showActionBottomSheet(
-        title: CharSequence,
-        subtitle: CharSequence? = null,
-        actions: List<RoutingActionItem>
-    ) {
-        val labels = actions.map { it.label }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(subtitle?.takeIf { it.isNotBlank() })
-            .setItems(labels) { _, which -> actions[which].handler() }
-            .show()
-    }
-
-    private fun showChoiceBottomSheet(
-        title: CharSequence,
-        subtitle: CharSequence? = null,
-        options: List<CharSequence>,
-        @DrawableRes iconRes: Int,
-        onSelected: (Int) -> Unit
-    ) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(subtitle?.takeIf { it.isNotBlank() })
-            .setItems(options.map(CharSequence::toString).toTypedArray()) { _, which ->
-                onSelected(which)
-            }
-            .show()
-    }
-
-    private fun showMessageBottomSheet(
-        title: CharSequence,
-        message: CharSequence,
-        actions: List<RoutingActionItem>
-    ) {
-        val builder = AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-        actions.getOrNull(0)?.let { builder.setPositiveButton(it.label) { _, _ -> it.handler() } }
-        actions.getOrNull(1)?.let { builder.setNegativeButton(it.label) { _, _ -> it.handler() } }
-        actions.getOrNull(2)?.let { builder.setNeutralButton(it.label) { _, _ -> it.handler() } }
-        builder.show()
     }
 }

@@ -1,5 +1,6 @@
 package com.xray.ang.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -41,10 +42,12 @@ import kotlinx.coroutines.withContext
 
 abstract class BaseActivity : AppCompatActivity() {
     private var progressBar: LinearProgressIndicator? = null
+    private var shouldRunPageEnterMotion = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyPreferredRefreshRate()
+        shouldRunPageEnterMotion = savedInstanceState == null && ValueAnimator.areAnimatorsEnabled()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         if (!Utils.getDarkModeStatus(this)) {
@@ -263,6 +266,10 @@ abstract class BaseActivity : AppCompatActivity() {
         startDelay: Long = 0L,
         duration: Long = MotionTokens.MEDIUM_ANIMATION_DURATION
     ) {
+        if (shouldSkipNestedPageEnterMotion(view)) {
+            UiMotion.settleView(view)
+            return
+        }
         view.post {
             UiMotion.animateEntrance(
                 view = view,
@@ -278,6 +285,9 @@ abstract class BaseActivity : AppCompatActivity() {
         translationOffsetDp: Float = 10f,
         startDelay: Long = 36L
     ) {
+        if (shouldSkipNestedPageEnterMotion(root)) {
+            return
+        }
         (root as? ViewGroup)?.getChildAt(0)?.let { child ->
             (child as? ViewGroup)?.let {
                 postStaggeredEnterMotion(it, translationOffsetDp = translationOffsetDp, startDelay = startDelay)
@@ -314,6 +324,9 @@ abstract class BaseActivity : AppCompatActivity() {
         startDelay: Long = 0L,
         stepDelay: Long = MotionTokens.STAGGER_DELAY
     ) {
+        if (shouldSkipNestedPageEnterMotion(container)) {
+            return
+        }
         container.post {
             UiMotion.animateStaggeredChildren(
                 container = container,
@@ -325,23 +338,32 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     private fun scheduleBaseScreenEnterMotion(baseRoot: View) {
-        val toolbar = baseRoot.findViewById<Toolbar>(R.id.toolbar)
         val content = baseRoot.findViewById<View>(R.id.content_container)
+        if (!shouldRunPageEnterMotion) {
+            UiMotion.settleView(content)
+            return
+        }
         baseRoot.post {
-            toolbar?.let {
-                UiMotion.animateEntrance(
-                    view = it,
-                    translationOffsetDp = -6f,
-                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
-                )
-            }
             UiMotion.animateEntrance(
                 view = content,
-                translationOffsetDp = 10f,
-                startDelay = 24L,
-                duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+                translationOffsetDp = 6f,
+                duration = MotionTokens.SHORT_ANIMATION_DURATION
             )
         }
+    }
+
+    private fun shouldSkipNestedPageEnterMotion(view: View): Boolean {
+        if (!shouldRunPageEnterMotion) {
+            return true
+        }
+        var current: View? = view
+        while (current != null) {
+            if (current.id == R.id.content_container) {
+                return true
+            }
+            current = current.parent as? View
+        }
+        return false
     }
 
     protected fun showLoading() {

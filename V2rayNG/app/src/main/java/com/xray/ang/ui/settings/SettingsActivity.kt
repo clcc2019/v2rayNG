@@ -173,14 +173,6 @@ class SettingsActivity : BaseActivity() {
             }
             setDivider(null)
             setDividerHeight(0)
-            view.post {
-                UiMotion.animateEntrance(
-                    view = listView,
-                    translationOffsetDp = 8f,
-                    startDelay = 48L,
-                    duration = MotionTokens.MEDIUM_ANIMATION_DURATION
-                )
-            }
         }
 
         private fun applyPreferenceVisuals(group: PreferenceGroup) {

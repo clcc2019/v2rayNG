@@ -80,9 +80,6 @@
     <color name="color_home_metric_good_text">#7CDFA3</color>
     <color name="color_home_metric_warn_text">#F4C067</color>
     <color name="color_home_metric_bad_text">#FF9B98</color>
-    <color name="color_home_selection_glow_start">#26F4F7FA</color>
-    <color name="color_home_selection_glow_center">#0AF4F7FA</color>
-
     <color name="md_theme_primary">#F4F7FA</color>
     <color name="md_theme_onPrimary">#12161A</color>
     <color name="md_theme_primaryContainer">#232B34</color>
