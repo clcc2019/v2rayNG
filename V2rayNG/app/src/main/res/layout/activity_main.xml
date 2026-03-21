@@ -100,8 +100,8 @@
         android:clickable="true"
         android:focusable="true"
         android:foreground="@drawable/bg_connection_dock_touch_ripple"
-        app:cardBackgroundColor="@color/colorWhite"
-        app:strokeColor="@android:color/transparent"
+        app:cardBackgroundColor="@color/color_home_card_bg_dock"
+        app:strokeColor="@color/color_home_card_stroke"
         app:strokeWidth="0dp">
 
         <LinearLayout

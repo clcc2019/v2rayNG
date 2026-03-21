@@ -203,12 +203,12 @@ class MainConnectionCardController(
             val alphaInt = (value * 255).toInt()
             binding.cardConnection.setCardBackgroundColor(
                 ColorUtils.setAlphaComponent(
-                    ContextCompat.getColor(context, R.color.colorWhite),
+                    ContextCompat.getColor(context, R.color.color_home_card_bg_dock),
                     alphaInt
                 )
             )
             binding.cardConnection.strokeColor = ColorUtils.setAlphaComponent(
-                ContextCompat.getColor(context, android.R.color.transparent),
+                ContextCompat.getColor(context, R.color.color_home_card_stroke),
                 alphaInt
             )
         }

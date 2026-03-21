@@ -595,9 +595,9 @@ class MainRecyclerAdapter(
             fun from(view: View): ItemColors {
                 val context = view.context
                 return ItemColors(
-                    surface = ContextCompat.getColor(context, R.color.colorWhite),
+                    surface = ContextCompat.getColor(context, R.color.color_home_card_bg),
                     selectedSurface = ContextCompat.getColor(context, R.color.color_home_card_bg_selected),
-                    outline = ContextCompat.getColor(context, android.R.color.transparent),
+                    outline = ContextCompat.getColor(context, R.color.color_home_card_stroke),
                     selectedOutline = ContextCompat.getColor(context, R.color.color_home_card_stroke_selected)
                 )
             }

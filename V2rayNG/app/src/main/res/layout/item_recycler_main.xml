@@ -19,8 +19,8 @@
         android:clipToOutline="true"
         android:foreground="@drawable/bg_home_list_item_ripple"
         android:nextFocusRight="@+id/layout_more"
-        app:cardBackgroundColor="@color/colorWhite"
-        app:strokeColor="@android:color/transparent"
+        app:cardBackgroundColor="@color/color_home_card_bg"
+        app:strokeColor="@color/color_home_card_stroke"
         app:strokeWidth="0dp">
 
         <LinearLayout
