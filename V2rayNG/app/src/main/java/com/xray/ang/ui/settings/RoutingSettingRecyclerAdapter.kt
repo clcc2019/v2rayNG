@@ -1,7 +1,6 @@
 package com.xray.ang.ui
 
 import android.view.LayoutInflater
-import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -89,7 +88,6 @@ class RoutingSettingRecyclerAdapter(
 
         holder.itemRoutingSettingBinding.layoutDragHandle.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                holder.itemRoutingSettingBinding.layoutDragHandle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onStartDrag?.invoke(holder)
             }
             false

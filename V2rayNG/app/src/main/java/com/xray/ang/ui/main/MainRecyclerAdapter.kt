@@ -3,7 +3,9 @@ package com.xray.ang.ui
 import android.animation.Animator
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.widget.ImageView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,12 +13,14 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
+import androidx.core.widget.ImageViewCompat
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.contracts.MainAdapterListener
 import com.xray.ang.databinding.ItemRecyclerFooterBinding
@@ -26,9 +30,6 @@ import com.xray.ang.handler.MmkvManager
 import com.xray.ang.helper.ItemTouchHelperAdapter
 import com.xray.ang.helper.ItemTouchHelperViewHolder
 import com.xray.ang.helper.ListDiffExecutors
-import com.xray.ang.ui.common.hapticClick
-import com.xray.ang.ui.common.hapticLongPress
-import com.xray.ang.ui.common.hapticVirtualKey
 import com.xray.ang.viewmodel.MainViewModel
 import java.util.Collections
 import kotlin.math.abs
@@ -308,10 +309,17 @@ class MainRecyclerAdapter(
 
     private fun bindPrimaryContent(holder: MainViewHolder, item: ServersCache) {
         val animateContentChanges = holder.boundGuid == item.guid
-        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.9f else 0.84f
-        val targetProtocolAlpha = if (holder.lastSelectionState == true) 0.94f else 0.82f
+        val targetStatisticsAlpha = if (holder.lastSelectionState == true) 0.9f else 0.82f
+        val targetProtocolAlpha = if (holder.lastSelectionState == true) 0.98f else 0.9f
         holder.itemMainBinding.tvName.text = item.profile.remarks
         val protocolText = item.profile.configType.name
+        applySecurityBadgeStyle(
+            container = holder.itemMainBinding.layoutSecurityBadge,
+            iconView = holder.itemMainBinding.ivSecurityBadge,
+            isSecure = item.profile.security.equals(AppConfig.TLS, ignoreCase = true) ||
+                item.profile.security.equals(AppConfig.REALITY, ignoreCase = true),
+            colors = holder.securityBadgeColors
+        )
         if (animateContentChanges) {
             UiMotion.animateTextChange(
                 textView = holder.itemMainBinding.tvType,
@@ -342,6 +350,7 @@ class MainRecyclerAdapter(
         val targetBackground = resolveCardBackgroundColor(holder.colors, isSelected)
         val targetStrokeColor = resolveCardStrokeColor(holder.colors, isSelected)
         val card = holder.itemMainBinding.itemBg
+        holder.itemMainBinding.infoContainer.isSelected = isSelected
         val hasTransformResidue = abs(card.translationY) > FLOAT_EPSILON ||
             abs(card.scaleX - 1f) > FLOAT_EPSILON ||
             abs(card.scaleY - 1f) > FLOAT_EPSILON ||
@@ -394,11 +403,11 @@ class MainRecyclerAdapter(
         val previousSelection = holder.lastSelectionState
         holder.lastSelectionState = isSelected
         val targetNameAlpha = if (isSelected) 1f else 0.96f
-        val targetStatisticsAlpha = if (isSelected) 0.9f else 0.84f
-        val targetProtocolAlpha = if (isSelected) 0.94f else 0.82f
-        val targetMetaAlpha = if (isSelected) 1f else 0.95f
-        val targetSubscriptionAlpha = if (isSelected) 1f else 0.94f
-        val targetMoreAlpha = if (isSelected) 0.76f else 0.6f
+        val targetStatisticsAlpha = if (isSelected) 0.9f else 0.82f
+        val targetProtocolAlpha = if (isSelected) 0.98f else 0.9f
+        val targetMetaAlpha = if (isSelected) 1f else 0.94f
+        val targetSubscriptionAlpha = if (isSelected) 0.96f else 0.82f
+        val targetMoreAlpha = if (isSelected) 0.76f else 0.58f
         val selectionDuration = if (isSelected) {
             MotionTokens.MEDIUM_ANIMATION_DURATION
         } else {
@@ -407,6 +416,7 @@ class MainRecyclerAdapter(
         val targetBackground = resolveCardBackgroundColor(holder.colors, isSelected)
         val targetStrokeColor = resolveCardStrokeColor(holder.colors, isSelected)
         val shouldAnimateSelection = animateChange && previousSelection != null
+        holder.itemMainBinding.infoContainer.isSelected = isSelected
 
         if (shouldAnimateSelection) {
             UiMotion.animateAlpha(holder.itemMainBinding.tvName, targetNameAlpha, duration = selectionDuration)
@@ -415,9 +425,11 @@ class MainRecyclerAdapter(
             UiMotion.animateAlpha(holder.itemMainBinding.layoutSubscription, targetSubscriptionAlpha, duration = selectionDuration)
             if (isSelected) {
                 holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
+                holder.itemMainBinding.layoutSecurityBadge.alpha = targetProtocolAlpha
                 holder.itemMainBinding.layoutMore.alpha = targetMoreAlpha
             } else {
                 UiMotion.animateAlpha(holder.itemMainBinding.tvType, targetProtocolAlpha, duration = selectionDuration)
+                UiMotion.animateAlpha(holder.itemMainBinding.layoutSecurityBadge, targetProtocolAlpha, duration = selectionDuration)
                 UiMotion.animateAlpha(holder.itemMainBinding.layoutMore, targetMoreAlpha, duration = selectionDuration)
             }
             UiMotion.animateCardSurface(
@@ -431,6 +443,7 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.tvName.alpha = targetNameAlpha
             holder.itemMainBinding.tvStatistics.alpha = targetStatisticsAlpha
             holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
+            holder.itemMainBinding.layoutSecurityBadge.alpha = targetProtocolAlpha
             holder.itemMainBinding.layoutMetaPanel.alpha = targetMetaAlpha
             holder.itemMainBinding.layoutSubscription.alpha = targetSubscriptionAlpha
             holder.itemMainBinding.layoutMore.alpha = targetMoreAlpha
@@ -537,7 +550,8 @@ class MainRecyclerAdapter(
         BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder {
         val colors = ItemColors.from(itemMainBinding.root)
         val latencyBadgeColors = LatencyBadgeColors.from(itemMainBinding.root)
-        val cardStrokeWidthPx = itemMainBinding.root.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp1)
+        val securityBadgeColors = SecurityBadgeColors.from(itemMainBinding.root)
+        val cardStrokeWidthPx = 0
         var lastSelectionState: Boolean? = null
         var boundGuid: String? = null
         var lastTestDelay: Long? = null
@@ -561,14 +575,12 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnClickListener
                 }
-                itemMainBinding.layoutMore.hapticClick()
                 UiMotion.animatePulse(itemMainBinding.layoutMore, pulseScale = 1.02f, duration = MotionTokens.PULSE_QUICK)
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
             }
 
             itemMainBinding.itemBg.setOnClickListener {
                 val item = boundItem ?: return@setOnClickListener
-                itemMainBinding.itemBg.hapticClick()
                 adapterListener?.onSelectServer(item.guid)
             }
             itemMainBinding.itemBg.setOnLongClickListener {
@@ -577,7 +589,6 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@setOnLongClickListener false
                 }
-                itemMainBinding.itemBg.hapticLongPress()
                 adapterListener?.onShare(item.guid, item.profile, currentPosition, true)
                 true
             }
@@ -588,7 +599,6 @@ class MainRecyclerAdapter(
                 if (currentPosition == RecyclerView.NO_POSITION) {
                     return@OnClickListener
                 }
-                itemMainBinding.tvTestResult.hapticVirtualKey()
                 UiMotion.animatePulse(itemMainBinding.tvTestResult, pulseScale = 1.04f, duration = MotionTokens.PULSE_QUICK)
                 adapterListener?.onTestDelay(item.guid, currentPosition)
             }
@@ -596,6 +606,7 @@ class MainRecyclerAdapter(
         }
 
         override fun onItemSelected() {
+            itemMainBinding.infoContainer.isSelected = lastSelectionState == true
             resetCardState(
                 itemMainBinding.itemBg,
                 resolveCardBackgroundColor(colors, lastSelectionState == true),
@@ -605,6 +616,7 @@ class MainRecyclerAdapter(
         }
 
         override fun onItemClear() {
+            itemMainBinding.infoContainer.isSelected = lastSelectionState == true
             resetCardState(
                 itemMainBinding.itemBg,
                 resolveCardBackgroundColor(colors, lastSelectionState == true),
@@ -695,6 +707,25 @@ class MainRecyclerAdapter(
         }
     }
 
+    data class SecurityBadgeColors(
+        val tlsBackground: Int,
+        val tlsIcon: Int,
+        val plainBackground: Int,
+        val plainIcon: Int
+    ) {
+        companion object {
+            fun from(view: View): SecurityBadgeColors {
+                val context = view.context
+                return SecurityBadgeColors(
+                    tlsBackground = ContextCompat.getColor(context, R.color.color_home_security_tls_bg),
+                    tlsIcon = ContextCompat.getColor(context, R.color.color_home_security_tls_icon),
+                    plainBackground = ContextCompat.getColor(context, R.color.color_home_security_plain_bg),
+                    plainIcon = ContextCompat.getColor(context, R.color.color_home_security_plain_icon)
+                )
+            }
+        }
+    }
+
     private object MainDiffCallback : DiffUtil.ItemCallback<ServersCache>() {
         override fun areItemsTheSame(oldItem: ServersCache, newItem: ServersCache): Boolean {
             return oldItem.guid == newItem.guid
@@ -741,6 +772,36 @@ class MainRecyclerAdapter(
             target.backgroundTintList = background
         }
         target.setTextColor(textColor)
+        target.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            createLatencyDotDrawable(target, textColor),
+            null,
+            null,
+            null
+        )
         target.alpha = if (delayMillis == 0L) 0.84f else 1f
+    }
+
+    private fun createLatencyDotDrawable(target: TextView, color: Int): Drawable {
+        val size = target.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
+        return GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(color)
+            setSize(size, size)
+        }
+    }
+
+    private fun applySecurityBadgeStyle(
+        container: View,
+        iconView: ImageView,
+        isSecure: Boolean,
+        colors: SecurityBadgeColors
+    ) {
+        container.backgroundTintList = ColorStateList.valueOf(
+            if (isSecure) colors.tlsBackground else colors.plainBackground
+        )
+        ImageViewCompat.setImageTintList(
+            iconView,
+            ColorStateList.valueOf(if (isSecure) colors.tlsIcon else colors.plainIcon)
+        )
     }
 }

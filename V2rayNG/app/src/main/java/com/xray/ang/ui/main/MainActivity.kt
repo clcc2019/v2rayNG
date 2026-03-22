@@ -40,8 +40,6 @@ import com.xray.ang.handler.SettingsChangeManager
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.handler.V2RayServiceManager
 import com.xray.ang.ui.common.hapticClick
-import com.xray.ang.ui.common.hapticConfirm
-import com.xray.ang.ui.common.hapticReject
 import com.xray.ang.ui.common.hapticVirtualKey
 import com.xray.ang.ui.common.launchActivityWithDefaultTransition
 import com.xray.ang.util.MessageUtil
@@ -101,6 +99,7 @@ class MainActivity : HelperBaseActivity() {
     private var notificationPermissionJob: Job? = null
     private var connectionTestFallbackJob: Job? = null
     private var hasAttemptedLaunchNotificationPermission = false
+    private var lastMainContentInsets: WindowInsetsCompat? = null
     private var defaultViewPagerTopPadding = 0
     private var defaultViewPagerBottomPadding = 0
     private var toolbarSearchMenuItem: MenuItem? = null
@@ -199,7 +198,6 @@ class MainActivity : HelperBaseActivity() {
         binding.fab.setOnClickListener { handleFabAction() }
         binding.cardConnection.setOnClickListener {
             if (serviceUiState == ServiceUiState.RUNNING && mainViewModel.isRunning.value == true) {
-                binding.cardConnection.hapticClick()
                 handleConnectionTestAction()
             }
         }
@@ -285,6 +283,8 @@ class MainActivity : HelperBaseActivity() {
     override fun onResume() {
         super.onResume()
         handlePendingSettingsChanges()
+        groupTabsController.resyncGroupTabVisibility()
+        binding.mainContent.post { syncMainContentInsets() }
         updateConnectionCardVisibility()
         scheduleNotificationPermissionPrompt()
     }
@@ -358,31 +358,40 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupMainContentInsets() {
-        val imeSpacing = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
-        val fallbackTopChromeHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp56)
         ViewCompat.setOnApplyWindowInsetsListener(binding.mainContent) { _, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
-            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
-            val floatingBottomInset = (systemBars.bottom * 0.08f).toInt()
-            searchController.onInsetsChanged(insets)
-            binding.appBarHome.updatePadding(top = systemBars.top)
-            val chromeContentHeight = binding.appBarHome.height.takeIf { it > 0 } ?: fallbackTopChromeHeight
-            val targetListTopPadding = maxOf(defaultViewPagerTopPadding, chromeContentHeight)
-
-            val targetListBottomPadding = if (imeVisible) {
-                imeInsets.bottom + imeSpacing
-            } else {
-                defaultViewPagerBottomPadding + floatingBottomInset
-            }
-            binding.viewPager.updatePadding(
-                top = targetListTopPadding,
-                bottom = targetListBottomPadding
-            )
-            renderChromeState(chromeStateReducer.onImeStateChanged(imeVisible), event = "ime_insets")
+            lastMainContentInsets = insets
+            applyMainContentInsets(insets)
             insets
         }
         ViewCompat.requestApplyInsets(binding.mainContent)
+    }
+
+    private fun syncMainContentInsets() {
+        val insets = lastMainContentInsets ?: ViewCompat.getRootWindowInsets(binding.mainContent) ?: return
+        applyMainContentInsets(insets)
+    }
+
+    private fun applyMainContentInsets(insets: WindowInsetsCompat) {
+        val imeSpacing = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp16)
+        val fallbackTopChromeHeight = resources.getDimensionPixelSize(R.dimen.view_height_dp56)
+        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+        val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime()) && imeInsets.bottom > systemBars.bottom
+        val floatingBottomInset = (systemBars.bottom * 0.08f).toInt()
+        searchController.onInsetsChanged(insets)
+        binding.appBarHome.updatePadding(top = systemBars.top)
+        val chromeContentHeight = binding.appBarHome.height.takeIf { it > 0 } ?: fallbackTopChromeHeight
+        val targetListTopPadding = maxOf(defaultViewPagerTopPadding, chromeContentHeight)
+        val targetListBottomPadding = if (imeVisible) {
+            imeInsets.bottom + imeSpacing
+        } else {
+            defaultViewPagerBottomPadding + floatingBottomInset
+        }
+        binding.viewPager.updatePadding(
+            top = targetListTopPadding,
+            bottom = targetListBottomPadding
+        )
+        renderChromeState(chromeStateReducer.onImeStateChanged(imeVisible), event = "ime_insets")
     }
 
     private fun updateConnectionCardVisibility() {
@@ -425,7 +434,6 @@ class MainActivity : HelperBaseActivity() {
                 message = getString(feedback.messageResId),
                 tone = feedback.toDockMessageTone()
             )
-            performServiceFeedbackHaptic(feedback.style)
         }
         mainViewModel.servicePhaseAction.observe(this) { phase ->
             connectionCardController.showPinnedServiceMessage(
@@ -744,14 +752,6 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
-    private fun performServiceFeedbackHaptic(style: MainViewModel.ServiceFeedback.Style) {
-        when (style) {
-            MainViewModel.ServiceFeedback.Style.SUCCESS -> binding.toolbar.hapticConfirm()
-            MainViewModel.ServiceFeedback.Style.ERROR -> binding.toolbar.hapticReject()
-            MainViewModel.ServiceFeedback.Style.NEUTRAL -> binding.toolbar.hapticClick()
-        }
-    }
-
     private fun MainViewModel.ServiceFeedback.toDockMessageTone(): MainConnectionCardController.ServiceMessageTone {
         return when (style) {
             MainViewModel.ServiceFeedback.Style.SUCCESS -> MainConnectionCardController.ServiceMessageTone.SUCCESS
@@ -931,7 +931,6 @@ class MainActivity : HelperBaseActivity() {
         )
         button.contentDescription = contentDescription
         button.setOnClickListener {
-            button.hapticClick()
             UiMotion.animatePulse(button, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
             onClick()
         }
@@ -990,8 +989,8 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun styleToolbarSearchIconButton(iconButton: ImageView) {
-        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
-        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp10)
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
+        val iconInset = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
         iconButton.layoutParams = iconButton.layoutParams.apply {
             width = buttonSize
             height = buttonSize
@@ -1022,7 +1021,7 @@ class MainActivity : HelperBaseActivity() {
     }
 
     fun updateToolbarSearchActionLayout(searchView: SearchView, expanded: Boolean) {
-        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp40)
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.view_height_dp36)
         val layoutParams = searchView.layoutParams ?: Toolbar.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             buttonSize
@@ -1104,7 +1103,7 @@ class MainActivity : HelperBaseActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.START or Gravity.CENTER_VERTICAL
-            marginEnd = resources.getDimensionPixelSize(R.dimen.padding_spacing_dp8)
+            marginEnd = 0
         }
         binding.toolbar.addView(actionView, 0, layoutParams)
         toolbarAppActionView = actionView
@@ -1125,7 +1124,6 @@ class MainActivity : HelperBaseActivity() {
             pressedAlpha = 0.9f
         )
         val openMoreAction: (View) -> Unit = { source ->
-            source.hapticClick()
             UiMotion.animatePulse(actionButton, pulseScale = 1.025f, duration = MotionTokens.PULSE_QUICK)
             openMorePage()
         }

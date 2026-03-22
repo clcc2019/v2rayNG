@@ -6,7 +6,6 @@ import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceCategory
@@ -15,10 +14,13 @@ import androidx.preference.PreferenceGroupAdapter
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.PreferenceViewHolder
+import androidx.preference.SwitchPreferenceCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.shape.CornerFamily
 import com.xray.ang.AngApplication
 import com.xray.ang.AppConfig
 import com.xray.ang.AppConfig.VPN
@@ -68,11 +70,12 @@ class SettingsActivity : BaseActivity() {
                 "category_connection_settings" to 9,
                 "category_advanced_settings" to 4,
             )
+            private const val SETTINGS_GROUP_CORNER_DP = 18f
         }
 
-        private val localDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
-        private val fakeDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FAKE_DNS_ENABLED) }
-        private val appendHttpProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_APPEND_HTTP_PROXY) }
+        private val localDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
+        private val fakeDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FAKE_DNS_ENABLED) }
+        private val appendHttpProxy by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_APPEND_HTTP_PROXY) }
 
         //        private val localDnsPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_LOCAL_DNS_PORT) }
         private val vpnDns by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_DNS) }
@@ -80,17 +83,17 @@ class SettingsActivity : BaseActivity() {
         private val vpnInterfaceAddress by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX) }
         private val vpnMtu by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_MTU) }
 
-        private val mux by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_MUX_ENABLED) }
+        private val mux by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_MUX_ENABLED) }
         private val muxConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_CONCURRENCY) }
         private val muxXudpConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_XUDP_CONCURRENCY) }
         private val muxXudpQuic by lazy { findPreference<ListPreference>(AppConfig.PREF_MUX_XUDP_QUIC) }
 
-        private val fragment by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FRAGMENT_ENABLED) }
+        private val fragment by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FRAGMENT_ENABLED) }
         private val fragmentPackets by lazy { findPreference<ListPreference>(AppConfig.PREF_FRAGMENT_PACKETS) }
         private val fragmentLength by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_LENGTH) }
         private val fragmentInterval by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_INTERVAL) }
 
-        private val autoUpdateCheck by lazy { findPreference<CheckBoxPreference>(AppConfig.SUBSCRIPTION_AUTO_UPDATE) }
+        private val autoUpdateCheck by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.SUBSCRIPTION_AUTO_UPDATE) }
         private val autoUpdateInterval by lazy { findPreference<EditTextPreference>(AppConfig.SUBSCRIPTION_AUTO_UPDATE_INTERVAL) }
         private val mode by lazy { findPreference<ListPreference>(AppConfig.PREF_MODE) }
 
@@ -173,6 +176,7 @@ class SettingsActivity : BaseActivity() {
             }
             setDivider(null)
             setDividerHeight(0)
+            SystemFontWeightHelper.scheduleApply(listView)
         }
 
         private fun applyPreferenceVisuals(group: PreferenceGroup) {
@@ -183,6 +187,10 @@ class SettingsActivity : BaseActivity() {
                     preference is PreferenceCategory -> {
                         preference.layoutResource = R.layout.preference_category_primary
                         applyPreferenceVisuals(preference)
+                    }
+                    preference is SwitchPreferenceCompat -> {
+                        preference.layoutResource = R.layout.preference_item_modern
+                        preference.widgetLayoutResource = R.layout.preference_widget_material_switch
                     }
                     preference is PreferenceGroup -> {
                         preference.layoutResource = R.layout.preference_item_modern
@@ -216,7 +224,7 @@ class SettingsActivity : BaseActivity() {
                         }
                     }
 
-                    is CheckBoxPreference, is androidx.preference.SwitchPreferenceCompat -> {
+                    is SwitchPreferenceCompat -> {
                     }
                 }
             }
@@ -394,18 +402,31 @@ class SettingsActivity : BaseActivity() {
                 val preference = getItem(position)
                 if (!isPreferenceRow(preference)) return
 
-                val itemSurface = holder.findViewById(R.id.settings_item_surface) ?: return
+                val itemSurface = holder.findViewById(R.id.settings_item_surface) as? MaterialCardView ?: return
                 val divider = holder.findViewById(R.id.settings_row_divider)
 
                 val isFirstInSection = !isPreferenceRow(getItemOrNull(position - 1))
                 val isLastInSection = !isPreferenceRow(getItemOrNull(position + 1))
-                val backgroundRes = when {
-                    isFirstInSection && isLastInSection -> R.drawable.bg_settings_row_single
-                    isFirstInSection -> R.drawable.bg_settings_row_top
-                    isLastInSection -> R.drawable.bg_settings_row_bottom
-                    else -> R.drawable.bg_settings_row_middle
-                }
-                itemSurface.background = ContextCompat.getDrawable(requireContext(), backgroundRes)
+                val cornerSize = resources.displayMetrics.density * SETTINGS_GROUP_CORNER_DP
+                itemSurface.shapeAppearanceModel = itemSurface.shapeAppearanceModel
+                    .toBuilder()
+                    .setAllCorners(CornerFamily.ROUNDED, 0f)
+                    .apply {
+                        if (isFirstInSection) {
+                            setTopLeftCorner(CornerFamily.ROUNDED, cornerSize)
+                            setTopRightCorner(CornerFamily.ROUNDED, cornerSize)
+                        }
+                        if (isLastInSection) {
+                            setBottomLeftCorner(CornerFamily.ROUNDED, cornerSize)
+                            setBottomRightCorner(CornerFamily.ROUNDED, cornerSize)
+                        }
+                    }
+                    .build()
+                itemSurface.setCardBackgroundColor(
+                    ContextCompat.getColor(requireContext(), R.color.color_settings_row_surface)
+                )
+                itemSurface.strokeWidth = 0
+                itemSurface.cardElevation = 0f
                 divider?.isVisible = !isLastInSection
             }
 

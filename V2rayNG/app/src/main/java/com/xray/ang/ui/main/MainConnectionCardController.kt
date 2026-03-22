@@ -57,11 +57,13 @@ class MainConnectionCardController(
 
     fun render(state: ServiceUiState) {
         val animateTextChanges = hasRenderedPrimaryContent
+        val previousState = lastRenderedState
         val selectedProfileName = mainViewModel.getSelectedServerSnapshot()
             ?.profile
             ?.remarks
             ?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.home_connection_profile_empty)
+        lastRenderedState = state
         val statusLabel = context.getString(
             when (state) {
                 ServiceUiState.RUNNING -> R.string.connection_connected_short
@@ -84,10 +86,9 @@ class MainConnectionCardController(
         )
         renderSummary(animate = animateTextChanges)
         applyStatusBadgeStyle(state)
-        if (animateTextChanges && lastRenderedState != state) {
+        if (animateTextChanges && previousState != state) {
             UiMotion.animatePulse(binding.tvConnectionStatus, pulseScale = 1.024f, duration = MotionTokens.PULSE_QUICK)
         }
-        lastRenderedState = state
         hasRenderedPrimaryContent = true
     }
 
@@ -236,20 +237,21 @@ class MainConnectionCardController(
             transientServiceMessage != null -> transientServiceMessage
             pinnedServiceMessage != null -> pinnedServiceMessage
             landingInfoMessage != null -> landingInfoMessage
-            else -> null
+            else -> defaultSummaryText()
         }
         val tone = when {
             transientServiceMessage != null -> transientServiceMessageTone
             pinnedServiceMessage != null -> pinnedServiceMessageTone
             landingInfoMessage != null -> landingInfoTone
+            lastRenderedState == ServiceUiState.RUNNING -> ServiceMessageTone.PRIMARY
             else -> ServiceMessageTone.MUTED
         }
-        val targetText = if (message.isNullOrBlank()) {
-            context.getString(R.string.home_connection_summary_short)
-        } else {
-            message
+        val targetText = if (message.isNullOrBlank()) context.getString(R.string.home_connection_summary_short) else message
+        val targetAlpha = when {
+            transientServiceMessage != null || pinnedServiceMessage != null || landingInfoMessage != null -> 1f
+            lastRenderedState == ServiceUiState.RUNNING -> 0.98f
+            else -> 0.94f
         }
-        val targetAlpha = if (message.isNullOrBlank()) 0.9f else 1f
         updateDockText(
             textView = binding.tvConnectionSummary,
             text = targetText,
@@ -268,6 +270,17 @@ class MainConnectionCardController(
         }
         lastRenderedSummary = renderedSummary
         lastRenderedSummaryTone = tone
+    }
+
+    private fun defaultSummaryText(): CharSequence {
+        val hasSelectedProfile = mainViewModel.getSelectedServerSnapshot() != null
+        if (!hasSelectedProfile) {
+            return context.getString(R.string.home_connection_summary_empty)
+        }
+        return when (lastRenderedState) {
+            ServiceUiState.RUNNING -> context.getString(R.string.home_connection_summary_running)
+            else -> context.getString(R.string.home_connection_summary_short)
+        }
     }
 
     private fun updateDockText(
@@ -296,9 +309,9 @@ class MainConnectionCardController(
         return when (tone) {
             ServiceMessageTone.MUTED -> R.color.color_connection_dock_text_secondary
             ServiceMessageTone.PRIMARY -> R.color.color_connection_dock_text_primary
-            ServiceMessageTone.SUCCESS -> R.color.color_home_metric_good_text
-            ServiceMessageTone.WARNING -> R.color.color_home_metric_warn_text
-            ServiceMessageTone.ERROR -> R.color.color_home_metric_bad_text
+            ServiceMessageTone.SUCCESS -> R.color.color_connection_dock_text_primary
+            ServiceMessageTone.WARNING -> R.color.color_connection_dock_text_primary
+            ServiceMessageTone.ERROR -> R.color.color_connection_dock_text_primary
         }
     }
 }

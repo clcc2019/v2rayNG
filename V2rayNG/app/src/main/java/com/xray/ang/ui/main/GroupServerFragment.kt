@@ -12,10 +12,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -33,7 +35,6 @@ import com.xray.ang.handler.MmkvManager
 import com.xray.ang.helper.SimpleItemTouchHelperCallback
 import com.xray.ang.ui.common.ActionBottomSheetItem
 import com.xray.ang.ui.common.actionBottomSheetItem
-import com.xray.ang.ui.common.hapticClick
 import com.xray.ang.ui.common.runWithRemovalConfirmation
 import com.xray.ang.ui.common.showActionBottomSheet
 import com.xray.ang.viewmodel.MainViewModel
@@ -65,6 +66,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
 
     class GroupServerBinding private constructor(
         private val rootView: View,
+        val refreshLayout: SwipeRefreshLayout,
         val recyclerView: RecyclerView,
         val layoutEmptyState: ViewGroup,
         val ivEmptyIcon: ImageView,
@@ -83,6 +85,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             private fun bind(root: View): GroupServerBinding {
                 return GroupServerBinding(
                     rootView = root,
+                    refreshLayout = requireView(root, R.id.refresh_layout),
                     recyclerView = requireView(root, R.id.recycler_view),
                     layoutEmptyState = requireView(root, R.id.layout_empty_state),
                     ivEmptyIcon = requireView(root, R.id.iv_empty_icon),
@@ -111,6 +114,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     private var lastEmptyStateVisible: Boolean? = null
     private var storedCountRequestVersion = 0
     private var lastEmptyStateMode: EmptyStateMode? = null
+    private var subscriptionRefreshJob: Job? = null
     private val switchInterpolator = FastOutSlowInInterpolator()
     private var initialTouchX = 0f
     private var initialTouchY = 0f
@@ -131,6 +135,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             mainViewModel = mainViewModel,
             adapterListener = ActivityAdapterListener()
         )
+        setupPullToRefresh()
         setupRecyclerView()
         setupEmptyStateActions()
         pendingListFadeIn = true
@@ -187,6 +192,18 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         ownerActivity.onServerListScrolled(0, binding.recyclerView.canScrollVertically(-1))
     }
 
+    private fun setupPullToRefresh() {
+        binding.refreshLayout.setColorSchemeColors(ContextCompat.getColor(requireContext(), R.color.md_theme_primary))
+        binding.refreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(requireContext(), R.color.md_theme_surface))
+        binding.refreshLayout.setDistanceToTriggerSync((resources.displayMetrics.density * 72f).toInt())
+        binding.refreshLayout.setOnChildScrollUpCallback { _, _ ->
+            binding.recyclerView.canScrollVertically(-1)
+        }
+        binding.refreshLayout.setOnRefreshListener {
+            refreshSubscriptions()
+        }
+    }
+
     private fun setupRecyclerView() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.setItemViewCacheSize(10)
@@ -235,6 +252,44 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
 
     private fun getSpanCount(): Int {
         return if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) 2 else 1
+    }
+
+    private fun refreshSubscriptions() {
+        if (subscriptionRefreshJob?.isActive == true) {
+            return
+        }
+        subscriptionRefreshJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val result = runCatching { mainViewModel.updateConfigViaSubAll() }
+            withContext(Dispatchers.Main) {
+                binding.refreshLayout.isRefreshing = false
+                result.onSuccess { updateResult ->
+                    when {
+                        updateResult.successCount + updateResult.failureCount + updateResult.skipCount == 0 -> {
+                            toast(R.string.title_update_subscription_no_subscription)
+                        }
+                        updateResult.successCount > 0 && updateResult.failureCount + updateResult.skipCount == 0 -> {
+                            toast(getString(R.string.title_update_config_count, updateResult.configCount))
+                        }
+                        else -> {
+                            toast(
+                                getString(
+                                    R.string.title_update_subscription_result,
+                                    updateResult.configCount,
+                                    updateResult.successCount,
+                                    updateResult.failureCount,
+                                    updateResult.skipCount
+                                )
+                            )
+                        }
+                    }
+                    if (updateResult.configCount > 0) {
+                        mainViewModel.reloadServerList(immediate = true)
+                    }
+                }.onFailure {
+                    toastError(R.string.toast_failure)
+                }
+            }
+        }
     }
 
     private fun updateEmptyState() {
@@ -485,7 +540,6 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         actionView.contentDescription = getString(spec.titleRes)
         attachEmptyActionMotion(actionView)
         actionView.setOnClickListener {
-            it.hapticClick()
             spec.onClick()
         }
     }

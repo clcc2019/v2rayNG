@@ -1,7 +1,6 @@
 package com.xray.ang.ui
 
 import android.content.res.ColorStateList
-import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -196,7 +195,6 @@ class SubSettingRecyclerAdapter(
 
             itemSubSettingBinding.layoutDragHandle.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
-                    itemSubSettingBinding.layoutDragHandle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                     onStartDrag?.invoke(this)
                 }
                 false

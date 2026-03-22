@@ -4,4 +4,6 @@
     <item name="tag_motion_animated_once" type="id" />
     <item name="tag_motion_running_animator" type="id" />
     <item name="tag_motion_card_style_animator" type="id" />
+    <item name="tag_font_weight_base_typeface" type="id" />
+    <item name="tag_font_weight_recycler_listener_attached" type="id" />
 </resources>

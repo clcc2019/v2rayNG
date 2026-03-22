@@ -42,6 +42,7 @@ class TaskerActivity : BaseActivity() {
         )
         listview = findViewById<View>(R.id.listview) as ListView
         listview?.adapter = adapter
+        SystemFontWeightHelper.scheduleApply(listview)
 
         init()
     }
@@ -112,4 +113,3 @@ class TaskerActivity : BaseActivity() {
     }
 
 }
-

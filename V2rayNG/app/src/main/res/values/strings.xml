@@ -379,11 +379,13 @@
     <string name="connection_test_error">Fail to detect internet connection: %s</string>
     <string name="connection_test_fail">Failed</string>
     <string name="connection_test_error_status_code">Error code: #%d</string>
-<string name="home_connection_summary_short">Start or stop the current profile.</string>
+<string name="home_connection_summary_short">Tap the button to start this profile.</string>
+    <string name="home_connection_summary_empty">Choose a profile before starting the service.</string>
+    <string name="home_connection_summary_running">Service is active. Tap the button again to stop it.</string>
     <string name="home_connection_endpoint_unavailable">Exit address unavailable</string>
     <string name="home_server_active_label">ACTIVE</string>
     <string name="home_server_source_label">Source</string>
-    <string name="home_connection_profile_empty">No profile selected</string>
+    <string name="home_connection_profile_empty">Choose a profile</string>
     <string name="current_config">Current configuration</string>
     <string name="connection_connected">Connected</string>
     <string name="connection_connected_short">Online</string>

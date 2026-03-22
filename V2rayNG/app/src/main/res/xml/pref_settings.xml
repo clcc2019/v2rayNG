@@ -22,22 +22,22 @@
             android:summary="%s"
             android:title="@string/title_pref_ui_mode_night" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_speed_enabled"
             android:summary="@string/summary_pref_speed_enabled"
             android:title="@string/title_pref_speed_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_double_column_display"
             android:summary="@string/summary_pref_double_column_display"
             android:title="@string/title_pref_double_column_display" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_group_all_display"
             android:summary="@string/summary_pref_group_all_display"
             android:title="@string/title_pref_group_all_display" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_confirm_remove"
             android:summary="@string/summary_pref_confirm_remove"
             android:title="@string/title_pref_confirm_remove" />
@@ -57,7 +57,7 @@
             android:summary="%s"
             android:title="@string/title_mode" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_prefer_ipv6"
             android:summary="@string/summary_pref_prefer_ipv6"
             android:title="@string/title_pref_prefer_ipv6" />
@@ -70,13 +70,13 @@
             android:summary="%s"
             android:title="@string/title_pref_vpn_bypass_lan" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pref_local_dns_enabled"
             android:summary="@string/summary_pref_local_dns_enabled"
             android:title="@string/title_pref_local_dns_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_fake_dns_enabled"
             android:summary="@string/summary_pref_fake_dns_enabled"
             android:title="@string/title_pref_fake_dns_enabled" />
@@ -99,25 +99,25 @@
             android:summary="@string/summary_pref_domestic_dns"
             android:title="@string/title_pref_domestic_dns" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pref_sniffing_enabled"
             android:summary="@string/summary_pref_sniffing_enabled"
             android:title="@string/title_pref_sniffing_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_route_only_enabled"
             android:summary="@string/summary_pref_route_only_enabled"
             android:title="@string/title_pref_route_only_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_proxy_sharing_enabled"
             android:defaultValue="false"
             android:summary="@string/summary_pref_proxy_sharing_enabled"
             android:title="@string/title_pref_proxy_sharing_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_append_http_proxy"
             android:summary="@string/summary_pref_append_http_proxy"
             android:title="@string/title_pref_append_http_proxy" />
@@ -154,7 +154,7 @@
         android:key="category_updates_settings"
         android:title="@string/title_updates_settings">
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_update_subscription"
             android:summary="@string/summary_pref_auto_update_subscription"
             android:title="@string/title_pref_auto_update_subscription" />
@@ -165,7 +165,7 @@
             android:summary="1440"
             android:title="@string/title_pref_auto_update_interval" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_is_booted"
             android:summary="@string/summary_pref_is_booted"
             android:title="@string/title_pref_is_booted" />
@@ -184,12 +184,12 @@
             android:summary="%s"
             android:title="@string/title_core_loglevel" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_mux_enabled"
             android:summary="@string/summary_pref_mux_enabled"
             android:title="@string/title_pref_mux_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_fragment_enabled"
             android:title="@string/title_pref_fragment_enabled" />
 
@@ -250,13 +250,13 @@
             android:summary="10808"
             android:title="@string/title_pref_socks_port" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_remove_invalid_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_remove_invalid_after_test"
             android:title="@string/title_pref_auto_remove_invalid_after_test" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_sort_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_sort_after_test"

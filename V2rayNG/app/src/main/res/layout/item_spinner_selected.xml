@@ -5,9 +5,10 @@
     android:layout_height="wrap_content"
     android:ellipsize="end"
     android:gravity="center_vertical"
+    android:includeFontPadding="false"
     android:maxLines="1"
     android:minHeight="@dimen/view_height_dp56"
     android:paddingStart="@dimen/padding_spacing_dp14"
     android:paddingEnd="@dimen/padding_spacing_dp14"
-    android:textAppearance="@style/TextAppearance.V2Ray.Body"
+    android:textAppearance="@style/TextAppearance.V2Ray.FormValue"
     android:textColor="@color/md_theme_onSurface" />

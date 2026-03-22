@@ -23,7 +23,6 @@ import com.xray.ang.databinding.ActivityMainBinding
 import com.xray.ang.databinding.ItemTabGroupBinding
 import com.xray.ang.dto.GroupMapItem
 import com.xray.ang.extension.toast
-import com.xray.ang.ui.common.hapticLongPress
 import com.xray.ang.viewmodel.MainViewModel
 
 class MainGroupTabsController(
@@ -184,6 +183,28 @@ class MainGroupTabsController(
         tabMediator?.detach()
     }
 
+    fun resyncGroupTabVisibility() {
+        val shouldShowTabs = binding.tabGroup.tabCount > 1 && !isGroupTabHidden
+        groupTabSlotAnimator?.cancel()
+        binding.cardTabGroup.animate().cancel()
+        binding.layoutGroupTabSlot.isVisible = shouldShowTabs
+        binding.tabGroup.isVisible = binding.tabGroup.tabCount > 1
+        binding.cardTabGroup.isVisible = binding.tabGroup.tabCount > 1
+        updateGroupTabSlotHeight(if (shouldShowTabs) expandedSlotHeightPx else 0)
+        binding.cardTabGroup.alpha = if (shouldShowTabs) 1f else 0f
+        binding.cardTabGroup.translationY =
+            if (shouldShowTabs) 0f else -binding.cardTabGroup.height.coerceAtLeast(1) * 0.34f
+        binding.cardTabGroup.scaleX = if (shouldShowTabs) 1f else 0.985f
+        binding.cardTabGroup.scaleY = if (shouldShowTabs) 1f else 0.985f
+        binding.cardTabGroup.isClickable = shouldShowTabs
+        binding.cardTabGroup.isFocusable = shouldShowTabs
+        binding.tabGroup.isEnabled = shouldShowTabs
+        binding.cardTabGroup.importantForAccessibility =
+            if (shouldShowTabs) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        ViewCompat.requestApplyInsets(binding.mainContent)
+    }
+
     private fun configureGroupTabLayout(groupCount: Int) {
         val useAdaptiveWidth = groupCount in 1..3
         val targetTabMode = TabLayout.MODE_SCROLLABLE
@@ -229,8 +250,7 @@ class MainGroupTabsController(
         bindGroupTabViewState(tabState, selected = false)
         tabBinding.root.tag = tabState
         if (group.id.isNotBlank()) {
-            val renameListener = View.OnLongClickListener { view ->
-                view.hapticLongPress()
+            val renameListener = View.OnLongClickListener {
                 startInlineRename(tabState)
                 true
             }
@@ -295,10 +315,14 @@ class MainGroupTabsController(
         for (index in 0 until slidingTabIndicator.childCount) {
             val tabView = slidingTabIndicator.getChildAt(index)
             tabView.minimumHeight = compactHeight
-            tabView.layoutParams = tabView.layoutParams.apply {
-                width = ViewGroup.LayoutParams.WRAP_CONTENT
-                height = compactHeight
-            }
+            val layoutParams = (tabView.layoutParams as? ViewGroup.MarginLayoutParams)
+                ?: ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, compactHeight)
+            layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            layoutParams.height = compactHeight
+            val balancedTabGap = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
+            layoutParams.marginStart = balancedTabGap
+            layoutParams.marginEnd = balancedTabGap
+            tabView.layoutParams = layoutParams
             tabView.setPadding(0, 0, 0, 0)
             tabView.requestLayout()
         }

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.V2Ray.Card.Section"
+    style="@style/Widget.V2Ray.Card.FormSection.FormPage"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:maxWidth="@dimen/list_card_max_width">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         style="@style/Widget.V2Ray.FormSection.Content">

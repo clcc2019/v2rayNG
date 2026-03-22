@@ -364,9 +364,11 @@
     <string name="connection_test_error">"失败：%s"</string>
     <string name="connection_test_fail">"失败"</string>
     <string name="connection_test_error_status_code">"状态码无效（#%d）"</string>
-<string name="home_connection_summary_short">启动或停止当前节点</string>
+<string name="home_connection_summary_short">点击右侧按钮启动当前节点</string>
+    <string name="home_connection_summary_empty">先选择一个节点，再启动服务</string>
+    <string name="home_connection_summary_running">服务已启动，可再次点击右侧按钮停止</string>
     <string name="home_connection_endpoint_unavailable">未返回落地地址</string>
-    <string name="home_connection_profile_empty">未选择配置</string>
+    <string name="home_connection_profile_empty">选择一个节点</string>
     <string name="current_config">"当前配置"</string>
     <string name="connection_connected">"已连接"</string>
     <string name="connection_connected_short">"在线"</string>

@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/toolbar_app_action_root"
-    android:layout_width="@dimen/view_height_dp48"
-    android:layout_height="@dimen/view_height_dp48"
+    android:layout_width="@dimen/view_height_dp36"
+    android:layout_height="@dimen/view_height_dp36"
     android:clipChildren="false"
     android:clipToPadding="false">
 
     <FrameLayout
         android:id="@+id/toolbar_app_button"
         style="@style/Widget.V2Ray.HomeChrome.ActionButton"
-        android:layout_width="@dimen/view_height_dp44"
-        android:layout_height="@dimen/view_height_dp44"
-        android:layout_gravity="start|center_vertical">
+        android:layout_width="@dimen/view_height_dp36"
+        android:layout_height="@dimen/view_height_dp36"
+        android:layout_gravity="center">
 
         <ImageView
             android:id="@+id/toolbar_app_icon"
             style="@style/Widget.V2Ray.HomeChrome.ActionIcon"
-            android:layout_width="@dimen/image_size_dp24"
-            android:layout_height="@dimen/image_size_dp24"
+            android:layout_width="@dimen/image_size_dp18"
+            android:layout_height="@dimen/image_size_dp18"
             android:layout_gravity="center"
             android:contentDescription="@null"
-            android:src="@drawable/ic_menu_cascade_20dp" />
+            android:src="@drawable/ic_menu_hamburger_20dp" />
 
     </FrameLayout>
 

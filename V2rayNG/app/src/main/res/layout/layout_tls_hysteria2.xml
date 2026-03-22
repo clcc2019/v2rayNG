@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.V2Ray.Card.Section"
+    style="@style/Widget.V2Ray.Card.FormSection.FormPage"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/padding_spacing_dp8"
-    android:maxWidth="@dimen/list_card_max_width">
+    android:layout_marginTop="@dimen/padding_spacing_dp8">
 
     <LinearLayout
+        android:animateLayoutChanges="true"
         style="@style/Widget.V2Ray.FormSection.Content">
 
         <LinearLayout

@@ -29,7 +29,6 @@ import com.xray.ang.AngApplication
 import com.xray.ang.R
 import com.xray.ang.handler.SettingsManager
 import com.xray.ang.helper.CustomDividerItemDecoration
-import com.xray.ang.ui.common.hapticClick
 import com.xray.ang.ui.common.startActivityWithDefaultTransition
 import com.xray.ang.util.MyContextWrapper
 import com.xray.ang.util.Utils
@@ -55,6 +54,21 @@ abstract class BaseActivity : AppCompatActivity() {
                 isAppearanceLightStatusBars = true
             }
         }
+    }
+
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+        SystemFontWeightHelper.scheduleApply(window.decorView)
+    }
+
+    override fun setContentView(view: View?) {
+        super.setContentView(view)
+        SystemFontWeightHelper.scheduleApply(window.decorView)
+    }
+
+    override fun setContentView(view: View?, params: ViewGroup.LayoutParams?) {
+        super.setContentView(view, params)
+        SystemFontWeightHelper.scheduleApply(window.decorView)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
@@ -97,6 +111,7 @@ abstract class BaseActivity : AppCompatActivity() {
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(16)
         recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
+        SystemFontWeightHelper.attachToRecyclerView(recyclerView)
     }
 
     protected fun setupToolbar(toolbar: Toolbar?, showHomeAsUp: Boolean = true, title: CharSequence? = null) {
@@ -115,7 +130,7 @@ abstract class BaseActivity : AppCompatActivity() {
         val container = base.findViewById<FrameLayout>(R.id.content_container)
         LayoutInflater.from(this).inflate(layoutResId, container, true)
         progressBar = base.findViewById(R.id.progress_bar)
-        super.setContentView(base)
+        setContentView(base)
         setupToolbar(base, showHomeAsUp, title)
         scheduleBaseScreenEnterMotion(base)
     }
@@ -125,7 +140,7 @@ abstract class BaseActivity : AppCompatActivity() {
         val container = base.findViewById<FrameLayout>(R.id.content_container)
         container.addView(childView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         progressBar = base.findViewById(R.id.progress_bar)
-        super.setContentView(base)
+        setContentView(base)
         setupToolbar(base, showHomeAsUp, title)
         scheduleBaseScreenEnterMotion(base)
     }
@@ -139,6 +154,7 @@ abstract class BaseActivity : AppCompatActivity() {
     ): SearchView? {
         val searchView = menuItem?.actionView as? SearchView ?: return null
         styleSearchView(searchView)
+        SystemFontWeightHelper.scheduleApply(searchView)
         searchView.queryHint = hint
         searchView.maxWidth = Int.MAX_VALUE
         var searchJob: Job? = null
@@ -191,6 +207,7 @@ abstract class BaseActivity : AppCompatActivity() {
         toolbar.navigationIcon?.setTint(foregroundColor)
         toolbar.overflowIcon?.setTint(foregroundColor)
         toolbar.elevation = 0f
+        SystemFontWeightHelper.scheduleApply(toolbar)
     }
 
     private fun styleSearchView(searchView: SearchView) {
@@ -297,20 +314,17 @@ abstract class BaseActivity : AppCompatActivity() {
 
     protected fun bindClickAction(
         view: View,
-        withHaptic: Boolean = true,
+        withHaptic: Boolean = false,
         action: () -> Unit
     ) {
         view.setOnClickListener {
-            if (withHaptic) {
-                it.hapticClick()
-            }
             action()
         }
     }
 
     protected fun bindLaunchAction(
         view: View,
-        withHaptic: Boolean = true,
+        withHaptic: Boolean = false,
         intentProvider: () -> Intent
     ) {
         bindClickAction(view, withHaptic) {

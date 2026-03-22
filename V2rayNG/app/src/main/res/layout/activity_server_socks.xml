@@ -21,22 +21,21 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.SectionLabel"
+            style="@style/Widget.V2Ray.SectionLabel.FormPage"
             android:text="@string/server_group_connection" />
 
         <include layout="@layout/layout_address_port" />
 
         <TextView
-            style="@style/Widget.V2Ray.SectionLabel"
+            style="@style/Widget.V2Ray.SectionLabel.FormPage"
             android:layout_marginTop="@dimen/padding_spacing_dp20"
             android:text="@string/server_group_identity" />
 
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.FormSection"
+            style="@style/Widget.V2Ray.Card.FormSection.FormPage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
             app:cardBackgroundColor="@color/md_theme_surface"
             app:strokeWidth="0dp">
 

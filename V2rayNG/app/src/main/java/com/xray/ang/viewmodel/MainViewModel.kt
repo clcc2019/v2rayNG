@@ -58,6 +58,10 @@ class MainViewModel(
 
     companion object {
         private const val TCPING_UI_BATCH_SIZE = 12
+        private const val LIST_UPDATE_THROTTLE_MS = 96L
+        private const val RELOAD_SCHEDULE_DEBOUNCE_MS = 96L
+        private const val GROUP_LOAD_DEBOUNCE_MS = 96L
+        private const val FILTER_DEBOUNCE_MS = 150L
     }
 
     private var tcpingCollectorJob: Job? = null
@@ -153,7 +157,7 @@ class MainViewModel(
             if (pendingListUpdateJob?.isActive != true && pendingListUpdates.isNotEmpty()) {
                 pendingListUpdateJob = viewModelScope.launch(Dispatchers.Main.immediate) {
                     while (true) {
-                        delay(32L)
+                        delay(LIST_UPDATE_THROTTLE_MS)
                         val pending = synchronized(pendingListUpdateLock) {
                             if (pendingListUpdates.isEmpty()) {
                                 pendingListUpdateJob = null
@@ -227,7 +231,7 @@ class MainViewModel(
         reloadJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
             try {
                 if (!isReloadScheduledImmediate) {
-                    delay(32L)
+                    delay(RELOAD_SCHEDULE_DEBOUNCE_MS)
                 }
                 reloadServerListInternal()
             } finally {
@@ -466,7 +470,7 @@ class MainViewModel(
         subscriptionsLoadJob?.cancel()
         subscriptionsJobScheduled = viewModelScope.launch(Dispatchers.Main.immediate) {
             if (!immediate) {
-                delay(32L)
+                delay(GROUP_LOAD_DEBOUNCE_MS)
             }
             val appContext = context.applicationContext
             val requestVersion = groupListVersion.incrementAndGet()
@@ -724,7 +728,7 @@ class MainViewModel(
         }
         filterJob?.cancel()
         filterJob = viewModelScope.launch(Dispatchers.Main.immediate) {
-            delay(32L)
+            delay(FILTER_DEBOUNCE_MS)
             val latest = trimmed
             if (latest == keywordFilter) {
                 return@launch

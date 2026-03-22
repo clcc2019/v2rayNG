@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
 import com.xray.ang.R
+import com.xray.ang.ui.QrCaptureActivity
 import com.xray.ang.databinding.ActivityNoneBinding
 import com.xray.ang.extension.toast
 import com.xray.ang.util.QRCodeDecoder
@@ -35,7 +36,9 @@ class ScannerActivity : HelperBaseActivity() {
     private fun launchScan() {
         scanQrCode.launch(
             ScanOptions()
+                .setCaptureActivity(QrCaptureActivity::class.java)
                 .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                .setPrompt(getString(R.string.menu_item_import_config_qrcode))
                 .setTorchEnabled(false)
                 .setBeepEnabled(false)
                 .setOrientationLocked(false)

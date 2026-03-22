@@ -26,6 +26,7 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = inflateBinding(inflater, container)
+        SystemFontWeightHelper.scheduleApply(binding.root)
         return binding.root
     }
 
@@ -68,5 +69,6 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
         }
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(16)
+        SystemFontWeightHelper.attachToRecyclerView(recyclerView)
     }
 }

@@ -1,113 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/item_bg"
-    style="@style/Widget.V2Ray.Card.HomeList"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginTop="@dimen/padding_spacing_dp6"
-    android:layout_marginBottom="@dimen/padding_spacing_dp6"
-    android:maxWidth="@dimen/list_card_max_width"
-    android:clickable="true"
-    android:focusable="true"
-    android:clipToOutline="true"
-    android:foreground="@drawable/bg_home_list_item_ripple"
-    android:nextFocusRight="@+id/layout_more"
-    app:cardBackgroundColor="@color/color_home_card_bg"
-    app:strokeColor="@color/color_home_card_stroke">
+    android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:id="@+id/info_container"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/item_bg"
+        style="@style/Widget.V2Ray.Card.HomeList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:baselineAligned="false"
-        android:gravity="top"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_spacing_dp16"
-        android:paddingTop="@dimen/padding_spacing_dp12"
-        android:paddingEnd="@dimen/padding_spacing_dp16"
-        android:paddingBottom="@dimen/padding_spacing_dp12">
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/padding_spacing_dp6"
+        android:layout_marginBottom="@dimen/padding_spacing_dp6"
+        android:maxWidth="@dimen/list_card_max_width"
+        android:clickable="true"
+        android:focusable="true"
+        android:clipToOutline="true"
+        android:foreground="@drawable/bg_home_list_item_ripple"
+        android:outlineAmbientShadowColor="@color/color_home_list_shadow_ambient"
+        android:outlineSpotShadowColor="@color/color_home_list_shadow_spot"
+        android:nextFocusRight="@+id/layout_more"
+        app:cardBackgroundColor="@color/color_home_card_bg"
+        app:strokeColor="@color/color_home_card_stroke">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/info_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/padding_spacing_dp8"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_margin="1dp"
+            android:background="@drawable/bg_home_list_card_panel"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/padding_spacing_dp16"
+            android:paddingTop="@dimen/padding_spacing_dp14"
+            android:paddingEnd="@dimen/padding_spacing_dp16"
+            android:paddingBottom="@dimen/padding_spacing_dp14">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
-                android:gravity="center_vertical"
+                android:gravity="top"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/tv_name"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:minLines="1"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
-                    style="@style/Widget.V2Ray.HomeList.Title"
-                    tools:text="hk-aliyun fallback route" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_name"
+                        style="@style/Widget.V2Ray.HomeList.Title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:minLines="1"
+                        android:paddingEnd="@dimen/padding_spacing_dp8"
+                        tools:text="hk-aliyun fallback route" />
+
+                    <TextView
+                        android:id="@+id/tv_statistics"
+                        style="@style/Widget.V2Ray.HomeList.Meta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/padding_spacing_dp6"
+                        android:ellipsize="middle"
+                        android:maxLines="1"
+                        android:minLines="1"
+                        tools:text="13.213.104.*** : 443" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/layout_more"
+                    android:layout_width="@dimen/view_height_dp36"
+                    android:layout_height="@dimen/view_height_dp36"
+                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:background="@drawable/bg_home_icon_circle_clear_ripple"
+                    android:clickable="true"
+                    android:contentDescription="@string/action_more"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:nextFocusLeft="@+id/item_bg"
+                    android:padding="0dp">
+
+                    <ImageView
+                        android:layout_width="@dimen/image_size_dp18"
+                        android:layout_height="@dimen/image_size_dp18"
+                        android:layout_gravity="center"
+                        android:alpha="0.82"
+                        app:srcCompat="@drawable/ic_more_vert_24dp"
+                        app:tint="@color/color_home_on_surface_muted" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_meta_panel"
+                style="@style/Widget.V2Ray.HomeList.MetaRow"
+                android:layout_marginTop="@dimen/padding_spacing_dp10">
 
                 <TextView
                     android:id="@+id/tv_type"
                     style="@style/Widget.V2Ray.HomeList.ProtocolChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
                     tools:text="VLESS" />
 
-            </LinearLayout>
+                <FrameLayout
+                    android:id="@+id/layout_security_badge"
+                    style="@style/Widget.V2Ray.HomeList.SecurityBadge"
+                    android:layout_marginStart="@dimen/padding_spacing_dp6">
 
-            <LinearLayout
-                android:id="@+id/layout_meta_panel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:orientation="vertical">
+                    <ImageView
+                        android:id="@+id/iv_security_badge"
+                        style="@style/Widget.V2Ray.HomeList.SecurityIcon"
+                        app:srcCompat="@drawable/ic_shield_16dp" />
 
-                <View
-                    android:id="@+id/view_meta_divider"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginBottom="@dimen/padding_spacing_dp6"
-                    android:alpha="0.8"
-                    android:background="@color/color_home_card_stroke"
-                    android:importantForAccessibility="no" />
+                </FrameLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tv_test_result"
+                    style="@style/Widget.V2Ray.HomeList.DelayBadge"
+                    android:layout_width="@dimen/view_width_delay_badge"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tv_statistics"
-                        style="@style/Widget.V2Ray.HomeList.Meta"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ellipsize="middle"
-                        android:maxLines="1"
-                        android:minLines="1"
-                        tools:text="13.213.104.*** : 443" />
-
-                    <TextView
-                        android:id="@+id/tv_test_result"
-                        style="@style/Widget.V2Ray.HomeList.DelayBadge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                        tools:text="114ms" />
-
-                </LinearLayout>
+                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    tools:text="114ms" />
 
             </LinearLayout>
 
@@ -116,14 +137,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/padding_spacing_dp8"
-                android:background="@drawable/bg_home_secondary_panel"
+                android:baselineAligned="false"
                 android:gravity="center_vertical"
-                android:minHeight="24dp"
                 android:orientation="horizontal"
-                android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="@dimen/padding_spacing_dp1"
-                android:paddingEnd="@dimen/padding_spacing_dp8"
-                android:paddingBottom="@dimen/padding_spacing_dp1"
                 android:visibility="gone">
 
                 <TextView
@@ -135,42 +151,19 @@
 
                 <TextView
                     android:id="@+id/tv_subscription"
+                    style="@style/Widget.V2Ray.HomeList.SourceValue"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:layout_marginStart="@dimen/padding_spacing_dp6"
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    style="@style/Widget.V2Ray.HomeList.SourceValue"
                     tools:text="Tokyo Premium" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/layout_more"
-            android:layout_width="@dimen/view_height_dp36"
-            android:layout_height="@dimen/view_height_dp36"
-            android:layout_marginStart="@dimen/padding_spacing_dp8"
-            android:background="@drawable/bg_home_icon_circle_clear_ripple"
-            android:clickable="true"
-            android:contentDescription="@string/action_more"
-            android:focusable="true"
-            android:gravity="center"
-            android:nextFocusLeft="@+id/item_bg"
-            android:padding="0dp">
+    </com.google.android.material.card.MaterialCardView>
 
-            <ImageView
-                android:layout_width="@dimen/image_size_dp18"
-                android:layout_height="@dimen/image_size_dp18"
-                android:layout_gravity="center"
-                android:alpha="0.82"
-                app:srcCompat="@drawable/ic_more_vert_24dp"
-                app:tint="@color/color_home_on_surface_muted" />
-
-        </FrameLayout>
-
-    </LinearLayout>
-
-</com.google.android.material.card.MaterialCardView>
+</FrameLayout>

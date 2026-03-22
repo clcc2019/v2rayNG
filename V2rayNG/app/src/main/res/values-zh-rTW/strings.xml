@@ -300,8 +300,10 @@
     <string name="connection_test_error">"測試網際網路連線失敗：%s"</string>
     <string name="connection_test_fail">"失敗"</string>
     <string name="connection_test_error_status_code">"錯誤碼：(#%d)"</string>
-<string name="home_connection_summary_short">啟動或停止目前節點</string>
-    <string name="home_connection_profile_empty">未選擇配置</string>
+<string name="home_connection_summary_short">點擊右側按鈕啟動目前節點</string>
+    <string name="home_connection_summary_empty">先選擇一個節點，再啟動服務</string>
+    <string name="home_connection_summary_running">服務已啟動，可再次點擊右側按鈕停止</string>
+    <string name="home_connection_profile_empty">選擇一個節點</string>
     <string name="connection_connected">"已連線，輕觸以檢查連線能力"</string>
     <string name="connection_connected_short">"在線"</string>
     <string name="connection_not_connected">"未連線"</string>

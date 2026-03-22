@@ -12,7 +12,7 @@
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="true"
+        android:clipToPadding="false"
         android:paddingStart="@dimen/padding_spacing_dp16"
         android:paddingTop="8dp"
         android:paddingEnd="@dimen/padding_spacing_dp16"
@@ -31,9 +31,9 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:minHeight="?attr/actionBarSize"
-            android:paddingStart="@dimen/padding_spacing_dp10"
+            android:paddingStart="@dimen/padding_spacing_dp8"
             android:paddingTop="0dp"
-            android:paddingEnd="@dimen/padding_spacing_dp10"
+            android:paddingEnd="@dimen/padding_spacing_dp8"
             android:paddingBottom="0dp"
             android:background="@android:color/transparent"
             app:subtitleTextAppearance="@style/TextAppearance.V2Ray.Support"
@@ -97,100 +97,128 @@
         android:layout_marginStart="@dimen/padding_spacing_dp16"
         android:layout_marginEnd="@dimen/padding_spacing_dp16"
         android:layout_marginBottom="@dimen/padding_spacing_dp12"
+        android:maxWidth="@dimen/list_card_max_width"
         android:clickable="true"
         android:focusable="true"
         android:foreground="@drawable/bg_connection_dock_touch_ripple"
+        android:outlineAmbientShadowColor="@color/color_connection_dock_shadow_ambient"
+        android:outlineSpotShadowColor="@color/color_connection_dock_shadow_spot"
         app:cardBackgroundColor="@color/color_home_card_bg_dock"
-        app:strokeColor="@color/color_home_card_stroke"
+        app:strokeColor="@android:color/transparent"
         app:strokeWidth="0dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:gravity="center_vertical"
-            android:minHeight="76dp"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/padding_spacing_dp16"
-            android:paddingTop="@dimen/padding_spacing_dp12"
-            android:paddingEnd="@dimen/padding_spacing_dp12"
-            android:paddingBottom="@dimen/padding_spacing_dp12">
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/iv_connection_map_decor"
+                android:layout_width="156dp"
+                android:layout_height="88dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="28dp"
+                android:alpha="0.96"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/bg_connection_dock_map_decor" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_margin="1dp"
+                android:background="@drawable/bg_connection_dock_panel"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="76dp"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/padding_spacing_dp16"
+                android:paddingTop="@dimen/padding_spacing_dp12"
+                android:paddingEnd="@dimen/padding_spacing_dp16"
+                android:paddingBottom="@dimen/padding_spacing_dp12">
 
-                                <TextView
-                                    android:id="@+id/tv_connection_status"
-                                    style="@style/Widget.V2Ray.Badge.ConnectionDockStatus"
-                                    android:text="@string/connection_not_connected_short" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingEnd="@dimen/padding_spacing_dp8"
+                    android:orientation="vertical">
 
-                                <TextView
-                                    android:id="@+id/tv_connection_profile"
-                                    style="@style/Widget.V2Ray.HomeDock.Profile"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp6"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:minLines="1" />
+                    <TextView
+                        android:id="@+id/tv_connection_status"
+                        style="@style/Widget.V2Ray.Badge.ConnectionDockStatus"
+                        android:text="@string/connection_not_connected_short" />
 
-                                <View
-                                    android:id="@+id/view_connection_divider"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="1dp"
-                                    android:layout_marginTop="@dimen/padding_spacing_dp8"
-                                    android:layout_marginBottom="@dimen/padding_spacing_dp6"
-                                    android:background="@color/color_connection_dock_divider"
-                                    android:importantForAccessibility="no" />
+                    <TextView
+                        android:id="@+id/tv_connection_profile"
+                        style="@style/Widget.V2Ray.HomeDock.Profile"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:minLines="1" />
 
-                                <TextView
-                                    android:id="@+id/tv_connection_summary"
-                                    style="@style/Widget.V2Ray.HomeDock.Summary"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/home_connection_summary_short" />
+                    <View
+                        android:id="@+id/view_connection_divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="@dimen/padding_spacing_dp10"
+                        android:layout_marginBottom="@dimen/padding_spacing_dp8"
+                        android:alpha="0.72"
+                        android:background="@color/color_connection_dock_divider"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/tv_connection_summary"
+                        style="@style/Widget.V2Ray.HomeDock.Summary"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:text="@string/home_connection_summary_short" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/layout_connection_surface"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:background="@drawable/bg_connection_action_container"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:elevation="3dp"
+                    android:outlineAmbientShadowColor="@color/color_connection_surface_shadow_ambient"
+                    android:outlineSpotShadowColor="@color/color_connection_surface_shadow_spot">
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/indicator_connection_progress"
+                        android:layout_width="@dimen/view_height_dp44"
+                        android:layout_height="@dimen/view_height_dp44"
+                        android:layout_gravity="center"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        app:indicatorColor="@color/color_connection_dock_text_primary"
+                        app:indicatorInset="0dp"
+                        app:indicatorSize="@dimen/view_height_dp44"
+                        app:trackColor="@android:color/transparent"
+                        app:trackThickness="3dp" />
+
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/fab"
+                        android:layout_width="@dimen/view_height_dp44"
+                        android:layout_height="@dimen/view_height_dp44"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_connection_action_circle"
+                        android:clickable="true"
+                        android:contentDescription="@string/tasker_start_service"
+                        android:focusable="true"
+                        android:padding="0dp"
+                        android:scaleType="center"
+                        android:src="@drawable/ic_play_24dp"
+                        android:tint="@color/md_theme_onPrimary" />
+
+                </FrameLayout>
 
             </LinearLayout>
 
-            <FrameLayout
-                android:id="@+id/layout_connection_surface"
-                android:layout_width="@dimen/view_height_dp44"
-                android:layout_height="@dimen/view_height_dp44"
-                android:layout_marginStart="@dimen/padding_spacing_dp10"
-                android:clipChildren="false"
-                android:clipToPadding="false">
-
-                                <com.google.android.material.progressindicator.CircularProgressIndicator
-                                    android:id="@+id/indicator_connection_progress"
-                                    android:layout_width="@dimen/view_height_dp44"
-                                    android:layout_height="@dimen/view_height_dp44"
-                                    android:layout_gravity="center"
-                                    android:indeterminate="true"
-                                    android:visibility="gone"
-                                    app:indicatorColor="@color/color_connection_dock_text_primary"
-                                    app:indicatorInset="0dp"
-                                    app:indicatorSize="@dimen/view_height_dp44"
-                                    app:trackColor="@android:color/transparent"
-                                    app:trackThickness="3dp" />
-
-                                <androidx.appcompat.widget.AppCompatImageButton
-                                    android:id="@+id/fab"
-                                    android:layout_width="@dimen/view_height_dp44"
-                                    android:layout_height="@dimen/view_height_dp44"
-                                    android:layout_gravity="center"
-                                    android:background="@drawable/bg_connection_action_circle"
-                                    android:clickable="true"
-                                    android:contentDescription="@string/tasker_start_service"
-                                    android:focusable="true"
-                                    android:padding="0dp"
-                                    android:scaleType="center"
-                                    android:src="@drawable/ic_play_24dp"
-                                    android:tint="@color/md_theme_onPrimary" />
-
-            </FrameLayout>
-
-        </LinearLayout>
+        </FrameLayout>
 
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

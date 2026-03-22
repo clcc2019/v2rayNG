@@ -29,9 +29,11 @@ object NotificationManager {
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
     private const val NOTIFICATION_PENDING_INTENT_RESTART_V2RAY = 2
     private const val NOTIFICATION_ICON_THRESHOLD = 3000
-    private const val ACTIVE_QUERY_INTERVAL_MS = 3000L
-    private const val IDLE_QUERY_INTERVAL_MS = 15000L
+    private const val ACTIVE_QUERY_INTERVAL_MS = 5000L
+    private const val IDLE_QUERY_INTERVAL_MS = 30000L
+    private const val DEEP_IDLE_QUERY_INTERVAL_MS = 60000L
     private const val IDLE_CYCLE_THRESHOLD = 2
+    private const val DEEP_IDLE_CYCLE_THRESHOLD = 6
 
     private var lastQueryTime = 0L
     private var mBuilder: NotificationCompat.Builder? = null
@@ -86,8 +88,16 @@ object NotificationManager {
                 lastZeroSpeed = zeroSpeed
                 idleCycles = if (zeroSpeed) idleCycles + 1 else 0
                 lastQueryTime = queryTime
-                delay(if (idleCycles >= IDLE_CYCLE_THRESHOLD) IDLE_QUERY_INTERVAL_MS else ACTIVE_QUERY_INTERVAL_MS)
+                delay(resolveQueryIntervalMs(idleCycles))
             }
+        }
+    }
+
+    private fun resolveQueryIntervalMs(idleCycles: Int): Long {
+        return when {
+            idleCycles >= DEEP_IDLE_CYCLE_THRESHOLD -> DEEP_IDLE_QUERY_INTERVAL_MS
+            idleCycles >= IDLE_CYCLE_THRESHOLD -> IDLE_QUERY_INTERVAL_MS
+            else -> ACTIVE_QUERY_INTERVAL_MS
         }
     }
 

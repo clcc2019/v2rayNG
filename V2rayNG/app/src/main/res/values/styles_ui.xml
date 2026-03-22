@@ -55,6 +55,13 @@
         <item name="android:textColor">@color/md_theme_onSurfaceVariant</item>
     </style>
 
+    <style name="TextAppearance.V2Ray.FormValue" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/md_theme_onSurface</item>
+    </style>
+
     <style name="TextAppearance.V2Ray.MenuItem" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
@@ -108,8 +115,8 @@
     </style>
 
     <style name="Widget.V2Ray.HomeChrome.ActionButton" parent="">
-        <item name="android:layout_width">@dimen/view_height_dp40</item>
-        <item name="android:layout_height">@dimen/view_height_dp40</item>
+        <item name="android:layout_width">@dimen/view_height_dp36</item>
+        <item name="android:layout_height">@dimen/view_height_dp36</item>
         <item name="android:background">@drawable/bg_home_toolbar_action</item>
         <item name="android:foreground">@drawable/bg_home_toolbar_action_ripple</item>
         <item name="android:clickable">true</item>
@@ -118,8 +125,8 @@
     </style>
 
     <style name="Widget.V2Ray.HomeChrome.ActionIcon" parent="">
-        <item name="android:layout_width">@dimen/image_size_dp20</item>
-        <item name="android:layout_height">@dimen/image_size_dp20</item>
+        <item name="android:layout_width">@dimen/image_size_dp18</item>
+        <item name="android:layout_height">@dimen/image_size_dp18</item>
         <item name="android:scaleType">center</item>
         <item name="android:tint">@color/color_home_on_surface</item>
     </style>
@@ -138,10 +145,15 @@
         <item name="cardElevation">0dp</item>
     </style>
 
+    <style name="Widget.V2Ray.Card.FormSection.FormPage" parent="Widget.V2Ray.Card.FormSection">
+        <item name="android:maxWidth">@dimen/settings_page_max_width</item>
+    </style>
+
     <style name="Widget.V2Ray.Card.HomeList" parent="Widget.V2Ray.Card.ListItem">
-        <item name="cardCornerRadius">16dp</item>
-        <item name="strokeWidth">1dp</item>
-        <item name="cardElevation">0dp</item>
+        <item name="cardCornerRadius">18dp</item>
+        <item name="strokeColor">@android:color/transparent</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardElevation">5dp</item>
     </style>
 
     <style name="Widget.V2Ray.Card.HomeDock" parent="Widget.V2Ray.Card.Primary">
@@ -149,7 +161,7 @@
         <item name="cardBackgroundColor">@color/color_home_card_bg_dock</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="strokeWidth">0dp</item>
-        <item name="cardElevation">0dp</item>
+        <item name="cardElevation">6dp</item>
     </style>
 
     <style name="Widget.V2Ray.HomeDock.Profile" parent="">
@@ -160,7 +172,8 @@
         <item name="android:textColor">@color/color_connection_dock_text_primary</item>
         <item name="android:textSize">17sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">-0.005</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <style name="Widget.V2Ray.HomeDock.Summary" parent="">
@@ -169,10 +182,10 @@
         <item name="android:includeFontPadding">false</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Body</item>
         <item name="android:textColor">@color/color_connection_dock_text_secondary</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:lineSpacingExtra">0dp</item>
-        <item name="android:letterSpacing">0.01</item>
-        <item name="android:alpha">0.92</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+        <item name="android:letterSpacing">0.004</item>
+        <item name="android:alpha">0.98</item>
     </style>
 
     <style name="Widget.V2Ray.Badge.ConnectionDockStatus" parent="">
@@ -187,10 +200,10 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
-        <item name="android:textSize">10sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/color_connection_dock_text_secondary</item>
-        <item name="android:letterSpacing">0.04</item>
+        <item name="android:letterSpacing">0.03</item>
     </style>
 
     <style name="Widget.V2Ray.MoreAction.Row" parent="Widget.V2Ray.Settings.Row" />
@@ -230,6 +243,10 @@
         <item name="android:maxWidth">@dimen/list_card_max_width</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Eyebrow</item>
         <item name="android:textColor">@color/color_section_heading</item>
+    </style>
+
+    <style name="Widget.V2Ray.SectionLabel.FormPage" parent="Widget.V2Ray.SectionLabel">
+        <item name="android:maxWidth">@dimen/settings_page_max_width</item>
     </style>
 
     <style name="Widget.V2Ray.SectionIconButton" parent="">
@@ -399,6 +416,13 @@
         <item name="android:alpha">0.9</item>
     </style>
 
+    <style name="Widget.V2Ray.HomeList.MetaRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
     <style name="Widget.V2Ray.HomeList.SourceText" parent="">
         <item name="android:includeFontPadding">false</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Support</item>
@@ -408,11 +432,13 @@
         <item name="android:alpha">0.96</item>
     </style>
 
-    <style name="Widget.V2Ray.HomeList.SourceLabel" parent="Widget.V2Ray.Badge.SubscriptionMeta">
+    <style name="Widget.V2Ray.HomeList.SourceLabel" parent="">
+        <item name="android:includeFontPadding">false</item>
         <item name="android:textColor">@color/color_home_on_surface_muted</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Support</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.02</item>
-        <item name="android:textSize">8.5sp</item>
+        <item name="android:textSize">10sp</item>
     </style>
 
     <style name="Widget.V2Ray.HomeList.SourceValue" parent="Widget.V2Ray.HomeList.SourceText">
@@ -464,6 +490,20 @@
         <item name="android:letterSpacing">0.03</item>
     </style>
 
+    <style name="Widget.V2Ray.HomeList.SecurityBadge" parent="">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:background">@drawable/bg_home_security_badge</item>
+        <item name="android:foregroundGravity">center</item>
+    </style>
+
+    <style name="Widget.V2Ray.HomeList.SecurityIcon" parent="">
+        <item name="android:layout_width">12dp</item>
+        <item name="android:layout_height">12dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:tint">@color/color_home_security_plain_icon</item>
+    </style>
+
     <style name="Widget.V2Ray.Badge.ConnectionCompact" parent="">
         <item name="android:background">@drawable/bg_connection_badge</item>
         <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
@@ -501,12 +541,14 @@
     </style>
 
     <style name="Widget.V2Ray.HomeList.DelayBadge" parent="Widget.V2Ray.Badge.MetricHomeCompact">
-        <item name="android:minWidth">42dp</item>
+        <item name="android:minWidth">@dimen/view_width_delay_badge</item>
         <item name="android:minHeight">22dp</item>
         <item name="android:paddingStart">@dimen/padding_spacing_dp6</item>
         <item name="android:paddingTop">@dimen/padding_spacing_dp2</item>
         <item name="android:paddingEnd">@dimen/padding_spacing_dp6</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp2</item>
+        <item name="android:drawablePadding">@dimen/padding_spacing_dp4</item>
+        <item name="android:gravity">center_vertical</item>
         <item name="android:textSize">9.5sp</item>
         <item name="android:letterSpacing">0</item>
     </style>
@@ -597,12 +639,13 @@
         <item name="android:paddingEnd">@dimen/padding_spacing_dp14</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp12</item>
         <item name="android:minHeight">@dimen/view_height_dp56</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.FormValue</item>
+        <item name="android:textSize">15sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
         <item name="android:textColorHint">@color/md_theme_onSurfaceVariant</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:maxWidth">@dimen/list_card_max_width</item>
+        <item name="android:maxWidth">@dimen/settings_page_max_width</item>
     </style>
 
     <style name="Widget.V2Ray.EditText.BottomSheet" parent="Widget.V2Ray.EditText">
@@ -632,10 +675,11 @@
         <item name="android:minHeight">@dimen/view_height_dp56</item>
         <item name="android:paddingStart">@dimen/padding_spacing_dp14</item>
         <item name="android:paddingEnd">@dimen/view_size_dp36</item>
-        <item name="android:popupBackground">@drawable/bg_popup_surface</item>
-        <item name="android:dropDownSelector">@drawable/bg_selected_indicator</item>
+        <item name="android:popupBackground">@drawable/bg_form_popup_surface</item>
+        <item name="android:dropDownSelector">@drawable/bg_form_option_selected</item>
+        <item name="android:dropDownVerticalOffset">@dimen/padding_spacing_dp8</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:maxWidth">@dimen/list_card_max_width</item>
+        <item name="android:maxWidth">@dimen/settings_page_max_width</item>
     </style>
 
     <style name="Widget.V2Ray.PopupMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
