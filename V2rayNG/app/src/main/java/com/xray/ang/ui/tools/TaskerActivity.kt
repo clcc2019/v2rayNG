@@ -2,13 +2,10 @@ package com.xray.ang.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.ListView
 import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityTaskerBinding
@@ -17,69 +14,58 @@ import com.xray.ang.handler.MmkvManager
 class TaskerActivity : BaseActivity() {
     private val binding by lazy { ActivityTaskerBinding.inflate(layoutInflater) }
 
-    private var listview: ListView? = null
-    private var lstData: ArrayList<String> = ArrayList()
-    private var lstGuid: ArrayList<String> = ArrayList()
+    private val serverLabels = arrayListOf("Default")
+    private val serverGuids = arrayListOf(AppConfig.TASKER_DEFAULT_GUID)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = "")
-
-        //add def value
-        lstData.add("Default")
-        lstGuid.add(AppConfig.TASKER_DEFAULT_GUID)
 
         MmkvManager.decodeAllServerList().forEach { key ->
             MmkvManager.decodeServerConfig(key)?.let { config ->
-                lstData.add(config.remarks)
-                lstGuid.add(key)
+                serverLabels.add(config.remarks)
+                serverGuids.add(key)
             }
         }
         val adapter = ArrayAdapter(
             this,
-            android.R.layout.simple_list_item_single_choice, lstData
+            android.R.layout.simple_list_item_single_choice, serverLabels
         )
-        listview = findViewById<View>(R.id.listview) as ListView
-        listview?.adapter = adapter
-        SystemFontWeightHelper.scheduleApply(listview)
+        binding.listview.adapter = adapter
+        SystemFontWeightHelper.scheduleApply(binding.listview)
 
-        init()
+        restoreInitialSelection()
     }
 
-    private fun init() {
+    private fun restoreInitialSelection() {
         try {
             val bundle = intent?.getBundleExtra(AppConfig.TASKER_EXTRA_BUNDLE)
             val switch = bundle?.getBoolean(AppConfig.TASKER_EXTRA_BUNDLE_SWITCH, false)
             val guid = bundle?.getString(AppConfig.TASKER_EXTRA_BUNDLE_GUID, "")
 
-            if (switch == null || TextUtils.isEmpty(guid)) {
+            if (switch == null || guid.isNullOrEmpty()) {
                 return
-            } else {
-                binding.switchStartService.isChecked = switch
-                val pos = lstGuid.indexOf(guid.toString())
-                if (pos >= 0) {
-                    listview?.setItemChecked(pos, true)
-                }
+            }
+
+            binding.switchStartService.isChecked = switch
+            val position = serverGuids.indexOf(guid)
+            if (position >= 0) {
+                binding.listview.setItemChecked(position, true)
             }
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to initialize Tasker settings", e)
-
         }
     }
 
     private fun confirmFinish() {
-        val position = listview?.checkedItemPosition
-        if (position == null || position < 0) {
-            return
-        }
+        val position = binding.listview.checkedItemPosition.takeIf { it >= 0 } ?: return
 
         val extraBundle = Bundle()
         extraBundle.putBoolean(AppConfig.TASKER_EXTRA_BUNDLE_SWITCH, binding.switchStartService.isChecked)
-        extraBundle.putString(AppConfig.TASKER_EXTRA_BUNDLE_GUID, lstGuid[position])
+        extraBundle.putString(AppConfig.TASKER_EXTRA_BUNDLE_GUID, serverGuids[position])
         val intent = Intent()
 
-        val remarks = lstData[position]
+        val remarks = serverLabels[position]
         val blurb = if (binding.switchStartService.isChecked) {
             "Start $remarks"
         } else {
@@ -100,10 +86,6 @@ class TaskerActivity : BaseActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.del_config -> {
-            true
-        }
-
         R.id.save_config -> {
             confirmFinish()
             true

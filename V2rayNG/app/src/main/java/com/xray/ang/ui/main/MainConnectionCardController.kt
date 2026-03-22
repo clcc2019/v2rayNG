@@ -36,12 +36,14 @@ class MainConnectionCardController(
     private var landingInfoTone: ServiceMessageTone = ServiceMessageTone.MUTED
     private var hasRenderedPrimaryContent = false
     private var lastRenderedState: ServiceUiState? = null
-    private var lastRenderedSummary: String? = null
-    private var lastRenderedSummaryTone: ServiceMessageTone? = null
     private val dockBackgroundAlphaRenderer = AnimatedFloatRenderer(
         motionInterpolator = motionInterpolator,
         debugKey = "dock_alpha"
     )
+
+    init {
+        SystemFontWeightHelper.scheduleApply(binding.cardConnection)
+    }
 
     fun updateVisibility(visible: Boolean, immediate: Boolean = false) {
         if (lastVisible == visible && !immediate) {
@@ -57,7 +59,6 @@ class MainConnectionCardController(
 
     fun render(state: ServiceUiState) {
         val animateTextChanges = hasRenderedPrimaryContent
-        val previousState = lastRenderedState
         val selectedProfileName = mainViewModel.getSelectedServerSnapshot()
             ?.profile
             ?.remarks
@@ -86,9 +87,6 @@ class MainConnectionCardController(
         )
         renderSummary(animate = animateTextChanges)
         applyStatusBadgeStyle(state)
-        if (animateTextChanges && previousState != state) {
-            UiMotion.animatePulse(binding.tvConnectionStatus, pulseScale = 1.024f, duration = MotionTokens.PULSE_QUICK)
-        }
         hasRenderedPrimaryContent = true
     }
 
@@ -261,15 +259,6 @@ class MainConnectionCardController(
         binding.tvConnectionSummary.setTextColor(
             ContextCompat.getColor(context, colorForTone(tone))
         )
-        val renderedSummary = targetText.toString()
-        if (animate &&
-            (lastRenderedSummary != renderedSummary || lastRenderedSummaryTone != tone) &&
-            (!message.isNullOrBlank() || tone != ServiceMessageTone.MUTED)
-        ) {
-            UiMotion.animatePulse(binding.tvConnectionSummary, pulseScale = 1.018f, duration = MotionTokens.PULSE_QUICK)
-        }
-        lastRenderedSummary = renderedSummary
-        lastRenderedSummaryTone = tone
     }
 
     private fun defaultSummaryText(): CharSequence {
@@ -289,19 +278,26 @@ class MainConnectionCardController(
         animate: Boolean,
         settledAlpha: Float
     ) {
+        val targetText = text ?: ""
         if (!animate) {
             textView.animate().cancel()
-            textView.text = text
+            textView.text = targetText
+            textView.alpha = settledAlpha
+            textView.translationY = 0f
+            return
+        }
+        if (textView.text?.toString().orEmpty() == targetText.toString()) {
+            textView.animate().cancel()
             textView.alpha = settledAlpha
             textView.translationY = 0f
             return
         }
         UiMotion.animateTextChange(
             textView = textView,
-            newText = text,
+            newText = targetText,
             settledAlpha = settledAlpha,
-            translationOffsetDp = 5f,
-            duration = MotionTokens.MEDIUM_ANIMATION_DURATION
+            translationOffsetDp = 2.5f,
+            duration = MotionTokens.SHORT_ANIMATION_DURATION
         )
     }
 

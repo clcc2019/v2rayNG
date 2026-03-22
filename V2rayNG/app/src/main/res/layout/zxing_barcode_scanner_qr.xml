@@ -21,15 +21,12 @@
 
     <TextView
         android:id="@+id/zxing_status_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Widget.V2Ray.Scanner.Status"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="64dp"
         android:background="@android:color/transparent"
         android:gravity="center"
         android:maxWidth="260dp"
-        android:text="@string/menu_item_import_config_qrcode"
-        android:textColor="@color/colorWhite"
-        android:textSize="14sp" />
+        android:text="@string/menu_item_import_config_qrcode" />
 
 </merge>

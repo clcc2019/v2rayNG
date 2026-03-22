@@ -64,25 +64,19 @@
 
                 <TextView
                     android:id="@+id/tv_empty_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.V2Ray.EmptyState.Title"
                     android:layout_marginTop="@dimen/padding_spacing_dp12"
-                    android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                     android:textColor="@color/color_home_on_surface"
-                    android:textSize="14sp"
                     android:alpha="0.94"
                     tools:text="暂无配置" />
 
                 <TextView
                     android:id="@+id/tv_empty_subtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.V2Ray.EmptyState.Subtitle"
                     android:layout_marginTop="@dimen/padding_spacing_dp6"
                     android:gravity="center"
                     android:maxWidth="220dp"
-                    android:textAppearance="@style/TextAppearance.V2Ray.Support"
                     android:textColor="@color/color_home_on_surface_muted"
-                    android:textSize="11sp"
                     android:alpha="0.82"
                     tools:text="导入或添加一个节点后，即可开始连接" />
 

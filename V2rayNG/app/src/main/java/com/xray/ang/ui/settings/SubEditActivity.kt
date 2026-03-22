@@ -99,24 +99,23 @@ class SubEditActivity : BaseActivity() {
         return true
     }
 
-    private fun saveServer(): Boolean {
+    private fun saveSubscription() {
         val subItem = buildSubscriptionItem()
         if (!validateSubscription(subItem)) {
-            return false
+            return
         }
         MmkvManager.encodeSubscription(editSubId, subItem)
         toastSuccess(R.string.toast_success)
         finish()
-        return true
     }
 
-    private fun deleteServer(): Boolean {
+    private fun deleteSubscription() {
         if (editSubId.isBlank()) {
-            return true
+            return
         }
         if (!MmkvManager.canRemoveSubscription(editSubId)) {
             toast(R.string.toast_action_not_allowed)
-            return false
+            return
         }
         runWithRemovalConfirmation {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -131,7 +130,6 @@ class SubEditActivity : BaseActivity() {
                 }
             }
         }
-        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -144,12 +142,12 @@ class SubEditActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.del_config -> {
-            deleteServer()
+            deleteSubscription()
             true
         }
 
         R.id.save_config -> {
-            saveServer()
+            saveSubscription()
             true
         }
 

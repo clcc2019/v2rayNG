@@ -57,7 +57,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:minWidth="28dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textAppearance="@style/TextAppearance.V2Ray.Badge"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         tools:text="1" />
                 </LinearLayout>

@@ -140,7 +140,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:paddingEnd="@dimen/padding_spacing_dp8"
+                    android:paddingEnd="@dimen/padding_spacing_dp10"
                     android:orientation="vertical">
 
                     <TextView
@@ -151,7 +151,7 @@
                     <TextView
                         android:id="@+id/tv_connection_profile"
                         style="@style/Widget.V2Ray.HomeDock.Profile"
-                        android:layout_marginTop="@dimen/padding_spacing_dp8"
+                        android:layout_marginTop="@dimen/padding_spacing_dp6"
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:minLines="1" />
@@ -160,7 +160,7 @@
                         android:id="@+id/view_connection_divider"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp10"
+                        android:layout_marginTop="@dimen/padding_spacing_dp8"
                         android:layout_marginBottom="@dimen/padding_spacing_dp8"
                         android:importantForAccessibility="no"
                         app:dividerColor="@color/color_connection_dock_divider"
@@ -171,6 +171,7 @@
                         style="@style/Widget.V2Ray.HomeDock.Summary"
                         android:ellipsize="end"
                         android:maxLines="2"
+                        android:minLines="1"
                         android:text="@string/home_connection_summary_short" />
 
                 </LinearLayout>

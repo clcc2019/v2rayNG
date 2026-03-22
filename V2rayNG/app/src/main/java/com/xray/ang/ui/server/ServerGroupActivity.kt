@@ -32,7 +32,6 @@ class ServerGroupActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = EConfigType.POLICYGROUP.toString())
 
         val config = MmkvManager.decodeServerConfig(editGuid)
@@ -45,10 +44,7 @@ class ServerGroupActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Binding selected server config
-     */
-    private fun bindingServer(config: ProfileItem): Boolean {
+    private fun bindingServer(config: ProfileItem) {
         binding.etRemarks.text = Utils.getEditable(config.remarks)
         binding.etPolicyGroupFilter.text = Utils.getEditable(config.policyGroupFilter)
 
@@ -57,14 +53,9 @@ class ServerGroupActivity : BaseActivity() {
 
         val pos = subIds.indexOf(config.policyGroupSubscriptionId ?: "").let { if (it >= 0) it else 0 }
         binding.spPolicyGroupSubId.setSelection(pos)
-
-        return true
     }
 
-    /**
-     * clear or init server config
-     */
-    private fun clearServer(): Boolean {
+    private fun clearServer() {
         binding.etRemarks.text = null
         binding.etPolicyGroupFilter.text = null
 
@@ -72,7 +63,6 @@ class ServerGroupActivity : BaseActivity() {
             val pos = subIds.indexOf(subscriptionId).let { if (it >= 0) it else 0 }
             binding.spPolicyGroupSubId.setSelection(pos)
         }
-        return true
     }
 
     /**

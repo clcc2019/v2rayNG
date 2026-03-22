@@ -29,7 +29,7 @@
             android:layout_centerVertical="true"
             android:layout_toStartOf="@id/switch_start_service"
             android:text="@string/tasker_start_service"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong" />
 
     </RelativeLayout>
 

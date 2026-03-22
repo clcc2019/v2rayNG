@@ -25,24 +25,16 @@
 
         <TextView
             android:id="@+id/tv_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.BottomSheet.Title"
             android:layout_marginTop="@dimen/padding_spacing_dp12"
             android:ellipsize="end"
-            android:maxLines="2"
-            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-            android:textColor="?attr/colorOnSurface" 
-            android:textSize="15sp" />
+            android:maxLines="2" />
 
         <TextView
             android:id="@+id/tv_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Widget.V2Ray.BottomSheet.Subtitle"
             android:layout_marginTop="@dimen/padding_spacing_dp4"
-            android:maxLines="12"
-            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="12sp" />
+            android:maxLines="12" />
 
         <LinearLayout
             android:id="@+id/layout_actions"

@@ -43,6 +43,29 @@
         <item name="android:textStyle">normal</item>
     </style>
 
+    <style name="TextAppearance.V2Ray.HomeDock.Status" parent="TextAppearance.V2Ray.Badge">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.HomeDock.Profile" parent="TextAppearance.V2Ray.FormValue">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">1dp</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.HomeDock.Summary" parent="TextAppearance.V2Ray.Body">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.004</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">1dp</item>
+    </style>
+
     <style name="TextAppearance.V2Ray.TabLarge" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
@@ -69,6 +92,22 @@
         <item name="android:textStyle">normal</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">@color/md_theme_onSurface</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.EmptyStateTitle" parent="TextAppearance.V2Ray.BodyStrong">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.EmptyStateSubtitle" parent="TextAppearance.V2Ray.Support">
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.BottomSheetTitle" parent="TextAppearance.V2Ray.CardTitle">
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="TextAppearance.V2Ray.BottomSheetSubtitle" parent="TextAppearance.V2Ray.Body">
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="Widget.V2Ray.Card" parent="Widget.Material3.CardView.Filled">
@@ -171,24 +210,15 @@
     <style name="Widget.V2Ray.HomeDock.Profile" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textAppearance">@style/TextAppearance.V2Ray.BodyStrong</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.HomeDock.Profile</item>
         <item name="android:textColor">@color/color_connection_dock_text_primary</item>
-        <item name="android:textSize">17sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">-0.01</item>
-        <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <style name="Widget.V2Ray.HomeDock.Summary" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Body</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.HomeDock.Summary</item>
         <item name="android:textColor">@color/color_connection_dock_text_secondary</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:lineSpacingExtra">2dp</item>
-        <item name="android:letterSpacing">0.004</item>
         <item name="android:alpha">0.98</item>
     </style>
 
@@ -203,11 +233,8 @@
         <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
         <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
-        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
-        <item name="android:textSize">11sp</item>
-        <item name="android:textStyle">normal</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.HomeDock.Status</item>
         <item name="android:textColor">@color/color_connection_dock_text_secondary</item>
-        <item name="android:letterSpacing">0.03</item>
     </style>
 
     <style name="Widget.V2Ray.MoreAction.Row" parent="Widget.V2Ray.Settings.Row" />
@@ -307,8 +334,8 @@
     </style>
 
     <style name="Widget.V2Ray.Preference.Title" parent="Widget.V2Ray.Settings.Title">
-        <item name="android:textSize">15.5sp</item>
-        <item name="android:letterSpacing">-0.008</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="Widget.V2Ray.Settings.Subtitle" parent="">
@@ -321,8 +348,9 @@
     </style>
 
     <style name="Widget.V2Ray.Preference.Subtitle" parent="Widget.V2Ray.Settings.Subtitle">
-        <item name="android:textSize">12.5sp</item>
-        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:layout_marginTop">@dimen/padding_spacing_dp2</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">0dp</item>
     </style>
 
     <style name="Widget.V2Ray.PreferenceCategory.Title" parent="">
@@ -332,8 +360,8 @@
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Eyebrow</item>
         <item name="android:textColor">@color/color_section_heading</item>
         <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:letterSpacing">0.015</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.02</item>
     </style>
 
     <style name="Widget.V2Ray.PreferenceCategory.Summary" parent="">
@@ -342,9 +370,9 @@
         <item name="android:maxWidth">@dimen/settings_page_max_width</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.Support</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-        <item name="android:textSize">11sp</item>
-        <item name="android:lineSpacingExtra">1dp</item>
-        <item name="android:alpha">0.92</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:lineSpacingExtra">0dp</item>
+        <item name="android:alpha">0.9</item>
     </style>
 
     <style name="Widget.V2Ray.Settings.Value" parent="">
@@ -379,6 +407,66 @@
         <item name="android:layout_height">16dp</item>
         <item name="android:alpha">0.52</item>
         <item name="android:tint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.BottomSheet.Title" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.BottomSheetTitle</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.V2Ray.BottomSheet.Subtitle" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.BottomSheetSubtitle</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.V2Ray.BottomSheet.ActionLabel" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.MenuItem</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.V2Ray.EmptyState.Title" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.EmptyStateTitle</item>
+    </style>
+
+    <style name="Widget.V2Ray.EmptyState.Subtitle" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.EmptyStateSubtitle</item>
+    </style>
+
+    <style name="Widget.V2Ray.LogContent" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Body</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Widget.V2Ray.Scanner.Status" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.BodyStrong</item>
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="Widget.V2Ray.HomeEmptyAction.Row" parent="">

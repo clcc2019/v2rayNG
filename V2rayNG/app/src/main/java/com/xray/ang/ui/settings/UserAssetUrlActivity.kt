@@ -17,31 +17,27 @@ import com.xray.ang.util.Utils
 import java.io.File
 
 class UserAssetUrlActivity : BaseActivity() {
-    // Receive QRcode URL from UserAssetActivity
     companion object {
         const val ASSET_URL_QRCODE = "ASSET_URL_QRCODE"
     }
 
     private val binding by lazy { ActivityUserAssetUrlBinding.inflate(layoutInflater) }
 
-    private var del_config: MenuItem? = null
-    private var save_config: MenuItem? = null
+    private var deleteMenuItem: MenuItem? = null
 
     private val extDir by lazy { File(Utils.userAssetPath(this)) }
     private val editAssetId by lazy { intent.getStringExtra("assetId").orEmpty() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_user_asset_add_url))
 
         val assetItem = MmkvManager.decodeAsset(editAssetId)
         val assetUrlQrcode = intent.getStringExtra(ASSET_URL_QRCODE)
-        val assetNameQrcode = File(assetUrlQrcode.toString()).name
         when {
-            assetItem != null -> bindingAsset(assetItem)
+            assetItem != null -> bindAsset(assetItem)
             assetUrlQrcode != null -> {
-                binding.etRemarks.setText(assetNameQrcode)
+                binding.etRemarks.setText(File(assetUrlQrcode).name)
                 binding.etUrl.setText(assetUrlQrcode)
             }
 
@@ -49,32 +45,20 @@ class UserAssetUrlActivity : BaseActivity() {
         }
     }
 
-    /**
-     * bingding seleced asset config
-     */
-    private fun bindingAsset(assetItem: AssetUrlItem): Boolean {
+    private fun bindAsset(assetItem: AssetUrlItem) {
         binding.etRemarks.text = Utils.getEditable(assetItem.remarks)
         binding.etUrl.text = Utils.getEditable(assetItem.url)
-        return true
     }
 
-    /**
-     * clear or init asset config
-     */
-    private fun clearAsset(): Boolean {
+    private fun clearAsset() {
         binding.etRemarks.text = null
         binding.etUrl.text = null
-        return true
     }
 
-    /**
-     * save asset config
-     */
-    private fun saveServer(): Boolean {
+    private fun saveAsset() {
         var assetItem = MmkvManager.decodeAsset(editAssetId)
         var assetId = editAssetId
         if (assetItem != null) {
-            // remove file associated with the asset
             val file = extDir.resolve(assetItem.remarks)
             if (file.exists()) {
                 try {
@@ -91,49 +75,41 @@ class UserAssetUrlActivity : BaseActivity() {
         assetItem.remarks = binding.etRemarks.text.toString()
         assetItem.url = binding.etUrl.text.toString()
 
-        // check remarks unique
         val assetList = MmkvManager.decodeAssetUrls()
         if (assetList.any { it.assetUrl.remarks == assetItem.remarks && it.guid != assetId }) {
             toast(R.string.msg_remark_is_duplicate)
-            return false
+            return
         }
-
 
         if (TextUtils.isEmpty(assetItem.remarks)) {
             toast(R.string.sub_setting_remarks)
-            return false
+            return
         }
         if (TextUtils.isEmpty(assetItem.url)) {
             toast(R.string.title_url)
-            return false
+            return
         }
 
         MmkvManager.encodeAsset(assetId, assetItem)
         toastSuccess(R.string.toast_success)
         finish()
-        return true
     }
 
-    /**
-     * save server config
-     */
-    private fun deleteServer(): Boolean {
+    private fun deleteAsset() {
         if (editAssetId.isNotEmpty()) {
             showConfirmDialog {
                 MmkvManager.removeAssetUrl(editAssetId)
                 finish()
             }
         }
-        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_server, menu)
-        del_config = menu.findItem(R.id.del_config)
-        save_config = menu.findItem(R.id.save_config)
+        deleteMenuItem = menu.findItem(R.id.del_config)
 
         if (editAssetId.isEmpty()) {
-            del_config?.isVisible = false
+            deleteMenuItem?.isVisible = false
         }
 
         return super.onCreateOptionsMenu(menu)
@@ -141,12 +117,12 @@ class UserAssetUrlActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.del_config -> {
-            deleteServer()
+            deleteAsset()
             true
         }
 
         R.id.save_config -> {
-            saveServer()
+            saveAsset()
             true
         }
 

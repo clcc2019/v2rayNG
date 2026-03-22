@@ -20,21 +20,15 @@ class RoutingEditActivity : BaseActivity() {
     private val position by lazy { intent.getIntExtra("position", -1) }
     private var advancedExpanded = false
 
-    private val outbound_tag: Array<out String> by lazy {
+    private val outboundTags: Array<out String> by lazy {
         resources.getStringArray(R.array.outbound_tag)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.routing_settings_rule_title))
 
-        val rulesetItem = SettingsManager.getRoutingRuleset(position)
-        if (rulesetItem != null) {
-            bindingServer(rulesetItem)
-        } else {
-            clearServer()
-        }
+        SettingsManager.getRoutingRuleset(position)?.let(::bindServer) ?: clearServer()
 
         binding.layoutAdvancedToggle.setOnClickListener {
             updateAdvancedSection(!advancedExpanded)
@@ -44,7 +38,7 @@ class RoutingEditActivity : BaseActivity() {
         }
     }
 
-    private fun bindingServer(rulesetItem: RulesetItem): Boolean {
+    private fun bindServer(rulesetItem: RulesetItem) {
         binding.etRemarks.text = Utils.getEditable(rulesetItem.remarks)
         binding.chkLocked.isChecked = rulesetItem.locked == true
         binding.etDomain.text = Utils.getEditable(formatDomainInput(rulesetItem.domain))
@@ -52,16 +46,14 @@ class RoutingEditActivity : BaseActivity() {
         binding.etPort.text = Utils.getEditable(rulesetItem.port)
         binding.etProtocol.text = Utils.getEditable(formatMultiValueInput(rulesetItem.protocol))
         binding.etNetwork.text = Utils.getEditable(rulesetItem.network)
-        val outbound = Utils.arrayFind(outbound_tag, rulesetItem.outboundTag)
+        val outbound = Utils.arrayFind(outboundTags, rulesetItem.outboundTag)
         binding.spOutboundTag.setSelection(outbound)
         updateAdvancedSection(
             !rulesetItem.protocol.isNullOrEmpty() || !rulesetItem.network.isNullOrEmpty()
         )
-
-        return true
     }
 
-    private fun clearServer(): Boolean {
+    private fun clearServer() {
         binding.etRemarks.text = null
         binding.chkLocked.isChecked = false
         binding.etDomain.text = null
@@ -71,7 +63,6 @@ class RoutingEditActivity : BaseActivity() {
         binding.etNetwork.text = null
         binding.spOutboundTag.setSelection(0)
         updateAdvancedSection(false)
-        return true
     }
 
     private fun updateAdvancedSection(expanded: Boolean) {
@@ -85,7 +76,7 @@ class RoutingEditActivity : BaseActivity() {
         binding.imgAdvancedToggle.animate().rotation(if (expanded) 180f else 0f).setDuration(180L).start()
     }
 
-    private fun saveServer(): Boolean {
+    private fun saveRule() {
         val rulesetItem = SettingsManager.getRoutingRuleset(position) ?: RulesetItem()
         val remarks = binding.etRemarks.text.toString().trim()
 
@@ -97,18 +88,17 @@ class RoutingEditActivity : BaseActivity() {
             protocol = parseMultiValueInput(binding.etProtocol.text.toString())
             port = binding.etPort.text.toString().takeIf { it.isNotBlank() }
             network = binding.etNetwork.text.toString().takeIf { it.isNotBlank() }
-            outboundTag = outbound_tag[binding.spOutboundTag.selectedItemPosition]
+            outboundTag = outboundTags[binding.spOutboundTag.selectedItemPosition]
         }
 
         if (rulesetItem.remarks.isNullOrEmpty()) {
             showToast(R.string.sub_setting_remarks)
-            return false
+            return
         }
 
         SettingsManager.saveRoutingRuleset(position, rulesetItem)
         showToast(R.string.toast_success)
         finish()
-        return true
     }
 
     private fun formatDomainInput(values: List<String>?): String {
@@ -149,8 +139,7 @@ class RoutingEditActivity : BaseActivity() {
         return if (trimmed.startsWith("domain:")) trimmed.removePrefix("domain:") else trimmed
     }
 
-
-    private fun deleteServer(): Boolean {
+    private fun deleteRule() {
         if (position >= 0) {
             showDeleteConfirmDialog {
                 lifecycleScope.launch(Dispatchers.IO) {
@@ -161,7 +150,6 @@ class RoutingEditActivity : BaseActivity() {
                 }
             }
         }
-        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -177,12 +165,12 @@ class RoutingEditActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.del_config -> {
-            deleteServer()
+            deleteRule()
             true
         }
 
         R.id.save_config -> {
-            saveServer()
+            saveRule()
             true
         }
 

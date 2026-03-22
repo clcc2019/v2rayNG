@@ -38,24 +38,16 @@ class ServerCustomConfigActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Binding selected server config
-     */
-    private fun bindingServer(config: ProfileItem): Boolean {
+    private fun bindingServer(config: ProfileItem) {
         binding.etRemarks.setText(config.remarks.orEmpty())
         val raw = MmkvManager.decodeServerRaw(editGuid)
         val configContent = raw.orEmpty()
 
         binding.editor.setText(configContent)
-        return true
     }
 
-    /**
-     * clear or init server config
-     */
-    private fun clearServer(): Boolean {
+    private fun clearServer() {
         binding.etRemarks.text = null
-        return true
     }
 
     /**
