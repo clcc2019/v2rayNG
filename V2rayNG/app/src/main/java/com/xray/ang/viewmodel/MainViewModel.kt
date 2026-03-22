@@ -118,6 +118,8 @@ class MainViewModel(
     private val groupCountLock = Any()
     private var cachedGroupIds: List<String> = emptyList()
     private var cachedGroupCounts: Map<String, Int> = emptyMap()
+    private var appliedSnapshotSubscriptionId: String? = null
+    private var appliedSnapshotKeyword: String? = null
     private var isGroupCountCacheDirty = true
     private var connectionCardRefreshVersion = 0
     private var isReceiverRegistered = false
@@ -599,6 +601,10 @@ class MainViewModel(
         return mainServerRepository.getServerCount(subId)
     }
 
+    fun matchesAppliedServerSnapshot(subscriptionId: String, keyword: String = keywordFilter.trim()): Boolean {
+        return appliedSnapshotSubscriptionId == subscriptionId && appliedSnapshotKeyword == keyword
+    }
+
     /**
      * Gets the position of a server by its GUID.
      * @param guid The GUID of the server.
@@ -880,6 +886,8 @@ class MainViewModel(
     }
 
     private fun applyServerListSnapshot(snapshot: MainServerListSnapshot) {
+        appliedSnapshotSubscriptionId = snapshot.subscriptionId
+        appliedSnapshotKeyword = snapshot.keyword
         serverList = snapshot.serverGuids
         serversCache.clear()
         serversCache.addAll(snapshot.servers)

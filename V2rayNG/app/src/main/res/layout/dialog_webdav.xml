@@ -14,8 +14,7 @@
         style="@style/Widget.V2Ray.Card.FormSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxWidth="@dimen/list_card_max_width"
-        app:strokeWidth="0dp">
+        android:maxWidth="@dimen/list_card_max_width">
 
         <LinearLayout
             style="@style/Widget.V2Ray.FormSection.Content"

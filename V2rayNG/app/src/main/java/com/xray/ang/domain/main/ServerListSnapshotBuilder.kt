@@ -7,6 +7,8 @@ import com.xray.ang.extension.nullIfBlank
 import com.xray.ang.handler.AngConfigManager
 
 data class MainServerListSnapshot(
+    val subscriptionId: String,
+    val keyword: String,
     val serverGuids: MutableList<String>,
     val servers: List<ServersCache>,
     val positions: Map<String, Int>,
@@ -70,6 +72,8 @@ class ServerListSnapshotBuilder(
         }
 
         return MainServerListSnapshot(
+            subscriptionId = targetSubscriptionId,
+            keyword = keyword,
             serverGuids = targetServerList,
             servers = servers,
             positions = positions,

@@ -116,8 +116,8 @@
                 android:layout_width="156dp"
                 android:layout_height="88dp"
                 android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="28dp"
-                android:alpha="0.96"
+                android:layout_marginEnd="24dp"
+                android:alpha="0.78"
                 android:contentDescription="@null"
                 android:importantForAccessibility="no"
                 android:src="@drawable/bg_connection_dock_map_decor" />
@@ -129,7 +129,7 @@
                 android:background="@drawable/bg_connection_dock_panel"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
-                android:minHeight="76dp"
+                android:minHeight="74dp"
                 android:orientation="horizontal"
                 android:paddingStart="@dimen/padding_spacing_dp16"
                 android:paddingTop="@dimen/padding_spacing_dp12"
@@ -156,15 +156,15 @@
                         android:maxLines="1"
                         android:minLines="1" />
 
-                    <View
+                    <com.google.android.material.divider.MaterialDivider
                         android:id="@+id/view_connection_divider"
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/padding_spacing_dp10"
                         android:layout_marginBottom="@dimen/padding_spacing_dp8"
-                        android:alpha="0.72"
-                        android:background="@color/color_connection_dock_divider"
-                        android:importantForAccessibility="no" />
+                        android:importantForAccessibility="no"
+                        app:dividerColor="@color/color_connection_dock_divider"
+                        app:dividerThickness="1dp" />
 
                     <TextView
                         android:id="@+id/tv_connection_summary"
@@ -183,7 +183,7 @@
                     android:background="@drawable/bg_connection_action_container"
                     android:clipChildren="false"
                     android:clipToPadding="false"
-                    android:elevation="3dp"
+                    android:elevation="2dp"
                     android:outlineAmbientShadowColor="@color/color_connection_surface_shadow_ambient"
                     android:outlineSpotShadowColor="@color/color_connection_surface_shadow_spot">
 

@@ -28,9 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -137,9 +135,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -147,145 +143,84 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:gravity="center_vertical"
-                    android:minHeight="72dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp14"
-                    android:paddingEnd="@dimen/padding_spacing_dp12"
-                    android:paddingBottom="@dimen/padding_spacing_dp14">
+                    style="@style/Widget.V2Ray.FormOptionRow">
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.FormOptionRow.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/sub_setting_enable"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Title"
+                            android:text="@string/sub_setting_enable" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/sub_setting_enable_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Subtitle"
+                            android:text="@string/sub_setting_enable_hint" />
 
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/chk_enable"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:theme="@style/BrandedSwitch" />
+                        style="@style/Widget.V2Ray.FormSwitch" />
 
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@color/color_card_outline" />
-
-                <LinearLayout
+                <com.google.android.material.divider.MaterialDivider
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:gravity="center_vertical"
-                    android:minHeight="72dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp14"
-                    android:paddingEnd="@dimen/padding_spacing_dp12"
-                    android:paddingBottom="@dimen/padding_spacing_dp14">
+                    app:dividerColor="@color/color_card_outline"
+                    app:dividerInsetStart="16dp"
+                    app:dividerInsetEnd="16dp"
+                    app:dividerThickness="1dp" />
+
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormOptionRow">
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.FormOptionRow.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/sub_auto_update"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Title"
+                            android:text="@string/sub_auto_update" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/sub_auto_update_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Subtitle"
+                            android:text="@string/sub_auto_update_hint" />
 
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/auto_update_check"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:theme="@style/BrandedSwitch" />
+                        style="@style/Widget.V2Ray.FormSwitch" />
 
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@color/color_card_outline" />
-
-                <LinearLayout
+                <com.google.android.material.divider.MaterialDivider
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_settings_item_ripple"
-                    android:gravity="center_vertical"
-                    android:minHeight="72dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp14"
-                    android:paddingEnd="@dimen/padding_spacing_dp12"
-                    android:paddingBottom="@dimen/padding_spacing_dp14">
+                    app:dividerColor="@color/color_card_outline"
+                    app:dividerInsetStart="16dp"
+                    app:dividerInsetEnd="16dp"
+                    app:dividerThickness="1dp" />
+
+                <LinearLayout
+                    style="@style/Widget.V2Ray.FormOptionRow">
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.FormOptionRow.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/sub_allow_insecure_url"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Title"
+                            android:text="@string/sub_allow_insecure_url" />
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/sub_allow_insecure_url_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Subtitle"
+                            android:text="@string/sub_allow_insecure_url_hint" />
 
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/allow_insecure_url"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:theme="@style/BrandedSwitch" />
+                        style="@style/Widget.V2Ray.FormSwitch" />
 
                 </LinearLayout>
 
@@ -308,9 +243,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"

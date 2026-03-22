@@ -35,9 +35,7 @@
             style="@style/Widget.V2Ray.Card.FormSection.FormPage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            app:cardBackgroundColor="@color/md_theme_surface"
-            app:strokeWidth="0dp">
+            android:layout_marginTop="@dimen/padding_spacing_dp8">
 
             <LinearLayout
                 style="@style/Widget.V2Ray.FormSection.Content">

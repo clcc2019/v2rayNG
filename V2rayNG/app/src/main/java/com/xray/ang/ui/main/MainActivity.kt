@@ -308,15 +308,13 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun setupHomeMotion(runInitialEntrance: Boolean) {
-        val pageOffsetPx = resources.displayMetrics.density * 8f
         binding.viewPager.setPageTransformer { page, position ->
             val absPos = kotlin.math.abs(position).coerceAtMost(1f)
-            val scale = 1f - (0.015f * absPos)
-            page.alpha = 1f - (0.08f * absPos)
+            page.alpha = 1f - (0.04f * absPos)
             page.translationX = 0f
-            page.translationY = pageOffsetPx * absPos
-            page.scaleX = scale
-            page.scaleY = scale
+            page.translationY = 0f
+            page.scaleX = 1f
+            page.scaleY = 1f
         }
 
         if (!runInitialEntrance) {

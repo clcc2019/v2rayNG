@@ -24,7 +24,6 @@
             <LinearLayout
                 android:id="@+id/settings_row_container"
                 style="@style/Widget.V2Ray.Settings.Row"
-                android:background="?attr/selectableItemBackground"
                 android:clickable="false"
                 android:duplicateParentState="true"
                 android:focusable="false">
@@ -50,11 +49,11 @@
 
                     <TextView
                         android:id="@android:id/title"
-                        style="@style/Widget.V2Ray.Settings.Title" />
+                        style="@style/Widget.V2Ray.Preference.Title" />
 
                     <TextView
                         android:id="@android:id/summary"
-                        style="@style/Widget.V2Ray.Settings.Subtitle"
+                        style="@style/Widget.V2Ray.Preference.Subtitle"
                         android:maxLines="4" />
 
                 </LinearLayout>
@@ -66,7 +65,8 @@
                     android:layout_marginStart="@dimen/padding_spacing_dp12"
                     android:gravity="center_vertical"
                     android:minHeight="@dimen/view_height_dp36"
-                    android:orientation="horizontal" />
+                    android:orientation="horizontal">
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -74,10 +74,12 @@
                 android:id="@+id/settings_row_divider"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:alpha="0.68"
                 android:visibility="gone"
                 app:dividerColor="@color/color_card_outline"
                 app:dividerInsetStart="54dp"
-                app:dividerThickness="1dp" />
+                app:dividerThickness="1dp">
+            </com.google.android.material.divider.MaterialDivider>
 
         </LinearLayout>
 

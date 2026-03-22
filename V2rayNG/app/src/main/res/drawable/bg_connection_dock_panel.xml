@@ -35,8 +35,8 @@
             <corners android:radius="16dp" />
             <gradient
                 android:angle="270"
-                android:startColor="#00000000"
-                android:endColor="#060C1117" />
+                android:startColor="@color/color_connection_dock_depth_top"
+                android:endColor="@color/color_connection_dock_depth_bottom" />
         </shape>
     </item>
 

@@ -28,9 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -76,57 +74,36 @@
                     android:layout_marginTop="@dimen/padding_spacing_dp8"
                     android:entries="@array/outbound_tag" />
 
-                <View
+                <com.google.android.material.divider.MaterialDivider
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:background="@color/color_card_outline" />
+                    app:dividerColor="@color/color_card_outline"
+                    app:dividerThickness="1dp" />
 
                 <LinearLayout
                     android:id="@+id/layout_locked_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp4"
-                    android:background="@drawable/bg_settings_item_ripple"
+                    style="@style/Widget.V2Ray.FormOptionRow"
                     android:clickable="true"
                     android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="72dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp4"
-                    android:paddingTop="@dimen/padding_spacing_dp8"
-                    android:paddingEnd="@dimen/padding_spacing_dp4"
-                    android:paddingBottom="@dimen/padding_spacing_dp8">
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingEnd="@dimen/padding_spacing_dp16">
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:paddingStart="@dimen/padding_spacing_dp12"
-                        android:paddingEnd="@dimen/padding_spacing_dp12">
+                        style="@style/Widget.V2Ray.FormOptionRow.Content">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/routing_settings_locked"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Title"
+                            android:text="@string/routing_settings_locked" />
 
                         <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/routing_lock_rule_hint"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Subtitle"
+                            android:text="@string/routing_lock_rule_hint" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
+                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/chk_locked"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:theme="@style/BrandedSwitch" />
+                        style="@style/Widget.V2Ray.FormSwitch" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -143,9 +120,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -232,9 +207,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width"
-            app:cardBackgroundColor="@color/color_settings_section_surface"
-            app:strokeWidth="0dp">
+            android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -243,40 +216,21 @@
 
                 <LinearLayout
                     android:id="@+id/layout_advanced_toggle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_settings_item_ripple"
+                    style="@style/Widget.V2Ray.FormOptionRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="64dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingTop="@dimen/padding_spacing_dp12"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:paddingBottom="@dimen/padding_spacing_dp12">
+                    android:focusable="true">
 
                     <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        style="@style/Widget.V2Ray.FormOptionRow.Content">
 
                         <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/routing_action_show_advanced"
-                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
-                            android:textColor="?attr/colorOnSurface" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Title"
+                            android:text="@string/routing_action_show_advanced" />
 
                         <TextView
                             android:id="@+id/tv_advanced_summary"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="@string/routing_advanced_summary_collapsed"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            style="@style/Widget.V2Ray.FormOptionRow.Subtitle"
+                            android:text="@string/routing_advanced_summary_collapsed" />
                     </LinearLayout>
 
                     <ImageView
@@ -288,14 +242,15 @@
                         app:tint="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
 
-                <View
+                <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/view_advanced_divider"
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="@dimen/padding_spacing_dp16"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16"
-                    android:background="@color/color_card_outline"
-                    android:visibility="gone" />
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:dividerColor="@color/color_card_outline"
+                    app:dividerInsetStart="16dp"
+                    app:dividerInsetEnd="16dp"
+                    app:dividerThickness="1dp" />
 
                 <LinearLayout
                     android:id="@+id/layout_advanced_content"

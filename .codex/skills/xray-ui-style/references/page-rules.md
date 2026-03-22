@@ -16,12 +16,13 @@
 ## 稳定产出流程
 
 1. 先归类页面：设置页、列表页、工具页、首页、编辑页
-2. 读取当前页、至少两个同级页，以及共享 `colors/styles/drawable`
-3. 如果是首页任务，再读 `references/home-main-surface-system.md`
-4. 写出简短判断：当前页属于现有哪种页面语言，问题是“不统一”还是“本身不好看”
-5. 决定改动层级：只收颜色和圆角、调整结构、还是重做整个页面
-6. 能先收共享资源时先收共享资源；共享资源解决不了再改单页结构
-7. 修改后对照同级页面复看，确认没有长成另一套产品
+2. Android UI 任务先读 `references/material3-integration.md`
+3. 读取当前页、至少两个同级页，以及共享 `colors/styles/drawable`
+4. 如果是首页任务，再读 `references/home-main-surface-system.md`
+5. 写出简短判断：当前页属于现有哪种页面语言，问题是“不统一”还是“本身不好看”
+6. 决定改动层级：只收颜色和圆角、调整结构、还是重做整个页面
+7. 能先收共享资源时先收共享资源；共享资源解决不了再改单页结构
+8. 修改后对照同级页面复看，确认没有长成另一套产品
 
 ## 页面级限制
 
@@ -38,6 +39,11 @@
 - 内容宽度优先使用 `settings_page_max_width`
 - 分组标题允许使用极轻度冷灰强化导航，但正文和说明仍保持中性文字，不把整页做成彩色面板
 - section card、settings row、more action row 的默认背景统一为纯白色
+- `更多` 页是设置式页面的最高优先级视觉参考，尤其是卡片背景、无描边效果、分隔线颜色和 row 点击面
+- 设置页优先使用 `MaterialCardView + MaterialDivider + SwitchPreferenceCompat / MaterialSwitch` 这类 Material 3 组件组合承载当前白卡分组列表
+- Preference 行项即使做成自定义布局，也应保持 Material 组件语义，不要退回纯手工无语义组件
+- 使用 style / theme / widgetLayoutResource 优先于逐项 runtime 拼装
+- 如果任务是“重构”，设置页的卡片背景、边框有无、分隔线颜色、点击面底色默认都要保持和 `更多` 页同一效果
 
 ### 首页 / 列表页
 
@@ -57,6 +63,8 @@
 - 首页 dock 不使用描边，允许极弱地图线稿装饰，但装饰不能影响正文和主按钮识别
 - 首页 dock 动态摘要一律保持中性文字，不用绿 / 黄 / 红字体直接表达状态
 - 首页文字粗细优先跟随系统 font weight 设置；首页震动反馈只保留底部启动 / 停止服务
+- 首页虽然可做更强的产品化表达，但底层仍优先用 Material 组件承载：`MaterialToolbar`、`MaterialCardView`、`MaterialDivider`、Material progress 等
+- 首页自定义 surface 不应破坏 Material 组件的状态层、可访问性和系统主题兼容性
 
 ### 工具页 / 日志页 / 路由页
 
@@ -64,6 +72,18 @@
 - 容器、圆角、背景深浅、次级按钮复用现有写法
 - 列表项默认收在统一面板里，不裸贴页面底
 - 背景统一冷白灰，主容器和内部卡片优先纯白
+- 若存在布尔项、分段容器、支持面板，优先参考 Material 3 的 `switch / card / divider / supporting pane` 结构，再套 xrayNG 风格
+
+### 编辑页 / 表单页
+
+- 默认按 `section card + label + field + supporting text / option row` 的 Material 3 结构组织
+- section 优先使用 `MaterialCardView`
+- 输入控件优先使用 theme-backed field surface，而不是散乱的单页局部背景
+- 下拉、弹层、弹窗优先保持 Material surface / outline / divider 关系
+- 布尔选项优先使用 `MaterialSwitch`，不要在不同编辑页混用多套开关组件
+- 外置 label 可以保留，不强行照搬浮动 label；但 field 的状态、触达尺寸、颜色和层次必须符合 MD3 基本语义
+- 编辑页卡片、选项行、分隔和 row 背景默认参考 `更多` 页 / 设置式页面的视觉基准，而不是直接采用 Material 3 组件默认外观
+- 若只是把 `SwitchCompat`、普通 divider、普通 card 替换为 Material 3 组件，替换后视觉应尽量贴近替换前效果；实现升级不等于视觉改版
 
 ## Preference 页面专项规则
 

@@ -9,20 +9,12 @@
 
     <TextView
         android:id="@android:id/title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxWidth="@dimen/settings_page_max_width"
-        android:textAppearance="@style/TextAppearance.V2Ray.Eyebrow"
-        android:textColor="@color/color_section_heading" />
+        style="@style/Widget.V2Ray.PreferenceCategory.Title" />
 
     <TextView
         android:id="@android:id/summary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/padding_spacing_dp4"
-        android:maxWidth="@dimen/settings_page_max_width"
         android:maxLines="3"
-        android:textAppearance="@style/TextAppearance.V2Ray.Support"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        style="@style/Widget.V2Ray.PreferenceCategory.Summary" />
 
 </LinearLayout>

@@ -12,6 +12,13 @@
         <item name="cardElevation">0dp</item>
     </style>
 
+    <style name="Widget.V2Ray.Card.FormSection" parent="Widget.V2Ray.Card.Section">
+        <item name="cardBackgroundColor">@color/color_settings_section_surface</item>
+        <item name="strokeColor">@color/color_card_outline</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
     <style name="Widget.V2Ray.Card.Subtle" parent="Widget.V2Ray.Card">
         <item name="cardBackgroundColor">@color/color_settings_row_surface</item>
         <item name="cardElevation">0dp</item>
@@ -33,6 +40,6 @@
         <item name="cardBackgroundColor">@color/color_home_card_bg_dock</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="strokeWidth">0dp</item>
-        <item name="cardElevation">4dp</item>
+        <item name="cardElevation">3dp</item>
     </style>
 </resources>

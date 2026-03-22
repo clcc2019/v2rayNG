@@ -10,6 +10,7 @@
     <dimen name="padding_spacing_dp8">8dp</dimen>
     <dimen name="padding_spacing_dp9">9dp</dimen>
     <dimen name="padding_spacing_dp10">10dp</dimen>
+    <dimen name="padding_spacing_dp11">11dp</dimen>
     <dimen name="padding_spacing_dp12">12dp</dimen>
     <dimen name="padding_spacing_dp13">13dp</dimen>
     <dimen name="padding_spacing_dp14">14dp</dimen>

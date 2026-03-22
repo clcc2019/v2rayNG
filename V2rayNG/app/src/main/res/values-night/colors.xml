@@ -18,10 +18,13 @@
     <color name="color_latency_bg_idle">#1B2026</color>
     <color name="color_section_action_surface">#171C22</color>
     <color name="color_section_action_surface_pressed">#1D232B</color>
-    <color name="color_form_field_surface">#12161B</color>
+    <color name="color_form_section_surface">#101317</color>
+    <color name="color_form_section_outline">#232B34</color>
+    <color name="color_form_field_surface">#151A20</color>
     <color name="color_form_field_surface_active">#101317</color>
-    <color name="color_form_field_outline">#232931</color>
-    <color name="color_form_dropdown_highlight">#171C22</color>
+    <color name="color_form_field_outline">#2F3842</color>
+    <color name="color_form_field_outline_focus">#AFB9C6</color>
+    <color name="color_form_dropdown_highlight">#1A2129</color>
     <color name="color_home_background">#000000</color>
     <color name="color_home_surface">#101317</color>
     <color name="color_home_surface_raised">#101317</color>
@@ -74,6 +77,8 @@
     <color name="color_connection_dock_highlight_top">#14FFFFFF</color>
     <color name="color_connection_dock_highlight_mid">#06FFFFFF</color>
     <color name="color_connection_dock_highlight_bottom">#00FFFFFF</color>
+    <color name="color_connection_dock_depth_top">#00000000</color>
+    <color name="color_connection_dock_depth_bottom">#00000000</color>
     <color name="color_connection_dock_map_line">#232931</color>
     <color name="color_connection_dock_map_line_secondary">#2E343D</color>
     <color name="color_connection_dock_map_dot">#3B434B</color>

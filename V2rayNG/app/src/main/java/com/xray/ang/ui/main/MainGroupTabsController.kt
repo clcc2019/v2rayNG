@@ -63,9 +63,6 @@ class MainGroupTabsController(
         override fun onPageSelected(position: Int) {
             if (position == lastAnimatedPagePosition) return
             lastAnimatedPagePosition = position
-            binding.viewPager.post {
-                findCurrentFragment()?.animateGroupSwitch()
-            }
             syncGroupTabSelection()
         }
     }

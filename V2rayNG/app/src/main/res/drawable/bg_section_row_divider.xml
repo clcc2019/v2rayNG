@@ -3,7 +3,7 @@
     <item android:left="52dp">
         <shape>
             <size android:height="1dp" />
-            <solid android:color="@color/color_card_outline" />
+            <solid android:color="#B8E2E8EF" />
         </shape>
     </item>
 </layer-list>

@@ -115,6 +115,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
     private var storedCountRequestVersion = 0
     private var lastEmptyStateMode: EmptyStateMode? = null
     private var subscriptionRefreshJob: Job? = null
+    private var hasResolvedInitialContent = false
     private val switchInterpolator = FastOutSlowInInterpolator()
     private var initialTouchX = 0f
     private var initialTouchY = 0f
@@ -150,6 +151,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             // Log.d(TAG, "GroupServerFragment updateListAction subId=$subId")
             when (update) {
                 is MainViewModel.ServerListUpdate.Full -> {
+                    hasResolvedInitialContent = true
                     adapter.setData(mainViewModel.serversCache, -1)
                     lastKnownItemCount = mainViewModel.serversCache.size
                     updateEmptyState()
@@ -164,6 +166,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             }
         }
 
+        syncCurrentSelectionState()
         updateEmptyState()
         // Log.d(TAG, "GroupServerFragment onViewCreated: subId=$subId")
     }
@@ -182,6 +185,7 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         if (mainViewModel.subscriptionId == subId) {
             lastKnownItemCount = mainViewModel.serversCache.size
         }
+        syncCurrentSelectionState()
         updateEmptyState()
         ownerActivity.onServerListContextChanged(
             isEmpty = binding.layoutEmptyState.isVisible,
@@ -256,43 +260,76 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
 
     private fun refreshSubscriptions() {
         if (subscriptionRefreshJob?.isActive == true) {
+            binding.refreshLayout.isRefreshing = false
             return
         }
-        subscriptionRefreshJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val result = runCatching { mainViewModel.updateConfigViaSubAll() }
-            withContext(Dispatchers.Main) {
-                binding.refreshLayout.isRefreshing = false
-                result.onSuccess { updateResult ->
-                    when {
-                        updateResult.successCount + updateResult.failureCount + updateResult.skipCount == 0 -> {
-                            toast(R.string.title_update_subscription_no_subscription)
-                        }
-                        updateResult.successCount > 0 && updateResult.failureCount + updateResult.skipCount == 0 -> {
-                            toast(getString(R.string.title_update_config_count, updateResult.configCount))
-                        }
-                        else -> {
-                            toast(
-                                getString(
-                                    R.string.title_update_subscription_result,
-                                    updateResult.configCount,
-                                    updateResult.successCount,
-                                    updateResult.failureCount,
-                                    updateResult.skipCount
-                                )
+        subscriptionRefreshJob = viewLifecycleOwner.lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching { mainViewModel.updateConfigViaSubAll() }
+            }
+            binding.refreshLayout.isRefreshing = false
+            result.onSuccess { updateResult ->
+                val context = context ?: return@onSuccess
+                when {
+                    updateResult.successCount + updateResult.failureCount + updateResult.skipCount == 0 -> {
+                        context.toast(R.string.title_update_subscription_no_subscription)
+                    }
+                    updateResult.successCount > 0 && updateResult.failureCount + updateResult.skipCount == 0 -> {
+                        context.toast(getString(R.string.title_update_config_count, updateResult.configCount))
+                    }
+                    else -> {
+                        context.toast(
+                            getString(
+                                R.string.title_update_subscription_result,
+                                updateResult.configCount,
+                                updateResult.successCount,
+                                updateResult.failureCount,
+                                updateResult.skipCount
                             )
-                        }
+                        )
                     }
-                    if (updateResult.configCount > 0) {
-                        mainViewModel.reloadServerList(immediate = true)
-                    }
-                }.onFailure {
-                    toastError(R.string.toast_failure)
                 }
+                if (updateResult.configCount > 0) {
+                    mainViewModel.reloadServerList(immediate = true)
+                }
+            }.onFailure {
+                context?.toastError(R.string.toast_failure)
             }
         }
     }
 
+    private fun syncCurrentSelectionState() {
+        if (mainViewModel.subscriptionId != subId) {
+            return
+        }
+        if (!mainViewModel.matchesAppliedServerSnapshot(subId)) {
+            return
+        }
+        hasResolvedInitialContent = true
+        lastKnownItemCount = mainViewModel.serversCache.size
+        adapter.setData(ArrayList(mainViewModel.serversCache))
+        if (mainViewModel.serversCache.isEmpty()) {
+            return
+        }
+        pendingListFadeIn = false
+        binding.recyclerView.isVisible = true
+        binding.recyclerView.alpha = 1f
+        binding.recyclerView.translationY = 0f
+        binding.layoutEmptyState.isVisible = false
+        lastEmptyStateVisible = false
+    }
+
     private fun updateEmptyState() {
+        if (mainViewModel.subscriptionId != subId) {
+            updateEmptyStateVisibility(shouldShowEmptyState = false, shouldAnimateEmptyState = false)
+            binding.refreshLayout.isRefreshing = false
+            return
+        }
+        if (!hasResolvedInitialContent && mainViewModel.serversCache.isEmpty()) {
+            updateRecyclerVisibility(shouldShowEmptyState = false)
+            updateEmptyStateVisibility(shouldShowEmptyState = false, shouldAnimateEmptyState = false)
+            return
+        }
         val itemCount = resolveItemCountForEmptyState()
         if (itemCount == null) {
             updateRecyclerVisibility(shouldShowEmptyState = false)
@@ -643,6 +680,9 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
                 }
                 if (mainViewModel.keywordFilter.isNotBlank()) {
                     return@withContext
+                }
+                if (mainViewModel.subscriptionId == targetSubId) {
+                    hasResolvedInitialContent = true
                 }
                 val changed = lastKnownItemCount != count
                 lastKnownItemCount = count

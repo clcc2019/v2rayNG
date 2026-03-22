@@ -105,64 +105,26 @@ class SettingsActivity : BaseActivity() {
         }
 
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
-            // Use MMKV as the storage backend for all Preferences
-            // This prevents inconsistencies between SharedPreferences and MMKV
             preferenceManager.preferenceDataStore = MmkvPreferenceDataStore()
-
             addPreferencesFromResource(R.xml.pref_settings)
-            preferenceScreen?.let { applyPreferenceVisuals(it) }
-            updateExpandableSections(isSearchActive = false)
-
-            initPreferenceSummaries()
-
-            localDns?.setOnPreferenceChangeListener { _, any ->
-                updateLocalDns(any as Boolean)
-                true
-            }
-
-            mux?.setOnPreferenceChangeListener { _, newValue ->
-                updateMux(newValue as Boolean)
-                true
-            }
-            muxConcurrency?.setOnPreferenceChangeListener { _, newValue ->
-                updateMuxConcurrency(newValue as String)
-                true
-            }
-            muxXudpConcurrency?.setOnPreferenceChangeListener { _, newValue ->
-                updateMuxXudpConcurrency(newValue as String)
-                true
-            }
-
-            fragment?.setOnPreferenceChangeListener { _, newValue ->
-                updateFragment(newValue as Boolean)
-                true
-            }
-
-            autoUpdateCheck?.setOnPreferenceChangeListener { _, newValue ->
-                val value = newValue as Boolean
-                autoUpdateCheck?.isChecked = value
-                autoUpdateInterval?.isEnabled = value
-                autoUpdateInterval?.text?.toLongEx()?.let {
-                    if (newValue) configureUpdateTask(it) else cancelUpdateTask()
-                }
-                true
-            }
-            mode?.setOnPreferenceChangeListener { pref, newValue ->
-                val valueStr = newValue.toString()
-                (pref as? ListPreference)?.let { lp ->
-                    val idx = lp.findIndexOfValue(valueStr)
-                    lp.summary = if (idx >= 0) lp.entries[idx] else valueStr
-                }
-                updateMode(valueStr)
-                true
-            }
+            preferenceScreen?.let(::configurePreferenceUi)
+            bindPreferenceSummaries()
+            bindPreferenceListeners()
             mode?.dialogLayoutResource = R.layout.preference_with_help_link
-
         }
-
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            configureListChrome()
+            SystemFontWeightHelper.scheduleApply(listView)
+        }
+
+        private fun configurePreferenceUi(screen: PreferenceScreen) {
+            applyPreferenceVisuals(screen)
+            updateExpandableSections(isSearchActive = false)
+        }
+
+        private fun configureListChrome() {
             listView.apply {
                 clipToPadding = false
                 setPadding(
@@ -176,7 +138,51 @@ class SettingsActivity : BaseActivity() {
             }
             setDivider(null)
             setDividerHeight(0)
-            SystemFontWeightHelper.scheduleApply(listView)
+        }
+
+        private fun bindPreferenceListeners() {
+            localDns?.setOnPreferenceChangeListener { _, any ->
+                updateLocalDns(any as Boolean)
+                true
+            }
+            fakeDns?.setOnPreferenceChangeListener { _, any ->
+                updateFakeDns(any as Boolean)
+                true
+            }
+            mux?.setOnPreferenceChangeListener { _, newValue ->
+                updateMux(newValue as Boolean)
+                true
+            }
+            muxConcurrency?.setOnPreferenceChangeListener { _, newValue ->
+                updateMuxConcurrency(newValue as String)
+                true
+            }
+            muxXudpConcurrency?.setOnPreferenceChangeListener { _, newValue ->
+                updateMuxXudpConcurrency(newValue as String)
+                true
+            }
+            fragment?.setOnPreferenceChangeListener { _, newValue ->
+                updateFragment(newValue as Boolean)
+                true
+            }
+            autoUpdateCheck?.setOnPreferenceChangeListener { _, newValue ->
+                val value = newValue as Boolean
+                autoUpdateCheck?.isChecked = value
+                autoUpdateInterval?.isEnabled = value
+                autoUpdateInterval?.text?.toLongEx()?.let {
+                    if (value) configureUpdateTask(it) else cancelUpdateTask()
+                }
+                true
+            }
+            mode?.setOnPreferenceChangeListener { pref, newValue ->
+                val valueStr = newValue.toString()
+                (pref as? ListPreference)?.let { listPreference ->
+                    val index = listPreference.findIndexOfValue(valueStr)
+                    listPreference.summary = if (index >= 0) listPreference.entries[index] else valueStr
+                }
+                updateMode(valueStr)
+                true
+            }
         }
 
         private fun applyPreferenceVisuals(group: PreferenceGroup) {
@@ -203,57 +209,51 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
-        private fun initPreferenceSummaries() {
-            fun updateSummary(pref: androidx.preference.Preference) {
-                when (pref) {
-                    is EditTextPreference -> {
-                        pref.summary = pref.text.orEmpty()
-                        pref.setOnPreferenceChangeListener { p, newValue ->
-                            p.summary = (newValue as? String).orEmpty()
-                            true
-                        }
-                    }
-
-                    is ListPreference -> {
-                        pref.summary = pref.entry ?: ""
-                        pref.setOnPreferenceChangeListener { p, newValue ->
-                            val lp = p as ListPreference
-                            val idx = lp.findIndexOfValue(newValue as? String)
-                            lp.summary = (if (idx >= 0) lp.entries[idx] else newValue) as CharSequence?
-                            true
-                        }
-                    }
-
-                    is SwitchPreferenceCompat -> {
-                    }
-                }
-            }
-
+        private fun bindPreferenceSummaries() {
             fun traverse(group: androidx.preference.PreferenceGroup) {
-                for (i in 0 until group.preferenceCount) {
-                    when (val p = group.getPreference(i)) {
-                        is androidx.preference.PreferenceGroup -> traverse(p)
-                        else -> updateSummary(p)
+                for (index in 0 until group.preferenceCount) {
+                    when (val preference = group.getPreference(index)) {
+                        is androidx.preference.PreferenceGroup -> traverse(preference)
+                        else -> bindSummary(preference)
                     }
                 }
             }
+            preferenceScreen?.let(::traverse)
+        }
 
-            preferenceScreen?.let { traverse(it) }
+        private fun bindSummary(preference: androidx.preference.Preference) {
+            when (preference) {
+                is EditTextPreference -> {
+                    preference.summary = preference.text.orEmpty()
+                    preference.setOnPreferenceChangeListener { pref, newValue ->
+                        pref.summary = (newValue as? String).orEmpty()
+                        true
+                    }
+                }
+
+                is ListPreference -> {
+                    preference.summary = preference.entry ?: ""
+                    preference.setOnPreferenceChangeListener { pref, newValue ->
+                        val listPreference = pref as ListPreference
+                        val index = listPreference.findIndexOfValue(newValue as? String)
+                        listPreference.summary = (if (index >= 0) listPreference.entries[index] else newValue) as CharSequence?
+                        true
+                    }
+                }
+
+                is SwitchPreferenceCompat -> Unit
+            }
         }
 
         override fun onStart() {
             super.onStart()
+            refreshPreferenceState()
+        }
 
-            // Initialize mode-dependent UI states
+        private fun refreshPreferenceState() {
             updateMode(MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, VPN))
-
-            // Initialize mux-dependent UI states
             updateMux(MmkvManager.decodeSettingsBool(AppConfig.PREF_MUX_ENABLED, false))
-
-            // Initialize fragment-dependent UI states
             updateFragment(MmkvManager.decodeSettingsBool(AppConfig.PREF_FRAGMENT_ENABLED, false))
-
-            // Initialize auto-update interval state
             autoUpdateInterval?.isEnabled = MmkvManager.decodeSettingsBool(AppConfig.SUBSCRIPTION_AUTO_UPDATE, false)
         }
 
@@ -322,9 +322,18 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun updateLocalDns(enabled: Boolean) {
-            fakeDns?.isEnabled = enabled
+            if (!enabled && fakeDns?.isChecked == true) {
+                fakeDns?.isChecked = false
+            }
 //            localDnsPort?.isEnabled = enabled
             vpnDns?.isEnabled = !enabled
+        }
+
+        private fun updateFakeDns(enabled: Boolean) {
+            if (enabled && localDns?.isChecked != true) {
+                localDns?.isChecked = true
+                updateLocalDns(true)
+            }
         }
 
         private fun configureUpdateTask(interval: Long) {
@@ -405,8 +414,30 @@ class SettingsActivity : BaseActivity() {
                 val itemSurface = holder.findViewById(R.id.settings_item_surface) as? MaterialCardView ?: return
                 val divider = holder.findViewById(R.id.settings_row_divider)
 
-                val isFirstInSection = !isPreferenceRow(getItemOrNull(position - 1))
-                val isLastInSection = !isPreferenceRow(getItemOrNull(position + 1))
+                val isFirstInSection = isFirstRowInSection(position)
+                val isLastInSection = isLastRowInSection(position)
+                applyItemSurfaceShape(itemSurface, isFirstInSection, isLastInSection)
+                bindDivider(divider, isLastInSection)
+            }
+
+            private fun getItemOrNull(position: Int): androidx.preference.Preference? {
+                if (position !in 0 until itemCount) return null
+                return super.getItem(position)
+            }
+
+            private fun isFirstRowInSection(position: Int): Boolean {
+                return !isPreferenceRow(getItemOrNull(position - 1))
+            }
+
+            private fun isLastRowInSection(position: Int): Boolean {
+                return !isPreferenceRow(getItemOrNull(position + 1))
+            }
+
+            private fun applyItemSurfaceShape(
+                itemSurface: MaterialCardView,
+                isFirstInSection: Boolean,
+                isLastInSection: Boolean
+            ) {
                 val cornerSize = resources.displayMetrics.density * SETTINGS_GROUP_CORNER_DP
                 itemSurface.shapeAppearanceModel = itemSurface.shapeAppearanceModel
                     .toBuilder()
@@ -422,17 +453,13 @@ class SettingsActivity : BaseActivity() {
                         }
                     }
                     .build()
-                itemSurface.setCardBackgroundColor(
-                    ContextCompat.getColor(requireContext(), R.color.color_settings_row_surface)
-                )
+                itemSurface.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.color_settings_row_surface))
                 itemSurface.strokeWidth = 0
                 itemSurface.cardElevation = 0f
-                divider?.isVisible = !isLastInSection
             }
 
-            private fun getItemOrNull(position: Int): androidx.preference.Preference? {
-                if (position !in 0 until itemCount) return null
-                return super.getItem(position)
+            private fun bindDivider(divider: View?, isLastInSection: Boolean) {
+                divider?.isVisible = !isLastInSection
             }
         }
     }
