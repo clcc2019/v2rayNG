@@ -150,13 +150,18 @@ class PerAppProxyAdapter(
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-    inner class AppViewHolder(private val itemBypassBinding: ItemRecyclerBypassListBinding) : BaseViewHolder(itemBypassBinding.root),
-        View.OnClickListener {
+    inner class AppViewHolder(private val itemBypassBinding: ItemRecyclerBypassListBinding) : BaseViewHolder(itemBypassBinding.root) {
         private lateinit var appInfo: AppInfo
         private var iconJob: Job? = null
 
         init {
-            itemView.setOnClickListener(this)
+            UiMotion.attachPressFeedback(itemBypassBinding.infoContainer, pressedScale = 0.992f)
+            itemBypassBinding.infoContainer.setOnClickListener {
+                toggleSelection()
+            }
+            itemBypassBinding.checkBox.setOnClickListener {
+                setSelection(itemBypassBinding.checkBox.isChecked)
+            }
         }
 
         fun bind(appInfo: AppInfo) {
@@ -195,12 +200,23 @@ class PerAppProxyAdapter(
             }
         }
 
-        override fun onClick(v: View?) {
-            val packageName = appInfo.packageName
-            viewModel.toggle(packageName)
-            val isSelected = if (appInfo.isSelected == 1) 0 else 1
-            appInfo = appInfo.copy(isSelected = isSelected)
-            itemBypassBinding.checkBox.isChecked = isSelected == 1
+        private fun toggleSelection() {
+            setSelection(appInfo.isSelected != 1)
+        }
+
+        private fun setSelection(selected: Boolean) {
+            val isCurrentlySelected = appInfo.isSelected == 1
+            if (isCurrentlySelected == selected) {
+                itemBypassBinding.checkBox.isChecked = selected
+                return
+            }
+            if (selected) {
+                viewModel.add(appInfo.packageName)
+            } else {
+                viewModel.remove(appInfo.packageName)
+            }
+            appInfo = appInfo.copy(isSelected = if (selected) 1 else 0)
+            itemBypassBinding.checkBox.isChecked = selected
         }
     }
 
