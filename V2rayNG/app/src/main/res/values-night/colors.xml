@@ -31,7 +31,7 @@
     <color name="color_home_surface_selected">#171C22</color>
     <color name="color_home_surface_soft">#171B20</color>
     <color name="color_home_card_shell">#0E1115</color>
-    <color name="color_home_card_shell_selected">#12161A</color>
+    <color name="color_home_card_shell_selected">#171C22</color>
     <color name="color_home_card_bg">@color/color_home_card_shell</color>
     <color name="color_home_card_bg_selected">@color/color_home_card_shell_selected</color>
     <color name="color_home_card_bg_dock">#0E1115</color>
@@ -55,9 +55,9 @@
     <color name="color_home_list_panel_bottom">#0E1115</color>
     <color name="color_home_list_panel_highlight_top">#16FFFFFF</color>
     <color name="color_home_list_panel_highlight_bottom">#00FFFFFF</color>
-    <color name="color_home_list_panel_selected_top">#171C22</color>
-    <color name="color_home_list_panel_selected_bottom">#12161A</color>
-    <color name="color_home_list_panel_selected_highlight_top">#1CFFFFFF</color>
+    <color name="color_home_list_panel_selected_top">#1C232B</color>
+    <color name="color_home_list_panel_selected_bottom">#151B22</color>
+    <color name="color_home_list_panel_selected_highlight_top">#24FFFFFF</color>
     <color name="color_home_list_panel_selected_highlight_bottom">#00FFFFFF</color>
     <color name="color_connection_dock_shadow_top">#00000000</color>
     <color name="color_connection_dock_shadow_mid">#00000000</color>

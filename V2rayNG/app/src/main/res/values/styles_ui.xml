@@ -290,6 +290,21 @@
         <item name="android:padding">0dp</item>
     </style>
 
+    <style name="Widget.V2Ray.FilterChip" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:background">@drawable/bg_group_tab_item</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:minWidth">56dp</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp12</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp12</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Support</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
     <style name="Widget.V2Ray.Settings.Row" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -570,6 +585,24 @@
         <item name="android:textSize">10.5sp</item>
         <item name="android:letterSpacing">0.005</item>
         <item name="android:alpha">0.98</item>
+    </style>
+
+    <style name="Widget.V2Ray.HomeList.SelectedBadge" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_group_count_badge_selected</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:minHeight">20dp</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
+        <item name="android:textAppearance">@style/TextAppearance.V2Ray.Badge</item>
+        <item name="android:textColor">@color/color_home_on_primary</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
     </style>
 
     <style name="Widget.V2Ray.Chip.Protocol" parent="">

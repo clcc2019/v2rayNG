@@ -10,8 +10,8 @@ android {
         applicationId = "com.xray.ang"
         minSdk = 26
         targetSdk = 36
-        versionCode = 732
-        versionName = "3.0.2"
+        versionCode = 733
+        versionName = "3.0.3"
 
         val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
         val universalApkEnabled = providers.gradleProperty("UNIVERSAL_APK").orNull?.toBoolean() == true

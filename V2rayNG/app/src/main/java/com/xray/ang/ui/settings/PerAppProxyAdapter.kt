@@ -4,7 +4,6 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.util.LruCache
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.view.isVisible
@@ -16,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xray.ang.databinding.ItemRecyclerBypassListBinding
 import com.xray.ang.dto.AppInfo
 import com.xray.ang.helper.ListDiffExecutors
-import com.xray.ang.viewmodel.PerAppProxyViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -28,14 +26,13 @@ import kotlinx.coroutines.withContext
 
 class PerAppProxyAdapter(
     apps: List<AppInfo>,
-    val viewModel: PerAppProxyViewModel
-) : RecyclerView.Adapter<PerAppProxyAdapter.BaseViewHolder>() {
+    private val onSelectionChanged: (AppInfo, Boolean) -> Unit
+) : RecyclerView.Adapter<PerAppProxyAdapter.AppViewHolder>() {
 
     companion object {
-        private const val VIEW_TYPE_HEADER = 0
-        private const val VIEW_TYPE_ITEM = 1
         private const val ICON_CACHE_SIZE = 48
         private const val PAYLOAD_SELECTION = "payload_selection"
+        private const val PAYLOAD_ICON = "payload_icon"
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppInfo>() {
             override fun areItemsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
                 return oldItem.packageName == newItem.packageName
@@ -73,6 +70,7 @@ class PerAppProxyAdapter(
         get() = differ.currentList
 
     private var iconLoader: AppIconLoader? = null
+    private var iconLoadingEnabled: Boolean = true
 
     init {
         setHasStableIds(true)
@@ -83,47 +81,58 @@ class PerAppProxyAdapter(
         differ.submitList(newApps.toList())
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        if (holder is AppViewHolder) {
-            val appInfo = apps[position - 1]
-            holder.bind(appInfo)
+    fun setIconLoadingEnabled(
+        enabled: Boolean,
+        firstVisiblePosition: Int = RecyclerView.NO_POSITION,
+        lastVisiblePosition: Int = RecyclerView.NO_POSITION
+    ) {
+        if (iconLoadingEnabled == enabled) {
+            return
         }
+        iconLoadingEnabled = enabled
+        if (!enabled || itemCount == 0) {
+            return
+        }
+        val start = firstVisiblePosition.coerceAtLeast(0)
+        val end = lastVisiblePosition.coerceAtMost(itemCount - 1)
+        if (firstVisiblePosition == RecyclerView.NO_POSITION || lastVisiblePosition == RecyclerView.NO_POSITION || start > end) {
+            return
+        }
+        notifyItemRangeChanged(start, end - start + 1, PAYLOAD_ICON)
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder, position: Int, payloads: MutableList<Any>) {
-        if (payloads.contains(PAYLOAD_SELECTION) && holder is AppViewHolder) {
-            val appInfo = apps[position - 1]
-            holder.bindSelection(appInfo)
-            return
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+        holder.bind(apps[position])
+    }
+
+    override fun onBindViewHolder(holder: AppViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty()) {
+            val appInfo = apps[position]
+            var handled = false
+            if (payloads.contains(PAYLOAD_SELECTION)) {
+                holder.bindSelection(appInfo)
+                handled = true
+            }
+            if (payloads.contains(PAYLOAD_ICON)) {
+                holder.bindIconState(appInfo.packageName)
+                handled = true
+            }
+            if (handled) {
+                return
+            }
         }
         super.onBindViewHolder(holder, position, payloads)
     }
 
-    override fun getItemCount() = apps.size + 1
+    override fun getItemCount() = apps.size
 
     override fun getItemId(position: Int): Long {
-        return if (position == 0) {
-            Long.MIN_VALUE
-        } else {
-            apps[position - 1].packageName.hashCode().toLong()
-        }
+        return apps[position].packageName.hashCode().toLong()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
         val ctx = parent.context
-
-        return when (viewType) {
-            VIEW_TYPE_HEADER -> {
-                val view = View(ctx)
-                view.layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    0
-                )
-                BaseViewHolder(view)
-            }
-
-            else -> AppViewHolder(ItemRecyclerBypassListBinding.inflate(LayoutInflater.from(ctx), parent, false))
-        }
+        return AppViewHolder(ItemRecyclerBypassListBinding.inflate(LayoutInflater.from(ctx), parent, false))
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -139,18 +148,12 @@ class PerAppProxyAdapter(
         super.onDetachedFromRecyclerView(recyclerView)
     }
 
-    override fun onViewRecycled(holder: BaseViewHolder) {
-        if (holder is AppViewHolder) {
-            holder.recycle()
-        }
+    override fun onViewRecycled(holder: AppViewHolder) {
+        holder.recycle()
         super.onViewRecycled(holder)
     }
 
-    override fun getItemViewType(position: Int) = if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
-
-    open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-
-    inner class AppViewHolder(private val itemBypassBinding: ItemRecyclerBypassListBinding) : BaseViewHolder(itemBypassBinding.root) {
+    inner class AppViewHolder(private val itemBypassBinding: ItemRecyclerBypassListBinding) : RecyclerView.ViewHolder(itemBypassBinding.root) {
         private lateinit var appInfo: AppInfo
         private var iconJob: Job? = null
 
@@ -160,18 +163,18 @@ class PerAppProxyAdapter(
                 toggleSelection()
             }
             itemBypassBinding.checkBox.setOnClickListener {
-                setSelection(itemBypassBinding.checkBox.isChecked)
+                toggleSelection()
             }
         }
 
         fun bind(appInfo: AppInfo) {
             this.appInfo = appInfo
 
-            bindIcon(appInfo.packageName)
+            bindIconState(appInfo.packageName)
             itemBypassBinding.name.text = appInfo.appName
             itemBypassBinding.systemBadge.isVisible = appInfo.isSystemApp
             itemBypassBinding.packageName.text = appInfo.packageName
-            itemBypassBinding.checkBox.isChecked = appInfo.isSelected == 1
+            bindSelection(appInfo)
         }
 
         fun bindSelection(appInfo: AppInfo) {
@@ -185,7 +188,7 @@ class PerAppProxyAdapter(
             itemBypassBinding.icon.setImageDrawable(iconLoader?.placeholder(itemBypassBinding.icon))
         }
 
-        private fun bindIcon(packageName: String) {
+        fun bindIconState(packageName: String) {
             val loader = iconLoader
             if (loader == null) {
                 itemBypassBinding.icon.setImageDrawable(null)
@@ -193,6 +196,9 @@ class PerAppProxyAdapter(
             }
             iconJob?.cancel()
             itemBypassBinding.icon.setImageDrawable(loader.placeholder(itemBypassBinding.icon))
+            if (!iconLoadingEnabled) {
+                return
+            }
             iconJob = loader.load(packageName) { requestedPackageName, drawable ->
                 if (::appInfo.isInitialized && appInfo.packageName == requestedPackageName) {
                     itemBypassBinding.icon.setImageDrawable(drawable)
@@ -211,12 +217,12 @@ class PerAppProxyAdapter(
                 return
             }
             if (selected) {
-                viewModel.add(appInfo.packageName)
+                appInfo = appInfo.copy(isSelected = 1)
             } else {
-                viewModel.remove(appInfo.packageName)
+                appInfo = appInfo.copy(isSelected = 0)
             }
-            appInfo = appInfo.copy(isSelected = if (selected) 1 else 0)
-            itemBypassBinding.checkBox.isChecked = selected
+            bindSelection(appInfo)
+            onSelectionChanged(appInfo, selected)
         }
     }
 

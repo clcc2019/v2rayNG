@@ -152,6 +152,20 @@
     <string name="menu_item_import_proxy_app">Import from Clipboard</string>
     <string name="per_app_proxy_settings">Per-app settings</string>
     <string name="per_app_proxy_settings_enable">Enable per-app</string>
+    <string name="per_app_proxy_page_intro">Choose which apps use the VPN route. The selected apps follow the mode below, and the first manual selection will turn per-app mode on automatically.</string>
+    <string name="per_app_proxy_enable_hint">Turn on app-based routing for the selections below.</string>
+    <string name="per_app_proxy_bypass_hint">Checked apps connect directly, while unchecked apps use proxy.</string>
+    <string name="per_app_proxy_list_title">App list</string>
+    <string name="per_app_proxy_selection_summary">%1$d selected / %2$d apps</string>
+    <string name="per_app_proxy_mode_general">General mode: selected apps use proxy.</string>
+    <string name="per_app_proxy_mode_bypass">Bypass mode: selected apps connect directly.</string>
+    <string name="per_app_proxy_filter_all">All apps</string>
+    <string name="per_app_proxy_filter_selected">Selected</string>
+    <string name="per_app_proxy_filter_user">User apps</string>
+    <string name="per_app_proxy_filter_system">System apps</string>
+    <string name="per_app_proxy_list_state_summary">%1$s · %2$s · %3$d visible</string>
+    <string name="per_app_proxy_empty_title">No matching apps</string>
+    <string name="per_app_proxy_empty_subtitle">Try a different keyword or clear the search.</string>
 
     <!-- Preferences -->
     <string name="title_settings">Settings</string>
@@ -384,6 +398,9 @@
     <string name="home_connection_summary_running">Service is active. Tap the button again to stop it.</string>
     <string name="home_connection_endpoint_unavailable">Exit address unavailable</string>
     <string name="home_server_active_label">ACTIVE</string>
+    <string name="home_server_selected_badge">Current</string>
+    <string name="home_toolbar_subtitle_default">%1$s · %2$d profiles · %3$s</string>
+    <string name="home_toolbar_subtitle_search">%1$s · %2$d matches · %3$s</string>
     <string name="home_server_source_label">Source</string>
     <string name="home_connection_profile_empty">Choose a profile</string>
     <string name="current_config">Current configuration</string>
@@ -472,6 +489,14 @@
     <string name="backup_summary_webdav">Configure remote sync and backup destination.</string>
 <string name="about_group_project">Project</string>
 <string name="observability_page_overview">Expose local metrics to inspect traffic and runtime signals.</string>
+    <string name="observability_group_startup">Startup</string>
+    <string name="observability_startup_title">Launch timings</string>
+    <string name="observability_startup_subtitle">Latest main screen launch timings captured on this device.</string>
+    <string name="observability_startup_on_create">Main screen ready</string>
+    <string name="observability_startup_first_frame">First frame</string>
+    <string name="observability_startup_summary">Main screen %1$s · first frame %2$s</string>
+    <string name="observability_startup_unavailable">Launch the app from a fresh start to capture timings.</string>
+    <string name="observability_startup_placeholder">--</string>
     <string name="observability_group_metrics">Metrics endpoint</string>
     <string name="title_observability">Observability</string>
     <string name="title_observability_metrics">Enable metrics endpoint</string>

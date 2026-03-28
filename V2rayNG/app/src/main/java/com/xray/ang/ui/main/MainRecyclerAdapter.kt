@@ -398,6 +398,8 @@ class MainRecyclerAdapter(
 
     private fun bindSelectionState(holder: MainViewHolder, isSelected: Boolean, animateChange: Boolean) {
         if (holder.lastSelectionState == isSelected) {
+            holder.itemMainBinding.infoContainer.isSelected = isSelected
+            UiMotion.setVisibility(holder.itemMainBinding.layoutSelectedBadge, isSelected)
             return
         }
         val previousSelection = holder.lastSelectionState
@@ -423,6 +425,13 @@ class MainRecyclerAdapter(
             UiMotion.animateAlpha(holder.itemMainBinding.tvStatistics, targetStatisticsAlpha, duration = selectionDuration)
             UiMotion.animateAlpha(holder.itemMainBinding.layoutMetaPanel, targetMetaAlpha, duration = selectionDuration)
             UiMotion.animateAlpha(holder.itemMainBinding.layoutSubscription, targetSubscriptionAlpha, duration = selectionDuration)
+            UiMotion.animateHorizontalVisibility(
+                view = holder.itemMainBinding.layoutSelectedBadge,
+                visible = isSelected,
+                translationOffsetDp = 10f,
+                fromStart = false,
+                duration = selectionDuration
+            )
             if (isSelected) {
                 holder.itemMainBinding.tvType.alpha = targetProtocolAlpha
                 holder.itemMainBinding.layoutSecurityBadge.alpha = targetProtocolAlpha
@@ -447,6 +456,7 @@ class MainRecyclerAdapter(
             holder.itemMainBinding.layoutMetaPanel.alpha = targetMetaAlpha
             holder.itemMainBinding.layoutSubscription.alpha = targetSubscriptionAlpha
             holder.itemMainBinding.layoutMore.alpha = targetMoreAlpha
+            UiMotion.setVisibility(holder.itemMainBinding.layoutSelectedBadge, isSelected)
             resetCardState(
                 holder.itemMainBinding.itemBg,
                 targetBackground,
@@ -468,6 +478,7 @@ class MainRecyclerAdapter(
                 contractScale = 0.994f,
                 duration = MotionTokens.EMPHASIS_DURATION
             )
+            UiMotion.animatePulse(holder.itemMainBinding.layoutSelectedBadge, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
             UiMotion.animatePulse(holder.itemMainBinding.layoutMore, pulseScale = 1.03f, duration = MotionTokens.PULSE_QUICK)
         }
     }
@@ -558,6 +569,7 @@ class MainRecyclerAdapter(
         var boundItem: ServersCache? = null
 
         init {
+            itemMainBinding.layoutSelectedBadge.visibility = View.GONE
             itemMainBinding.layoutMore.visibility = View.VISIBLE
             UiMotion.attachPressFeedback(itemMainBinding.layoutMore, pressedScale = 0.96f)
             UiMotion.attachPressFeedback(itemMainBinding.tvTestResult, pressedScale = 0.97f)
@@ -607,6 +619,7 @@ class MainRecyclerAdapter(
 
         override fun onItemSelected() {
             itemMainBinding.infoContainer.isSelected = lastSelectionState == true
+            UiMotion.setVisibility(itemMainBinding.layoutSelectedBadge, lastSelectionState == true)
             resetCardState(
                 itemMainBinding.itemBg,
                 resolveCardBackgroundColor(colors, lastSelectionState == true),
@@ -617,6 +630,7 @@ class MainRecyclerAdapter(
 
         override fun onItemClear() {
             itemMainBinding.infoContainer.isSelected = lastSelectionState == true
+            UiMotion.setVisibility(itemMainBinding.layoutSelectedBadge, lastSelectionState == true)
             resetCardState(
                 itemMainBinding.itemBg,
                 resolveCardBackgroundColor(colors, lastSelectionState == true),
@@ -632,8 +646,13 @@ class MainRecyclerAdapter(
     override fun onViewRecycled(holder: BaseViewHolder) {
         if (holder is MainViewHolder) {
             holder.itemMainBinding.itemBg.animate().cancel()
+            holder.itemMainBinding.layoutSelectedBadge.animate().cancel()
             holder.itemMainBinding.layoutMore.animate().cancel()
             holder.itemMainBinding.tvTestResult.animate().cancel()
+            holder.itemMainBinding.layoutSelectedBadge.alpha = 1f
+            holder.itemMainBinding.layoutSelectedBadge.translationX = 0f
+            holder.itemMainBinding.layoutSelectedBadge.scaleX = 1f
+            holder.itemMainBinding.layoutSelectedBadge.scaleY = 1f
             holder.itemMainBinding.layoutMore.scaleX = 1f
             holder.itemMainBinding.layoutMore.scaleY = 1f
             holder.itemMainBinding.tvTestResult.scaleX = 1f

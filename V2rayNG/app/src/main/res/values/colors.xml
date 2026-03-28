@@ -32,7 +32,7 @@
     <color name="color_home_surface_selected">#EEF2F6</color>
     <color name="color_home_surface_soft">#F4F7FA</color>
     <color name="color_home_card_shell">#FBFCFD</color>
-    <color name="color_home_card_shell_selected">#E7EDF3</color>
+    <color name="color_home_card_shell_selected">#DCE5EE</color>
     <color name="color_home_card_bg">@color/color_home_card_shell</color>
     <color name="color_home_card_bg_selected">@color/color_home_card_shell_selected</color>
     <color name="color_home_card_bg_dock">#FFFFFF</color>
@@ -56,9 +56,9 @@
     <color name="color_home_list_panel_bottom">#FAFCFE</color>
     <color name="color_home_list_panel_highlight_top">#E8FFFFFF</color>
     <color name="color_home_list_panel_highlight_bottom">#00FFFFFF</color>
-    <color name="color_home_list_panel_selected_top">#F1F5F9</color>
-    <color name="color_home_list_panel_selected_bottom">#E8EDF3</color>
-    <color name="color_home_list_panel_selected_highlight_top">#F2FFFFFF</color>
+    <color name="color_home_list_panel_selected_top">#E8EFF6</color>
+    <color name="color_home_list_panel_selected_bottom">#DCE5EE</color>
+    <color name="color_home_list_panel_selected_highlight_top">#F6FBFF</color>
     <color name="color_home_list_panel_selected_highlight_bottom">#00FFFFFF</color>
     <color name="color_connection_dock_shadow_top">#00000000</color>
     <color name="color_connection_dock_shadow_mid">#00000000</color>

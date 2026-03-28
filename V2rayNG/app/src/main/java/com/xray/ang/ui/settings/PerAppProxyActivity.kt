@@ -6,7 +6,10 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.xray.ang.AppConfig
 import com.xray.ang.AppConfig.ANG_PACKAGE
 import com.xray.ang.R
@@ -31,6 +34,13 @@ import kotlinx.coroutines.withContext
 import java.text.Collator
 
 class PerAppProxyActivity : BaseActivity() {
+    private enum class AppListFilter {
+        ALL,
+        SELECTED_ONLY,
+        USER_ONLY,
+        SYSTEM_ONLY
+    }
+
     private val binding by lazy { ActivityBypassListBinding.inflate(layoutInflater) }
 
     private lateinit var adapter: PerAppProxyAdapter
@@ -38,39 +48,78 @@ class PerAppProxyActivity : BaseActivity() {
     private val viewModel: PerAppProxyViewModel by viewModels()
     private var listUpdateJob: Job? = null
     private var currentFilter: String = ""
+    private var currentAppListFilter: AppListFilter = AppListFilter.ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
+        setupRecyclerView()
+        setupSwitchRows()
+        setupActions()
+        updateSelectionSummary()
+        initList()
+        postScreenContentEnterMotion(binding.root)
+    }
 
+    private fun setupRecyclerView() {
         binding.recyclerView.setHasFixedSize(true)
         optimizeRecyclerViewForHighRefresh(binding.recyclerView)
         binding.recyclerView.itemAnimator = null
-        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
-        adapter = PerAppProxyAdapter(emptyList(), viewModel)
+        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.bg_per_app_list_divider)
+        adapter = PerAppProxyAdapter(emptyList(), ::onAppSelectionChanged)
         binding.recyclerView.adapter = adapter
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                adapter.setIconLoadingEnabled(
+                    enabled = newState == RecyclerView.SCROLL_STATE_IDLE,
+                    firstVisiblePosition = layoutManager.findFirstVisibleItemPosition(),
+                    lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+                )
+            }
+        })
+    }
 
-        initList()
+    private fun setupSwitchRows() {
+        binding.switchPerAppProxy.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)
+        binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
 
         binding.switchPerAppProxy.setOnCheckedChangeListener { _, isChecked ->
             MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, isChecked)
+            SettingsChangeManager.makeRestartService()
+            updateSelectionSummary()
         }
-        binding.switchPerAppProxy.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)
+        binding.switchBypassApps.setOnCheckedChangeListener { _, isChecked ->
+            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, isChecked)
+            SettingsChangeManager.makeRestartService()
+            updateSelectionSummary()
+        }
+    }
+
+    private fun setupActions() {
+        applyPressMotion(
+            binding.containerPerAppProxy,
+            binding.containerBypassApps,
+            binding.layoutSwitchBypassAppsTips,
+            binding.chipFilterAll,
+            binding.chipFilterSelected,
+            binding.chipFilterUser,
+            binding.chipFilterSystem
+        )
         binding.containerPerAppProxy.setOnClickListener {
             binding.switchPerAppProxy.toggle()
         }
-
-        binding.switchBypassApps.setOnCheckedChangeListener { _, isChecked ->
-            MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, isChecked)
-        }
-        binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
         binding.containerBypassApps.setOnClickListener {
             binding.switchBypassApps.toggle()
         }
-
         binding.layoutSwitchBypassAppsTips.setOnClickListener {
             toastLong(R.string.summary_pref_per_app_proxy)
         }
+        binding.chipFilterAll.setOnClickListener { applyAppListFilter(AppListFilter.ALL) }
+        binding.chipFilterSelected.setOnClickListener { applyAppListFilter(AppListFilter.SELECTED_ONLY) }
+        binding.chipFilterUser.setOnClickListener { applyAppListFilter(AppListFilter.USER_ONLY) }
+        binding.chipFilterSystem.setOnClickListener { applyAppListFilter(AppListFilter.SYSTEM_ONLY) }
+        updateFilterChips()
     }
 
     private fun initList() {
@@ -118,12 +167,10 @@ class PerAppProxyActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.select_all -> {
             selectAllApp()
-            allowPerAppProxy()
             true
         }
         R.id.invert_selection -> {
             invertSelection()
-            allowPerAppProxy()
             true
         }
 
@@ -153,13 +200,17 @@ class PerAppProxyActivity : BaseActivity() {
             viewModel.removeAll(pkgNames)
         } else {
             viewModel.addAll(pkgNames)
+            ensurePerAppProxyEnabled()
         }
         refreshData()
+        updateSelectionSummary()
     }
 
     private fun invertSelection() {
         viewModel.toggleAll(adapter.apps.map { it.packageName })
+        ensurePerAppProxyEnabled()
         refreshData()
+        updateSelectionSummary()
     }
 
     private fun selectProxyAppAuto() {
@@ -182,7 +233,7 @@ class PerAppProxyActivity : BaseActivity() {
                 applyProxySelection(content, true) { success ->
                     if (success) {
                         toastSuccess(R.string.toast_success)
-                        allowPerAppProxy()
+                        ensurePerAppProxyEnabled()
                     } else {
                         toastError(R.string.toast_failure)
                     }
@@ -197,7 +248,7 @@ class PerAppProxyActivity : BaseActivity() {
         applyProxySelection(content, false) { success ->
             if (success) {
                 toastSuccess(R.string.toast_success)
-                allowPerAppProxy()
+                ensurePerAppProxyEnabled()
             } else {
                 toastError(R.string.toast_failure)
             }
@@ -213,14 +264,26 @@ class PerAppProxyActivity : BaseActivity() {
         toastSuccess(R.string.toast_success)
     }
 
-    private fun allowPerAppProxy() {
-        binding.switchPerAppProxy.isChecked = true
-        SettingsChangeManager.makeRestartService()
+    private fun onAppSelectionChanged(appInfo: AppInfo, selected: Boolean) {
+        if (selected) {
+            viewModel.add(appInfo.packageName)
+            ensurePerAppProxyEnabled()
+        } else {
+            viewModel.remove(appInfo.packageName)
+        }
+        refreshData()
+        updateSelectionSummary()
+    }
+
+    private fun ensurePerAppProxyEnabled() {
+        if (!binding.switchPerAppProxy.isChecked) {
+            binding.switchPerAppProxy.isChecked = true
+        }
     }
 
     private fun applyProxySelection(content: String, force: Boolean, onComplete: (Boolean) -> Unit) {
         val bypassChecked = binding.switchBypassApps.isChecked
-        val appsSnapshot = adapter.apps.toList()
+        val appsSnapshot = appsAll.toList()
         lifecycleScope.launch(Dispatchers.Default) {
             val success = try {
                 val proxyApps = if (TextUtils.isEmpty(content)) {
@@ -254,6 +317,7 @@ class PerAppProxyActivity : BaseActivity() {
             withContext(Dispatchers.Main) {
                 if (success) {
                     refreshData()
+                    updateSelectionSummary()
                 }
                 onComplete(success)
             }
@@ -282,7 +346,7 @@ class PerAppProxyActivity : BaseActivity() {
         return true
     }
 
-    fun refreshData() {
+    private fun refreshData() {
         scheduleListUpdate(currentFilter)
     }
 
@@ -292,7 +356,7 @@ class PerAppProxyActivity : BaseActivity() {
         val snapshot = appsAll
         listUpdateJob?.cancel()
         listUpdateJob = lifecycleScope.launch(Dispatchers.Default) {
-            val filteredApps = if (key.isEmpty()) {
+            val searchFilteredApps = if (key.isEmpty()) {
                 snapshot
             } else {
                 snapshot.filter {
@@ -300,17 +364,79 @@ class PerAppProxyActivity : BaseActivity() {
                         || it.packageName.contains(key, ignoreCase = true)
                 }
             }
-            val synced = syncSelection(filteredApps)
+            val synced = syncSelection(searchFilteredApps)
+            val filteredApps = synced.filter(::matchesAppListFilter)
             withContext(Dispatchers.Main) {
-                adapter.submitList(synced)
+                renderAppList(filteredApps)
             }
         }
+    }
+
+    private fun renderAppList(apps: List<AppInfo>) {
+        adapter.submitList(apps)
+        binding.recyclerView.isVisible = apps.isNotEmpty()
+        binding.layoutEmptyState.isVisible = apps.isEmpty()
+        updateSelectionSummary()
     }
 
     private fun syncSelection(apps: List<AppInfo>): List<AppInfo> {
         return apps.map { app ->
             val selected = if (viewModel.contains(app.packageName)) 1 else 0
             if (app.isSelected == selected) app else app.copy(isSelected = selected)
+        }
+    }
+
+    private fun updateSelectionSummary() {
+        binding.tvSelectionSummary.text = getString(
+            R.string.per_app_proxy_selection_summary,
+            viewModel.getAll().size,
+            appsAll.size
+        )
+        binding.tvListSummary.text = getString(
+            R.string.per_app_proxy_list_state_summary,
+            getString(
+                if (binding.switchBypassApps.isChecked) {
+                    R.string.per_app_proxy_mode_bypass
+                } else {
+                    R.string.per_app_proxy_mode_general
+                }
+            ),
+            getString(filterLabelRes(currentAppListFilter)),
+            if (::adapter.isInitialized) adapter.apps.size else 0
+        )
+    }
+
+    private fun applyAppListFilter(filter: AppListFilter) {
+        if (currentAppListFilter == filter) {
+            return
+        }
+        currentAppListFilter = filter
+        updateFilterChips()
+        refreshData()
+    }
+
+    private fun updateFilterChips() {
+        binding.chipFilterAll.isSelected = currentAppListFilter == AppListFilter.ALL
+        binding.chipFilterSelected.isSelected = currentAppListFilter == AppListFilter.SELECTED_ONLY
+        binding.chipFilterUser.isSelected = currentAppListFilter == AppListFilter.USER_ONLY
+        binding.chipFilterSystem.isSelected = currentAppListFilter == AppListFilter.SYSTEM_ONLY
+    }
+
+    private fun matchesAppListFilter(app: AppInfo): Boolean {
+        return when (currentAppListFilter) {
+            AppListFilter.ALL -> true
+            AppListFilter.SELECTED_ONLY -> app.isSelected == 1
+            AppListFilter.USER_ONLY -> !app.isSystemApp
+            AppListFilter.SYSTEM_ONLY -> app.isSystemApp
+        }
+    }
+
+    private fun filterLabelRes(filter: AppListFilter): Int {
+        return when (filter) {
+            AppListFilter.ALL -> R.string.per_app_proxy_filter_all
+            AppListFilter.SELECTED_ONLY -> R.string.per_app_proxy_filter_selected
+            AppListFilter.USER_ONLY -> R.string.per_app_proxy_filter_user
+            AppListFilter.SYSTEM_ONLY -> R.string.per_app_proxy_filter_system
         }
     }
 }

@@ -2,17 +2,21 @@ package com.xray.ang.ui
 
 import android.os.Bundle
 import android.os.SystemClock
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.gson.JsonObject
 import com.xray.ang.AppConfig
 import com.xray.ang.R
 import com.xray.ang.databinding.ActivityObservabilityBinding
 import com.xray.ang.handler.MmkvManager
 import com.xray.ang.util.JsonUtil
+import com.xray.ang.util.StartupTracer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.net.HttpURLConnection
@@ -58,7 +62,9 @@ class ObservabilityActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.title_observability))
         initMetricsToggle()
+        updateMetricsPolling()
         initRangeChips()
+        renderStartupMetrics()
         loadHistory()
         renderChart()
         renderTrafficValues()
@@ -66,17 +72,6 @@ class ObservabilityActivity : BaseActivity() {
             binding.tvTrafficSubtitle.text = buildPointSubtitle(point)
         }
         postScreenContentEnterMotion(binding.root)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        updateMetricsPolling()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        metricsJob?.cancel()
-        metricsJob = null
     }
 
     private fun initMetricsToggle() {
@@ -101,42 +96,44 @@ class ObservabilityActivity : BaseActivity() {
         if (metricsJob?.isActive == true) {
             return
         }
-        metricsJob = lifecycleScope.launchWhenStarted {
-            while (isActive) {
-                val sampleElapsed = SystemClock.elapsedRealtime()
-                val sampleWall = System.currentTimeMillis()
-                val totals = withContext(Dispatchers.IO) { fetchTrafficTotals() }
-                if (totals != null) {
-                    val previousTotals = lastTotals
-                    if (previousTotals != null) {
-                        val elapsedMs = sampleElapsed - lastSampleElapsed
-                        val totalsReset = totals.first < previousTotals.first || totals.second < previousTotals.second
-                        val gapTooLarge = elapsedMs > 10_000L
-                        if (elapsedMs <= 0L || gapTooLarge || totalsReset) {
-                            lastTotals = totals
-                            lastSampleElapsed = sampleElapsed
+        metricsJob = lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (isActive && binding.switchMetrics.isChecked) {
+                    val sampleElapsed = SystemClock.elapsedRealtime()
+                    val sampleWall = System.currentTimeMillis()
+                    val totals = withContext(Dispatchers.IO) { fetchTrafficTotals() }
+                    if (totals != null) {
+                        val previousTotals = lastTotals
+                        if (previousTotals != null) {
+                            val elapsedMs = sampleElapsed - lastSampleElapsed
+                            val totalsReset = totals.first < previousTotals.first || totals.second < previousTotals.second
+                            val gapTooLarge = elapsedMs > 10_000L
+                            if (elapsedMs <= 0L || gapTooLarge || totalsReset) {
+                                lastTotals = totals
+                                lastSampleElapsed = sampleElapsed
+                                lastSampleWall = sampleWall
+                                lastRateUp = 0L
+                                lastRateDown = 0L
+                                resetBucket()
+                                renderTrafficValues()
+                                continue
+                            }
+                            val safeElapsed = elapsedMs.coerceAtLeast(300L)
+                            val deltaUp = (totals.first - previousTotals.first).coerceAtLeast(0L)
+                            val deltaDown = (totals.second - previousTotals.second).coerceAtLeast(0L)
+                            val rateUp = (deltaUp * 1000L) / safeElapsed
+                            val rateDown = (deltaDown * 1000L) / safeElapsed
+                            lastRateUp = rateUp
+                            lastRateDown = rateDown
                             lastSampleWall = sampleWall
-                            lastRateUp = 0L
-                            lastRateDown = 0L
-                            resetBucket()
+                            accumulateSample(sampleWall, rateUp, rateDown)
                             renderTrafficValues()
-                            continue
                         }
-                        val safeElapsed = elapsedMs.coerceAtLeast(300L)
-                        val deltaUp = (totals.first - previousTotals.first).coerceAtLeast(0L)
-                        val deltaDown = (totals.second - previousTotals.second).coerceAtLeast(0L)
-                        val rateUp = (deltaUp * 1000L) / safeElapsed
-                        val rateDown = (deltaDown * 1000L) / safeElapsed
-                        lastRateUp = rateUp
-                        lastRateDown = rateDown
-                        lastSampleWall = sampleWall
-                        accumulateSample(sampleWall, rateUp, rateDown)
-                        renderTrafficValues()
+                        lastTotals = totals
+                        lastSampleElapsed = sampleElapsed
                     }
-                    lastTotals = totals
-                    lastSampleElapsed = sampleElapsed
+                    delay(1200L)
                 }
-                delay(1200L)
             }
         }
     }
@@ -237,6 +234,18 @@ class ObservabilityActivity : BaseActivity() {
         renderTrafficValues()
     }
 
+    private fun renderStartupMetrics() {
+        val onCreateMs = StartupTracer.onCreateElapsedMs
+        val firstFrameMs = StartupTracer.firstFrameElapsedMs
+        binding.tvStartupOnCreateValue.text = formatDuration(onCreateMs)
+        binding.tvStartupFirstFrameValue.text = formatDuration(firstFrameMs)
+        binding.tvStartupSubtitle.text = if (firstFrameMs > 0L) {
+            getString(R.string.observability_startup_summary, formatDuration(onCreateMs), formatDuration(firstFrameMs))
+        } else {
+            getString(R.string.observability_startup_unavailable)
+        }
+    }
+
     private fun renderTrafficValues() {
         binding.tvUplinkValue.text = formatRate(lastRateUp)
         binding.tvDownlinkValue.text = formatRate(lastRateDown)
@@ -253,6 +262,14 @@ class ObservabilityActivity : BaseActivity() {
             value >= mb -> String.format("%.1f MB/s", value / mb)
             value >= kb -> String.format("%.0f KB/s", value / kb)
             else -> String.format("%d B/s", bytesPerSec)
+        }
+    }
+
+    private fun formatDuration(durationMs: Long): String {
+        return if (durationMs > 0L) {
+            "${durationMs}ms"
+        } else {
+            getString(R.string.observability_startup_placeholder)
         }
     }
 

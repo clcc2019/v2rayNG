@@ -82,6 +82,7 @@ class MainActivity : HelperBaseActivity() {
         MainSearchController(this, groupTabsController, mainViewModel) { active ->
             renderChromeState(chromeStateReducer.onSearchStateChanged(active), event = "search_ui")
             groupTabsController.notifyCurrentFragmentSearchUiChanged()
+            updateToolbarSubtitle()
         }
     }
     private val actionsController by lazy {
@@ -405,6 +406,7 @@ class MainActivity : HelperBaseActivity() {
     private fun setupViewModel() {
         mainViewModel.updateGroupsAction.observe(this) { groups ->
             groupTabsController.renderGroupTabs(groups)
+            updateToolbarSubtitle()
         }
         mainViewModel.updateTestResultAction.observe(this) { result ->
             val message = compactTestResult(result)
@@ -766,22 +768,22 @@ class MainActivity : HelperBaseActivity() {
         return when (state) {
             ServiceUiState.STARTING -> ActionButtonUiModel(
                 textResId = R.string.connection_starting,
-                iconRes = R.drawable.ic_play_24dp
+                iconRes = R.drawable.ic_play_28dp
             )
 
             ServiceUiState.STOPPING -> ActionButtonUiModel(
                 textResId = R.string.connection_stopping,
-                iconRes = R.drawable.ic_stop_24dp
+                iconRes = R.drawable.ic_stop_28dp
             )
 
             ServiceUiState.RUNNING -> ActionButtonUiModel(
                 textResId = R.string.action_stop_service,
-                iconRes = R.drawable.ic_stop_24dp
+                iconRes = R.drawable.ic_stop_28dp
             )
 
             ServiceUiState.STOPPED -> ActionButtonUiModel(
                 textResId = R.string.tasker_start_service,
-                iconRes = R.drawable.ic_play_24dp
+                iconRes = R.drawable.ic_play_28dp
             )
         }
     }
@@ -865,7 +867,34 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun updateToolbarSubtitle() {
-        binding.toolbar.subtitle = null
+        val groupLabel = mainViewModel.getCurrentGroupLabel(this)
+        val itemCount = if (mainViewModel.keywordFilter.isNotBlank()) {
+            mainViewModel.getCurrentVisibleCount()
+        } else {
+            mainViewModel.getCurrentGroupTotalCount()
+        }
+        val serviceStateLabel = getString(
+            when (serviceUiState) {
+                ServiceUiState.RUNNING -> R.string.connection_connected_short
+                ServiceUiState.STARTING -> R.string.connection_starting_short
+                ServiceUiState.STOPPING -> R.string.connection_stopping_short
+                ServiceUiState.STOPPED -> R.string.connection_not_connected_short
+            }
+        )
+        binding.toolbar.subtitle = getString(
+            if (mainViewModel.keywordFilter.isNotBlank()) {
+                R.string.home_toolbar_subtitle_search
+            } else {
+                R.string.home_toolbar_subtitle_default
+            },
+            groupLabel,
+            itemCount,
+            serviceStateLabel
+        )
+    }
+
+    fun refreshHomeSubtitle() {
+        updateToolbarSubtitle()
     }
 
     fun refreshConnectionCard() {

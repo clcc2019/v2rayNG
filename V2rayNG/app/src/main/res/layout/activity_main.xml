@@ -212,7 +212,7 @@
                         android:focusable="true"
                         android:padding="0dp"
                         android:scaleType="center"
-                        android:src="@drawable/ic_play_24dp"
+                        android:src="@drawable/ic_play_28dp"
                         android:tint="@color/md_theme_onPrimary" />
 
                 </FrameLayout>
