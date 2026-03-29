@@ -20,156 +20,13 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.SectionLabel"
-            android:text="@string/sub_group_quick_actions" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.V2Ray.Card.Section.Flat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
-            android:maxWidth="@dimen/list_card_max_width">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/padding_spacing_dp16">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/routing_settings_title"
-                    android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp4"
-                    android:text="@string/routing_priority_summary"
-                    android:textAppearance="@style/TextAppearance.V2Ray.Body"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/action_add_rule"
-                        style="@style/Widget.V2Ray.Button.Primary"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/routing_settings_add_rule"
-                        app:icon="@drawable/ic_add_24dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/action_more_sheet"
-                        style="@style/Widget.V2Ray.Button.Secondary"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp10"
-                        android:layout_weight="1"
-                        android:text="@string/action_more"
-                        app:icon="@drawable/ic_more_vert_24dp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_routing_summary_panel"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp12">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/routing_summary_total"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-                        <TextView
-                            android:id="@+id/tv_rule_count"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="0"
-                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_routing_summary_panel"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp12">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/routing_summary_enabled"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-                        <TextView
-                            android:id="@+id/tv_rule_enabled_count"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="0"
-                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_routing_summary_panel"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp12">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/routing_summary_locked"
-                            android:textAppearance="@style/TextAppearance.V2Ray.Support"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-                        <TextView
-                            android:id="@+id/tv_rule_locked_count"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:text="0"
-                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+            style="@style/Widget.V2Ray.PageIntro"
+            android:maxWidth="@dimen/list_card_max_width"
+            android:text="@string/routing_page_intro" />
 
         <TextView
             style="@style/Widget.V2Ray.SectionLabel"
-            android:layout_marginTop="@dimen/padding_spacing_dp20"
+            android:layout_marginTop="@dimen/padding_spacing_dp18"
             android:text="@string/routing_group_preferences" />
 
         <com.google.android.material.card.MaterialCardView
@@ -289,11 +146,12 @@
             android:text="@string/routing_group_rules" />
 
         <TextView
+            android:id="@+id/tv_rule_overview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/padding_spacing_dp4"
             android:maxWidth="@dimen/list_card_max_width"
-            android:text="@string/routing_priority_hint"
+            android:text="@string/routing_priority_summary"
             android:textAppearance="@style/TextAppearance.V2Ray.Body"
             android:textColor="?attr/colorOnSurfaceVariant" />
 

@@ -113,11 +113,11 @@
 
             <ImageView
                 android:id="@+id/iv_connection_map_decor"
-                android:layout_width="156dp"
-                android:layout_height="88dp"
+                android:layout_width="164dp"
+                android:layout_height="92dp"
                 android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="24dp"
-                android:alpha="0.78"
+                android:layout_marginEnd="16dp"
+                android:alpha="0.8"
                 android:contentDescription="@null"
                 android:importantForAccessibility="no"
                 android:src="@drawable/bg_connection_dock_map_decor" />
@@ -129,19 +129,20 @@
                 android:background="@drawable/bg_connection_dock_panel"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
-                android:minHeight="74dp"
+                android:minHeight="82dp"
                 android:orientation="horizontal"
-                android:paddingStart="@dimen/padding_spacing_dp16"
-                android:paddingTop="@dimen/padding_spacing_dp12"
-                android:paddingEnd="@dimen/padding_spacing_dp16"
-                android:paddingBottom="@dimen/padding_spacing_dp12">
+                android:paddingStart="18dp"
+                android:paddingTop="@dimen/padding_spacing_dp14"
+                android:paddingEnd="@dimen/padding_spacing_dp14"
+                android:paddingBottom="@dimen/padding_spacing_dp14">
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:paddingEnd="@dimen/padding_spacing_dp10"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:paddingEnd="@dimen/padding_spacing_dp10">
 
                     <TextView
                         android:id="@+id/tv_connection_status"
@@ -151,7 +152,7 @@
                     <TextView
                         android:id="@+id/tv_connection_profile"
                         style="@style/Widget.V2Ray.HomeDock.Profile"
-                        android:layout_marginTop="@dimen/padding_spacing_dp6"
+                        android:layout_marginTop="@dimen/padding_spacing_dp5"
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:minLines="1" />
@@ -161,7 +162,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/padding_spacing_dp8"
-                        android:layout_marginBottom="@dimen/padding_spacing_dp8"
+                        android:layout_marginBottom="@dimen/padding_spacing_dp9"
                         android:importantForAccessibility="no"
                         app:dividerColor="@color/color_connection_dock_divider"
                         app:dividerThickness="1dp" />
@@ -178,33 +179,31 @@
 
                 <FrameLayout
                     android:id="@+id/layout_connection_surface"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="@dimen/padding_spacing_dp12"
                     android:background="@drawable/bg_connection_action_container"
                     android:clipChildren="false"
                     android:clipToPadding="false"
-                    android:elevation="2dp"
-                    android:outlineAmbientShadowColor="@color/color_connection_surface_shadow_ambient"
-                    android:outlineSpotShadowColor="@color/color_connection_surface_shadow_spot">
+                    android:padding="4dp">
 
                     <com.google.android.material.progressindicator.CircularProgressIndicator
                         android:id="@+id/indicator_connection_progress"
-                        android:layout_width="@dimen/view_height_dp44"
-                        android:layout_height="@dimen/view_height_dp44"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:indeterminate="true"
                         android:visibility="gone"
                         app:indicatorColor="@color/color_connection_dock_text_primary"
                         app:indicatorInset="0dp"
-                        app:indicatorSize="@dimen/view_height_dp44"
+                        app:indicatorSize="42dp"
                         app:trackColor="@android:color/transparent"
                         app:trackThickness="3dp" />
 
                     <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/fab"
-                        android:layout_width="@dimen/view_height_dp44"
-                        android:layout_height="@dimen/view_height_dp44"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_connection_action_circle"
                         android:clickable="true"

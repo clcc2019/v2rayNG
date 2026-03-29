@@ -40,4 +40,18 @@
         </shape>
     </item>
 
+    <item
+        android:left="0.5dp"
+        android:top="0.5dp"
+        android:right="0.5dp"
+        android:bottom="0.5dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16.5dp" />
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="0.75dp"
+                android:color="@color/color_connection_dock_glass_stroke" />
+        </shape>
+    </item>
+
 </layer-list>

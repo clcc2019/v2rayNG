@@ -316,7 +316,7 @@ class MainGroupTabsController(
                 ?: ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, compactHeight)
             layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
             layoutParams.height = compactHeight
-            val balancedTabGap = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp4)
+            val balancedTabGap = activity.resources.getDimensionPixelSize(R.dimen.padding_spacing_dp6)
             layoutParams.marginStart = balancedTabGap
             layoutParams.marginEnd = balancedTabGap
             tabView.layoutParams = layoutParams

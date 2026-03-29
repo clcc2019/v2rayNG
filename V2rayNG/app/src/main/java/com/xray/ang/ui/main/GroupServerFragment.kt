@@ -155,15 +155,12 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
                     adapter.setData(mainViewModel.serversCache, -1)
                     lastKnownItemCount = mainViewModel.serversCache.size
                     updateEmptyState()
-                    ownerActivity.refreshHomeSubtitle()
                 }
                 is MainViewModel.ServerListUpdate.Single -> {
                     adapter.setData(mainViewModel.serversCache, update.position)
-                    ownerActivity.refreshHomeSubtitle()
                 }
                 is MainViewModel.ServerListUpdate.Batch -> {
                     adapter.updateTestResults(mainViewModel.serversCache, update.positions)
-                    ownerActivity.refreshHomeSubtitle()
                 }
                 null -> Unit
             }
@@ -190,7 +187,6 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
         }
         syncCurrentSelectionState()
         updateEmptyState()
-        ownerActivity.refreshHomeSubtitle()
         ownerActivity.onServerListContextChanged(
             isEmpty = binding.layoutEmptyState.isVisible,
             canScrollUp = binding.recyclerView.canScrollVertically(-1),
@@ -424,7 +420,6 @@ class GroupServerFragment : BaseFragment<GroupServerFragment.GroupServerBinding>
             canScrollUp = binding.recyclerView.canScrollVertically(-1),
             resetContext = false
         )
-        ownerActivity.refreshHomeSubtitle()
     }
 
     private fun resolveEmptyStateMode(): EmptyStateMode {

@@ -328,8 +328,10 @@
 <string name="routing_settings_rule_title">路由规则设置</string>
 <string name="routing_priority_hint">从上到下匹配，命中即停止</string>
     <string name="routing_priority_summary">高→低优先级，命中即停止</string>
+    <string name="routing_page_intro">在这里调整路由行为。右上角可以直接添加规则或打开更多操作。</string>
 <string name="routing_group_preferences">路由偏好</string>
     <string name="routing_group_rules">规则优先级</string>
+    <string name="routing_rule_overview">%1$d 条规则 · %2$d 条启用 · %3$d 条锁定</string>
     <string name="routing_summary_total">规则数</string>
     <string name="routing_summary_enabled">已启用</string>
     <string name="routing_summary_locked">已锁定</string>
@@ -383,8 +385,6 @@
     <string name="home_connection_summary_running">服务已启动，可再次点击右侧按钮停止</string>
     <string name="home_connection_endpoint_unavailable">未返回落地地址</string>
     <string name="home_server_selected_badge">当前</string>
-    <string name="home_toolbar_subtitle_default">%1$s · %2$d 个节点 · %3$s</string>
-    <string name="home_toolbar_subtitle_search">%1$s · %2$d 个结果 · %3$s</string>
     <string name="home_connection_profile_empty">选择一个节点</string>
     <string name="current_config">"当前配置"</string>
     <string name="connection_connected">"已连接"</string>
@@ -428,6 +428,12 @@
     <string name="update_action_check_now">立即检查</string>
     <string name="update_action_checking">检查中…</string>
     <string name="update_action_view_details">查看详情</string>
+    <string name="update_page_intro">检查发布信息，并在应用内直接下载适配当前设备的安装包。</string>
+    <string name="update_action_downloading">下载中…</string>
+    <string name="update_action_download_install">下载并安装</string>
+    <string name="update_action_install_now">继续安装</string>
+    <string name="update_action_allow_install">允许安装</string>
+    <string name="update_action_recheck">重新检查</string>
     <string name="update_status_ready_title">准备就绪</string>
     <string name="update_status_ready_summary">对比当前安装版本与最新发布通道信息。</string>
     <string name="update_status_checking_title">正在检查发布信息</string>
@@ -436,11 +442,20 @@
     <string name="update_status_latest_summary">当前安装版本已与所选通道中的最新可用版本一致。</string>
     <string name="update_status_available_title">发现新版本</string>
     <string name="update_status_available_summary">当前设备已有可下载的更新版本。</string>
+    <string name="update_status_downloading_title">正在下载更新</string>
+    <string name="update_status_downloading_summary">正在为当前设备下载安装包，完成后会自动打开系统安装器。</string>
+    <string name="update_status_permission_title">请允许从此应用安装</string>
+    <string name="update_status_permission_summary">Android 需要先授予安装权限。允许后，会自动继续打开安装器。</string>
+    <string name="update_status_install_title">准备安装</string>
+    <string name="update_status_install_summary">安装包已准备完成，请在系统安装界面完成升级。</string>
     <string name="update_status_error_title">检查更新失败</string>
     <string name="update_status_badge_ready">就绪</string>
     <string name="update_status_badge_checking">检查中</string>
     <string name="update_status_badge_latest">最新</string>
     <string name="update_status_badge_available">可更新</string>
+    <string name="update_status_badge_downloading">下载中</string>
+    <string name="update_status_badge_permission">授权</string>
+    <string name="update_status_badge_install">安装</string>
     <string name="update_status_badge_error">重试</string>
     <string name="update_summary_installed">已安装</string>
     <string name="update_summary_latest">最新版本</string>
@@ -450,6 +465,8 @@
     <string name="update_last_checked">上次检查 %s</string>
     <string name="update_version_footer">应用 v%1$s • Core %2$s</string>
     <string name="update_version_value">v%s</string>
+    <string name="update_download_failed">下载安装包失败。</string>
+    <string name="update_install_unavailable">当前设备未找到可用的安装器。</string>
 
     <string name="title_policy_group_type">策略组类型</string>
     <string name="title_policy_group_subscription_id">来自订阅分组</string>

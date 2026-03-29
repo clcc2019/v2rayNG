@@ -48,9 +48,7 @@ class RoutingSettingActivity : HelperBaseActivity() {
     private lateinit var adapter: RoutingSettingRecyclerAdapter
     private var mItemTouchHelper: ItemTouchHelper? = null
     private var refreshJob: Job? = null
-    private var lastRuleCount: Int? = null
-    private var lastEnabledCount: Int? = null
-    private var lastLockedCount: Int? = null
+    private var lastRuleOverview: String? = null
     private var lastEmptyStateVisible: Boolean? = null
     private var lastRulesSignature: Int? = null
     private val extDir by lazy { File(Utils.userAssetPath(this)) }
@@ -86,12 +84,6 @@ class RoutingSettingActivity : HelperBaseActivity() {
         binding.layoutDomainStrategy.setOnClickListener {
             setDomainStrategy()
         }
-        binding.actionAddRule.setOnClickListener {
-            openRoutingEditor()
-        }
-        binding.actionMoreSheet.setOnClickListener {
-            showMoreActionsSheet()
-        }
         binding.actionEmptyAddRule.setOnClickListener {
             openRoutingEditor()
         }
@@ -111,8 +103,6 @@ class RoutingSettingActivity : HelperBaseActivity() {
             false
         }
         applyPressMotion(
-            binding.actionAddRule,
-            binding.actionMoreSheet,
             binding.layoutDomainStrategy,
             binding.layoutPerAppProxySettings,
             binding.layoutRoutingAssets,
@@ -461,12 +451,14 @@ class RoutingSettingActivity : HelperBaseActivity() {
         val total = items.size
         val enabled = items.count { it.enabled }
         val locked = items.count { it.locked == true }
-        updateSummaryValue(binding.tvRuleCount, total, lastRuleCount)
-        updateSummaryValue(binding.tvRuleEnabledCount, enabled, lastEnabledCount)
-        updateSummaryValue(binding.tvRuleLockedCount, locked, lastLockedCount)
-        lastRuleCount = total
-        lastEnabledCount = enabled
-        lastLockedCount = locked
+        val overview = getString(R.string.routing_rule_overview, total, enabled, locked)
+        if (lastRuleOverview != overview) {
+            binding.tvRuleOverview.text = overview
+            if (lastRuleOverview != null) {
+                UiMotion.animatePulse(binding.tvRuleOverview, pulseScale = 1.01f, duration = MotionTokens.PULSE_QUICK)
+            }
+            lastRuleOverview = overview
+        }
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -481,13 +473,6 @@ class RoutingSettingActivity : HelperBaseActivity() {
             UiMotion.setVisibility(binding.recyclerView, !isEmpty)
         }
         lastEmptyStateVisible = isEmpty
-    }
-
-    private fun updateSummaryValue(view: android.widget.TextView, value: Int, previousValue: Int?) {
-        view.text = value.toString()
-        if (previousValue != null && previousValue != value) {
-            UiMotion.animatePulse(view, pulseScale = 1.028f, duration = MotionTokens.PULSE_QUICK)
-        }
     }
 
     private inner class ActivityAdapterListener : BaseAdapterListener {

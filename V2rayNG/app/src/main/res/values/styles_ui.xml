@@ -53,17 +53,17 @@
     <style name="TextAppearance.V2Ray.HomeDock.Profile" parent="TextAppearance.V2Ray.FormValue">
         <item name="android:textSize">17sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:letterSpacing">0</item>
+        <item name="android:letterSpacing">-0.01</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:lineSpacingExtra">0dp</item>
     </style>
 
     <style name="TextAppearance.V2Ray.HomeDock.Summary" parent="TextAppearance.V2Ray.Body">
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">12.5sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:letterSpacing">0.004</item>
+        <item name="android:letterSpacing">0.008</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <style name="TextAppearance.V2Ray.TabLarge" parent="TextAppearance.AppCompat.Body2">
@@ -225,13 +225,13 @@
     <style name="Widget.V2Ray.Badge.ConnectionDockStatus" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@drawable/bg_connection_badge</item>
+        <item name="android:background">@drawable/bg_connection_dock_status_badge</item>
         <item name="android:gravity">center</item>
         <item name="android:includeFontPadding">false</item>
-        <item name="android:minHeight">20dp</item>
-        <item name="android:paddingStart">@dimen/padding_spacing_dp8</item>
+        <item name="android:minHeight">22dp</item>
+        <item name="android:paddingStart">@dimen/padding_spacing_dp9</item>
         <item name="android:paddingTop">@dimen/padding_spacing_dp3</item>
-        <item name="android:paddingEnd">@dimen/padding_spacing_dp8</item>
+        <item name="android:paddingEnd">@dimen/padding_spacing_dp9</item>
         <item name="android:paddingBottom">@dimen/padding_spacing_dp3</item>
         <item name="android:textAppearance">@style/TextAppearance.V2Ray.HomeDock.Status</item>
         <item name="android:textColor">@color/color_connection_dock_text_secondary</item>

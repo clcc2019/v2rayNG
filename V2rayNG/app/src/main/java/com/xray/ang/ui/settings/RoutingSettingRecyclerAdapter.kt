@@ -63,26 +63,18 @@ class RoutingSettingRecyclerAdapter(
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         val ruleset = items[position]
         val context = holder.itemView.context
-        val advancedSummary = buildAdvancedSummary(context, ruleset)
 
         holder.itemRoutingSettingBinding.remarks.text =
             ruleset.remarks?.takeIf { it.isNotBlank() } ?: context.getString(R.string.routing_rule_untitled)
-        holder.itemRoutingSettingBinding.domainIp.text = buildMatchSummary(context, ruleset)
-        holder.itemRoutingSettingBinding.outboundTag.text = ruleset.outboundTag
-        holder.itemRoutingSettingBinding.outboundTag.isVisible = ruleset.outboundTag.isNotBlank()
+        holder.itemRoutingSettingBinding.domainIp.text = buildRuleSummary(context, ruleset)
         holder.itemRoutingSettingBinding.chkEnable.isChecked = ruleset.enabled
         holder.itemRoutingSettingBinding.imgLocked.isVisible = ruleset.locked == true
-        holder.itemRoutingSettingBinding.tvPriority.text = (position + 1).toString()
-        holder.itemRoutingSettingBinding.tvAdvancedSummary.isVisible = advancedSummary != null
-        holder.itemRoutingSettingBinding.tvAdvancedSummary.text = advancedSummary
+        holder.itemRoutingSettingBinding.tvPriority.text = "#${position + 1}"
         holder.itemView.alpha = if (ruleset.enabled) 1f else 0.68f
         holder.resetCardStyle()
         bindEntranceMotion(holder, position, buildItemKey(ruleset, position))
 
         holder.itemRoutingSettingBinding.infoContainer.setOnClickListener {
-            adapterListener?.onEdit("", position)
-        }
-        holder.itemRoutingSettingBinding.layoutEdit.setOnClickListener {
             adapterListener?.onEdit("", position)
         }
 
@@ -140,7 +132,6 @@ class RoutingSettingRecyclerAdapter(
         BaseViewHolder(itemRoutingSettingBinding.root), ItemTouchHelperViewHolder {
         init {
             UiMotion.attachPressFeedback(itemRoutingSettingBinding.infoContainer, pressedScale = 0.992f)
-            UiMotion.attachPressFeedback(itemRoutingSettingBinding.layoutEdit, pressedScale = 0.984f)
             UiMotion.attachPressFeedback(itemRoutingSettingBinding.layoutDragHandle, pressedScale = 0.984f)
         }
     }
@@ -198,8 +189,11 @@ class RoutingSettingRecyclerAdapter(
     override fun onItemDismiss(position: Int) {
     }
 
-    private fun buildMatchSummary(context: android.content.Context, ruleset: RulesetItem): String {
+    private fun buildRuleSummary(context: android.content.Context, ruleset: RulesetItem): String {
         val parts = buildList {
+            ruleset.outboundTag.takeIf { it.isNotBlank() }?.let {
+                add("${context.getString(R.string.routing_settings_outbound_tag)}: $it")
+            }
             ruleset.domain?.takeIf { it.isNotEmpty() }?.let {
                 add("${context.getString(R.string.routing_settings_domain)}: ${previewValues(it)}")
             }
@@ -209,12 +203,6 @@ class RoutingSettingRecyclerAdapter(
             ruleset.port?.takeIf { it.isNotBlank() }?.let {
                 add("${context.getString(R.string.routing_settings_port)}: $it")
             }
-        }
-        return parts.joinToString(" · ").ifBlank { context.getString(R.string.routing_rule_no_condition) }
-    }
-
-    private fun buildAdvancedSummary(context: android.content.Context, ruleset: RulesetItem): String? {
-        val parts = buildList {
             ruleset.protocol?.takeIf { it.isNotEmpty() }?.let {
                 add("${context.getString(R.string.routing_settings_protocol)}: ${previewValues(it)}")
             }
@@ -222,7 +210,7 @@ class RoutingSettingRecyclerAdapter(
                 add("${context.getString(R.string.routing_settings_network)}: $it")
             }
         }
-        return parts.joinToString(" · ").takeIf { it.isNotBlank() }
+        return parts.joinToString(" · ").ifBlank { context.getString(R.string.routing_rule_no_condition) }
     }
 
     private fun previewValues(values: List<String>): String {

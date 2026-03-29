@@ -2,11 +2,12 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item>
-        <shape android:shape="oval">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
             <gradient
                 android:angle="270"
-                android:startColor="@color/color_connection_dock_button_surface"
-                android:endColor="@color/color_home_surface_soft" />
+                android:startColor="@color/color_connection_action_plate_top"
+                android:endColor="@color/color_connection_action_plate_bottom" />
         </shape>
     </item>
 
@@ -15,11 +16,26 @@
         android:top="1dp"
         android:right="1dp"
         android:bottom="18dp">
-        <shape android:shape="oval">
+        <shape android:shape="rectangle">
+            <corners android:radius="19dp" />
             <gradient
                 android:angle="270"
-                android:startColor="#28FFFFFF"
-                android:endColor="#00FFFFFF" />
+                android:startColor="@color/color_connection_action_plate_highlight_top"
+                android:endColor="@color/color_connection_action_plate_highlight_bottom" />
+        </shape>
+    </item>
+
+    <item
+        android:left="1dp"
+        android:top="12dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="19dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="@color/color_connection_action_plate_depth_top"
+                android:endColor="@color/color_connection_action_plate_depth_bottom" />
         </shape>
     </item>
 

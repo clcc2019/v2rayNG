@@ -18,15 +18,15 @@
         android:orientation="vertical">
 
         <TextView
-            style="@style/Widget.V2Ray.SectionLabel"
-            android:text="@string/update_group_status" />
+            style="@style/Widget.V2Ray.PageIntro"
+            android:text="@string/update_page_intro" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_update_status"
             style="@style/Widget.V2Ray.Card.Section.Flat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:layout_marginTop="@dimen/padding_spacing_dp12"
             android:maxWidth="@dimen/list_card_max_width">
 
             <LinearLayout
@@ -93,20 +93,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/padding_spacing_dp16"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
+                    android:background="@drawable/bg_routing_summary_panel"
+                    android:orientation="vertical"
+                    android:padding="@dimen/padding_spacing_dp12">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_routing_summary_panel"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp12">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/update_summary_installed"
                             android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="?attr/colorOnSurfaceVariant" />
@@ -115,23 +115,27 @@
                             android:id="@+id/tv_current_version"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
-                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
+                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                             android:textColor="?attr/colorOnSurface" />
                     </LinearLayout>
 
+                    <com.google.android.material.divider.MaterialDivider
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="@dimen/padding_spacing_dp10"
+                        android:layout_marginBottom="@dimen/padding_spacing_dp10"
+                        app:dividerColor="@color/color_card_outline" />
+
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/padding_spacing_dp8"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_routing_summary_panel"
-                        android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp12">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/update_summary_latest"
                             android:textAppearance="@style/TextAppearance.V2Ray.Support"
                             android:textColor="?attr/colorOnSurfaceVariant" />
@@ -140,9 +144,8 @@
                             android:id="@+id/tv_latest_version"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/padding_spacing_dp4"
                             android:text="@string/update_summary_waiting"
-                            android:textAppearance="@style/TextAppearance.V2Ray.CardTitle"
+                            android:textAppearance="@style/TextAppearance.V2Ray.BodyStrong"
                             android:textColor="?attr/colorOnSurface" />
                     </LinearLayout>
                 </LinearLayout>
@@ -151,7 +154,7 @@
                     android:id="@+id/layout_release_notes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/padding_spacing_dp16"
+                    android:layout_marginTop="@dimen/padding_spacing_dp14"
                     android:background="@drawable/bg_routing_summary_panel"
                     android:orientation="vertical"
                     android:padding="@dimen/padding_spacing_dp12"
@@ -168,9 +171,9 @@
                         android:id="@+id/tv_release_notes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/padding_spacing_dp4"
+                        android:layout_marginTop="@dimen/padding_spacing_dp6"
                         android:ellipsize="end"
-                        android:maxLines="6"
+                        android:maxLines="8"
                         android:textAppearance="@style/TextAppearance.V2Ray.Body"
                         android:textColor="?attr/colorOnSurface" />
                 </LinearLayout>
@@ -198,9 +201,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/padding_spacing_dp10"
                         android:layout_weight="1"
-                        android:text="@string/update_action_view_details"
+                        android:text="@string/update_action_recheck"
                         android:visibility="gone"
-                        app:icon="@drawable/ic_description_24dp" />
+                        app:icon="@drawable/ic_refresh_24dp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -278,7 +281,6 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
         </LinearLayout>
-
     </LinearLayout>
 
 </ScrollView>

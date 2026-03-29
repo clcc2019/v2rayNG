@@ -335,8 +335,10 @@
 <string name="routing_settings_rule_title">Routing Rule Settings</string>
 <string name="routing_priority_hint">Match from top to bottom, stop at first hit</string>
     <string name="routing_priority_summary">Higher → lower priority, stop at first match</string>
+    <string name="routing_page_intro">Adjust routing behavior here. Use the top-right buttons to add rules or open more actions.</string>
 <string name="routing_group_preferences">Routing preferences</string>
     <string name="routing_group_rules">Rule priority</string>
+    <string name="routing_rule_overview">%1$d rules · %2$d enabled · %3$d locked</string>
     <string name="routing_summary_total">Rules</string>
     <string name="routing_summary_enabled">Enabled</string>
     <string name="routing_summary_locked">Locked</string>
@@ -399,8 +401,6 @@
     <string name="home_connection_endpoint_unavailable">Exit address unavailable</string>
     <string name="home_server_active_label">ACTIVE</string>
     <string name="home_server_selected_badge">Current</string>
-    <string name="home_toolbar_subtitle_default">%1$s · %2$d profiles · %3$s</string>
-    <string name="home_toolbar_subtitle_search">%1$s · %2$d matches · %3$s</string>
     <string name="home_server_source_label">Source</string>
     <string name="home_connection_profile_empty">Choose a profile</string>
     <string name="current_config">Current configuration</string>
@@ -438,10 +438,16 @@
     <string name="update_now">Update now</string>
     <string name="update_check_pre_release">Check Pre-release</string>
     <string name="update_checking_for_update">Checking for update…</string>
+    <string name="update_page_intro">Check the release feed and install the matching APK without leaving the app.</string>
 <string name="update_group_status">Current status</string>
     <string name="update_group_preferences">Release channel</string>
     <string name="update_action_check_now">Check now</string>
     <string name="update_action_checking">Checking…</string>
+    <string name="update_action_downloading">Downloading…</string>
+    <string name="update_action_download_install">Download and install</string>
+    <string name="update_action_install_now">Install update</string>
+    <string name="update_action_allow_install">Allow install</string>
+    <string name="update_action_recheck">Check again</string>
     <string name="update_action_view_details">View details</string>
     <string name="update_status_ready_title">Ready to check</string>
     <string name="update_status_ready_summary">Compare the installed build with the latest release feed.</string>
@@ -451,11 +457,20 @@
     <string name="update_status_latest_summary">The installed build already matches the newest release available for this channel.</string>
     <string name="update_status_available_title">Update available</string>
     <string name="update_status_available_summary">A newer build is ready to download for this device.</string>
+    <string name="update_status_downloading_title">Downloading update</string>
+    <string name="update_status_downloading_summary">The APK is downloading for this device. The installer will open automatically when it finishes.</string>
+    <string name="update_status_permission_title">Allow installs from this app</string>
+    <string name="update_status_permission_summary">Android needs permission before opening the APK installer. After you allow it, installation continues automatically.</string>
+    <string name="update_status_install_title">Ready to install</string>
+    <string name="update_status_install_summary">The update package is ready. Finish the system install prompt to complete the upgrade.</string>
     <string name="update_status_error_title">Unable to check updates</string>
     <string name="update_status_badge_ready">Ready</string>
     <string name="update_status_badge_checking">Checking</string>
     <string name="update_status_badge_latest">Latest</string>
     <string name="update_status_badge_available">New</string>
+    <string name="update_status_badge_downloading">Download</string>
+    <string name="update_status_badge_permission">Allow</string>
+    <string name="update_status_badge_install">Install</string>
     <string name="update_status_badge_error">Retry</string>
     <string name="update_summary_installed">Installed</string>
     <string name="update_summary_latest">Latest</string>
@@ -465,6 +480,8 @@
     <string name="update_last_checked">Last checked %s</string>
     <string name="update_version_footer">App v%1$s • Core %2$s</string>
     <string name="update_version_value">v%s</string>
+    <string name="update_download_failed">Failed to download the update package.</string>
+    <string name="update_install_unavailable">No installer was found on this device.</string>
 
     <string name="title_policy_group_type">Policy group type</string>
     <string name="title_policy_group_subscription_id">From subscription group</string>

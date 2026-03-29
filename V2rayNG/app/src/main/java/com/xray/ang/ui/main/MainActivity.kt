@@ -82,7 +82,6 @@ class MainActivity : HelperBaseActivity() {
         MainSearchController(this, groupTabsController, mainViewModel) { active ->
             renderChromeState(chromeStateReducer.onSearchStateChanged(active), event = "search_ui")
             groupTabsController.notifyCurrentFragmentSearchUiChanged()
-            updateToolbarSubtitle()
         }
     }
     private val actionsController by lazy {
@@ -867,34 +866,7 @@ class MainActivity : HelperBaseActivity() {
     }
 
     private fun updateToolbarSubtitle() {
-        val groupLabel = mainViewModel.getCurrentGroupLabel(this)
-        val itemCount = if (mainViewModel.keywordFilter.isNotBlank()) {
-            mainViewModel.getCurrentVisibleCount()
-        } else {
-            mainViewModel.getCurrentGroupTotalCount()
-        }
-        val serviceStateLabel = getString(
-            when (serviceUiState) {
-                ServiceUiState.RUNNING -> R.string.connection_connected_short
-                ServiceUiState.STARTING -> R.string.connection_starting_short
-                ServiceUiState.STOPPING -> R.string.connection_stopping_short
-                ServiceUiState.STOPPED -> R.string.connection_not_connected_short
-            }
-        )
-        binding.toolbar.subtitle = getString(
-            if (mainViewModel.keywordFilter.isNotBlank()) {
-                R.string.home_toolbar_subtitle_search
-            } else {
-                R.string.home_toolbar_subtitle_default
-            },
-            groupLabel,
-            itemCount,
-            serviceStateLabel
-        )
-    }
-
-    fun refreshHomeSubtitle() {
-        updateToolbarSubtitle()
+        binding.toolbar.subtitle = null
     }
 
     fun refreshConnectionCard() {

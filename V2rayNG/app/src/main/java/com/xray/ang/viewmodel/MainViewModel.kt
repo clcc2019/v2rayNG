@@ -118,7 +118,6 @@ class MainViewModel(
     private val groupCountLock = Any()
     private var cachedGroupIds: List<String> = emptyList()
     private var cachedGroupCounts: Map<String, Int> = emptyMap()
-    private var latestGroupsSnapshot: List<GroupMapItem> = emptyList()
     private var appliedSnapshotSubscriptionId: String? = null
     private var appliedSnapshotKeyword: String? = null
     private var isGroupCountCacheDirty = true
@@ -496,7 +495,6 @@ class MainViewModel(
                             mainServerRepository.setCachedSubscriptionId(subscriptionId)
                             reloadServerList()
                         }
-                        latestGroupsSnapshot = groups
                         updateGroupsAction.value = groups
                     }
                 } finally {
@@ -602,27 +600,6 @@ class MainViewModel(
         cached?.get(subId)?.let { return it }
         return mainServerRepository.getServerCount(subId)
     }
-
-    fun getCurrentGroupLabel(context: Context = getApplication()): String {
-        latestGroupsSnapshot.firstOrNull { it.id == subscriptionId }
-            ?.remarks
-            ?.takeIf { it.isNotBlank() }
-            ?.let { return it }
-        if (subscriptionId.isBlank()) {
-            return context.getString(R.string.filter_config_all)
-        }
-        return mainServerRepository.getSubscription(subscriptionId)
-            ?.remarks
-            ?.takeIf { it.isNotBlank() }
-            ?: context.getString(R.string.filter_config_all)
-    }
-
-    fun getCurrentGroupTotalCount(): Int {
-        latestGroupsSnapshot.firstOrNull { it.id == subscriptionId }?.let { return it.count }
-        return countServers(subscriptionId)
-    }
-
-    fun getCurrentVisibleCount(): Int = serversCache.size
 
     fun matchesAppliedServerSnapshot(subscriptionId: String, keyword: String = keywordFilter.trim()): Boolean {
         return appliedSnapshotSubscriptionId == subscriptionId && appliedSnapshotKeyword == keyword

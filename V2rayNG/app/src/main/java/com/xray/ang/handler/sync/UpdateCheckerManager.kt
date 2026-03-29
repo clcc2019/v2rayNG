@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URLDecoder
 
 object UpdateCheckerManager {
     suspend fun checkForUpdate(includePreRelease: Boolean = false): CheckUpdateResult = withContext(Dispatchers.IO) {
@@ -68,10 +69,24 @@ object UpdateCheckerManager {
                 ?: throw IllegalStateException("Failed to create connection")
 
             try {
-                val apkFile = File(context.cacheDir, "update.apk")
+                connection.useCaches = false
+                connection.instanceFollowRedirects = true
+                connection.setRequestProperty("Cache-Control", "no-cache")
+                connection.connect()
+
+                if (connection.responseCode !in 200..299) {
+                    throw IllegalStateException("Download failed with HTTP ${connection.responseCode}")
+                }
+
+                val apkFile = File(context.cacheDir, buildDownloadFileName(downloadUrl))
+                context.cacheDir.listFiles()?.forEach { cached ->
+                    if (cached != apkFile && cached.name.startsWith("update-") && cached.extension.equals("apk", ignoreCase = true)) {
+                        runCatching { cached.delete() }
+                    }
+                }
                 Log.i(AppConfig.TAG, "Downloading APK to: ${apkFile.absolutePath}")
 
-                FileOutputStream(apkFile).use { outputStream ->
+                FileOutputStream(apkFile, false).use { outputStream ->
                     connection.inputStream.use { inputStream ->
                         inputStream.copyTo(outputStream)
                     }
@@ -91,6 +106,25 @@ object UpdateCheckerManager {
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to initiate download: ${e.message}")
             return@withContext null
+        }
+    }
+
+    private fun buildDownloadFileName(downloadUrl: String): String {
+        val fallbackName = "update-${System.currentTimeMillis()}.apk"
+        val rawName = downloadUrl.substringAfterLast('/').substringBefore('?').trim()
+        if (rawName.isBlank()) {
+            return fallbackName
+        }
+
+        val decodedName = runCatching { URLDecoder.decode(rawName, Charsets.UTF_8.name()) }
+            .getOrDefault(rawName)
+        val safeName = decodedName.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            .ifBlank { fallbackName }
+
+        return if (safeName.endsWith(".apk", ignoreCase = true)) {
+            "update-$safeName"
+        } else {
+            fallbackName
         }
     }
 
